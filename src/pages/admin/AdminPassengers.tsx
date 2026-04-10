@@ -35,7 +35,7 @@ const AdminPassengers = () => {
       <aside className="hidden lg:flex w-64 flex-col border-r bg-sidebar">
         <div className="flex items-center gap-3 p-5 border-b border-sidebar-border">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary"><Car className="h-5 w-5 text-primary-foreground" /></div>
-          <div><h1 className="text-sm font-bold text-sidebar-foreground">UrbanGo</h1><p className="text-[10px] text-sidebar-foreground/60">Painel Admin</p></div>
+          <div><h1 className="text-sm font-bold text-sidebar-foreground">Vamoo</h1><p className="text-[10px] text-sidebar-foreground/60">Painel Admin</p></div>
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {sidebarItems.map((item) => (
@@ -51,7 +51,7 @@ const AdminPassengers = () => {
           <div className="absolute inset-0 bg-foreground/40" onClick={() => setSidebarOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-64 bg-sidebar animate-fade-in">
             <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-              <h1 className="text-sm font-bold text-sidebar-foreground">UrbanGo</h1>
+              <h1 className="text-sm font-bold text-sidebar-foreground">Vamoo</h1>
               <button onClick={() => setSidebarOpen(false)}><X className="h-5 w-5 text-sidebar-foreground" /></button>
             </div>
             <nav className="p-3 space-y-1">
