@@ -45,7 +45,7 @@ const RoleSelector = () => {
             <div className="rounded-xl bg-primary-foreground/20 p-3">
               <role.icon className="h-7 w-7 text-primary-foreground" />
             </div>
-            <h3 className="text-lg font-bold text-primary-foreground">{role.title}</h3>
+            <h3 className="text-lg font-bold font-display text-primary-foreground">{role.title}</h3>
             <p className="text-sm text-primary-foreground/80">{role.description}</p>
           </div>
         </button>
