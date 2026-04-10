@@ -45,7 +45,7 @@ const Index = () => {
           </p>
 
           <p className="text-muted-foreground text-sm sm:text-base max-w-md animate-slide-up">
-            O app de transporte urbano feito para cidades brasileiras. Seguro, justo e rápido.
+            Seja dono do app de mobilidade urbana na sua cidade!
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 mt-4 animate-slide-up" style={{ animationDelay: "100ms" }}>
