@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/auth/AuthPage.tsx";
@@ -26,36 +27,34 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<AuthPage />} />
-          {/* Passenger */}
-          <Route path="/passenger" element={<PassengerHome />} />
-          <Route path="/passenger/history" element={<PassengerHistory />} />
-          <Route path="/passenger/profile" element={<PassengerProfile />} />
-          {/* Driver */}
-          <Route path="/driver" element={<DriverHome />} />
-          <Route path="/driver/wallet" element={<DriverWallet />} />
-          <Route path="/driver/rides" element={<DriverRides />} />
-          <Route path="/driver/profile" element={<DriverProfile />} />
-          {/* Admin */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/drivers" element={<AdminDrivers />} />
-          <Route path="/admin/passengers" element={<AdminPassengers />} />
-          <Route path="/admin/rides" element={<AdminRides />} />
-          <Route path="/admin/finance" element={<AdminFinance />} />
-          <Route path="/admin/tariffs" element={<AdminTariffs />} />
-          <Route path="/admin/fraud" element={<AdminFraud />} />
-          <Route path="/admin/live" element={<AdminLive />} />
-          {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/passenger" element={<PassengerHome />} />
+            <Route path="/passenger/history" element={<PassengerHistory />} />
+            <Route path="/passenger/profile" element={<PassengerProfile />} />
+            <Route path="/driver" element={<DriverHome />} />
+            <Route path="/driver/wallet" element={<DriverWallet />} />
+            <Route path="/driver/rides" element={<DriverRides />} />
+            <Route path="/driver/profile" element={<DriverProfile />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/drivers" element={<AdminDrivers />} />
+            <Route path="/admin/passengers" element={<AdminPassengers />} />
+            <Route path="/admin/rides" element={<AdminRides />} />
+            <Route path="/admin/finance" element={<AdminFinance />} />
+            <Route path="/admin/tariffs" element={<AdminTariffs />} />
+            <Route path="/admin/fraud" element={<AdminFraud />} />
+            <Route path="/admin/live" element={<AdminLive />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
