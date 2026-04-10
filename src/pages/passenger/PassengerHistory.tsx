@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Clock, MapPin, ChevronRight, Filter } from "lucide-react";
+import { Clock, ChevronRight } from "lucide-react";
 import BottomNav from "@/components/shared/BottomNav";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { Home, User } from "lucide-react";

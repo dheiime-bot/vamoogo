@@ -21,7 +21,7 @@ const navItems = [
 ];
 
 const PassengerHome = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [passengers, setPassengers] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("car");
   const [origin, setOrigin] = useState("");
