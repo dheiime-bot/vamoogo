@@ -145,7 +145,7 @@ const AuthPage = () => {
             <Car className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-primary-foreground">UrbanGo</h1>
+            <h1 className="text-xl font-bold font-display text-primary-foreground">Vamoo</h1>
             <p className="text-xs text-primary-foreground/70">
               {mode === "login" ? "Entre na sua conta" : `Cadastro - Etapa ${step}/${maxSteps}`}
             </p>

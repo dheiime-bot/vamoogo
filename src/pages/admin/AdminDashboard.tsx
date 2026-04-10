@@ -44,7 +44,7 @@ const AdminDashboard = () => {
             <Car className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-sidebar-foreground">UrbanGo</h1>
+            <h1 className="text-sm font-bold font-display text-sidebar-foreground">Vamoo</h1>
             <p className="text-[10px] text-sidebar-foreground/60">Painel Admin</p>
           </div>
         </div>
@@ -72,7 +72,7 @@ const AdminDashboard = () => {
           <div className="absolute inset-0 bg-foreground/40" onClick={() => setSidebarOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-64 bg-sidebar animate-fade-in">
             <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-              <h1 className="text-sm font-bold text-sidebar-foreground">UrbanGo Admin</h1>
+              <h1 className="text-sm font-bold font-display text-sidebar-foreground">Vamoo Admin</h1>
               <button onClick={() => setSidebarOpen(false)}>
                 <X className="h-5 w-5 text-sidebar-foreground" />
               </button>
