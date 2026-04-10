@@ -2,6 +2,7 @@ import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft,
 import BottomNav from "@/components/shared/BottomNav";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { icon: Home, label: "Início", path: "/driver" },
@@ -12,6 +13,22 @@ const navItems = [
 
 const DriverProfile = () => {
   const navigate = useNavigate();
+  const { profile, driverData, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const displayName = profile?.full_name || "Motorista";
+  const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "premium" ? "Premium" : "Carro";
+  const statusMap: Record<string, "pending" | "approved" | "rejected" | "blocked"> = {
+    pending: "pending",
+    approved: "approved",
+    rejected: "rejected",
+    blocked: "blocked",
+  };
+  const driverStatus = statusMap[driverData?.status] || "pending";
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -27,22 +44,21 @@ const DriverProfile = () => {
               <User className="h-8 w-8 text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Carlos Mendes</h2>
-              <p className="text-sm text-muted-foreground">Motorista • Carro</p>
+              <h2 className="text-lg font-bold">{displayName}</h2>
+              <p className="text-sm text-muted-foreground">Motorista • {categoryLabel}</p>
               <div className="flex items-center gap-2 mt-1">
-                <StatusBadge status="approved" />
-                <span className="flex items-center gap-0.5 text-xs"><Star className="h-3 w-3 text-warning" /> 4.92</span>
+                <StatusBadge status={driverStatus} />
+                <span className="flex items-center gap-0.5 text-xs"><Star className="h-3 w-3 text-warning" /> {driverData?.rating || "0.00"}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-2 mt-4">
           {[
-            { label: "Corridas", value: "342" },
-            { label: "Avaliação", value: "4.92" },
-            { label: "Cancelamentos", value: "0/3" },
+            { label: "Corridas", value: String(driverData?.total_rides || 0) },
+            { label: "Avaliação", value: String(driverData?.rating || "0.00") },
+            { label: "Cancelamentos", value: `${driverData?.daily_cancellations || 0}/3` },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border bg-card p-3 text-center">
               <p className="text-lg font-bold">{s.value}</p>
@@ -51,16 +67,13 @@ const DriverProfile = () => {
           ))}
         </div>
 
-        {/* Documents */}
         <div className="mt-4 space-y-2">
           <h3 className="text-sm font-semibold text-muted-foreground">Documentos & Verificações</h3>
           {[
-            { icon: FileText, label: "CPF", value: "***.***.***-12", verified: true },
-            { icon: CarIcon, label: "CNH (EAR)", value: "Verificada", verified: true },
-            { icon: Camera, label: "Selfie facial", value: "Verificada", verified: true },
-            { icon: Camera, label: "Foto CNH (frente)", value: "Enviada", verified: true },
-            { icon: Camera, label: "Foto CNH (verso)", value: "Enviada", verified: true },
-            { icon: Phone, label: "Telefone", value: "(11) 99999-1234", verified: true },
+            { icon: FileText, label: "CPF", value: profile?.cpf ? `***-${profile.cpf.slice(-2)}` : "N/A", verified: true },
+            { icon: CarIcon, label: "CNH (EAR)", value: driverData?.cnh_ear ? "Verificada" : "Pendente", verified: !!driverData?.cnh_ear },
+            { icon: Camera, label: "Selfie facial", value: profile?.selfie_url ? "Verificada" : "Pendente", verified: !!profile?.selfie_url },
+            { icon: Phone, label: "Telefone", value: profile?.phone || "N/A", verified: !!profile?.phone_verified },
           ].map((item) => (
             <div key={item.label} className="flex items-center justify-between rounded-xl border bg-card p-4">
               <div className="flex items-center gap-3">
@@ -72,22 +85,23 @@ const DriverProfile = () => {
           ))}
         </div>
 
-        {/* Vehicle */}
-        <div className="mt-4 rounded-2xl border bg-card p-4">
-          <h3 className="text-sm font-semibold mb-3">Veículo</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Modelo", value: "Toyota Corolla 2022" },
-              { label: "Cor", value: "Prata" },
-              { label: "Placa", value: "ABC-1D23" },
-              { label: "Categoria", value: "Carro" },
-            ].map((v) => (
-              <div key={v.label}><p className="text-xs text-muted-foreground">{v.label}</p><p className="text-sm font-medium">{v.value}</p></div>
-            ))}
+        {driverData && (
+          <div className="mt-4 rounded-2xl border bg-card p-4">
+            <h3 className="text-sm font-semibold mb-3">Veículo</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Modelo", value: driverData.vehicle_model || "N/A" },
+                { label: "Cor", value: driverData.vehicle_color || "N/A" },
+                { label: "Placa", value: driverData.vehicle_plate || "N/A" },
+                { label: "Categoria", value: categoryLabel },
+              ].map((v) => (
+                <div key={v.label}><p className="text-xs text-muted-foreground">{v.label}</p><p className="text-sm font-medium">{v.value}</p></div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <button onClick={() => navigate("/")} className="mt-6 w-full rounded-xl border border-destructive/30 py-3 text-sm font-semibold text-destructive">
+        <button onClick={handleLogout} className="mt-6 w-full rounded-xl border border-destructive/30 py-3 text-sm font-semibold text-destructive">
           Sair da conta
         </button>
       </div>
