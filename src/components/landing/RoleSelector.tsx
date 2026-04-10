@@ -7,7 +7,7 @@ const roles = [
     title: "Passageiro",
     description: "Solicite corridas com segurança e praticidade",
     icon: User,
-    path: "/passenger",
+    path: "/auth",
     gradient: "bg-gradient-primary",
   },
   {
@@ -15,7 +15,7 @@ const roles = [
     title: "Motorista",
     description: "Dirija e ganhe com o modelo pré-pago",
     icon: Car,
-    path: "/driver",
+    path: "/auth",
     gradient: "bg-gradient-accent",
   },
   {
