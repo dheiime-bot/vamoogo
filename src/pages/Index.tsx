@@ -1,16 +1,19 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import RoleSelector from "@/components/landing/RoleSelector";
+import { Car } from "lucide-react";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
-  return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+const Index = () => (
+  <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <div className="mb-12 text-center animate-fade-in">
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-primary shadow-glow">
+        <Car className="h-10 w-10 text-primary-foreground" />
+      </div>
+      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+        <span className="text-gradient-primary">UrbanGo</span>
+      </h1>
+      <p className="mt-2 text-sm text-muted-foreground">Transporte urbano inteligente</p>
     </div>
-  );
-};
-
-const Index = PlaceholderIndex;
+    <RoleSelector />
+  </div>
+);
 
 export default Index;
