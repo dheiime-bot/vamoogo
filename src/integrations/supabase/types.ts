@@ -370,6 +370,42 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawals: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          driver_id: string
+          id: string
+          pix_key: string
+          processed_at: string | null
+          requested_at: string
+          status: Database["public"]["Enums"]["withdrawal_status"]
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          pix_key: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          pix_key?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -397,6 +433,7 @@ export type Database = {
         | "cancelled"
       user_type: "passenger" | "driver" | "admin"
       vehicle_category: "moto" | "car" | "premium"
+      withdrawal_status: "pending" | "approved" | "paid" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -538,6 +575,7 @@ export const Constants = {
       ],
       user_type: ["passenger", "driver", "admin"],
       vehicle_category: ["moto", "car", "premium"],
+      withdrawal_status: ["pending", "approved", "paid", "rejected"],
     },
   },
 } as const
