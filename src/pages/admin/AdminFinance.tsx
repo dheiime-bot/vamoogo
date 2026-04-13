@@ -35,7 +35,7 @@ const AdminFinance = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  const handleWithdrawal = async (id: string, status: string) => {
+  const handleWithdrawal = async (id: string, status: "approved" | "paid" | "rejected") => {
     await supabase.from("withdrawals").update({ status, processed_at: new Date().toISOString() }).eq("id", id);
     toast.success(`Saque ${status === "approved" ? "aprovado" : status === "paid" ? "pago" : "rejeitado"}`);
     fetchData();

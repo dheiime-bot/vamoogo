@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, Ban, CheckCircle, Filter } from "lucide-react";
+import { Search, Ban, CheckCircle } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ const AdminDrivers = () => {
 
   useEffect(() => { fetchDrivers(); }, []);
 
-  const updateStatus = async (userId: string, status: string) => {
+  const updateStatus = async (userId: string, status: "pending" | "approved" | "rejected" | "blocked") => {
     await supabase.from("drivers").update({ status }).eq("user_id", userId);
     toast.success(`Status atualizado para ${status}`);
     fetchDrivers();
