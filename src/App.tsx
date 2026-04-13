@@ -22,6 +22,11 @@ import AdminFinance from "./pages/admin/AdminFinance.tsx";
 import AdminTariffs from "./pages/admin/AdminTariffs.tsx";
 import AdminFraud from "./pages/admin/AdminFraud.tsx";
 import AdminLive from "./pages/admin/AdminLive.tsx";
+import AdminSupport from "./pages/admin/AdminSupport.tsx";
+import AdminCampaigns from "./pages/admin/AdminCampaigns.tsx";
+import AdminCoupons from "./pages/admin/AdminCoupons.tsx";
+import AdminReports from "./pages/admin/AdminReports.tsx";
+import AdminAudit from "./pages/admin/AdminAudit.tsx";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +55,11 @@ const App = () => (
             <Route path="/admin/tariffs" element={<AdminTariffs />} />
             <Route path="/admin/fraud" element={<AdminFraud />} />
             <Route path="/admin/live" element={<AdminLive />} />
+            <Route path="/admin/support" element={<AdminSupport />} />
+            <Route path="/admin/campaigns" element={<AdminCampaigns />} />
+            <Route path="/admin/coupons" element={<AdminCoupons />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/audit" element={<AdminAudit />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
