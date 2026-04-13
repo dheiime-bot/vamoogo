@@ -1,127 +1,119 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard, Users, Car, DollarSign, Settings, AlertTriangle, MapPin,
-  Menu, X, Search, Filter, Eye, Navigation, Clock
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, Eye, XCircle, Play, Flag, ArrowRightLeft } from "lucide-react";
+import AdminLayout from "@/components/admin/AdminLayout";
 import StatusBadge from "@/components/shared/StatusBadge";
-
-const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
-  { icon: Users, label: "Motoristas", path: "/admin/drivers" },
-  { icon: Users, label: "Passageiros", path: "/admin/passengers" },
-  { icon: Car, label: "Corridas", path: "/admin/rides" },
-  { icon: DollarSign, label: "Financeiro", path: "/admin/finance" },
-  { icon: Settings, label: "Tarifas", path: "/admin/tariffs" },
-  { icon: AlertTriangle, label: "Antifraude", path: "/admin/fraud" },
-  { icon: MapPin, label: "Mapa ao vivo", path: "/admin/live" },
-];
-
-const rides = [
-  { id: "#1042", from: "Av. Paulista, 1000", to: "Rua Augusta, 500", driver: "Carlos M.", passenger: "Maria S.", price: "R$ 18,50", fee: "R$ 2,78", date: "10/04/2026, 14:35", status: "completed" as const, category: "Carro", distance: "3.2km", duration: "12min", passengers: 1 },
-  { id: "#1041", from: "Shopping Morumbi", to: "Aeroporto GRU", driver: "Ana S.", passenger: "João L.", price: "R$ 85,00", fee: "R$ 12,75", date: "10/04/2026, 13:20", status: "active" as const, category: "Premium", distance: "28.5km", duration: "45min", passengers: 2 },
-  { id: "#1040", from: "Estação Sé", to: "Vila Madalena", driver: "João P.", passenger: "Ana C.", price: "R$ 12,00", fee: "R$ 1,44", date: "10/04/2026, 12:10", status: "cancelled" as const, category: "Moto", distance: "5.8km", duration: "18min", passengers: 1 },
-  { id: "#1039", from: "Pinheiros", to: "Brooklin", driver: "Maria L.", passenger: "Pedro R.", price: "R$ 22,00", fee: "R$ 3,96", date: "10/04/2026, 11:45", status: "completed" as const, category: "Carro", distance: "4.1km", duration: "15min", passengers: 3 },
-  { id: "#1038", from: "Liberdade", to: "Mooca", driver: "Carlos M.", passenger: "Carla D.", price: "R$ 16,00", fee: "R$ 2,40", date: "10/04/2026, 10:00", status: "completed" as const, category: "Carro", distance: "6.2km", duration: "22min", passengers: 1 },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const AdminRides = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [rides, setRides] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const fetchRides = async () => {
+    const { data } = await supabase
+      .from("rides")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (data) setRides(data);
+  };
+
+  useEffect(() => { fetchRides(); }, []);
+
+  // Realtime
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-rides")
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, () => fetchRides())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const updateRide = async (id: string, update: any, msg: string) => {
+    await supabase.from("rides").update(update).eq("id", id);
+    toast.success(msg);
+    fetchRides();
+  };
+
+  const filtered = rides.filter((r) => {
+    const matchSearch = !search || r.origin_address?.toLowerCase().includes(search.toLowerCase()) || r.destination_address?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === "all" || r.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
+  const rideStatusMap: Record<string, "active" | "completed" | "cancelled" | "pending"> = {
+    requested: "pending", accepted: "active", in_progress: "active", completed: "completed", cancelled: "cancelled",
+  };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden lg:flex w-64 flex-col border-r bg-sidebar">
-        <div className="flex items-center gap-3 p-5 border-b border-sidebar-border">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary"><Car className="h-5 w-5 text-primary-foreground" /></div>
-          <div><h1 className="text-sm font-bold text-sidebar-foreground">Vamoo</h1><p className="text-[10px] text-sidebar-foreground/60">Painel Admin</p></div>
+    <AdminLayout title="Corridas">
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-1 items-center gap-2 rounded-xl border bg-card px-3 py-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input placeholder="Buscar por endereço..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" />
         </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {sidebarItems.map((item) => (
-            <button key={item.path} onClick={() => navigate(item.path)} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${location.pathname === item.path ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground/70 hover:bg-sidebar-accent"}`}>
-              <item.icon className="h-4 w-4" />{item.label}
+        <div className="flex gap-1 overflow-x-auto">
+          {["all", "requested", "accepted", "in_progress", "completed", "cancelled"].map((s) => (
+            <button key={s} onClick={() => setFilterStatus(s)} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium ${filterStatus === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {s === "all" ? "Todas" : s === "requested" ? "Solicitadas" : s === "accepted" ? "Aceitas" : s === "in_progress" ? "Em andamento" : s === "completed" ? "Concluídas" : "Canceladas"}
             </button>
           ))}
-        </nav>
-      </aside>
-
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-foreground/40" onClick={() => setSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-64 bg-sidebar animate-fade-in">
-            <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-              <h1 className="text-sm font-bold text-sidebar-foreground">Vamoo</h1>
-              <button onClick={() => setSidebarOpen(false)}><X className="h-5 w-5 text-sidebar-foreground" /></button>
-            </div>
-            <nav className="p-3 space-y-1">
-              {sidebarItems.map((item) => (
-                <button key={item.path} onClick={() => { navigate(item.path); setSidebarOpen(false); }} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${location.pathname === item.path ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground/70"}`}>
-                  <item.icon className="h-4 w-4" />{item.label}
-                </button>
-              ))}
-            </nav>
-          </aside>
         </div>
-      )}
+      </div>
 
-      <main className="flex-1 overflow-auto">
-        <header className="flex items-center gap-3 border-b bg-card p-4">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden"><Menu className="h-5 w-5" /></button>
-          <h2 className="text-lg font-bold">Corridas</h2>
-        </header>
-
-        <div className="p-4 lg:p-6">
-          <div className="flex gap-2 mb-4">
-            <div className="flex flex-1 items-center gap-2 rounded-xl border bg-card px-3 py-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <input placeholder="Buscar por ID, motorista ou passageiro..." className="flex-1 bg-transparent text-sm outline-none" />
-            </div>
-            <button className="flex items-center gap-1 rounded-xl border bg-card px-3 py-2 text-sm font-medium"><Filter className="h-4 w-4" /> Filtrar</button>
-          </div>
-
-          <div className="space-y-3">
-            {rides.map((ride, i) => (
-              <div key={ride.id} className="rounded-2xl border bg-card p-4 shadow-sm animate-slide-up" style={{ animationDelay: `${i * 50}ms`, animationFillMode: "both" }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold">{ride.id}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted font-medium">{ride.category}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{ride.date}</p>
-                  </div>
-                  <StatusBadge status={ride.status} />
+      <div className="space-y-3">
+        {filtered.length === 0 && <p className="text-center py-8 text-sm text-muted-foreground">Nenhuma corrida encontrada</p>}
+        {filtered.map((ride, i) => (
+          <div key={ride.id} className="rounded-2xl border bg-card p-4 shadow-sm animate-slide-up" style={{ animationDelay: `${i * 30}ms`, animationFillMode: "both" }}>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono text-muted-foreground">{ride.id.slice(0, 8)}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-muted font-medium">{ride.category}</span>
+                  <span className="text-xs text-muted-foreground">{ride.passenger_count} pass.</span>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-3 mb-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Rota</p>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-primary" /><p className="text-sm">{ride.from}</p></div>
-                      <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-destructive" /><p className="text-sm">{ride.to}</p></div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div><p className="text-xs text-muted-foreground">Motorista</p><p className="text-sm font-medium">{ride.driver}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Passageiro</p><p className="text-sm font-medium">{ride.passenger}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Distância</p><p className="text-sm font-medium">{ride.distance}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Duração</p><p className="text-sm font-medium">{ride.duration}</p></div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between border-t pt-3">
-                  <div className="flex items-center gap-4">
-                    <div><p className="text-xs text-muted-foreground">Valor</p><p className="text-base font-bold">{ride.price}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Taxa</p><p className="text-sm font-semibold text-primary">{ride.fee}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Passageiros</p><p className="text-sm font-medium">{ride.passengers}</p></div>
-                  </div>
-                  <button className="rounded-lg p-2 hover:bg-muted"><Eye className="h-4 w-4 text-muted-foreground" /></button>
-                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">{new Date(ride.created_at).toLocaleString("pt-BR")}</p>
               </div>
-            ))}
+              <StatusBadge status={rideStatusMap[ride.status] || "pending"} />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3 mb-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success" /><p className="text-sm truncate">{ride.origin_address?.split(" - ")[0]}</p></div>
+                <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-destructive" /><p className="text-sm truncate">{ride.destination_address?.split(" - ")[0]}</p></div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div><span className="text-muted-foreground">Distância</span><p className="font-medium">{ride.distance_km} km</p></div>
+                <div><span className="text-muted-foreground">Duração</span><p className="font-medium">{ride.duration_minutes} min</p></div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between border-t pt-3">
+              <div className="flex items-center gap-4">
+                <div><p className="text-xs text-muted-foreground">Valor</p><p className="text-base font-bold">R$ {ride.price?.toFixed(2) || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Taxa</p><p className="text-sm font-semibold text-primary">R$ {ride.platform_fee?.toFixed(2) || "—"}</p></div>
+              </div>
+              <div className="flex gap-1">
+                {ride.status === "requested" && (
+                  <button onClick={() => updateRide(ride.id, { status: "cancelled", cancelled_at: new Date().toISOString() }, "Corrida cancelada")} className="rounded-lg p-1.5 hover:bg-destructive/10" title="Cancelar">
+                    <XCircle className="h-4 w-4 text-destructive" />
+                  </button>
+                )}
+                {ride.status === "accepted" && (
+                  <button onClick={() => updateRide(ride.id, { status: "in_progress", started_at: new Date().toISOString() }, "Corrida iniciada")} className="rounded-lg p-1.5 hover:bg-success/10" title="Iniciar">
+                    <Play className="h-4 w-4 text-success" />
+                  </button>
+                )}
+                {ride.status === "in_progress" && (
+                  <button onClick={() => updateRide(ride.id, { status: "completed", completed_at: new Date().toISOString() }, "Corrida finalizada")} className="rounded-lg p-1.5 hover:bg-primary/10" title="Finalizar">
+                    <Flag className="h-4 w-4 text-primary" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        ))}
+      </div>
+    </AdminLayout>
   );
 };
 
