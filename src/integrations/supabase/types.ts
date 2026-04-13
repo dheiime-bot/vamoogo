@@ -14,6 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          min_rides: number | null
+          name: string
+          start_date: string
+          type: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          min_rides?: number | null
+          name: string
+          start_date?: string
+          type?: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          min_rides?: number | null
+          name?: string
+          start_date?: string
+          type?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          min_fare: number | null
+          used_count: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_fare?: number | null
+          used_count?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_fare?: number | null
+          used_count?: number
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
           balance: number
@@ -120,6 +234,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fraud_alerts_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incidents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          driver_id: string | null
+          id: string
+          passenger_id: string | null
+          resolution: string | null
+          ride_id: string | null
+          severity: string
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description: string
+          driver_id?: string | null
+          id?: string
+          passenger_id?: string | null
+          resolution?: string | null
+          ride_id?: string | null
+          severity?: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          driver_id?: string | null
+          id?: string
+          passenger_id?: string | null
+          resolution?: string | null
+          ride_id?: string | null
+          severity?: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidents_ride_id_fkey"
             columns: ["ride_id"]
             isOneToOne: false
             referencedRelation: "rides"
@@ -304,6 +471,42 @@ export type Database = {
           status?: Database["public"]["Enums"]["ride_status"]
           stops?: Json | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          admin_response: string | null
+          created_at: string
+          id: string
+          message: string
+          priority: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          priority?: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          priority?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
