@@ -244,7 +244,5 @@ const AdminDashboard = () => {
   );
 };
 
-// Need Bell import
-import { Bell } from "lucide-react";
 
 export default AdminDashboard;
