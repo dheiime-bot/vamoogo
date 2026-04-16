@@ -110,6 +110,7 @@ const AdminDrivers = () => {
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => updateStatus(d.user_id, "approved")} className="rounded-lg p-1.5 bg-success/10"><CheckCircle className="h-4 w-4 text-success" /></button>
+                  <button onClick={() => updateStatus(d.user_id, "rejected")} className="rounded-lg p-1.5 bg-warning/10"><XCircle className="h-4 w-4 text-warning" /></button>
                   <button onClick={() => updateStatus(d.user_id, "blocked")} className="rounded-lg p-1.5 bg-destructive/10"><Ban className="h-4 w-4 text-destructive" /></button>
                 </div>
               </div>
