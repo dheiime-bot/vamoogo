@@ -57,28 +57,30 @@ const OriginPicker = ({
   otherPerson, onChangeOtherPerson,
 }: OriginPickerProps) => {
   const [loadingGps, setLoadingGps] = useState(false);
+  const [gpsAddress, setGpsAddress] = useState<string>("");
+  const [gpsLoc, setGpsLoc] = useState<CityLocation | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<CityLocation[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const [edited, setEdited] = useState(false);
   const autoTried = useRef(false);
 
-  // Captura GPS automaticamente uma vez ao montar
+  // Captura GPS ao montar
   useEffect(() => {
-    if (autoTried.current || selectedOrigin) return;
+    if (autoTried.current) return;
     autoTried.current = true;
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      toast.error("GPS indisponível neste dispositivo");
+      return;
+    }
     setLoadingGps(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        // Espera o Google Maps carregar (até 3s) para obter endereço
-        let address = "";
         for (let i = 0; i < 6; i++) {
           if ((window as any).google?.maps?.Geocoder) break;
           await new Promise((r) => setTimeout(r, 500));
         }
-        address = await reverseGeocode(latitude, longitude);
+        const address = await reverseGeocode(latitude, longitude);
         const loc: CityLocation = {
           id: `gps-${Date.now()}`,
           name: "Minha localização",
@@ -88,29 +90,38 @@ const OriginPicker = ({
           category: "other" as any,
           city: "Altamira",
         };
-        onSelectOrigin(loc, "gps");
-        setQuery(address);
+        setGpsLoc(loc);
+        setGpsAddress(address);
         setLoadingGps(false);
+        // Se ainda não está em modo "outra pessoa", aplica GPS como origem
+        if (!forOtherPerson) onSelectOrigin(loc, "gps");
         toast.success("Localização detectada");
       },
       () => {
         setLoadingGps(false);
-        toast.info("Digite o endereço de embarque");
+        toast.error("Não foi possível obter localização");
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, [selectedOrigin, onSelectOrigin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Sincroniza query com endereço selecionado quando vem do GPS (e usuário ainda não editou)
+  // Quando alterna o modo, ajusta a origem
   useEffect(() => {
-    if (selectedOrigin && !edited && selectedOrigin.id.startsWith("gps-")) {
-      setQuery(selectedOrigin.address);
+    if (forOtherPerson) {
+      // Limpa origem do GPS — usuário deve buscar endereço da pessoa
+      // (não chamamos onSelectOrigin pois precisamos de seleção manual)
+    } else if (gpsLoc) {
+      // Volta para GPS automaticamente
+      onSelectOrigin(gpsLoc, "gps");
+      setQuery("");
+      setShowResults(false);
     }
-  }, [selectedOrigin, edited]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forOtherPerson]);
 
   const handleSearch = (q: string) => {
     setQuery(q);
-    setEdited(true);
     setShowResults(true);
     if (q.length >= 2) setResults(searchLocations(q));
     else setResults(getPopularLocations("Altamira", 8));
@@ -122,7 +133,7 @@ const OriginPicker = ({
     setShowResults(false);
   };
 
-  const handleUseGps = () => {
+  const handleRetryGps = () => {
     if (!navigator.geolocation) {
       toast.error("GPS indisponível");
       return;
@@ -141,11 +152,10 @@ const OriginPicker = ({
           category: "other" as any,
           city: "Altamira",
         };
-        onSelectOrigin(loc, "gps");
-        setQuery(address);
-        setEdited(false);
+        setGpsLoc(loc);
+        setGpsAddress(address);
         setLoadingGps(false);
-        setShowResults(false);
+        if (!forOtherPerson) onSelectOrigin(loc, "gps");
       },
       () => {
         setLoadingGps(false);
@@ -155,22 +165,42 @@ const OriginPicker = ({
     );
   };
 
-  const isManual = !!selectedOrigin && !selectedOrigin.id.startsWith("gps-");
-
   return (
     <div className="space-y-3">
-      {/* Campo único de origem com autopreenchimento */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-          <div className="h-2.5 w-2.5 rounded-full bg-success shrink-0" />
-          {loadingGps && !selectedOrigin ? (
-            <div className="flex-1 flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Detectando sua localização...
-            </div>
-          ) : (
+      {/* Origem: GPS (padrão) ou busca de endereço (quando outra pessoa) */}
+      {!forOtherPerson ? (
+        <div className="flex items-center gap-3 rounded-xl bg-success/5 border border-success/30 p-3">
+          <div className="h-9 w-9 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
+            <Navigation className="h-4 w-4 text-success" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-semibold text-success uppercase tracking-wide">Sua localização</p>
+            {loadingGps ? (
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin" /> Detectando...
+              </p>
+            ) : gpsAddress ? (
+              <p className="text-sm font-medium truncate">{gpsAddress}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">Aguardando GPS</p>
+            )}
+          </div>
+          <button
+            onClick={handleRetryGps}
+            disabled={loadingGps}
+            className="text-[11px] font-semibold text-primary hover:underline disabled:opacity-50"
+          >
+            Atualizar
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
+            <div className="h-2.5 w-2.5 rounded-full bg-success shrink-0" />
             <input
               type="text"
-              placeholder="Endereço de embarque"
+              placeholder="Endereço de embarque da pessoa"
+              autoFocus
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
@@ -179,142 +209,96 @@ const OriginPicker = ({
                 if (results.length === 0) setResults(getPopularLocations("Altamira", 8));
               }}
             />
-          )}
-          {query && !loadingGps && (
-            <button onClick={() => { setQuery(""); setEdited(true); setResults(getPopularLocations("Altamira", 8)); setShowResults(true); }}>
-              <X className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-          )}
-          <button
-            onClick={handleUseGps}
-            disabled={loadingGps}
-            title="Usar minha localização"
-            className="flex items-center justify-center h-7 w-7 rounded-lg bg-primary/10 text-primary hover:bg-primary/15 transition-colors disabled:opacity-50"
-          >
-            {loadingGps ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Navigation className="h-3.5 w-3.5" />}
-          </button>
-        </div>
-
-        {showResults && (
-          <div className="rounded-xl border bg-card shadow-md max-h-52 overflow-y-auto">
-            {results.length > 0 ? results.map((loc) => (
-              <button
-                key={loc.id}
-                onClick={() => handleSelectManual(loc)}
-                className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-muted transition-colors border-b border-border/50 last:border-b-0"
-              >
-                <span className="text-lg mt-0.5">{getCategoryIcon(loc.category)}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{loc.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{loc.address} • {getCategoryLabel(loc.category)}</p>
-                </div>
-                {selectedOrigin?.id === loc.id && <Check className="h-4 w-4 text-success" />}
+            {query && (
+              <button onClick={() => { setQuery(""); setResults(getPopularLocations("Altamira", 8)); setShowResults(true); }}>
+                <X className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
-            )) : <p className="px-3 py-4 text-xs text-muted-foreground text-center">Nenhum local encontrado</p>}
-          </div>
-        )}
-
-        {selectedOrigin && !showResults && (
-          <p className="text-[10px] text-muted-foreground px-1 flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            {selectedOrigin.id.startsWith("gps-") ? "GPS detectado — você pode editar" : "Endereço selecionado"}
-          </p>
-        )}
-      </div>
-
-      {/* Atalhos rápidos */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          onClick={() => {
-            setShowResults(true);
-            setEdited(true);
-            if (results.length === 0) setResults(getPopularLocations("Altamira", 8));
-          }}
-          className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-left hover:border-primary/50 hover:bg-primary/5 transition-colors"
-        >
-          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            )}
             <Search className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold leading-tight">Outro endereço</p>
-            <p className="text-[10px] text-muted-foreground leading-tight">Buscar local</p>
-          </div>
-        </button>
-        <button
-          onClick={() => onToggleOtherPerson(!forOtherPerson)}
-          className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors ${
-            forOtherPerson ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/50 hover:bg-primary/5"
-          }`}
-        >
-          <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${forOtherPerson ? "bg-primary/15" : "bg-muted"}`}>
-            <User className={`h-4 w-4 ${forOtherPerson ? "text-primary" : "text-muted-foreground"}`} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold leading-tight">Outra pessoa</p>
-            <p className="text-[10px] text-muted-foreground leading-tight">{forOtherPerson ? "Ativado" : "Para terceiros"}</p>
-          </div>
-        </button>
-      </div>
 
-      {/* Formulário: dados do passageiro real */}
-      {forOtherPerson && (
-        <div className={`rounded-xl border p-3 transition-colors ${forOtherPerson ? "border-primary bg-primary/5" : "border-border"}`}>
-          <label className="flex items-center justify-between cursor-pointer">
-            <div className="flex items-center gap-2.5">
-              <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${forOtherPerson ? "bg-primary/15" : "bg-muted"}`}>
-                <User className={`h-4 w-4 ${forOtherPerson ? "text-primary" : "text-muted-foreground"}`} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Pedir para outra pessoa</p>
-                <p className="text-[11px] text-muted-foreground">A corrida será para outra pessoa</p>
-              </div>
-            </div>
-            <div
-              role="switch"
-              aria-checked={forOtherPerson}
-              onClick={() => onToggleOtherPerson(!forOtherPerson)}
-              className={`relative h-6 w-11 rounded-full transition-colors ${forOtherPerson ? "bg-primary" : "bg-muted-foreground/30"}`}
-            >
-              <div
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow-md transition-transform ${forOtherPerson ? "translate-x-5" : "translate-x-0.5"}`}
-              />
-            </div>
-          </label>
-
-          {forOtherPerson && (
-            <div className="mt-3 space-y-2 animate-fade-in">
-              <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5">
-                <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Nome do passageiro"
-                  value={otherPerson.name}
-                  onChange={(e) => onChangeOtherPerson({ ...otherPerson, name: e.target.value })}
-                  className="flex-1 bg-transparent text-sm outline-none"
-                />
-              </div>
-              <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5">
-                <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <input
-                  type="tel"
-                  placeholder="(00) 00000-0000"
-                  value={otherPerson.phone}
-                  onChange={(e) => onChangeOtherPerson({ ...otherPerson, phone: formatPhone(e.target.value) })}
-                  className="flex-1 bg-transparent text-sm outline-none"
-                  maxLength={15}
-                />
-                {otherPerson.phone && validatePhone(otherPerson.phone) && (
-                  <Check className="h-3.5 w-3.5 text-success" />
-                )}
-              </div>
-              {otherPerson.phone && !validatePhone(otherPerson.phone) && (
-                <p className="text-[10px] text-destructive px-1">Telefone inválido</p>
-              )}
-              <p className="text-[10px] text-muted-foreground px-1">
-                O motorista verá os dados do passageiro real
-              </p>
+          {showResults && (
+            <div className="rounded-xl border bg-card shadow-md max-h-52 overflow-y-auto">
+              {results.length > 0 ? results.map((loc) => (
+                <button
+                  key={loc.id}
+                  onClick={() => handleSelectManual(loc)}
+                  className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-muted transition-colors border-b border-border/50 last:border-b-0"
+                >
+                  <span className="text-lg mt-0.5">{getCategoryIcon(loc.category)}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{loc.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{loc.address} • {getCategoryLabel(loc.category)}</p>
+                  </div>
+                  {selectedOrigin?.id === loc.id && <Check className="h-4 w-4 text-success" />}
+                </button>
+              )) : <p className="px-3 py-4 text-xs text-muted-foreground text-center">Nenhum local encontrado</p>}
             </div>
           )}
+
+          {selectedOrigin && !selectedOrigin.id.startsWith("gps-") && !showResults && (
+            <p className="text-[10px] text-muted-foreground px-1 flex items-center gap-1">
+              <MapPin className="h-3 w-3" /> Endereço da pessoa selecionado
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Toggle: Outra pessoa */}
+      <button
+        onClick={() => onToggleOtherPerson(!forOtherPerson)}
+        className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
+          forOtherPerson ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/50"
+        }`}
+      >
+        <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${forOtherPerson ? "bg-primary/15" : "bg-muted"}`}>
+          <User className={`h-4 w-4 ${forOtherPerson ? "text-primary" : "text-muted-foreground"}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold">Pedir para outra pessoa</p>
+          <p className="text-[11px] text-muted-foreground">
+            {forOtherPerson ? "Informe endereço, nome e telefone" : "A corrida será para outra pessoa"}
+          </p>
+        </div>
+        <div className={`relative h-6 w-11 rounded-full transition-colors shrink-0 ${forOtherPerson ? "bg-primary" : "bg-muted-foreground/30"}`}>
+          <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow-md transition-transform ${forOtherPerson ? "translate-x-5" : "translate-x-0.5"}`} />
+        </div>
+      </button>
+
+      {/* Dados do passageiro real */}
+      {forOtherPerson && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2 animate-fade-in">
+          <p className="text-[11px] font-semibold text-primary">Dados do passageiro</p>
+          <div className="flex items-center gap-2 rounded-lg bg-card px-3 py-2.5 border">
+            <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <input
+              type="text"
+              placeholder="Nome do passageiro"
+              value={otherPerson.name}
+              onChange={(e) => onChangeOtherPerson({ ...otherPerson, name: e.target.value })}
+              className="flex-1 bg-transparent text-sm outline-none"
+            />
+          </div>
+          <div className="flex items-center gap-2 rounded-lg bg-card px-3 py-2.5 border">
+            <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <input
+              type="tel"
+              placeholder="(00) 00000-0000"
+              value={otherPerson.phone}
+              onChange={(e) => onChangeOtherPerson({ ...otherPerson, phone: formatPhone(e.target.value) })}
+              className="flex-1 bg-transparent text-sm outline-none"
+              maxLength={15}
+            />
+            {otherPerson.phone && validatePhone(otherPerson.phone) && (
+              <Check className="h-3.5 w-3.5 text-success" />
+            )}
+          </div>
+          {otherPerson.phone && !validatePhone(otherPerson.phone) && (
+            <p className="text-[10px] text-destructive px-1">Telefone inválido</p>
+          )}
+          <p className="text-[10px] text-muted-foreground px-1">
+            O motorista verá os dados do passageiro real para localizá-lo
+          </p>
         </div>
       )}
     </div>
