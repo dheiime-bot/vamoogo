@@ -112,27 +112,16 @@ const PassengerHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
 
-  // Calculate estimated price
-  useEffect(() => {
-    if (!selectedOrigin || !selectedDestination) {
-      setEstimatedPrice(null); setEstimatedTime(null); setEstimatedDistance(null);
-      return;
-    }
-    const distanceKm = Math.round(Math.sqrt(
-      Math.pow((selectedDestination.lat - selectedOrigin.lat) * 111, 2) +
-      Math.pow((selectedDestination.lng - selectedOrigin.lng) * 111 * Math.cos(selectedOrigin.lat * Math.PI / 180), 2)
-    ) * 10) / 10;
-    const basePrices: Record<string, number> = { moto: 5, car: 7, premium: 12 };
-    const perKm: Record<string, number> = { moto: 1.2, car: 1.8, premium: 3.0 };
-    const perMin: Record<string, number> = { moto: 0.3, car: 0.45, premium: 0.7 };
-    const durationMin = Math.round(distanceKm * 3);
-    let price = basePrices[selectedCategory] + perKm[selectedCategory] * distanceKm + perMin[selectedCategory] * durationMin;
-    price += (passengers - 1) * 2;
-    price = Math.max(price, selectedCategory === "moto" ? 8 : selectedCategory === "car" ? 12 : 20);
-    setEstimatedPrice(Math.round(price * 100) / 100);
-    setEstimatedTime(durationMin);
-    setEstimatedDistance(distanceKm);
-  }, [selectedOrigin, selectedDestination, selectedCategory, passengers]);
+  // Cálculo real de tarifa via Distance Matrix + tabela tariffs do banco
+  const fare = useFareEstimate(
+    selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng } : null,
+    selectedDestination ? { lat: selectedDestination.lat, lng: selectedDestination.lng } : null,
+    selectedCategory as "moto" | "car" | "premium",
+    passengers
+  );
+  const estimatedPrice = fare.price;
+  const estimatedTime = fare.durationMin;
+  const estimatedDistance = fare.distanceKm;
 
   const handleSearch = (query: string) => {
     if (query.length >= 2) setSearchResults(searchLocations(query));
