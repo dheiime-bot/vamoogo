@@ -233,6 +233,18 @@ const DriverHome = () => {
     ? { lat: Number(activeRide.destination_lat), lng: Number(activeRide.destination_lng), label: "Destino" }
     : null;
 
+  // Carrega nome do passageiro quando há corrida aceita
+  useEffect(() => {
+    if (!activeRide?.passenger_id) { setPassengerName(""); return; }
+    supabase.from("profiles").select("full_name").eq("user_id", activeRide.passenger_id).single()
+      .then(({ data }) => setPassengerName(data?.full_name ?? "Passageiro"));
+  }, [activeRide?.passenger_id]);
+
+  // Chat overlay (apenas quando corrida está ativa)
+  if (showChat && activeRide) {
+    return <RideChat rideId={activeRide.id} driverName={passengerName} onBack={() => setShowChat(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
