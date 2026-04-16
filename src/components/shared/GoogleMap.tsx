@@ -4,7 +4,7 @@
  * Mantém a mesma API (props) para evitar refatoração nas páginas.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { APIProvider, Map, AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
+import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { Loader2 } from "lucide-react";
 import { useGoogleMapsKey } from "@/hooks/useGoogleMapsKey";
 
