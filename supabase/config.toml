@@ -1,1 +1,4 @@
 project_id = "xsbvfwxyxgnkfkafxtaa"
+
+[functions.dispatch-ride]
+verify_jwt = false
