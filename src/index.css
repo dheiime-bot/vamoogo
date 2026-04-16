@@ -214,3 +214,22 @@
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
 }
+
+/* Limpeza visual do Google Maps:
+   - Esconde o link "Atalhos do teclado"
+   - Esconde "Dados cartográficos ©..."
+   - Esconde "Termos" / "Reportar erro no mapa"
+   Mantemos o logo do Google (exigência dos Termos de Uso da API).
+*/
+.gmap-clean .gm-style-cc,
+.gmap-clean a[href^="https://maps.google.com/maps"],
+.gmap-clean a[href*="maps.google.com/maps?ll="],
+.gmap-clean a[href*="/maps/@"],
+.gmap-clean .gmnoprint:not(.gm-bundled-control),
+.gmap-clean .gm-style-mtc,
+.gmap-clean button[title*="Atalhos"],
+.gmap-clean button[aria-label*="Atalhos"],
+.gmap-clean button[aria-label*="keyboard"] {
+  display: none !important;
+}
+

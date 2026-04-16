@@ -524,7 +524,7 @@ const GoogleMap = ({ className = "h-[300px]", ...rest }: GoogleMapProps) => {
   }
 
   return (
-    <div className={`${className} relative rounded-2xl overflow-hidden shadow-sm`}>
+    <div className={`${className} gmap-clean relative rounded-2xl overflow-hidden shadow-sm`}>
       <APIProvider apiKey={key} libraries={["places"]} language="pt-BR" region="BR">
         <GoogleMapInner {...rest} />
       </APIProvider>
