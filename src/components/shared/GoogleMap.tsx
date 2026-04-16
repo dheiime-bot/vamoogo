@@ -499,6 +499,9 @@ const GoogleMapInner = ({
       {!showRoute && <FitToPoints points={points} />}
       {onMapClick && <ClickHandler onMapClick={onMapClick} />}
       {onCenterChange && <CenterTracker onCenterChange={onCenterChange} />}
+      {interactive && (
+        <RecenterButton target={origin || animatedDriver || userLoc || null} />
+      )}
     </Map>
   );
 };
