@@ -6,6 +6,7 @@ import { Home, User, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
+import RideChat from "@/components/passenger/RideChat";
 import { toast } from "sonner";
 
 
@@ -43,6 +44,8 @@ const DriverHome = () => {
   const [todayStats, setTodayStats] = useState({ rides: 0, earnings: 0, hours: 0 });
   const [rideState, setRideState] = useState<DriverRideState>("idle");
   const [offerCountdown, setOfferCountdown] = useState(15);
+  const [showChat, setShowChat] = useState(false);
+  const [passengerName, setPassengerName] = useState<string>("");
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
@@ -230,6 +233,18 @@ const DriverHome = () => {
     ? { lat: Number(activeRide.destination_lat), lng: Number(activeRide.destination_lng), label: "Destino" }
     : null;
 
+  // Carrega nome do passageiro quando há corrida aceita
+  useEffect(() => {
+    if (!activeRide?.passenger_id) { setPassengerName(""); return; }
+    supabase.from("profiles").select("full_name").eq("user_id", activeRide.passenger_id).single()
+      .then(({ data }) => setPassengerName(data?.full_name ?? "Passageiro"));
+  }, [activeRide?.passenger_id]);
+
+  // Chat overlay (apenas quando corrida está ativa)
+  if (showChat && activeRide) {
+    return <RideChat rideId={activeRide.id} driverName={passengerName} onBack={() => setShowChat(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -401,7 +416,7 @@ const DriverHome = () => {
               className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold">
               <Phone className="h-4 w-4 text-primary" /> Ligar {activeRide.for_other_person ? "passageiro" : ""}
             </button>
-            <button className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold">
+            <button onClick={() => setShowChat(true)} className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold hover:bg-muted">
               <MessageCircle className="h-4 w-4 text-primary" /> Chat
             </button>
           </div>
