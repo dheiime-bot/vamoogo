@@ -51,27 +51,29 @@ const RouteLayer = ({
   stops: MapPoint[];
 }) => {
   const map = useMap();
-  const polylineRef = useRef<google.maps.Polyline | null>(null);
+  const routesLib = useMapsLibrary("routes");
+  const polylineRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!map || !window.google?.maps) return;
+    if (!map || !routesLib) return;
     let cancelled = false;
 
     const fetchRoute = async () => {
       try {
-        const ds = new google.maps.DirectionsService();
+        const ds = new routesLib.DirectionsService();
         const res = await ds.route({
           origin: { lat: origin.lat, lng: origin.lng },
           destination: { lat: destination.lat, lng: destination.lng },
           waypoints: stops.map((s) => ({ location: { lat: s.lat, lng: s.lng } })),
-          travelMode: google.maps.TravelMode.DRIVING,
+          travelMode: "DRIVING" as any,
         });
         if (cancelled) return;
         const path = res.routes[0]?.overview_path;
         if (!path) return;
 
         polylineRef.current?.setMap(null);
-        polylineRef.current = new google.maps.Polyline({
+        const g = (window as any).google;
+        polylineRef.current = new g.maps.Polyline({
           path,
           strokeColor: "#1E90FF",
           strokeOpacity: 0.85,
@@ -79,8 +81,8 @@ const RouteLayer = ({
           map,
         });
 
-        const bounds = new google.maps.LatLngBounds();
-        path.forEach((p) => bounds.extend(p));
+        const bounds = new g.maps.LatLngBounds();
+        path.forEach((p: any) => bounds.extend(p));
         map.fitBounds(bounds, 60);
       } catch (e) {
         console.warn("Directions error:", e);
@@ -93,7 +95,7 @@ const RouteLayer = ({
       polylineRef.current?.setMap(null);
       polylineRef.current = null;
     };
-  }, [map, origin.lat, origin.lng, destination.lat, destination.lng, stops]);
+  }, [map, routesLib, origin.lat, origin.lng, destination.lat, destination.lng, stops]);
 
   return null;
 };
