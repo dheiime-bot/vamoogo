@@ -143,7 +143,7 @@ const PassengerHome = () => {
   };
 
   // Request ride after payment method is selected
-  const handleConfirmRide = async (method: PaymentMethod) => {
+  const handleConfirmRide = async (method: PaymentMethod, coupon: AppliedCoupon | null) => {
     if (!selectedOrigin || !selectedDestination || !user) return;
     setPaymentMethod(method);
     setRideState("idle"); // Close modal temporarily
@@ -151,7 +151,8 @@ const PassengerHome = () => {
 
     const distanceKm = estimatedDistance || 0;
     const durationMin = estimatedTime || 0;
-    const price = estimatedPrice || 0;
+    const basePrice = estimatedPrice || 0;
+    const price = coupon ? Math.max(0, basePrice - coupon.discount) : basePrice;
     const platformFee = Math.round(price * 0.15 * 100) / 100;
 
     const { data, error } = await supabase.from("rides").insert({
@@ -169,6 +170,16 @@ const PassengerHome = () => {
 
     setIsRequesting(false);
     if (error) { toast.error("Erro: " + error.message); return; }
+
+    // Increment coupon usage (best-effort, non-blocking)
+    if (coupon) {
+      supabase.rpc as any; // noop type guard
+      supabase.from("coupons").select("used_count").eq("id", coupon.id).single()
+        .then(({ data: c }) => {
+          if (c) supabase.from("coupons").update({ used_count: (c.used_count || 0) + 1 }).eq("id", coupon.id).then(() => {});
+        });
+    }
+
     setRideState("searching");
     setActiveRide(data);
     toast.success("Buscando motorista mais próximo...");
