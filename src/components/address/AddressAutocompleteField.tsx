@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, MapPin, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { classifyPlace } from "@/lib/placeCategories";
 import {
   createSessionToken,
   fetchAutocomplete,
@@ -195,30 +196,53 @@ export default function AddressAutocompleteField({
 
       {open && predictions.length > 0 && (
         <div className="absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-xl border bg-popover shadow-lg animate-in fade-in-0 zoom-in-95">
-          {predictions.map((p, i) => (
-            <button
-              key={p.place_id}
-              type="button"
-              onMouseEnter={() => setHighlight(i)}
-              onClick={() => handleSelect(p)}
-              className={cn(
-                "flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors border-b border-border/40 last:border-b-0",
-                i === highlight ? "bg-accent" : "hover:bg-muted"
-              )}
-            >
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">
-                  {p.structured_formatting?.main_text || p.description}
-                </p>
-                {p.structured_formatting?.secondary_text && (
-                  <p className="truncate text-xs text-muted-foreground">
-                    {p.structured_formatting.secondary_text}
-                  </p>
+          {predictions.map((p, i) => {
+            const info = classifyPlace(p.types, p.categoryHint);
+            const Icon = info.icon;
+            return (
+              <button
+                key={p.place_id}
+                type="button"
+                onMouseEnter={() => setHighlight(i)}
+                onClick={() => handleSelect(p)}
+                className={cn(
+                  "flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors border-b border-border/40 last:border-b-0",
+                  i === highlight ? "bg-accent" : "hover:bg-muted"
                 )}
-              </div>
-            </button>
-          ))}
+              >
+                <div
+                  className={cn(
+                    "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                    info.bg
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4", info.color)} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-medium">
+                      {p.structured_formatting?.main_text || p.description}
+                    </p>
+                    {p.openNow === true && (
+                      <span className="shrink-0 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-emerald-700 dark:text-emerald-400">
+                        Aberto
+                      </span>
+                    )}
+                    {p.openNow === false && (
+                      <span className="shrink-0 rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-rose-700 dark:text-rose-400">
+                        Fechado
+                      </span>
+                    )}
+                  </div>
+                  {p.structured_formatting?.secondary_text && (
+                    <p className="truncate text-xs text-muted-foreground">
+                      {p.structured_formatting.secondary_text}
+                    </p>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
