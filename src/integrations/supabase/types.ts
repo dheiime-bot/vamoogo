@@ -163,6 +163,39 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_locations: {
+        Row: {
+          category: Database["public"]["Enums"]["vehicle_category"]
+          driver_id: string
+          heading: number | null
+          id: string
+          is_online: boolean
+          lat: number
+          lng: number
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["vehicle_category"]
+          driver_id: string
+          heading?: number | null
+          id?: string
+          is_online?: boolean
+          lat: number
+          lng: number
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["vehicle_category"]
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          is_online?: boolean
+          lat?: number
+          lng?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
           balance: number
@@ -425,6 +458,47 @@ export type Database = {
         }
         Relationships: []
       }
+      ride_offers: {
+        Row: {
+          created_at: string
+          distance_to_pickup_km: number | null
+          driver_id: string
+          expires_at: string
+          id: string
+          responded_at: string | null
+          ride_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          distance_to_pickup_km?: number | null
+          driver_id: string
+          expires_at?: string
+          id?: string
+          responded_at?: string | null
+          ride_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          distance_to_pickup_km?: number | null
+          driver_id?: string
+          expires_at?: string
+          id?: string
+          responded_at?: string | null
+          ride_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_offers_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rides: {
         Row: {
           cancelled_at: string | null
@@ -652,12 +726,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_nearest_drivers: {
+        Args: {
+          _category: Database["public"]["Enums"]["vehicle_category"]
+          _lat: number
+          _limit?: number
+          _lng: number
+          _max_km?: number
+        }
+        Returns: {
+          distance_km: number
+          driver_id: string
+          lat: number
+          lng: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      haversine_km: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
       }
     }
     Enums: {
