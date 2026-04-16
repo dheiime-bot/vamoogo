@@ -16,6 +16,14 @@ export interface PlacePrediction {
     secondary_text?: string;
   };
   types?: string[];
+  source?: "cache" | "google" | string;
+  /** Quando vem do cache local, já trazemos os dados resolvidos para evitar chamada de Details. */
+  _resolved?: {
+    lat: number;
+    lng: number;
+    address: string;
+    formattedAddress: string;
+  };
 }
 
 export interface PlaceDetails {
@@ -49,11 +57,12 @@ export async function fetchAutocomplete(params: {
   const { query, sessionToken, lat, lng } = params;
   if (!query || query.trim().length < 2) return [];
 
-  const { data, error } = await supabase.functions.invoke("google-places", {
+  // Usa search-places: cache local + fallback Google
+  const { data, error } = await supabase.functions.invoke("search-places", {
     body: { query, sessionToken, lat, lng },
   });
   if (error) {
-    console.error("[googlePlaces] autocomplete error:", error);
+    console.error("[googlePlaces] search-places error:", error);
     return [];
   }
   return (data?.predictions ?? []) as PlacePrediction[];
@@ -66,6 +75,17 @@ export async function fetchPlaceDetails(params: {
   prediction?: PlacePrediction;
 }): Promise<PlaceDetails | null> {
   const { placeId, sessionToken, prediction } = params;
+
+  // Atalho: se a prediction veio do cache local, já temos os dados resolvidos.
+  if (prediction?._resolved) {
+    return {
+      address: prediction._resolved.address,
+      formattedAddress: prediction._resolved.formattedAddress,
+      placeId,
+      lat: prediction._resolved.lat,
+      lng: prediction._resolved.lng,
+    };
+  }
 
   const { data, error } = await supabase.functions.invoke("google-places", {
     body: { placeId, sessionToken },
