@@ -8,7 +8,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
-import { Loader2 } from "lucide-react";
+import { Loader2, LocateFixed } from "lucide-react";
 import { useGoogleMapsKey } from "@/hooks/useGoogleMapsKey";
 
 interface MapPoint {
