@@ -59,7 +59,7 @@ const PassengerHome = () => {
       .then(({ data }) => { if (data) setRecentRides(data); });
   }, [user]);
 
-  // Realtime ride updates
+  // Realtime: updates da corrida + posição do motorista
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -69,12 +69,9 @@ const PassengerHome = () => {
         setActiveRide(ride);
 
         if (ride.status === "accepted" && ride.driver_id) {
-          // Fetch driver info
           const { data: driver } = await supabase.from("drivers").select("*").eq("user_id", ride.driver_id).single();
           const { data: driverProfile } = await supabase.from("profiles").select("*").eq("user_id", ride.driver_id).single();
-          if (driver && driverProfile) {
-            setDriverInfo({ ...driver, profile: driverProfile });
-          }
+          if (driver && driverProfile) setDriverInfo({ ...driver, profile: driverProfile });
           setRideState("driver_arriving");
           toast.success("Motorista a caminho! 🚗");
         } else if (ride.status === "in_progress") {
@@ -82,17 +79,40 @@ const PassengerHome = () => {
           toast.success("Corrida iniciada!");
         } else if (ride.status === "completed") {
           setRideState("completed");
+          setDriverLocation(null);
           toast.success("Corrida finalizada!");
         } else if (ride.status === "cancelled") {
           setRideState("idle");
           setActiveRide(null);
           setDriverInfo(null);
           setPaymentMethod(null);
-          toast.error("Corrida cancelada");
+          setDriverLocation(null);
+          toast.error("Não encontramos motorista disponível");
         }
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
+
+  // Realtime: posição GPS do motorista durante a corrida
+  useEffect(() => {
+    if (!activeRide?.driver_id || !["accepted", "in_progress"].includes(activeRide.status)) return;
+    const driverId = activeRide.driver_id;
+
+    // Fetch inicial
+    supabase.from("driver_locations").select("lat,lng").eq("driver_id", driverId).maybeSingle()
+      .then(({ data }) => { if (data) setDriverLocation({ lat: Number(data.lat), lng: Number(data.lng) }); });
+
+    const channel = supabase
+      .channel(`driver-location-${driverId}`)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "driver_locations", filter: `driver_id=eq.${driverId}` },
+        (payload) => {
+          const loc = payload.new as any;
+          if (loc?.lat && loc?.lng) setDriverLocation({ lat: Number(loc.lat), lng: Number(loc.lng) });
+        })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeRide?.driver_id, activeRide?.status]);
 
   // Calculate estimated price
   useEffect(() => {
