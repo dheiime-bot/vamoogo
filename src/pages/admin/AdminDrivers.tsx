@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Search, Ban, CheckCircle, XCircle } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StatusBadge from "@/components/shared/StatusBadge";
+import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -9,11 +10,12 @@ const AdminDrivers = () => {
   const [drivers, setDrivers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedDriver, setSelectedDriver] = useState<any>(null);
 
   const fetchDrivers = async () => {
     const { data } = await supabase
       .from("drivers")
-      .select("*, profiles!inner(full_name, cpf, phone, email)")
+      .select("*, profiles!inner(full_name, cpf, phone, email, selfie_url)")
       .order("created_at", { ascending: false });
     if (data) setDrivers(data);
   };
@@ -22,13 +24,15 @@ const AdminDrivers = () => {
 
   const updateStatus = async (userId: string, status: "pending" | "approved" | "rejected" | "blocked") => {
     await supabase.from("drivers").update({ status }).eq("user_id", userId);
-    toast.success(`Status atualizado para ${status}`);
+    const labels = { approved: "aprovado", rejected: "reprovado", blocked: "bloqueado", pending: "pendente" };
+    toast.success(`Motorista ${labels[status]}`);
+    setSelectedDriver(null);
     fetchDrivers();
   };
 
   const filtered = drivers.filter((d) => {
     const profile = (d as any).profiles;
-    const matchSearch = !search || 
+    const matchSearch = !search ||
       profile?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       profile?.cpf?.includes(search);
     const matchStatus = filterStatus === "all" || d.status === filterStatus;
@@ -46,10 +50,10 @@ const AdminDrivers = () => {
           <Search className="h-4 w-4 text-muted-foreground" />
           <input placeholder="Buscar por nome ou CPF..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" />
         </div>
-        <div className="flex gap-1">
-          {["all", "pending", "approved", "blocked"].map((s) => (
+        <div className="flex gap-1 flex-wrap">
+          {["all", "pending", "approved", "rejected", "blocked"].map((s) => (
             <button key={s} onClick={() => setFilterStatus(s)} className={`rounded-lg px-3 py-2 text-xs font-medium ${filterStatus === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {s === "all" ? "Todos" : s === "pending" ? "Pendentes" : s === "approved" ? "Aprovados" : "Bloqueados"}
+              {s === "all" ? "Todos" : s === "pending" ? "Pendentes" : s === "approved" ? "Aprovados" : s === "rejected" ? "Reprovados" : "Bloqueados"}
             </button>
           ))}
         </div>
@@ -73,7 +77,7 @@ const AdminDrivers = () => {
               {filtered.map((d) => {
                 const profile = (d as any).profiles;
                 return (
-                  <tr key={d.id} className="hover:bg-muted/30 transition-colors">
+                  <tr key={d.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedDriver(d)}>
                     <td className="px-4 py-3">
                       <p className="font-medium">{profile?.full_name || "—"}</p>
                       <p className="text-xs text-muted-foreground">{profile?.phone || ""}</p>
@@ -84,11 +88,9 @@ const AdminDrivers = () => {
                     <td className="px-4 py-3">{d.total_rides || 0}</td>
                     <td className="px-4 py-3"><StatusBadge status={statusMap[d.status] || "pending"} /></td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        <button onClick={() => updateStatus(d.user_id, "approved")} className="rounded-lg p-1.5 hover:bg-success/10" title="Aprovar"><CheckCircle className="h-4 w-4 text-success" /></button>
-                        <button onClick={() => updateStatus(d.user_id, "rejected")} className="rounded-lg p-1.5 hover:bg-warning/10" title="Reprovar"><XCircle className="h-4 w-4 text-warning" /></button>
-                        <button onClick={() => updateStatus(d.user_id, "blocked")} className="rounded-lg p-1.5 hover:bg-destructive/10" title="Bloquear"><Ban className="h-4 w-4 text-destructive" /></button>
-                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); setSelectedDriver(d); }} className="rounded-lg p-1.5 hover:bg-primary/10" title="Ver detalhes">
+                        <Eye className="h-4 w-4 text-primary" />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -100,7 +102,7 @@ const AdminDrivers = () => {
           {filtered.map((d) => {
             const profile = (d as any).profiles;
             return (
-              <div key={d.id} className="p-4">
+              <button key={d.id} onClick={() => setSelectedDriver(d)} className="w-full p-4 text-left hover:bg-muted/30 transition-colors">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <p className="font-medium">{profile?.full_name || "—"}</p>
@@ -108,17 +110,21 @@ const AdminDrivers = () => {
                   </div>
                   <StatusBadge status={statusMap[d.status] || "pending"} />
                 </div>
-                <div className="flex gap-1">
-                  <button onClick={() => updateStatus(d.user_id, "approved")} className="rounded-lg p-1.5 bg-success/10"><CheckCircle className="h-4 w-4 text-success" /></button>
-                  <button onClick={() => updateStatus(d.user_id, "rejected")} className="rounded-lg p-1.5 bg-warning/10"><XCircle className="h-4 w-4 text-warning" /></button>
-                  <button onClick={() => updateStatus(d.user_id, "blocked")} className="rounded-lg p-1.5 bg-destructive/10"><Ban className="h-4 w-4 text-destructive" /></button>
-                </div>
-              </div>
+                <p className="text-xs text-primary flex items-center gap-1"><Eye className="h-3 w-3" /> Toque para ver detalhes</p>
+              </button>
             );
           })}
         </div>
         {filtered.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">Nenhum motorista encontrado</p>}
       </div>
+
+      {selectedDriver && (
+        <DriverDetailsModal
+          driver={selectedDriver}
+          onClose={() => setSelectedDriver(null)}
+          onAction={(status) => updateStatus(selectedDriver.user_id, status)}
+        />
+      )}
     </AdminLayout>
   );
 };
