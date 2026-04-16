@@ -125,7 +125,7 @@ const AppSidebar = () => {
         )}
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
