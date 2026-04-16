@@ -101,7 +101,11 @@ export const useFareEstimate = (
         };
 
         // 2) Sequência completa de pontos: origem → paradas → destino
-        const sequence: Point[] = [origin, ...waypoints, destination];
+        const validWaypoints = waypoints.filter(
+          (w) => w && typeof w.lat === "number" && typeof w.lng === "number" && !isNaN(w.lat) && !isNaN(w.lng)
+        );
+        const sequence: Point[] = [origin, ...validWaypoints, destination];
+        console.log("[useFareEstimate] sequência:", sequence.length, "pontos •", validWaypoints.length, "paradas");
 
         // 3) Tentar Distance Matrix por trecho (somando). Fallback: haversine + estimativa.
         let km: number | null = null;

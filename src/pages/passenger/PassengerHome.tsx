@@ -558,8 +558,13 @@ const PassengerHome = () => {
                 <div className="flex items-center justify-between rounded-xl bg-primary/5 border border-primary/20 p-3">
                   <div>
                     <span className="text-sm font-medium">Valor estimado</span>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Navigation className="h-3 w-3" /> {estimatedDistance} km • ~{estimatedTime} min
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <span className="flex items-center gap-1"><Navigation className="h-3 w-3" /> {estimatedDistance} km • ~{estimatedTime} min</span>
+                      {selectedStops.filter((s) => !!s).length > 0 && (
+                        <span className="rounded-full bg-warning/15 text-warning px-2 py-0.5 font-semibold">
+                          +{selectedStops.filter((s) => !!s).length} parada{selectedStops.filter((s) => !!s).length > 1 ? "s" : ""} incluída{selectedStops.filter((s) => !!s).length > 1 ? "s" : ""}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <span className="text-xl font-extrabold text-primary">R$ {estimatedPrice.toFixed(2)}</span>
