@@ -61,6 +61,7 @@ const App = () => (
             <Route path="/admin/coupons" element={<AdminCoupons />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/audit" element={<AdminAudit />} />
+            <Route path="/test-autocomplete" element={<TestAutocomplete />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
