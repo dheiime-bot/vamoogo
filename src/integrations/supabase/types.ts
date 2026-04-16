@@ -89,6 +89,41 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          ride_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          ride_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          ride_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           active: boolean
@@ -410,6 +445,7 @@ export type Database = {
           origin_lng: number | null
           passenger_count: number
           passenger_id: string
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
           platform_fee: number | null
           price: number | null
           rating: number | null
@@ -437,6 +473,7 @@ export type Database = {
           origin_lng?: number | null
           passenger_count?: number
           passenger_id: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
           platform_fee?: number | null
           price?: number | null
           rating?: number | null
@@ -464,6 +501,7 @@ export type Database = {
           origin_lng?: number | null
           passenger_count?: number
           passenger_id?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
           platform_fee?: number | null
           price?: number | null
           rating?: number | null
@@ -626,6 +664,7 @@ export type Database = {
       app_role: "admin" | "driver" | "passenger"
       driver_status: "pending" | "approved" | "rejected" | "blocked"
       fraud_severity: "light" | "moderate" | "probable"
+      payment_method: "cash" | "pix" | "debit" | "credit"
       recharge_method: "pix" | "card"
       recharge_status: "pending" | "completed" | "failed"
       ride_status:
@@ -767,6 +806,7 @@ export const Constants = {
       app_role: ["admin", "driver", "passenger"],
       driver_status: ["pending", "approved", "rejected", "blocked"],
       fraud_severity: ["light", "moderate", "probable"],
+      payment_method: ["cash", "pix", "debit", "credit"],
       recharge_method: ["pix", "card"],
       recharge_status: ["pending", "completed", "failed"],
       ride_status: [
