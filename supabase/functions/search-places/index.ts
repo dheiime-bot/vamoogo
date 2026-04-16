@@ -6,6 +6,7 @@
 // 2. Cache local DB (tabela `places`) — só usa hits muito fortes (similarity >= 0.65)
 // 3. Google Places API (New) v1 — searchText + autocomplete em paralelo
 //    - searchText: campeão para POIs ("Mix Mateus", "Atacadão", restaurantes)
+//      → retorna openNow, types completos, endereço formatado
 //    - autocomplete: campeão para endereços/ruas
 // 4. Aprende: salva os melhores POIs no cache para acelerar próximas buscas
 //
@@ -34,7 +35,6 @@ function memGet(key: string) {
 
 function memSet(key: string, data: any) {
   if (memCache.size >= MAX_MEM_ENTRIES) {
-    // remove o mais antigo
     const firstKey = memCache.keys().next().value;
     if (firstKey) memCache.delete(firstKey);
   }
@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
 
     if (!apiKey) {
       const { data: cacheRows } = await cacheRpc;
-      const cachePredictions = (cacheRows ?? []).map((r: any) => buildCachePrediction(r));
+      const cachePredictions = (cacheRows ?? []).map(buildCachePrediction);
       const payload = { predictions: cachePredictions, source: "cache_only" };
       memSet(cacheKey, payload);
       return new Response(JSON.stringify(payload), {
@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.shortFormattedAddress",
+          "places.id,places.displayName,places.formattedAddress,places.shortFormattedAddress,places.location,places.types,places.currentOpeningHours.openNow,places.businessStatus",
       },
       body: JSON.stringify({
         textQuery: q,
@@ -139,25 +139,30 @@ Deno.serve(async (req) => {
     const cachePredictions = strongCache.map(buildCachePrediction);
 
     // SearchText (New API) → predictions
-    const textPredictions = ((textRes as any)?.places ?? []).map((p: any) => {
-      const name = p.displayName?.text ?? "";
-      const fullAddr = p.formattedAddress ?? p.shortFormattedAddress ?? "";
-      const loc = p.location;
-      if (!loc?.latitude || !loc?.longitude) return null;
-      return {
-        place_id: p.id,
-        description: `${name} — ${fullAddr}`,
-        structured_formatting: { main_text: name, secondary_text: fullAddr },
-        _resolved: {
-          lat: loc.latitude,
-          lng: loc.longitude,
-          address: name,
-          formattedAddress: fullAddr,
-        },
-        types: p.types ?? [],
-        source: "google_textsearch",
-      };
-    }).filter(Boolean);
+    const textPredictions = ((textRes as any)?.places ?? [])
+      .filter((p: any) => p.businessStatus !== "CLOSED_PERMANENTLY")
+      .map((p: any) => {
+        const name = p.displayName?.text ?? "";
+        const fullAddr = p.formattedAddress ?? p.shortFormattedAddress ?? "";
+        const loc = p.location;
+        if (!loc?.latitude || !loc?.longitude) return null;
+        const openNow = p.currentOpeningHours?.openNow;
+        return {
+          place_id: p.id,
+          description: `${name} — ${fullAddr}`,
+          structured_formatting: { main_text: name, secondary_text: fullAddr },
+          _resolved: {
+            lat: loc.latitude,
+            lng: loc.longitude,
+            address: name,
+            formattedAddress: fullAddr,
+          },
+          types: p.types ?? [],
+          openNow: typeof openNow === "boolean" ? openNow : null,
+          source: "google_textsearch",
+        };
+      })
+      .filter(Boolean);
 
     const autoPredictions = ((autoRes as any)?.predictions ?? []).map((p: any) => ({
       ...p,
@@ -235,6 +240,7 @@ function buildCachePrediction(r: any) {
       formattedAddress: r.address,
     },
     types: [r.category ?? "other"],
+    categoryHint: r.category ?? null,
     source: "cache",
   };
 }
