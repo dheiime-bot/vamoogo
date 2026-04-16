@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Ban, CheckCircle } from "lucide-react";
+import { Search, Ban, CheckCircle, XCircle } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
