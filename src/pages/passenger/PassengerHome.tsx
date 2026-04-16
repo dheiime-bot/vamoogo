@@ -266,17 +266,6 @@ const PassengerHome = () => {
           trackUserLocation={!selectedOrigin}
           showRoute={!!selectedOrigin && !!effectiveDestination}
         />
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 rounded-full bg-card/90 backdrop-blur-md px-3 py-1.5 shadow-md">
-          <MapPin className="h-3.5 w-3.5 text-primary" />
-          <span className="text-xs font-medium">Altamira, PA</span>
-        </div>
-        {isRideActive && estimatedTime && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 rounded-full bg-primary px-4 py-1.5 shadow-glow">
-            <span className="text-xs font-bold text-primary-foreground">
-              {rideState === "searching" ? "Buscando..." : `Chegada em ${estimatedTime} min`}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Bottom sheet */}

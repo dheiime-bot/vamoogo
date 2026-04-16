@@ -8,7 +8,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
-import { Loader2 } from "lucide-react";
+import { Loader2, LocateFixed } from "lucide-react";
 import { useGoogleMapsKey } from "@/hooks/useGoogleMapsKey";
 
 interface MapPoint {
@@ -387,6 +387,44 @@ const MapStyler = () => {
   return null;
 };
 
+/** Botão flutuante para recentralizar o mapa em um ponto preferido. */
+const RecenterButton = ({ target }: { target: MapPoint | null }) => {
+  const map = useMap();
+
+  const handleClick = () => {
+    if (!map) return;
+    if (target) {
+      map.panTo({ lat: target.lat, lng: target.lng });
+      map.setZoom(16);
+      return;
+    }
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          map.panTo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          map.setZoom(16);
+        },
+        () => {
+          map.panTo(ALTAMIRA_CENTER);
+          map.setZoom(14);
+        },
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-label="Recentralizar mapa"
+      className="absolute bottom-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-lg ring-1 ring-border hover:bg-muted transition-colors active:scale-95"
+    >
+      <LocateFixed className="h-5 w-5 text-primary" />
+    </button>
+  );
+};
+
 /* ---------- Mapa principal ---------- */
 
 const GoogleMapInner = ({
@@ -461,6 +499,9 @@ const GoogleMapInner = ({
       {!showRoute && <FitToPoints points={points} />}
       {onMapClick && <ClickHandler onMapClick={onMapClick} />}
       {onCenterChange && <CenterTracker onCenterChange={onCenterChange} />}
+      {interactive && (
+        <RecenterButton target={origin || animatedDriver || userLoc || null} />
+      )}
     </Map>
   );
 };
