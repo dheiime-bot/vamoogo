@@ -109,7 +109,9 @@ const FitToPoints = ({ points }: { points: MapPoint[] }) => {
       map.setZoom(14);
       return;
     }
-    const bounds = new google.maps.LatLngBounds();
+    const g = (window as any).google;
+    if (!g) return;
+    const bounds = new g.maps.LatLngBounds();
     points.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }));
     map.fitBounds(bounds, 60);
   }, [map, points]);
@@ -120,7 +122,7 @@ const ClickHandler = ({ onMapClick }: { onMapClick: (lat: number, lng: number) =
   const map = useMap();
   useEffect(() => {
     if (!map) return;
-    const listener = map.addListener("click", (e: google.maps.MapMouseEvent) => {
+    const listener = map.addListener("click", (e: any) => {
       if (e.latLng) onMapClick(e.latLng.lat(), e.latLng.lng());
     });
     return () => listener.remove();
