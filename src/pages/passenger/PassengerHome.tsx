@@ -54,6 +54,7 @@ const PassengerHome = () => {
   const [originType, setOriginType] = useState<OriginType>("gps");
   const [forOtherPerson, setForOtherPerson] = useState(false);
   const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
+  const [returnToOrigin, setReturnToOrigin] = useState(false);
 
   // Fetch recent rides
   useEffect(() => {
@@ -117,13 +118,21 @@ const PassengerHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
 
+  const confirmedStops = selectedStops.filter((s): s is CityLocation => !!s);
+  const effectiveStops = returnToOrigin && selectedOrigin && selectedDestination
+    ? [...confirmedStops, selectedDestination]
+    : confirmedStops;
+  const effectiveDestination = returnToOrigin && selectedOrigin && selectedDestination
+    ? selectedOrigin
+    : selectedDestination;
+
   // Cálculo real de tarifa via Distance Matrix + tabela tariffs do banco
   const fare = useFareEstimate(
     selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng } : null,
-    selectedDestination ? { lat: selectedDestination.lat, lng: selectedDestination.lng } : null,
+    effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng } : null,
     selectedCategory as "moto" | "car" | "premium",
     passengers,
-    selectedStops.filter((s): s is CityLocation => !!s).map((s) => ({ lat: s.lat, lng: s.lng }))
+    effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng }))
   );
   const estimatedPrice = fare.price;
   const estimatedTime = fare.durationMin;
@@ -172,14 +181,14 @@ const PassengerHome = () => {
       passenger_id: user.id,
       origin_address: `${selectedOrigin.name} - ${selectedOrigin.address}`,
       origin_lat: selectedOrigin.lat, origin_lng: selectedOrigin.lng,
-      destination_address: `${selectedDestination.name} - ${selectedDestination.address}`,
-      destination_lat: selectedDestination.lat, destination_lng: selectedDestination.lng,
+      destination_address: `${effectiveDestination.name} - ${effectiveDestination.address}`,
+      destination_lat: effectiveDestination.lat, destination_lng: effectiveDestination.lng,
       category: selectedCategory as "moto" | "car" | "premium",
       passenger_count: passengers, distance_km: distanceKm, duration_minutes: durationMin,
       price, platform_fee: platformFee, driver_net: price - platformFee,
       payment_method: method as any,
-      stops: selectedStops.filter((s): s is CityLocation => !!s).length > 0
-        ? selectedStops.filter((s): s is CityLocation => !!s).map((s) => ({ name: s.name, address: s.address, lat: s.lat, lng: s.lng }))
+      stops: effectiveStops.length > 0
+        ? effectiveStops.map((s) => ({ name: s.name, address: s.address, lat: s.lat, lng: s.lng }))
         : null,
       origin_type: originType,
       for_other_person: forOtherPerson,
@@ -226,7 +235,7 @@ const PassengerHome = () => {
     setSelectedOrigin(null); setSelectedDestination(null); setOrigin(""); setDestination("");
     setStops([]); setSelectedStops([]);
     setDriverInfo(null); setPaymentMethod(null);
-    setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps");
+    setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps"); setReturnToOrigin(false);
   };
 
   const showSuggestions = activeInput !== null;
@@ -250,11 +259,11 @@ const PassengerHome = () => {
         <GoogleMap
           className="h-[40vh] rounded-none"
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
-          destination={selectedDestination ? { lat: selectedDestination.lat, lng: selectedDestination.lng, label: selectedDestination.name } : null}
-          stops={selectedStops.filter((s): s is CityLocation => !!s).map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
+          destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
+          stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
           driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
           trackUserLocation={!selectedOrigin}
-          showRoute={!!selectedOrigin && !!selectedDestination}
+          showRoute={!!selectedOrigin && !!effectiveDestination}
         />
         <div className="absolute top-4 left-4 z-10 flex items-center gap-2 rounded-full bg-card/90 backdrop-blur-md px-3 py-1.5 shadow-md">
           <MapPin className="h-3.5 w-3.5 text-primary" />
@@ -482,29 +491,23 @@ const PassengerHome = () => {
                   <button onClick={() => { setStops([...stops, ""]); setSelectedStops([...selectedStops, null]); }} className="flex items-center gap-2 text-xs font-medium text-primary">
                     <Plus className="h-3.5 w-3.5" /> Adicionar parada
                   </button>
-                  {selectedOrigin && (
+                  {selectedOrigin && selectedDestination && (
                     <button
                       onClick={() => {
-                        // Cria uma parada de "retorno à origem" como ponto final intermediário
-                        // (a corrida segue: origem → destino → origem)
-                        const returnStop: CityLocation = {
-                          ...selectedOrigin,
-                          id: `return-${Date.now()}`,
-                          name: `Retornar: ${selectedOrigin.name}`,
-                        };
-                        if (!selectedDestination) {
-                          // Sem destino ainda → vira o próprio destino (ida e volta direta seria origem=destino, então adicionamos como parada após o destino real)
-                          toast.info("Defina primeiro o destino, depois adicione o retorno");
-                          return;
-                        }
-                        setStops([...stops, returnStop.name]);
-                        setSelectedStops([...selectedStops, returnStop]);
-                        toast.success("Retorno à origem adicionado");
+                        setReturnToOrigin((prev) => {
+                          const next = !prev;
+                          toast.success(next ? "Retorno à origem ativado" : "Retorno à origem removido");
+                          return next;
+                        });
                       }}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-success rounded-lg bg-success/10 px-2.5 py-1.5 hover:bg-success/15 transition-colors"
-                      title="Adicionar retorno ao ponto de embarque"
+                      className={`flex items-center gap-1.5 text-xs font-semibold rounded-lg px-2.5 py-1.5 transition-colors ${
+                        returnToOrigin
+                          ? "bg-success/15 text-success ring-1 ring-success/30"
+                          : "text-success bg-success/10 hover:bg-success/15"
+                      }`}
+                      title="Fazer ida e volta, encerrando novamente na origem"
                     >
-                      <Navigation className="h-3 w-3" /> Voltar à origem
+                      <Navigation className="h-3 w-3" /> {returnToOrigin ? "Remover retorno" : "Voltar à origem"}
                     </button>
                   )}
                 </div>
@@ -560,9 +563,14 @@ const PassengerHome = () => {
                     <span className="text-sm font-medium">Valor estimado</span>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-0.5">
                       <span className="flex items-center gap-1"><Navigation className="h-3 w-3" /> {estimatedDistance} km • ~{estimatedTime} min</span>
-                      {selectedStops.filter((s) => !!s).length > 0 && (
+                      {confirmedStops.length > 0 && (
                         <span className="rounded-full bg-warning/15 text-warning px-2 py-0.5 font-semibold">
-                          +{selectedStops.filter((s) => !!s).length} parada{selectedStops.filter((s) => !!s).length > 1 ? "s" : ""} incluída{selectedStops.filter((s) => !!s).length > 1 ? "s" : ""}
+                          +{confirmedStops.length} parada{confirmedStops.length > 1 ? "s" : ""} incluída{confirmedStops.length > 1 ? "s" : ""}
+                        </span>
+                      )}
+                      {returnToOrigin && (
+                        <span className="rounded-full bg-success/10 px-2 py-0.5 font-semibold text-success">
+                          ida e volta
                         </span>
                       )}
                     </div>
@@ -608,7 +616,7 @@ const PassengerHome = () => {
         onClose={() => setRideState("idle")}
         onConfirm={handleConfirmRide}
         originName={selectedOrigin?.name || ""}
-        destinationName={selectedDestination?.name || ""}
+        destinationName={returnToOrigin && selectedDestination ? `${selectedDestination.name} + retorno` : selectedDestination?.name || ""}
         distanceKm={estimatedDistance || 0}
         durationMin={estimatedTime || 0}
         estimatedPrice={estimatedPrice || 0}
