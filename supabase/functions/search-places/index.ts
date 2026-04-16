@@ -1,10 +1,13 @@
 // Edge function: search-places
-// Estratégia híbrida para encontrar endereços E estabelecimentos populares (ex: "Mix Mateus"):
-// 1. Cache local (tabela `places`) — só usa se houver match muito forte (similarity >= 0.6)
-// 2. Google Places Text Search — ótimo para nomes de estabelecimentos (POIs)
-// 3. Google Places Autocomplete — ótimo para endereços/ruas
+// Otimizada para máxima precisão em endereços E estabelecimentos populares.
 //
-// Mescla resultados priorizando POIs (estabelecimentos) quando o usuário está digitando um nome.
+// Estratégia:
+// 1. Cache em memória (TTL 60s) — respostas instantâneas para queries repetidas
+// 2. Cache local DB (tabela `places`) — só usa hits muito fortes (similarity >= 0.65)
+// 3. Google Places API (New) v1 — searchText + autocomplete em paralelo
+//    - searchText: campeão para POIs ("Mix Mateus", "Atacadão", restaurantes)
+//    - autocomplete: campeão para endereços/ruas
+// 4. Aprende: salva os melhores POIs no cache para acelerar próximas buscas
 //
 // POST body: { query: string, lat?: number, lng?: number, sessionToken?: string }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -14,13 +17,49 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Cache em memória (instância da edge function viva)
+const memCache = new Map<string, { at: number; data: any }>();
+const MEM_TTL_MS = 60_000;
+const MAX_MEM_ENTRIES = 200;
+
+function memGet(key: string) {
+  const hit = memCache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > MEM_TTL_MS) {
+    memCache.delete(key);
+    return null;
+  }
+  return hit.data;
+}
+
+function memSet(key: string, data: any) {
+  if (memCache.size >= MAX_MEM_ENTRIES) {
+    // remove o mais antigo
+    const firstKey = memCache.keys().next().value;
+    if (firstKey) memCache.delete(firstKey);
+  }
+  memCache.set(key, { at: Date.now(), data });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const { query, lat, lng, sessionToken } = await req.json();
-    if (!query || typeof query !== "string" || query.trim().length < 2) {
+    const q = (query ?? "").toString().trim();
+    if (q.length < 2) {
       return new Response(JSON.stringify({ predictions: [], source: "none" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const hasLoc = typeof lat === "number" && typeof lng === "number";
+    const cacheKey = `${q.toLowerCase()}|${hasLoc ? `${lat.toFixed(2)},${lng.toFixed(2)}` : "noloc"}`;
+
+    // 1. Memory cache hit
+    const cached = memGet(cacheKey);
+    if (cached) {
+      return new Response(JSON.stringify({ ...cached, source: "memcache" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -30,95 +69,107 @@ Deno.serve(async (req) => {
     const sb = createClient(SUPABASE_URL, ANON);
     const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY");
 
-    const hasLoc = typeof lat === "number" && typeof lng === "number";
-
-    // 1. Cache local — só usa hits realmente fortes
-    const { data: cacheRows, error: cacheErr } = await sb.rpc("search_places", {
-      _query: query,
+    // 2. Cache local DB (em paralelo com Google)
+    const cacheRpc = sb.rpc("search_places", {
+      _query: q,
       _lat: hasLoc ? lat : null,
       _lng: hasLoc ? lng : null,
       _limit: 5,
       _max_km: 50,
     });
-    if (cacheErr) console.error("search_places rpc error:", cacheErr);
-
-    const strongCache = (cacheRows ?? []).filter((r: any) => (r.similarity ?? 0) >= 0.55);
-
-    const cachePredictions = strongCache.map((r: any) => ({
-      place_id: r.google_place_id ?? `local:${r.id}`,
-      description: `${r.name} — ${r.address}`,
-      structured_formatting: { main_text: r.name, secondary_text: r.address },
-      _resolved: {
-        lat: r.lat,
-        lng: r.lng,
-        address: r.name,
-        formattedAddress: r.address,
-      },
-      types: [r.category ?? "other"],
-      source: "cache",
-    }));
 
     if (!apiKey) {
-      return new Response(JSON.stringify({ predictions: cachePredictions, source: "cache_only" }), {
+      const { data: cacheRows } = await cacheRpc;
+      const cachePredictions = (cacheRows ?? []).map((r: any) => buildCachePrediction(r));
+      const payload = { predictions: cachePredictions, source: "cache_only" };
+      memSet(cacheKey, payload);
+      return new Response(JSON.stringify(payload), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // 2. Google Places Text Search (POIs / estabelecimentos)
-    // Muito melhor que autocomplete para "Mix Mateus", "Atacadão", etc.
-    const locationBias = hasLoc ? `&location=${lat},${lng}&radius=30000` : "";
-    const textSearchUrl =
-      `https://maps.googleapis.com/maps/api/place/textsearch/json` +
-      `?query=${encodeURIComponent(query)}` +
-      locationBias +
-      `&language=pt-BR&region=br` +
-      `&key=${apiKey}`;
+    // 3. Google Places API (New) v1 — searchText (POIs) + Autocomplete legacy (endereços) em paralelo
+    const locationBias = hasLoc
+      ? { circle: { center: { latitude: lat, longitude: lng }, radius: 30000 } }
+      : undefined;
 
-    // 3. Google Places Autocomplete (endereços/ruas)
+    // SearchText (New API) — muito superior para estabelecimentos
+    const searchTextPromise = fetch("https://places.googleapis.com/v1/places:searchText", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask":
+          "places.id,places.displayName,places.formattedAddress,places.location,places.types,places.shortFormattedAddress",
+      },
+      body: JSON.stringify({
+        textQuery: q,
+        languageCode: "pt-BR",
+        regionCode: "BR",
+        maxResultCount: 6,
+        ...(locationBias ? { locationBias } : {}),
+      }),
+    })
+      .then((r) => r.json())
+      .catch((e) => ({ error: String(e) }));
+
+    // Autocomplete legacy — campeão para endereços/ruas (mais barato)
     const sessionParam = sessionToken ? `&sessiontoken=${encodeURIComponent(sessionToken)}` : "";
+    const locParam = hasLoc ? `&location=${lat},${lng}&radius=30000` : "";
     const autocompleteUrl =
       `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
-      `?input=${encodeURIComponent(query)}` +
-      locationBias +
+      `?input=${encodeURIComponent(q)}` +
+      locParam +
       `&language=pt-BR&components=country:br` +
       sessionParam +
       `&key=${apiKey}`;
+    const autocompletePromise = fetch(autocompleteUrl)
+      .then((r) => r.json())
+      .catch((e) => ({ error: String(e) }));
 
-    // Executa em paralelo
-    const [textRes, autoRes] = await Promise.all([
-      fetch(textSearchUrl).then((r) => r.json()).catch((e) => ({ error: String(e) })),
-      fetch(autocompleteUrl).then((r) => r.json()).catch((e) => ({ error: String(e) })),
+    const [cacheRes, textRes, autoRes] = await Promise.all([
+      cacheRpc,
+      searchTextPromise,
+      autocompletePromise,
     ]);
 
-    // Converte resultados do Text Search em predictions (já trazem dados resolvidos!)
-    const textPredictions = (textRes?.results ?? []).slice(0, 5).map((r: any) => ({
-      place_id: r.place_id,
-      description: `${r.name} — ${r.formatted_address}`,
-      structured_formatting: {
-        main_text: r.name,
-        secondary_text: r.formatted_address,
-      },
-      _resolved: {
-        lat: r.geometry?.location?.lat,
-        lng: r.geometry?.location?.lng,
-        address: r.name,
-        formattedAddress: r.formatted_address,
-      },
-      types: r.types ?? [],
-      source: "google_textsearch",
-    })).filter((p: any) => p._resolved.lat && p._resolved.lng);
+    if (cacheRes.error) console.error("cache rpc:", cacheRes.error);
 
-    const autoPredictions = (autoRes?.predictions ?? []).map((p: any) => ({
+    const strongCache = (cacheRes.data ?? []).filter((r: any) => (r.similarity ?? 0) >= 0.65);
+    const cachePredictions = strongCache.map(buildCachePrediction);
+
+    // SearchText (New API) → predictions
+    const textPredictions = ((textRes as any)?.places ?? []).map((p: any) => {
+      const name = p.displayName?.text ?? "";
+      const fullAddr = p.formattedAddress ?? p.shortFormattedAddress ?? "";
+      const loc = p.location;
+      if (!loc?.latitude || !loc?.longitude) return null;
+      return {
+        place_id: p.id,
+        description: `${name} — ${fullAddr}`,
+        structured_formatting: { main_text: name, secondary_text: fullAddr },
+        _resolved: {
+          lat: loc.latitude,
+          lng: loc.longitude,
+          address: name,
+          formattedAddress: fullAddr,
+        },
+        types: p.types ?? [],
+        source: "google_textsearch",
+      };
+    }).filter(Boolean);
+
+    const autoPredictions = ((autoRes as any)?.predictions ?? []).map((p: any) => ({
       ...p,
       source: "google_autocomplete",
     }));
 
-    // Mescla: cache forte > text search (POIs) > autocomplete (endereços)
+    // Mescla: cache forte > POIs > endereços
     const seen = new Set<string>();
     const merged: any[] = [];
     const pushUnique = (arr: any[]) => {
       for (const p of arr) {
-        if (!p.place_id || seen.has(p.place_id)) continue;
+        if (!p?.place_id || seen.has(p.place_id)) continue;
         seen.add(p.place_id);
         merged.push(p);
         if (merged.length >= 8) break;
@@ -128,7 +179,19 @@ Deno.serve(async (req) => {
     pushUnique(textPredictions);
     pushUnique(autoPredictions);
 
-    // Background: salva os melhores POIs no cache para próximas buscas
+    const payload = {
+      predictions: merged,
+      source: "hybrid",
+      debug: {
+        cache: cachePredictions.length,
+        text: textPredictions.length,
+        auto: autoPredictions.length,
+      },
+    };
+
+    memSet(cacheKey, payload);
+
+    // Aprendizado em background: salva os melhores POIs no cache DB
     if (textPredictions.length > 0) {
       const upserts = textPredictions.slice(0, 3).map((p: any) => ({
         google_place_id: p.place_id,
@@ -141,15 +204,16 @@ Deno.serve(async (req) => {
         country: "BR",
         last_synced_at: new Date().toISOString(),
       }));
-      sb.from("places").upsert(upserts, { onConflict: "google_place_id" }).then(({ error }) => {
-        if (error) console.error("cache upsert error:", error);
-      });
+      sb.from("places")
+        .upsert(upserts, { onConflict: "google_place_id" })
+        .then(({ error }: any) => {
+          if (error) console.error("cache upsert:", error.message);
+        });
     }
 
-    return new Response(
-      JSON.stringify({ predictions: merged, source: "hybrid", debug: { cache: cachePredictions.length, text: textPredictions.length, auto: autoPredictions.length } }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify(payload), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (err) {
     console.error("search-places error", err);
     return new Response(JSON.stringify({ error: String(err), predictions: [] }), {
@@ -158,3 +222,19 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+function buildCachePrediction(r: any) {
+  return {
+    place_id: r.google_place_id ?? `local:${r.id}`,
+    description: `${r.name} — ${r.address}`,
+    structured_formatting: { main_text: r.name, secondary_text: r.address },
+    _resolved: {
+      lat: r.lat,
+      lng: r.lng,
+      address: r.name,
+      formattedAddress: r.address,
+    },
+    types: [r.category ?? "other"],
+    source: "cache",
+  };
+}
