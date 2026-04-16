@@ -299,12 +299,20 @@ const DriverHome = () => {
         <div className="mx-4 mt-4 rounded-2xl border-2 border-primary bg-card p-4 shadow-glow animate-slide-up">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
+              <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
                 <Clock className="h-3.5 w-3.5 text-primary" />
               </div>
               <span className="text-xs font-bold text-primary uppercase">Nova Corrida</span>
             </div>
-            <span className="text-2xl font-extrabold tabular-nums text-warning">{offerCountdown}s</span>
+            <span className={`text-2xl font-extrabold tabular-nums ${offerCountdown <= 5 ? "text-destructive animate-pulse" : "text-warning"}`}>{offerCountdown}s</span>
+          </div>
+
+          {/* Progress bar countdown */}
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mb-3">
+            <div
+              className={`h-full transition-all duration-500 ease-linear ${offerCountdown <= 5 ? "bg-destructive" : "bg-primary"}`}
+              style={{ width: `${(offerCountdown / 15) * 100}%` }}
+            />
           </div>
 
           <div className="rounded-xl bg-muted/50 p-3 mb-3">
