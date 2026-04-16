@@ -34,6 +34,7 @@ interface GoogleMapProps {
 }
 
 const ALTAMIRA_CENTER = { lat: -3.2036, lng: -52.2108 };
+const MAP_ID = "vamoogo-map";
 
 // Estilo de mapa moderno (claro, limpo, premium)
 const MODERN_MAP_STYLE = [
@@ -458,6 +459,7 @@ const GoogleMapInner = ({
     <Map
       defaultCenter={ALTAMIRA_CENTER}
       defaultZoom={14}
+      mapId={MAP_ID}
       gestureHandling={interactive ? "greedy" : "none"}
       disableDefaultUI={true}
       zoomControl={false}
