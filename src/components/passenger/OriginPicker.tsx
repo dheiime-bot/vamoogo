@@ -222,8 +222,42 @@ const OriginPicker = ({
         )}
       </div>
 
-      {/* Toggle: pedir para outra pessoa — visível apenas quando origem é manual */}
-      {isManual && (
+      {/* Atalhos rápidos */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => {
+            setShowResults(true);
+            setEdited(true);
+            if (results.length === 0) setResults(getPopularLocations("Altamira", 8));
+          }}
+          className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-left hover:border-primary/50 hover:bg-primary/5 transition-colors"
+        >
+          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <Search className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold leading-tight">Outro endereço</p>
+            <p className="text-[10px] text-muted-foreground leading-tight">Buscar local</p>
+          </div>
+        </button>
+        <button
+          onClick={() => onToggleOtherPerson(!forOtherPerson)}
+          className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors ${
+            forOtherPerson ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/50 hover:bg-primary/5"
+          }`}
+        >
+          <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${forOtherPerson ? "bg-primary/15" : "bg-muted"}`}>
+            <User className={`h-4 w-4 ${forOtherPerson ? "text-primary" : "text-muted-foreground"}`} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold leading-tight">Outra pessoa</p>
+            <p className="text-[10px] text-muted-foreground leading-tight">{forOtherPerson ? "Ativado" : "Para terceiros"}</p>
+          </div>
+        </button>
+      </div>
+
+      {/* Formulário: dados do passageiro real */}
+      {forOtherPerson && (
         <div className={`rounded-xl border p-3 transition-colors ${forOtherPerson ? "border-primary bg-primary/5" : "border-border"}`}>
           <label className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center gap-2.5">
