@@ -203,7 +203,7 @@ const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
       if (t < 1) rafRef.current = requestAnimationFrame(tick);
       else fromRef.current = to;
     };
-    rafRef.current && cancelAnimationFrame(rafRef.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
