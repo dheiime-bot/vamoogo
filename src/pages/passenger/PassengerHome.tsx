@@ -478,9 +478,36 @@ const PassengerHome = () => {
                     }}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>
                   </div>
                 ))}
-                <button onClick={() => { setStops([...stops, ""]); setSelectedStops([...selectedStops, null]); }} className="flex items-center gap-2 text-xs font-medium text-primary">
-                  <Plus className="h-3.5 w-3.5" /> Adicionar parada
-                </button>
+                <div className="flex items-center justify-between gap-2">
+                  <button onClick={() => { setStops([...stops, ""]); setSelectedStops([...selectedStops, null]); }} className="flex items-center gap-2 text-xs font-medium text-primary">
+                    <Plus className="h-3.5 w-3.5" /> Adicionar parada
+                  </button>
+                  {selectedOrigin && (
+                    <button
+                      onClick={() => {
+                        // Cria uma parada de "retorno à origem" como ponto final intermediário
+                        // (a corrida segue: origem → destino → origem)
+                        const returnStop: CityLocation = {
+                          ...selectedOrigin,
+                          id: `return-${Date.now()}`,
+                          name: `Retornar: ${selectedOrigin.name}`,
+                        };
+                        if (!selectedDestination) {
+                          // Sem destino ainda → vira o próprio destino (ida e volta direta seria origem=destino, então adicionamos como parada após o destino real)
+                          toast.info("Defina primeiro o destino, depois adicione o retorno");
+                          return;
+                        }
+                        setStops([...stops, returnStop.name]);
+                        setSelectedStops([...selectedStops, returnStop]);
+                        toast.success("Retorno à origem adicionado");
+                      }}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-success rounded-lg bg-success/10 px-2.5 py-1.5 hover:bg-success/15 transition-colors"
+                      title="Adicionar retorno ao ponto de embarque"
+                    >
+                      <Navigation className="h-3 w-3" /> Voltar à origem
+                    </button>
+                  )}
+                </div>
               </div>
 
               {showSuggestions && (
