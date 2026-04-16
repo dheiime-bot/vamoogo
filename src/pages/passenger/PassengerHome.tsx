@@ -629,25 +629,6 @@ const PassengerHome = () => {
                 Chamou, Vamoo! 🚀
               </button>
 
-              {/* Recent rides */}
-              {recentRides.length > 0 && (
-                <div>
-                  <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Corridas recentes</h3>
-                  <div className="space-y-2">
-                    {recentRides.map((ride) => (
-                      <div key={ride.id} className="flex items-center gap-3 rounded-xl border p-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted"><Clock className="h-4 w-4 text-muted-foreground" /></div>
-                        <div className="flex-1 min-w-0">
-                          <p className="truncate text-sm font-medium">{ride.destination_address?.split(" - ")[0]}</p>
-                          <p className="text-xs text-muted-foreground">{new Date(ride.created_at).toLocaleDateString("pt-BR")}</p>
-                        </div>
-                        <div className="text-right"><p className="text-sm font-bold">R$ {ride.price?.toFixed(2) || "—"}</p></div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
