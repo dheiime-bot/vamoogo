@@ -16,8 +16,12 @@ export interface PlacePrediction {
     secondary_text?: string;
   };
   types?: string[];
-  source?: "cache" | "google" | string;
-  /** Quando vem do cache local, já trazemos os dados resolvidos para evitar chamada de Details. */
+  source?: "cache" | "google_textsearch" | "google_autocomplete" | "memcache" | string;
+  /** true=aberto, false=fechado, null/undefined=info indisponível (vem do searchText) */
+  openNow?: boolean | null;
+  /** Categoria já classificada (vem do cache local). */
+  categoryHint?: string | null;
+  /** Quando vem do cache local ou textsearch, já trazemos os dados resolvidos. */
   _resolved?: {
     lat: number;
     lng: number;
