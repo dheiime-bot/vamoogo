@@ -373,13 +373,39 @@ const DriverHome = () => {
             <span className="text-sm font-bold text-info">A caminho do passageiro</span>
             <span className="font-extrabold">R$ {Number(activeRide.price).toFixed(2)}</span>
           </div>
+
+          {/* Aviso: corrida para outra pessoa */}
+          {activeRide.for_other_person && (
+            <div className="rounded-xl border-2 border-warning bg-warning/10 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-full bg-warning/20 flex items-center justify-center">
+                  <User className="h-3.5 w-3.5 text-warning" />
+                </div>
+                <p className="text-xs font-bold text-warning uppercase">Corrida para outra pessoa</p>
+              </div>
+              <div className="rounded-lg bg-card p-2.5 space-y-1">
+                <p className="text-xs text-muted-foreground">Quem vai embarcar</p>
+                <p className="text-sm font-bold">{activeRide.other_person_name}</p>
+                <a href={`tel:${activeRide.other_person_phone?.replace(/\D/g, "")}`} className="flex items-center gap-1.5 text-sm font-mono font-bold text-primary">
+                  <Phone className="h-3.5 w-3.5" /> {activeRide.other_person_phone}
+                </a>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-start gap-2">
             <MapPin className="h-4 w-4 text-success mt-0.5 shrink-0" />
             <p className="text-sm">{activeRide.origin_address?.split(" - ")[0]}</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold">
-              <Phone className="h-4 w-4 text-primary" /> Ligar
+            <button
+              onClick={() => {
+                const phone = activeRide.for_other_person ? activeRide.other_person_phone : "";
+                if (phone) window.location.href = `tel:${phone.replace(/\D/g, "")}`;
+                else toast("Use o chat para falar com o solicitante");
+              }}
+              className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold">
+              <Phone className="h-4 w-4 text-primary" /> Ligar {activeRide.for_other_person ? "passageiro" : ""}
             </button>
             <button className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold">
               <MessageCircle className="h-4 w-4 text-primary" /> Chat

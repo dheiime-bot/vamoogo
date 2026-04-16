@@ -5,6 +5,7 @@ import GoogleMap from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
+import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passenger/OriginPicker";
 import { Home, User } from "lucide-react";
 import { searchLocations, getPopularLocations, getCategoryLabel, getCategoryIcon, CityLocation } from "@/data/cityLocations";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,6 +50,9 @@ const PassengerHome = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [driverInfo, setDriverInfo] = useState<any>(null);
+  const [originType, setOriginType] = useState<OriginType>("gps");
+  const [forOtherPerson, setForOtherPerson] = useState(false);
+  const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
 
   // Fetch recent rides
   useEffect(() => {
@@ -145,6 +149,10 @@ const PassengerHome = () => {
   // Request ride after payment method is selected
   const handleConfirmRide = async (method: PaymentMethod, coupon: AppliedCoupon | null) => {
     if (!selectedOrigin || !selectedDestination || !user) return;
+    if (forOtherPerson && (!otherPerson.name.trim() || otherPerson.phone.replace(/\D/g, "").length < 10)) {
+      toast.error("Informe nome e telefone do passageiro");
+      return;
+    }
     setPaymentMethod(method);
     setRideState("idle"); // Close modal temporarily
     setIsRequesting(true);
@@ -166,14 +174,17 @@ const PassengerHome = () => {
       price, platform_fee: platformFee, driver_net: price - platformFee,
       payment_method: method as any,
       stops: stops.filter(Boolean).length > 0 ? stops.filter(Boolean) : null,
-    }).select().single();
+      origin_type: originType,
+      for_other_person: forOtherPerson,
+      other_person_name: forOtherPerson ? otherPerson.name.trim() : null,
+      other_person_phone: forOtherPerson ? otherPerson.phone : null,
+    } as any).select().single();
 
     setIsRequesting(false);
     if (error) { toast.error("Erro: " + error.message); return; }
 
     // Increment coupon usage (best-effort, non-blocking)
     if (coupon) {
-      supabase.rpc as any; // noop type guard
       supabase.from("coupons").select("used_count").eq("id", coupon.id).single()
         .then(({ data: c }) => {
           if (c) supabase.from("coupons").update({ used_count: (c.used_count || 0) + 1 }).eq("id", coupon.id).then(() => {});
@@ -207,6 +218,7 @@ const PassengerHome = () => {
     setRideState("idle"); setActiveRide(null); setRating(0); setRatingComment("");
     setSelectedOrigin(null); setSelectedDestination(null); setOrigin(""); setDestination("");
     setDriverInfo(null); setPaymentMethod(null);
+    setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps");
   };
 
   const showSuggestions = activeInput !== null;
@@ -415,15 +427,22 @@ const PassengerHome = () => {
           {/* Normal idle form */}
           {rideState === "idle" && (
             <>
+              {/* Smart Origin Picker (GPS / Manual / Other person) */}
+              <OriginPicker
+                selectedOrigin={selectedOrigin}
+                onSelectOrigin={(loc, type) => {
+                  setSelectedOrigin(loc);
+                  setOrigin(loc.name);
+                  setOriginType(type);
+                }}
+                forOtherPerson={forOtherPerson}
+                onToggleOtherPerson={setForOtherPerson}
+                otherPerson={otherPerson}
+                onChangeOtherPerson={setOtherPerson}
+              />
+
+              {/* Destination input */}
               <div className="space-y-2">
-                <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-                  <div className="h-2.5 w-2.5 rounded-full bg-success" />
-                  <input type="text" placeholder="Onde você está?" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" value={origin}
-                    onChange={(e) => { setOrigin(e.target.value); handleSearch(e.target.value); }}
-                    onFocus={() => { setActiveInput("origin"); handleSearch(origin); }}
-                  />
-                  {origin && <button onClick={() => { setOrigin(""); setSelectedOrigin(null); }}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>}
-                </div>
                 <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
                   <div className="h-2.5 w-2.5 rounded-full bg-destructive" />
                   <input type="text" placeholder="Para onde vai?" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" value={destination}

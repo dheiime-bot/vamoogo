@@ -513,10 +513,14 @@ export type Database = {
           driver_id: string | null
           driver_net: number | null
           duration_minutes: number | null
+          for_other_person: boolean
           id: string
           origin_address: string
           origin_lat: number | null
           origin_lng: number | null
+          origin_type: string
+          other_person_name: string | null
+          other_person_phone: string | null
           passenger_count: number
           passenger_id: string
           payment_method: Database["public"]["Enums"]["payment_method"] | null
@@ -541,10 +545,14 @@ export type Database = {
           driver_id?: string | null
           driver_net?: number | null
           duration_minutes?: number | null
+          for_other_person?: boolean
           id?: string
           origin_address: string
           origin_lat?: number | null
           origin_lng?: number | null
+          origin_type?: string
+          other_person_name?: string | null
+          other_person_phone?: string | null
           passenger_count?: number
           passenger_id: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
@@ -569,10 +577,14 @@ export type Database = {
           driver_id?: string | null
           driver_net?: number | null
           duration_minutes?: number | null
+          for_other_person?: boolean
           id?: string
           origin_address?: string
           origin_lat?: number | null
           origin_lng?: number | null
+          origin_type?: string
+          other_person_name?: string | null
+          other_person_phone?: string | null
           passenger_count?: number
           passenger_id?: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
