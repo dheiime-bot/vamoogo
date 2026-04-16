@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Power, Wallet, Navigation, AlertTriangle, Clock, TrendingUp, Car, MapPin, Loader2, CheckCircle2, XCircle, Play, Flag, Phone, MessageCircle, Star } from "lucide-react";
 import BottomNav from "@/components/shared/BottomNav";
-import MapboxMap from "@/components/shared/MapboxMap";
+import GoogleMap from "@/components/shared/GoogleMap";
 import { Home, User, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -163,7 +163,7 @@ const DriverHome = () => {
 
       {/* Map */}
       <div className="px-4 mt-4">
-        <MapboxMap
+        <GoogleMap
           className="h-[180px]"
           origin={rideState === "going_to_passenger" || rideState === "in_ride" ? originPoint : null}
           destination={rideState === "in_ride" ? destPoint : null}

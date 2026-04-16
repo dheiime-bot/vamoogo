@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Activity, MapPin, RefreshCw } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import MapboxMap from "@/components/shared/MapboxMap";
+import GoogleMap from "@/components/shared/GoogleMap";
 import { supabase } from "@/integrations/supabase/client";
 
 const AdminLive = () => {
@@ -77,7 +77,7 @@ const AdminLive = () => {
             <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-destructive" /> Incidentes</span>
           </div>
         </div>
-        <MapboxMap
+        <GoogleMap
           className="h-[400px] lg:h-[500px] rounded-none"
           origin={firstRide ? { lat: firstRide.origin_lat, lng: firstRide.origin_lng, label: "Origem" } : null}
           destination={firstRide ? { lat: firstRide.destination_lat, lng: firstRide.destination_lng, label: "Destino" } : null}
