@@ -50,6 +50,9 @@ const PassengerHome = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [driverInfo, setDriverInfo] = useState<any>(null);
+  const [originType, setOriginType] = useState<OriginType>("gps");
+  const [forOtherPerson, setForOtherPerson] = useState(false);
+  const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
 
   // Fetch recent rides
   useEffect(() => {
