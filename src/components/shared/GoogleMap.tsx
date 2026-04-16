@@ -1,7 +1,10 @@
 /**
- * GoogleMap — substituto direto do antigo MapboxMap.
- * Usa @vis.gl/react-google-maps + Google Directions Service via fetch.
- * Mantém a mesma API (props) para evitar refatoração nas páginas.
+ * GoogleMap — mapa premium estilo Uber/99.
+ * - Carrinho animado para motorista (gira pelo heading)
+ * - Bonequinho para passageiro/origem
+ * - Pino de destino destacado
+ * - Movimento interpolado suave (sem teleporte)
+ * - Rota com gradiente azul
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
@@ -13,6 +16,7 @@ interface MapPoint {
   lng: number;
   label?: string;
   color?: string;
+  heading?: number;
 }
 
 interface GoogleMapProps {
@@ -30,16 +34,187 @@ interface GoogleMapProps {
 }
 
 const ALTAMIRA_CENTER = { lat: -3.2036, lng: -52.2108 };
-const MAP_ID = "vamoogo-map"; // necessário para AdvancedMarker
+const MAP_ID = "vamoogo-map";
 
-const ColoredPin = ({ color, label }: { color: string; label?: string }) => (
-  <div className="relative" title={label}>
-    <div
-      className="h-7 w-7 rounded-full border-[3px] border-white shadow-lg"
-      style={{ backgroundColor: color }}
-    />
+// Estilo de mapa moderno (claro, limpo, premium)
+const MODERN_MAP_STYLE = [
+  { elementType: "geometry", stylers: [{ color: "#f7f8fa" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#5b6573" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }] },
+  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e8eef7" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#dbe3f0" }] },
+  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#cfe2ff" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#5b8def" }] },
+];
+
+/* ---------- Markers premium ---------- */
+
+const CarMarker = ({ heading = 0 }: { heading?: number }) => (
+  <div
+    className="relative drop-shadow-xl"
+    style={{
+      transform: `rotate(${heading}deg)`,
+      transition: "transform 600ms ease-out",
+      width: 44,
+      height: 44,
+    }}
+    title="Motorista"
+  >
+    <svg viewBox="0 0 64 64" width="44" height="44">
+      <defs>
+        <radialGradient id="carShadow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="rgba(0,0,0,0.35)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+        <linearGradient id="carBody" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#1f2937" />
+          <stop offset="100%" stopColor="#0b1220" />
+        </linearGradient>
+      </defs>
+      {/* sombra */}
+      <ellipse cx="32" cy="56" rx="18" ry="4" fill="url(#carShadow)" />
+      {/* corpo */}
+      <g>
+        {/* base */}
+        <rect x="14" y="22" width="36" height="26" rx="9" fill="url(#carBody)" />
+        {/* teto / cabine */}
+        <path
+          d="M20 22 L26 12 H38 L44 22 Z"
+          fill="#111827"
+          stroke="#0b1220"
+          strokeWidth="1"
+        />
+        {/* parabrisa */}
+        <path
+          d="M22 22 L27 14 H37 L42 22 Z"
+          fill="#7dd3fc"
+          opacity="0.85"
+        />
+        {/* faróis */}
+        <circle cx="18" cy="20" r="2.2" fill="#fde68a" />
+        <circle cx="46" cy="20" r="2.2" fill="#fde68a" />
+        {/* rodas */}
+        <circle cx="20" cy="48" r="4.5" fill="#0b1220" stroke="#374151" strokeWidth="1.2" />
+        <circle cx="44" cy="48" r="4.5" fill="#0b1220" stroke="#374151" strokeWidth="1.2" />
+        {/* logo */}
+        <circle cx="32" cy="35" r="3" fill="#3b82f6" />
+      </g>
+    </svg>
   </div>
 );
+
+const PassengerMarker = () => (
+  <div className="relative" title="Passageiro">
+    <div
+      className="absolute inset-0 rounded-full bg-primary/30 animate-ping"
+      style={{ width: 44, height: 44, top: -2, left: -2 }}
+    />
+    <svg viewBox="0 0 48 48" width="40" height="40" className="relative drop-shadow-lg">
+      <defs>
+        <linearGradient id="pBg" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#1d4ed8" />
+        </linearGradient>
+      </defs>
+      <circle cx="24" cy="22" r="18" fill="url(#pBg)" stroke="#fff" strokeWidth="3" />
+      {/* cabeça */}
+      <circle cx="24" cy="17" r="4.5" fill="#fff" />
+      {/* corpo */}
+      <path
+        d="M14 30 c0-5 4.5-8 10-8 s10 3 10 8 v2 H14 z"
+        fill="#fff"
+      />
+      {/* ponta inferior do pin */}
+      <path d="M24 44 L18 36 H30 Z" fill="#1d4ed8" />
+    </svg>
+  </div>
+);
+
+const DestinationMarker = () => (
+  <div className="relative drop-shadow-lg" title="Destino">
+    <svg viewBox="0 0 48 48" width="38" height="38">
+      <defs>
+        <linearGradient id="dBg" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#b91c1c" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M24 2 C14 2 7 9 7 19 c0 12 17 27 17 27 s17-15 17-27 C41 9 34 2 24 2 z"
+        fill="url(#dBg)"
+        stroke="#fff"
+        strokeWidth="2.5"
+      />
+      <circle cx="24" cy="19" r="6" fill="#fff" />
+    </svg>
+  </div>
+);
+
+const StopMarker = ({ index }: { index: number }) => (
+  <div className="relative drop-shadow-md" title={`Parada ${index + 1}`}>
+    <div
+      className="h-7 w-7 rounded-full bg-amber-500 border-[3px] border-white flex items-center justify-center text-white text-xs font-bold"
+    >
+      {index + 1}
+    </div>
+  </div>
+);
+
+/* ---------- Interpolação de posição (movimento suave) ---------- */
+
+const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
+  const [pos, setPos] = useState<MapPoint | null>(target ?? null);
+  const fromRef = useRef<MapPoint | null>(target ?? null);
+  const startTsRef = useRef<number>(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!target) {
+      setPos(null);
+      fromRef.current = null;
+      return;
+    }
+    if (!fromRef.current) {
+      fromRef.current = target;
+      setPos(target);
+      return;
+    }
+    const from = pos || fromRef.current;
+    const to = target;
+    const duration = 900; // ms
+    startTsRef.current = performance.now();
+
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - startTsRef.current) / duration);
+      const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // easeInOutQuad
+      setPos({
+        lat: from.lat + (to.lat - from.lat) * ease,
+        lng: from.lng + (to.lng - from.lng) * ease,
+        heading: to.heading,
+        label: to.label,
+      });
+      if (t < 1) rafRef.current = requestAnimationFrame(tick);
+      else fromRef.current = to;
+    };
+    rafRef.current && cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target?.lat, target?.lng, target?.heading]);
+
+  return pos;
+};
+
+/* ---------- Rota / camadas ---------- */
 
 const RouteLayer = ({
   origin,
@@ -53,6 +228,7 @@ const RouteLayer = ({
   const map = useMap();
   const routesLib = useMapsLibrary("routes");
   const polylineRef = useRef<any>(null);
+  const polylineBgRef = useRef<any>(null);
 
   useEffect(() => {
     if (!map || !routesLib) return;
@@ -72,18 +248,28 @@ const RouteLayer = ({
         if (!path) return;
 
         polylineRef.current?.setMap(null);
+        polylineBgRef.current?.setMap(null);
         const g = (window as any).google;
+        // halo (linha mais larga embaixo)
+        polylineBgRef.current = new g.maps.Polyline({
+          path,
+          strokeColor: "#1e3a8a",
+          strokeOpacity: 0.25,
+          strokeWeight: 10,
+          map,
+        });
+        // linha principal
         polylineRef.current = new g.maps.Polyline({
           path,
-          strokeColor: "#1E90FF",
-          strokeOpacity: 0.85,
+          strokeColor: "#3b82f6",
+          strokeOpacity: 1,
           strokeWeight: 5,
           map,
         });
 
         const bounds = new g.maps.LatLngBounds();
         path.forEach((p: any) => bounds.extend(p));
-        map.fitBounds(bounds, 60);
+        map.fitBounds(bounds, 80);
       } catch (e) {
         console.warn("Directions error:", e);
       }
@@ -93,7 +279,9 @@ const RouteLayer = ({
     return () => {
       cancelled = true;
       polylineRef.current?.setMap(null);
+      polylineBgRef.current?.setMap(null);
       polylineRef.current = null;
+      polylineBgRef.current = null;
     };
   }, [map, routesLib, origin.lat, origin.lng, destination.lat, destination.lng, stops]);
 
@@ -106,14 +294,14 @@ const FitToPoints = ({ points }: { points: MapPoint[] }) => {
     if (!map || points.length === 0) return;
     if (points.length === 1) {
       map.panTo({ lat: points[0].lat, lng: points[0].lng });
-      map.setZoom(14);
+      map.setZoom(15);
       return;
     }
     const g = (window as any).google;
     if (!g) return;
     const bounds = new g.maps.LatLngBounds();
     points.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }));
-    map.fitBounds(bounds, 60);
+    map.fitBounds(bounds, 80);
   }, [map, points]);
   return null;
 };
@@ -147,19 +335,34 @@ const CenterTracker = ({
   return null;
 };
 
+const MapStyler = () => {
+  const map = useMap();
+  useEffect(() => {
+    if (!map) return;
+    try {
+      (map as any).setOptions({ styles: MODERN_MAP_STYLE });
+    } catch {
+      /* noop — quando mapId define estilo, isto é ignorado */
+    }
+  }, [map]);
+  return null;
+};
+
+/* ---------- Mapa principal ---------- */
+
 const GoogleMapInner = ({
   origin,
   destination,
   driverLocation,
   stops = [],
   onMapClick,
-  showCenterPin,
   onCenterChange,
   interactive = true,
   showRoute = true,
   trackUserLocation = false,
-}: Omit<GoogleMapProps, "className">) => {
+}: Omit<GoogleMapProps, "className" | "showCenterPin">) => {
   const [userLoc, setUserLoc] = useState<MapPoint | null>(null);
+  const animatedDriver = useInterpolatedPosition(driverLocation || null);
 
   useEffect(() => {
     if (!trackUserLocation || !navigator.geolocation) return;
@@ -171,43 +374,45 @@ const GoogleMapInner = ({
   }, [trackUserLocation]);
 
   const points = useMemo(
-    () => [origin, destination, driverLocation, ...stops, userLoc].filter(Boolean) as MapPoint[],
-    [origin, destination, driverLocation, stops, userLoc]
+    () => [origin, destination, animatedDriver, ...stops, userLoc].filter(Boolean) as MapPoint[],
+    [origin, destination, animatedDriver, stops, userLoc]
   );
 
   return (
     <Map
       defaultCenter={ALTAMIRA_CENTER}
-      defaultZoom={13}
+      defaultZoom={14}
       mapId={MAP_ID}
       gestureHandling={interactive ? "greedy" : "none"}
       disableDefaultUI={!interactive}
       clickableIcons={false}
       style={{ width: "100%", height: "100%" }}
     >
+      <MapStyler />
+
       {origin && (
         <AdvancedMarker position={{ lat: origin.lat, lng: origin.lng }}>
-          <ColoredPin color="#00C853" label={origin.label || "Origem"} />
+          <PassengerMarker />
         </AdvancedMarker>
       )}
       {destination && (
         <AdvancedMarker position={{ lat: destination.lat, lng: destination.lng }}>
-          <ColoredPin color="#FF1744" label={destination.label || "Destino"} />
+          <DestinationMarker />
         </AdvancedMarker>
       )}
       {stops.map((s, i) => (
         <AdvancedMarker key={i} position={{ lat: s.lat, lng: s.lng }}>
-          <ColoredPin color="#FFB300" label={s.label || `Parada ${i + 1}`} />
+          <StopMarker index={i} />
         </AdvancedMarker>
       ))}
-      {driverLocation && (
-        <AdvancedMarker position={{ lat: driverLocation.lat, lng: driverLocation.lng }}>
-          <ColoredPin color="#1E90FF" label="Motorista" />
+      {animatedDriver && (
+        <AdvancedMarker position={{ lat: animatedDriver.lat, lng: animatedDriver.lng }}>
+          <CarMarker heading={animatedDriver.heading || 0} />
         </AdvancedMarker>
       )}
       {userLoc && !origin && (
         <AdvancedMarker position={{ lat: userLoc.lat, lng: userLoc.lng }}>
-          <ColoredPin color="#1E90FF" label="Você" />
+          <PassengerMarker />
         </AdvancedMarker>
       )}
 
@@ -233,13 +438,13 @@ const GoogleMap = ({ className = "h-[300px]", ...rest }: GoogleMapProps) => {
   }
 
   return (
-    <div className={`${className} relative rounded-2xl overflow-hidden`}>
+    <div className={`${className} relative rounded-2xl overflow-hidden shadow-sm`}>
       <APIProvider apiKey={key} libraries={["places"]} language="pt-BR" region="BR">
         <GoogleMapInner {...rest} />
       </APIProvider>
       {rest.showCenterPin && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full z-10 pointer-events-none">
-          <svg viewBox="0 0 24 24" className="w-8 h-8 text-primary drop-shadow-lg" fill="currentColor">
+          <svg viewBox="0 0 24 24" className="w-9 h-9 text-primary drop-shadow-xl" fill="currentColor">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
           </svg>
         </div>
