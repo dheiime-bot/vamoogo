@@ -124,6 +124,39 @@ export type Database = {
           },
         ]
       }
+      city_sync_log: {
+        Row: {
+          center_lat: number
+          center_lng: number
+          city_key: string
+          created_at: string
+          id: string
+          last_synced_at: string
+          places_count: number
+          radius_m: number
+        }
+        Insert: {
+          center_lat: number
+          center_lng: number
+          city_key: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string
+          places_count?: number
+          radius_m: number
+        }
+        Update: {
+          center_lat?: number
+          center_lng?: number
+          city_key?: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string
+          places_count?: number
+          radius_m?: number
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           active: boolean
@@ -361,6 +394,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      places: {
+        Row: {
+          address: string
+          category: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          google_place_id: string | null
+          id: string
+          last_synced_at: string
+          lat: number
+          lng: number
+          name: string
+          rating: number | null
+          raw: Json | null
+          state: string | null
+          types: string[] | null
+          updated_at: string
+          user_ratings_total: number | null
+        }
+        Insert: {
+          address: string
+          category?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          google_place_id?: string | null
+          id?: string
+          last_synced_at?: string
+          lat: number
+          lng: number
+          name: string
+          rating?: number | null
+          raw?: Json | null
+          state?: string | null
+          types?: string[] | null
+          updated_at?: string
+          user_ratings_total?: number | null
+        }
+        Update: {
+          address?: string
+          category?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          google_place_id?: string | null
+          id?: string
+          last_synced_at?: string
+          lat?: number
+          lng?: number
+          name?: string
+          rating?: number | null
+          raw?: Json | null
+          state?: string | null
+          types?: string[] | null
+          updated_at?: string
+          user_ratings_total?: number | null
+        }
+        Relationships: []
       }
       platform_settings: {
         Row: {
@@ -767,6 +860,28 @@ export type Database = {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
       }
+      search_places: {
+        Args: {
+          _lat?: number
+          _limit?: number
+          _lng?: number
+          _max_km?: number
+          _query: string
+        }
+        Returns: {
+          address: string
+          category: string
+          distance_km: number
+          google_place_id: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          similarity: number
+        }[]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "driver" | "passenger"

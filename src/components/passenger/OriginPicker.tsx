@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { MapPin, Search, X, User, Phone, Loader2, Check, Navigation } from "lucide-react";
 import { searchLocations, getPopularLocations, getCategoryIcon, getCategoryLabel, CityLocation } from "@/data/cityLocations";
+import { useCityCache } from "@/hooks/useCityCache";
 import { toast } from "sonner";
 
 export type OriginType = "gps" | "manual";
@@ -59,10 +60,14 @@ const OriginPicker = ({
   const [loadingGps, setLoadingGps] = useState(false);
   const [gpsAddress, setGpsAddress] = useState<string>("");
   const [gpsLoc, setGpsLoc] = useState<CityLocation | null>(null);
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<CityLocation[]>([]);
   const [showResults, setShowResults] = useState(false);
   const autoTried = useRef(false);
+
+  // Dispara cache de locais da cidade (1x por cidade) ao detectar GPS
+  useCityCache(gpsCoords);
 
   // Captura GPS ao montar
   useEffect(() => {
@@ -92,6 +97,7 @@ const OriginPicker = ({
         };
         setGpsLoc(loc);
         setGpsAddress(address);
+        setGpsCoords({ lat: latitude, lng: longitude });
         setLoadingGps(false);
         // Se ainda não está em modo "outra pessoa", aplica GPS como origem
         if (!forOtherPerson) onSelectOrigin(loc, "gps");
@@ -154,6 +160,7 @@ const OriginPicker = ({
         };
         setGpsLoc(loc);
         setGpsAddress(address);
+        setGpsCoords({ lat: latitude, lng: longitude });
         setLoadingGps(false);
         if (!forOtherPerson) onSelectOrigin(loc, "gps");
       },
