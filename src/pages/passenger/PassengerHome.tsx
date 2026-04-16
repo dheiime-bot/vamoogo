@@ -190,6 +190,7 @@ const PassengerHome = () => {
       stops: effectiveStops.length > 0
         ? effectiveStops.map((s) => ({ name: s.name, address: s.address, lat: s.lat, lng: s.lng }))
         : null,
+      legs: fare.legs.length > 0 ? fare.legs : [],
       origin_type: originType,
       for_other_person: forOtherPerson,
       other_person_name: forOtherPerson ? otherPerson.name.trim() : null,
