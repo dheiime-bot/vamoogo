@@ -580,7 +580,6 @@ const PassengerHome = () => {
                 </div>
               )}
 
-              {/* Estimate inline (botão de chamar fica fixo no rodapé) */}
             </>
           )}
         </div>
@@ -602,10 +601,6 @@ const PassengerHome = () => {
           </button>
         </div>
       )}
-            </>
-          )}
-        </div>
-      </div>
 
       {/* Payment Method Modal */}
       <PaymentMethodModal
