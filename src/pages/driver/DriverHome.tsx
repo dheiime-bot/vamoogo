@@ -6,6 +6,7 @@ import { Home, User, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
+import RideChat from "@/components/passenger/RideChat";
 import { toast } from "sonner";
 
 
@@ -43,6 +44,8 @@ const DriverHome = () => {
   const [todayStats, setTodayStats] = useState({ rides: 0, earnings: 0, hours: 0 });
   const [rideState, setRideState] = useState<DriverRideState>("idle");
   const [offerCountdown, setOfferCountdown] = useState(15);
+  const [showChat, setShowChat] = useState(false);
+  const [passengerName, setPassengerName] = useState<string>("");
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
@@ -401,7 +404,7 @@ const DriverHome = () => {
               className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold">
               <Phone className="h-4 w-4 text-primary" /> Ligar {activeRide.for_other_person ? "passageiro" : ""}
             </button>
-            <button className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold">
+            <button onClick={() => setShowChat(true)} className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold hover:bg-muted">
               <MessageCircle className="h-4 w-4 text-primary" /> Chat
             </button>
           </div>
