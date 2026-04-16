@@ -217,7 +217,8 @@ const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
 /* ---------- Rota / camadas ---------- */
 
 // Paleta de cores para trechos (cíclica). Cada trecho ganha uma cor distinta.
-const LEG_COLORS = [
+// Exportada para que outros componentes (ex: breakdown de preço) usem as MESMAS cores.
+export const LEG_COLORS = [
   "#3b82f6", // azul
   "#10b981", // verde
   "#f59e0b", // âmbar
@@ -226,6 +227,16 @@ const LEG_COLORS = [
   "#ec4899", // rosa
   "#06b6d4", // ciano
 ];
+
+const RouteLayer = ({
+  origin,
+  destination,
+  stops,
+}: {
+  origin: MapPoint;
+  destination: MapPoint;
+  stops: MapPoint[];
+}) => {
 
 const RouteLayer = ({
   origin,
