@@ -21,6 +21,8 @@ export interface PlacePrediction {
   openNow?: boolean | null;
   /** Categoria já classificada (vem do cache local). */
   categoryHint?: string | null;
+  /** Distância em km até a localização do usuário (calculada no backend quando lat/lng informados). */
+  distanceKm?: number;
   /** Quando vem do cache local ou textsearch, já trazemos os dados resolvidos. */
   _resolved?: {
     lat: number;
