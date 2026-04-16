@@ -79,7 +79,7 @@ const PaymentMethodModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="w-full max-w-lg rounded-t-3xl bg-card shadow-2xl animate-slide-up max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b shrink-0">
