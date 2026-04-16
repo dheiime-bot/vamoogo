@@ -1,16 +1,9 @@
 import { useEffect, useState } from "react";
 import { Clock, ChevronRight } from "lucide-react";
-import BottomNav from "@/components/shared/BottomNav";
+import AppMenu from "@/components/shared/AppMenu";
 import StatusBadge from "@/components/shared/StatusBadge";
-import { Home, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
-const navItems = [
-  { icon: Home, label: "Início", path: "/passenger" },
-  { icon: Clock, label: "Corridas", path: "/passenger/history" },
-  { icon: User, label: "Perfil", path: "/passenger/profile" },
-];
 
 const PassengerHistory = () => {
   const { user } = useAuth();
@@ -91,7 +84,7 @@ const PassengerHistory = () => {
         ))}
       </div>
 
-      <BottomNav items={navItems} />
+      <AppMenu role="passenger" />
     </div>
   );
 };

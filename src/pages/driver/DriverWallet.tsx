@@ -1,17 +1,11 @@
 import { useEffect, useState } from "react";
 import { Wallet, CreditCard, QrCode, ArrowDownLeft, ArrowUpRight, Gift, Home, User, Loader2, Banknote, History, BarChart3 } from "lucide-react";
-import BottomNav from "@/components/shared/BottomNav";
+import AppMenu from "@/components/shared/AppMenu";
 import { BarChart, Bar, XAxis, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const navItems = [
-  { icon: Home, label: "Início", path: "/driver" },
-  { icon: Wallet, label: "Carteira", path: "/driver/wallet" },
-  { icon: History, label: "Corridas", path: "/driver/rides" },
-  { icon: User, label: "Perfil", path: "/driver/profile" },
-];
 
 const DriverWallet = () => {
   const { user, driverData } = useAuth();
@@ -177,7 +171,7 @@ const DriverWallet = () => {
           </div>
         )}
       </div>
-      <BottomNav items={navItems} />
+      <AppMenu role="driver" />
     </div>
   );
 };

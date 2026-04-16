@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X } from "lucide-react";
-import BottomNav from "@/components/shared/BottomNav";
+import AppMenu from "@/components/shared/AppMenu";
 import GoogleMap from "@/components/shared/GoogleMap";
 import { Home, User, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,12 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import { toast } from "sonner";
 
-const navItems = [
-  { icon: Home, label: "Início", path: "/driver" },
-  { icon: Wallet, label: "Carteira", path: "/driver/wallet" },
-  { icon: History, label: "Corridas", path: "/driver/rides" },
-  { icon: User, label: "Perfil", path: "/driver/profile" },
-];
 
 type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in_ride";
 
@@ -474,7 +468,7 @@ const DriverHome = () => {
         </div>
       )}
 
-      <BottomNav items={navItems} />
+      <AppMenu role="driver" />
     </div>
   );
 };

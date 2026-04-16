@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { MapPin, Search, Users, Plus, Clock, ChevronRight, Car, Bike, Crown, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
-import BottomNav from "@/components/shared/BottomNav";
+import AppMenu from "@/components/shared/AppMenu";
 import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import RideChat from "@/components/passenger/RideChat";
@@ -19,11 +19,6 @@ const categories = [
   { id: "premium", label: "Premium", icon: Crown, desc: "VIP" },
 ];
 
-const navItems = [
-  { icon: Home, label: "Início", path: "/passenger" },
-  { icon: Clock, label: "Corridas", path: "/passenger/history" },
-  { icon: User, label: "Perfil", path: "/passenger/profile" },
-];
 
 type RideState = "idle" | "payment" | "searching" | "accepted" | "driver_arriving" | "arrived" | "in_progress" | "completed" | "rating";
 
@@ -647,7 +642,7 @@ const PassengerHome = () => {
         category={selectedCategory}
       />
 
-      <BottomNav items={navItems} />
+      <AppMenu role="passenger" />
     </div>
   );
 };

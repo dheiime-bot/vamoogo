@@ -1,13 +1,6 @@
-import { Clock, MapPin, Navigation, Star, Wallet, Home, User, History } from "lucide-react";
-import BottomNav from "@/components/shared/BottomNav";
+import { Clock, MapPin, Navigation, Star } from "lucide-react";
+import AppMenu from "@/components/shared/AppMenu";
 import StatusBadge from "@/components/shared/StatusBadge";
-
-const navItems = [
-  { icon: Home, label: "Início", path: "/driver" },
-  { icon: Wallet, label: "Carteira", path: "/driver/wallet" },
-  { icon: History, label: "Corridas", path: "/driver/rides" },
-  { icon: User, label: "Perfil", path: "/driver/profile" },
-];
 
 const rides = [
   { id: "#1042", from: "Av. Paulista, 1000", to: "Rua Augusta, 500", price: "R$ 18,50", fee: "R$ 2,78", net: "R$ 15,72", date: "10/04, 14:35", status: "completed" as const, distance: "3.2km", duration: "12min", passengers: 1, rating: 5 },
@@ -70,7 +63,7 @@ const DriverRides = () => (
       ))}
     </div>
 
-    <BottomNav items={navItems} />
+    <AppMenu role="driver" />
   </div>
 );
 
