@@ -97,6 +97,7 @@ const OriginPicker = ({
         };
         setGpsLoc(loc);
         setGpsAddress(address);
+        setGpsCoords({ lat: latitude, lng: longitude });
         setLoadingGps(false);
         // Se ainda não está em modo "outra pessoa", aplica GPS como origem
         if (!forOtherPerson) onSelectOrigin(loc, "gps");
@@ -159,6 +160,7 @@ const OriginPicker = ({
         };
         setGpsLoc(loc);
         setGpsAddress(address);
+        setGpsCoords({ lat: latitude, lng: longitude });
         setLoadingGps(false);
         if (!forOtherPerson) onSelectOrigin(loc, "gps");
       },
