@@ -184,7 +184,11 @@ const PassengerHome = () => {
     if (error) { toast.error("Erro: " + error.message); return; }
     setRideState("searching");
     setActiveRide(data);
-    toast.success("Buscando motorista...");
+    toast.success("Buscando motorista mais próximo...");
+
+    // Dispara o match em background (não bloqueia a UI)
+    supabase.functions.invoke("dispatch-ride", { body: { rideId: data.id } })
+      .catch((e) => console.warn("dispatch-ride invoke:", e));
   };
 
   const handleCancelRide = async () => {
