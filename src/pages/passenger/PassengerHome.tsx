@@ -36,6 +36,7 @@ const PassengerHome = () => {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [stops, setStops] = useState<string[]>([]);
+  const [selectedStops, setSelectedStops] = useState<(CityLocation | null)[]>([]);
   const [activeInput, setActiveInput] = useState<"origin" | "destination" | number | null>(null);
   const [searchResults, setSearchResults] = useState<CityLocation[]>([]);
   const [selectedOrigin, setSelectedOrigin] = useState<CityLocation | null>(null);
@@ -121,7 +122,8 @@ const PassengerHome = () => {
     selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng } : null,
     selectedDestination ? { lat: selectedDestination.lat, lng: selectedDestination.lng } : null,
     selectedCategory as "moto" | "car" | "premium",
-    passengers
+    passengers,
+    selectedStops.filter((s): s is CityLocation => !!s).map((s) => ({ lat: s.lat, lng: s.lng }))
   );
   const estimatedPrice = fare.price;
   const estimatedTime = fare.durationMin;
@@ -135,7 +137,10 @@ const PassengerHome = () => {
   const selectLocation = (loc: CityLocation) => {
     if (activeInput === "origin") { setOrigin(loc.name); setSelectedOrigin(loc); }
     else if (activeInput === "destination") { setDestination(loc.name); setSelectedDestination(loc); }
-    else if (typeof activeInput === "number") { const ns = [...stops]; ns[activeInput] = loc.name; setStops(ns); }
+    else if (typeof activeInput === "number") {
+      const ns = [...stops]; ns[activeInput] = loc.name; setStops(ns);
+      const nss = [...selectedStops]; nss[activeInput] = loc; setSelectedStops(nss);
+    }
     setActiveInput(null); setSearchResults([]);
   };
 
@@ -173,7 +178,9 @@ const PassengerHome = () => {
       passenger_count: passengers, distance_km: distanceKm, duration_minutes: durationMin,
       price, platform_fee: platformFee, driver_net: price - platformFee,
       payment_method: method as any,
-      stops: stops.filter(Boolean).length > 0 ? stops.filter(Boolean) : null,
+      stops: selectedStops.filter((s): s is CityLocation => !!s).length > 0
+        ? selectedStops.filter((s): s is CityLocation => !!s).map((s) => ({ name: s.name, address: s.address, lat: s.lat, lng: s.lng }))
+        : null,
       origin_type: originType,
       for_other_person: forOtherPerson,
       other_person_name: forOtherPerson ? otherPerson.name.trim() : null,
@@ -217,6 +224,7 @@ const PassengerHome = () => {
   const resetRide = () => {
     setRideState("idle"); setActiveRide(null); setRating(0); setRatingComment("");
     setSelectedOrigin(null); setSelectedDestination(null); setOrigin(""); setDestination("");
+    setStops([]); setSelectedStops([]);
     setDriverInfo(null); setPaymentMethod(null);
     setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps");
   };
@@ -243,6 +251,7 @@ const PassengerHome = () => {
           className="h-[40vh] rounded-none"
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
           destination={selectedDestination ? { lat: selectedDestination.lat, lng: selectedDestination.lng, label: selectedDestination.name } : null}
+          stops={selectedStops.filter((s): s is CityLocation => !!s).map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
           driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
           trackUserLocation={!selectedOrigin}
           showRoute={!!selectedOrigin && !!selectedDestination}
@@ -456,13 +465,20 @@ const PassengerHome = () => {
                   <div key={i} className="flex items-center gap-3 rounded-xl bg-muted p-3">
                     <div className="h-2.5 w-2.5 rounded-full bg-warning" />
                     <input type="text" placeholder={`Parada ${i + 1}`} className="flex-1 bg-transparent text-sm outline-none" value={stop}
-                      onChange={(e) => { const ns = [...stops]; ns[i] = e.target.value; setStops(ns); handleSearch(e.target.value); }}
+                      onChange={(e) => {
+                        const ns = [...stops]; ns[i] = e.target.value; setStops(ns);
+                        const nss = [...selectedStops]; nss[i] = null; setSelectedStops(nss);
+                        handleSearch(e.target.value);
+                      }}
                       onFocus={() => { setActiveInput(i); handleSearch(stop); }}
                     />
-                    <button onClick={() => setStops(stops.filter((_, j) => j !== i))}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                    <button onClick={() => {
+                      setStops(stops.filter((_, j) => j !== i));
+                      setSelectedStops(selectedStops.filter((_, j) => j !== i));
+                    }}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>
                   </div>
                 ))}
-                <button onClick={() => setStops([...stops, ""])} className="flex items-center gap-2 text-xs font-medium text-primary">
+                <button onClick={() => { setStops([...stops, ""]); setSelectedStops([...selectedStops, null]); }} className="flex items-center gap-2 text-xs font-medium text-primary">
                   <Plus className="h-3.5 w-3.5" /> Adicionar parada
                 </button>
               </div>
