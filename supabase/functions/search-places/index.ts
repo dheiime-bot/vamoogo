@@ -89,33 +89,48 @@ Deno.serve(async (req) => {
     }
 
     // 3. Google Places API (New) v1 — searchText (POIs) + Autocomplete legacy (endereços) em paralelo
+    // RAIO REDUZIDO para 15km → foca na cidade do dispositivo. Resultados de outras cidades
+    // ainda podem aparecer (Google ignora bias quando não há match local), mas serão
+    // penalizados na ordenação abaixo.
+    const CITY_RADIUS_M = 15000;
     const locationBias = hasLoc
-      ? { circle: { center: { latitude: lat, longitude: lng }, radius: 30000 } }
+      ? { circle: { center: { latitude: lat, longitude: lng }, radius: CITY_RADIUS_M } }
+      : undefined;
+    // locationRestriction força o Google a só retornar dentro do raio (mais agressivo).
+    const locationRestriction = hasLoc
+      ? { circle: { center: { latitude: lat, longitude: lng }, radius: CITY_RADIUS_M } }
       : undefined;
 
     // SearchText (New API) — muito superior para estabelecimentos
-    const searchTextPromise = fetch("https://places.googleapis.com/v1/places:searchText", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.shortFormattedAddress,places.location,places.types,places.currentOpeningHours.openNow,places.businessStatus",
-      },
-      body: JSON.stringify({
-        textQuery: q,
-        languageCode: "pt-BR",
-        regionCode: "BR",
-        maxResultCount: 6,
-        ...(locationBias ? { locationBias } : {}),
-      }),
-    })
-      .then((r) => r.json())
-      .catch((e) => ({ error: String(e) }));
+    // Tentamos PRIMEIRO com locationRestriction (apenas cidade local).
+    // Se vier vazio, fazemos fallback com locationBias (cidade preferida, mas aceita fora).
+    const buildSearchTextBody = (useRestriction: boolean) => ({
+      textQuery: q,
+      languageCode: "pt-BR",
+      regionCode: "BR",
+      maxResultCount: 8,
+      ...(hasLoc && useRestriction ? { locationRestriction } : {}),
+      ...(hasLoc && !useRestriction && locationBias ? { locationBias } : {}),
+    });
+
+    const searchText = (useRestriction: boolean) =>
+      fetch("https://places.googleapis.com/v1/places:searchText", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": apiKey,
+          "X-Goog-FieldMask":
+            "places.id,places.displayName,places.formattedAddress,places.shortFormattedAddress,places.location,places.types,places.currentOpeningHours.openNow,places.businessStatus",
+        },
+        body: JSON.stringify(buildSearchTextBody(useRestriction)),
+      })
+        .then((r) => r.json())
+        .catch((e) => ({ error: String(e) }));
 
     // Autocomplete legacy — campeão para endereços/ruas (mais barato)
+    // RAIO 15km + sem strictBounds (permite leve overflow para ruas que cruzam bairros vizinhos).
     const sessionParam = sessionToken ? `&sessiontoken=${encodeURIComponent(sessionToken)}` : "";
-    const locParam = hasLoc ? `&location=${lat},${lng}&radius=30000` : "";
+    const locParam = hasLoc ? `&location=${lat},${lng}&radius=${CITY_RADIUS_M}` : "";
     const autocompleteUrl =
       `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
       `?input=${encodeURIComponent(q)}` +
@@ -127,11 +142,20 @@ Deno.serve(async (req) => {
       .then((r) => r.json())
       .catch((e) => ({ error: String(e) }));
 
-    const [cacheRes, textRes, autoRes] = await Promise.all([
+    // Roda primeira tentativa (restrição local) em paralelo com cache + autocomplete
+    const [cacheRes, textResStrict, autoRes] = await Promise.all([
       cacheRpc,
-      searchTextPromise,
+      hasLoc ? searchText(true) : searchText(false),
       autocompletePromise,
     ]);
+
+    // Fallback: se restrição local não encontrou nada relevante, refaz com bias (mais permissivo)
+    let textRes: any = textResStrict;
+    const strictPlaces = (textResStrict as any)?.places ?? [];
+    if (hasLoc && strictPlaces.length === 0) {
+      console.log(`[search-places] restrict 0 hits para "${q}", fallback bias`);
+      textRes = await searchText(false);
+    }
 
     if (cacheRes.error) console.error("cache rpc:", cacheRes.error);
 
@@ -153,7 +177,7 @@ Deno.serve(async (req) => {
       return p;
     });
 
-    // SearchText (New API) → predictions
+    // SearchText (New API) → predictions (com distância)
     const textPredictions = ((textRes as any)?.places ?? [])
       .filter((p: any) => p.businessStatus !== "CLOSED_PERMANENTLY")
       .map((p: any) => {
@@ -162,6 +186,7 @@ Deno.serve(async (req) => {
         const loc = p.location;
         if (!loc?.latitude || !loc?.longitude) return null;
         const openNow = p.currentOpeningHours?.openNow;
+        const distanceKm = hasLoc ? dist(lat, lng, loc.latitude, loc.longitude) : undefined;
         return {
           place_id: p.id,
           description: `${name} — ${fullAddr}`,
@@ -174,7 +199,7 @@ Deno.serve(async (req) => {
           },
           types: p.types ?? [],
           openNow: typeof openNow === "boolean" ? openNow : null,
-          distanceKm: hasLoc ? dist(lat, lng, loc.latitude, loc.longitude) : undefined,
+          distanceKm,
           source: "google_textsearch",
         };
       })
@@ -193,20 +218,38 @@ Deno.serve(async (req) => {
         if (!p?.place_id || seen.has(p.place_id)) continue;
         seen.add(p.place_id);
         merged.push(p);
-        if (merged.length >= 8) break;
       }
     };
     pushUnique(cachePredictions);
     pushUnique(textPredictions);
     pushUnique(autoPredictions);
 
+    // ORDENAÇÃO INTELIGENTE: prioriza cidade do dispositivo
+    // - Score = distância (km), com PESO BÔNUS para cache (já validado pela cidade)
+    // - Itens sem distância (autocomplete puro) ficam no meio (peso neutro 8km)
+    // - Itens >50km recebem penalidade pesada (provavelmente outra cidade)
+    let final = merged;
+    if (hasLoc) {
+      const score = (p: any): number => {
+        const d = typeof p.distanceKm === "number" ? p.distanceKm : 8;
+        let s = d;
+        if (p.source === "cache") s -= 2; // bônus para cache local
+        if (d > 50) s += 100; // penalidade forte para outras cidades
+        if (d > 200) s += 1000; // outro estado: vai pro fim
+        return s;
+      };
+      final = [...merged].sort((a, b) => score(a) - score(b));
+    }
+    final = final.slice(0, 8);
+
     const payload = {
-      predictions: merged,
+      predictions: final,
       source: "hybrid",
       debug: {
         cache: cachePredictions.length,
         text: textPredictions.length,
         auto: autoPredictions.length,
+        nearestKm: hasLoc && final[0]?.distanceKm ? Number(final[0].distanceKm.toFixed(1)) : null,
       },
     };
 
