@@ -19,6 +19,27 @@ type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in
 
 const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", debit: "Débito", credit: "Crédito" };
 
+const playOfferSound = () => {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const beep = (freq: number, start: number, dur = 0.18) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur);
+    };
+    beep(880, 0); beep(1320, 0.22); beep(1760, 0.44);
+    setTimeout(() => ctx.close(), 1000);
+  } catch (e) { /* ignore */ }
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+};
+
 const DriverHome = () => {
   const { user, profile, driverData } = useAuth();
   const [isOnline, setIsOnline] = useState(false);
