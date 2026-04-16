@@ -9,6 +9,7 @@ import { Home, User } from "lucide-react";
 import { searchLocations, getPopularLocations, getCategoryLabel, getCategoryIcon, CityLocation } from "@/data/cityLocations";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useFareEstimate } from "@/hooks/useFareEstimate";
 import { toast } from "sonner";
 
 const categories = [
