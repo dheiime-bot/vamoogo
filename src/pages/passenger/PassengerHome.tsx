@@ -5,6 +5,7 @@ import GoogleMap from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
+import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passenger/OriginPicker";
 import { Home, User } from "lucide-react";
 import { searchLocations, getPopularLocations, getCategoryLabel, getCategoryIcon, CityLocation } from "@/data/cityLocations";
 import { useAuth } from "@/contexts/AuthContext";
