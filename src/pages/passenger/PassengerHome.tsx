@@ -11,6 +11,7 @@ import { searchLocations, getPopularLocations, getCategoryLabel, getCategoryIcon
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useFareEstimate } from "@/hooks/useFareEstimate";
+import { useCityCache } from "@/hooks/useCityCache";
 import { toast } from "sonner";
 
 const categories = [
