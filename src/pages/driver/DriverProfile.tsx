@@ -1,15 +1,8 @@
-import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, Wallet, Home, History } from "lucide-react";
-import BottomNav from "@/components/shared/BottomNav";
+import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft } from "lucide-react";
+import AppMenu from "@/components/shared/AppMenu";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-
-const navItems = [
-  { icon: Home, label: "Início", path: "/driver" },
-  { icon: Wallet, label: "Carteira", path: "/driver/wallet" },
-  { icon: History, label: "Corridas", path: "/driver/rides" },
-  { icon: User, label: "Perfil", path: "/driver/profile" },
-];
 
 const DriverProfile = () => {
   const navigate = useNavigate();
