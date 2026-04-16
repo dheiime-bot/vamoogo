@@ -53,11 +53,7 @@ const haversineKm = (a: Point, b: Point) => {
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 };
 
-// Preço bruto por trecho — sem aplicar min_fare nem extras de passageiros
-const computeLegPrice = (km: number, min: number, t: Tariff) => {
-  const base = (t.base_fare + t.per_km * km + t.per_minute * min) * t.region_multiplier;
-  return Math.round(base * 100) / 100;
-};
+// (Preço por trecho é calculado por rateio proporcional ao "preço bruto" do trecho — ver mais abaixo.)
 
 const computePrice = (km: number, min: number, passengers: number, t: Tariff) => {
   const base = (t.base_fare + t.per_km * km + t.per_minute * min) * t.region_multiplier;
