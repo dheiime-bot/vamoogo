@@ -107,6 +107,7 @@ const DriverHome = () => {
         setPendingOffer(offer);
         setPendingRide(offer.rides);
         setRideState("offer");
+        playOfferSound();
       }
     };
     checkExisting();
@@ -123,6 +124,7 @@ const DriverHome = () => {
           setPendingOffer(offer);
           setPendingRide(ride);
           setRideState("offer");
+          playOfferSound();
           toast.success("Nova corrida! 🚗");
         })
       .subscribe();
