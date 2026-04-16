@@ -48,8 +48,23 @@ export default function AddressAutocompleteField({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userLocRef = useRef<{ lat: number; lng: number } | null>(null);
   // Session token reutilizado em autocomplete + details. Renovado após cada seleção.
   const sessionTokenRef = useRef<string>(createSessionToken());
+
+  // Captura geolocalização para enviar como location bias (resultados próximos)
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userLocRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      },
+      () => {
+        // Silencioso: sem permissão = sem viés de localização
+      },
+      { enableHighAccuracy: false, timeout: 4000, maximumAge: 5 * 60 * 1000 }
+    );
+  }, []);
 
   // Sincroniza texto quando o valor selecionado vem de fora
   useEffect(() => {
@@ -83,6 +98,8 @@ export default function AddressAutocompleteField({
       const results = await fetchAutocomplete({
         query: q,
         sessionToken: sessionTokenRef.current,
+        lat: userLocRef.current?.lat,
+        lng: userLocRef.current?.lng,
       });
       setPredictions(results.slice(0, 6));
       setHighlight(0);
