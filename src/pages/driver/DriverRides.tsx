@@ -63,7 +63,7 @@ const DriverRides = () => (
       ))}
     </div>
 
-    <BottomNav items={navItems} />
+    <AppMenu role="driver" />
   </div>
 );
 

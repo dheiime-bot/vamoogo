@@ -84,7 +84,7 @@ const PassengerHistory = () => {
         ))}
       </div>
 
-      <BottomNav items={navItems} />
+      <AppMenu role="passenger" />
     </div>
   );
 };

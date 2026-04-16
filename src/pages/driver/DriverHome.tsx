@@ -468,7 +468,7 @@ const DriverHome = () => {
         </div>
       )}
 
-      <BottomNav items={navItems} />
+      <AppMenu role="driver" />
     </div>
   );
 };

@@ -63,7 +63,7 @@ const PassengerProfile = () => {
         </button>
       </div>
 
-      <BottomNav items={navItems} />
+      <AppMenu role="passenger" />
     </div>
   );
 };

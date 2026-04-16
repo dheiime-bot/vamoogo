@@ -99,7 +99,7 @@ const DriverProfile = () => {
         </button>
       </div>
 
-      <BottomNav items={navItems} />
+      <AppMenu role="driver" />
     </div>
   );
 };
