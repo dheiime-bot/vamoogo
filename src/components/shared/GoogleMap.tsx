@@ -461,7 +461,13 @@ const GoogleMapInner = ({
       defaultZoom={14}
       mapId={MAP_ID}
       gestureHandling={interactive ? "greedy" : "none"}
-      disableDefaultUI={!interactive}
+      disableDefaultUI={true}
+      zoomControl={false}
+      mapTypeControl={false}
+      streetViewControl={false}
+      fullscreenControl={false}
+      rotateControl={false}
+      scaleControl={false}
       clickableIcons={false}
       style={{ width: "100%", height: "100%" }}
     >
