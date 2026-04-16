@@ -3,7 +3,7 @@ import { Car, DollarSign, AlertTriangle, Activity, ChevronRight, TrendingUp, Use
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 import AdminLayout from "@/components/admin/AdminLayout";
-import MapboxMap from "@/components/shared/MapboxMap";
+import GoogleMap from "@/components/shared/GoogleMap";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -115,7 +115,7 @@ const AdminDashboard = () => {
             <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-destructive" /> Incidentes</span>
           </div>
         </div>
-        <MapboxMap
+        <GoogleMap
           className="h-[300px] lg:h-[350px] rounded-none"
           origin={firstActive ? { lat: firstActive.origin_lat, lng: firstActive.origin_lng, label: "Origem" } : null}
           destination={firstActive ? { lat: firstActive.destination_lat, lng: firstActive.destination_lng, label: "Destino" } : null}

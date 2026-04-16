@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { MapPin, Search, Users, Plus, Clock, ChevronRight, Car, Bike, Crown, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
 import BottomNav from "@/components/shared/BottomNav";
-import MapboxMap from "@/components/shared/MapboxMap";
+import GoogleMap from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod } from "@/components/passenger/PaymentMethodModal";
 import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
@@ -205,7 +205,7 @@ const PassengerHome = () => {
     <div className="min-h-screen bg-background pb-20">
       {/* Map */}
       <div className="relative">
-        <MapboxMap
+        <GoogleMap
           className="h-[40vh] rounded-none"
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
           destination={selectedDestination ? { lat: selectedDestination.lat, lng: selectedDestination.lng, label: selectedDestination.name } : null}
