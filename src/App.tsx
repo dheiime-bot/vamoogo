@@ -27,6 +27,7 @@ import AdminCampaigns from "./pages/admin/AdminCampaigns.tsx";
 import AdminCoupons from "./pages/admin/AdminCoupons.tsx";
 import AdminReports from "./pages/admin/AdminReports.tsx";
 import AdminAudit from "./pages/admin/AdminAudit.tsx";
+import TestAutocomplete from "./pages/TestAutocomplete.tsx";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/admin/coupons" element={<AdminCoupons />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/audit" element={<AdminAudit />} />
+            <Route path="/test-autocomplete" element={<TestAutocomplete />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
