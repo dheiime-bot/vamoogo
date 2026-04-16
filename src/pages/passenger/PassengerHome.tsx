@@ -149,6 +149,10 @@ const PassengerHome = () => {
   // Request ride after payment method is selected
   const handleConfirmRide = async (method: PaymentMethod, coupon: AppliedCoupon | null) => {
     if (!selectedOrigin || !selectedDestination || !user) return;
+    if (forOtherPerson && (!otherPerson.name.trim() || otherPerson.phone.replace(/\D/g, "").length < 10)) {
+      toast.error("Informe nome e telefone do passageiro");
+      return;
+    }
     setPaymentMethod(method);
     setRideState("idle"); // Close modal temporarily
     setIsRequesting(true);
@@ -170,14 +174,17 @@ const PassengerHome = () => {
       price, platform_fee: platformFee, driver_net: price - platformFee,
       payment_method: method as any,
       stops: stops.filter(Boolean).length > 0 ? stops.filter(Boolean) : null,
-    }).select().single();
+      origin_type: originType,
+      for_other_person: forOtherPerson,
+      other_person_name: forOtherPerson ? otherPerson.name.trim() : null,
+      other_person_phone: forOtherPerson ? otherPerson.phone : null,
+    } as any).select().single();
 
     setIsRequesting(false);
     if (error) { toast.error("Erro: " + error.message); return; }
 
     // Increment coupon usage (best-effort, non-blocking)
     if (coupon) {
-      supabase.rpc as any; // noop type guard
       supabase.from("coupons").select("used_count").eq("id", coupon.id).single()
         .then(({ data: c }) => {
           if (c) supabase.from("coupons").update({ used_count: (c.used_count || 0) + 1 }).eq("id", coupon.id).then(() => {});
