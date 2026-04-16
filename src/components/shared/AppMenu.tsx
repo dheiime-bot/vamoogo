@@ -82,7 +82,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
             <Menu className="h-5 w-5 text-foreground" />
           </button>
         </SheetTrigger>
-        <span className="font-display text-xl font-extrabold text-gradient-primary leading-none select-none">
+        <span className="flex h-11 items-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 font-display text-xl font-extrabold text-gradient-primary leading-none select-none">
           Vamoo!
         </span>
       </div>
