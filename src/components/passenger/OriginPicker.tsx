@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { MapPin, Search, X, User, Phone, Loader2, Check, Navigation } from "lucide-react";
-import { searchLocations, getPopularLocations, getCategoryIcon, getCategoryLabel, CityLocation } from "@/data/cityLocations";
+import { useEffect, useRef } from "react";
+import { MapPin, User, Phone, Loader2, Navigation } from "lucide-react";
+import AddressAutocompleteField from "@/components/address/AddressAutocompleteField";
 import { useCityCache } from "@/hooks/useCityCache";
+import type { PlaceDetails } from "@/services/googlePlaces";
+import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
 import { toast } from "sonner";
 
 export type OriginType = "gps" | "manual";
@@ -12,8 +14,8 @@ export interface OtherPersonInfo {
 }
 
 interface OriginPickerProps {
-  selectedOrigin: CityLocation | null;
-  onSelectOrigin: (loc: CityLocation, type: OriginType) => void;
+  selectedOrigin: AppLocation | null;
+  onSelectOrigin: (loc: AppLocation, type: OriginType) => void;
   forOtherPerson: boolean;
   onToggleOtherPerson: (v: boolean) => void;
   otherPerson: OtherPersonInfo;
@@ -59,11 +61,8 @@ const OriginPicker = ({
 }: OriginPickerProps) => {
   const [loadingGps, setLoadingGps] = useState(false);
   const [gpsAddress, setGpsAddress] = useState<string>("");
-  const [gpsLoc, setGpsLoc] = useState<CityLocation | null>(null);
+  const [gpsLoc, setGpsLoc] = React.useState<AppLocation | null>(null);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<CityLocation[]>([]);
-  const [showResults, setShowResults] = useState(false);
   const autoTried = useRef(false);
 
   // Dispara cache de locais da cidade (1x por cidade) ao detectar GPS
@@ -86,14 +85,12 @@ const OriginPicker = ({
           await new Promise((r) => setTimeout(r, 500));
         }
         const address = await reverseGeocode(latitude, longitude);
-        const loc: CityLocation = {
+        const loc: AppLocation = {
           id: `gps-${Date.now()}`,
           name: "Minha localização",
           address,
           lat: latitude,
           lng: longitude,
-          category: "other" as any,
-          city: "Altamira",
         };
         setGpsLoc(loc);
         setGpsAddress(address);
@@ -126,19 +123,6 @@ const OriginPicker = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forOtherPerson]);
 
-  const handleSearch = (q: string) => {
-    setQuery(q);
-    setShowResults(true);
-    if (q.length >= 2) setResults(searchLocations(q));
-    else setResults(getPopularLocations("Altamira", 8));
-  };
-
-  const handleSelectManual = (loc: CityLocation) => {
-    onSelectOrigin(loc, "manual");
-    setQuery(loc.name);
-    setShowResults(false);
-  };
-
   const handleRetryGps = () => {
     if (!navigator.geolocation) {
       toast.error("GPS indisponível");
@@ -149,14 +133,12 @@ const OriginPicker = ({
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         const address = await reverseGeocode(latitude, longitude);
-        const loc: CityLocation = {
+        const loc: AppLocation = {
           id: `gps-${Date.now()}`,
           name: "Minha localização",
           address,
           lat: latitude,
           lng: longitude,
-          category: "other" as any,
-          city: "Altamira",
         };
         setGpsLoc(loc);
         setGpsAddress(address);
@@ -170,6 +152,15 @@ const OriginPicker = ({
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  };
+
+  const selectedManualOrigin = selectedOrigin && !selectedOrigin.id.startsWith("gps-")
+    ? placeDetailsFromAppLocation(selectedOrigin)
+    : null;
+
+  const handleManualOriginChange = (place: PlaceDetails | null) => {
+    if (!place) return;
+    onSelectOrigin(appLocationFromPlaceDetails(place), "manual");
   };
 
   return (
@@ -202,48 +193,15 @@ const OriginPicker = ({
         </div>
       ) : (
         <div className="space-y-2">
-          <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-            <div className="h-2.5 w-2.5 rounded-full bg-success shrink-0" />
-            <input
-              type="text"
-              placeholder="Endereço de embarque da pessoa"
-              autoFocus
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              value={query}
-              onChange={(e) => handleSearch(e.target.value)}
-              onFocus={() => {
-                setShowResults(true);
-                if (results.length === 0) setResults(getPopularLocations("Altamira", 8));
-              }}
-            />
-            {query && (
-              <button onClick={() => { setQuery(""); setResults(getPopularLocations("Altamira", 8)); setShowResults(true); }}>
-                <X className="h-3.5 w-3.5 text-muted-foreground" />
-              </button>
-            )}
-            <Search className="h-4 w-4 text-muted-foreground" />
-          </div>
+          <AddressAutocompleteField
+            label="Embarque da pessoa"
+            placeholder="Digite rua, número ou local popular"
+            value={selectedManualOrigin}
+            onChange={handleManualOriginChange}
+            autoFocus
+          />
 
-          {showResults && (
-            <div className="rounded-xl border bg-card shadow-md max-h-52 overflow-y-auto">
-              {results.length > 0 ? results.map((loc) => (
-                <button
-                  key={loc.id}
-                  onClick={() => handleSelectManual(loc)}
-                  className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-muted transition-colors border-b border-border/50 last:border-b-0"
-                >
-                  <span className="text-lg mt-0.5">{getCategoryIcon(loc.category)}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{loc.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{loc.address} • {getCategoryLabel(loc.category)}</p>
-                  </div>
-                  {selectedOrigin?.id === loc.id && <Check className="h-4 w-4 text-success" />}
-                </button>
-              )) : <p className="px-3 py-4 text-xs text-muted-foreground text-center">Nenhum local encontrado</p>}
-            </div>
-          )}
-
-          {selectedOrigin && !selectedOrigin.id.startsWith("gps-") && !showResults && (
+          {selectedOrigin && !selectedOrigin.id.startsWith("gps-") && (
             <p className="text-[10px] text-muted-foreground px-1 flex items-center gap-1">
               <MapPin className="h-3 w-3" /> Endereço da pessoa selecionado
             </p>
