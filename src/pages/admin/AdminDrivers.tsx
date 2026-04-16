@@ -85,8 +85,9 @@ const AdminDrivers = () => {
                     <td className="px-4 py-3"><StatusBadge status={statusMap[d.status] || "pending"} /></td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
-                        <button onClick={() => updateStatus(d.user_id, "approved")} className="rounded-lg p-1.5 hover:bg-muted" title="Aprovar"><CheckCircle className="h-4 w-4 text-success" /></button>
-                        <button onClick={() => updateStatus(d.user_id, "blocked")} className="rounded-lg p-1.5 hover:bg-muted" title="Bloquear"><Ban className="h-4 w-4 text-destructive" /></button>
+                        <button onClick={() => updateStatus(d.user_id, "approved")} className="rounded-lg p-1.5 hover:bg-success/10" title="Aprovar"><CheckCircle className="h-4 w-4 text-success" /></button>
+                        <button onClick={() => updateStatus(d.user_id, "rejected")} className="rounded-lg p-1.5 hover:bg-warning/10" title="Reprovar"><XCircle className="h-4 w-4 text-warning" /></button>
+                        <button onClick={() => updateStatus(d.user_id, "blocked")} className="rounded-lg p-1.5 hover:bg-destructive/10" title="Bloquear"><Ban className="h-4 w-4 text-destructive" /></button>
                       </div>
                     </td>
                   </tr>
