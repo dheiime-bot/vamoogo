@@ -216,6 +216,17 @@ const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
 
 /* ---------- Rota / camadas ---------- */
 
+// Paleta de cores para trechos (cíclica). Cada trecho ganha uma cor distinta.
+const LEG_COLORS = [
+  "#3b82f6", // azul
+  "#10b981", // verde
+  "#f59e0b", // âmbar
+  "#ef4444", // vermelho
+  "#8b5cf6", // violeta
+  "#ec4899", // rosa
+  "#06b6d4", // ciano
+];
+
 const RouteLayer = ({
   origin,
   destination,
@@ -227,49 +238,79 @@ const RouteLayer = ({
 }) => {
   const map = useMap();
   const routesLib = useMapsLibrary("routes");
-  const polylineRef = useRef<any>(null);
-  const polylineBgRef = useRef<any>(null);
+  const polylinesRef = useRef<any[]>([]);
+  const halosRef = useRef<any[]>([]);
+
+  // Chave estável para deps (evita re-render por nova referência de array)
+  const stopsKey = stops.map((s) => `${s.lat.toFixed(5)},${s.lng.toFixed(5)}`).join("|");
 
   useEffect(() => {
     if (!map || !routesLib) return;
     let cancelled = false;
 
+    const clearAll = () => {
+      polylinesRef.current.forEach((p) => p?.setMap(null));
+      halosRef.current.forEach((p) => p?.setMap(null));
+      polylinesRef.current = [];
+      halosRef.current = [];
+    };
+
     const fetchRoute = async () => {
       try {
-        const ds = new routesLib.DirectionsService();
-        const res = await ds.route({
-          origin: { lat: origin.lat, lng: origin.lng },
-          destination: { lat: destination.lat, lng: destination.lng },
-          waypoints: stops.map((s) => ({ location: { lat: s.lat, lng: s.lng } })),
-          travelMode: "DRIVING" as any,
-        });
-        if (cancelled) return;
-        const path = res.routes[0]?.overview_path;
-        if (!path) return;
-
-        polylineRef.current?.setMap(null);
-        polylineBgRef.current?.setMap(null);
         const g = (window as any).google;
-        // halo (linha mais larga embaixo)
-        polylineBgRef.current = new g.maps.Polyline({
-          path,
-          strokeColor: "#1e3a8a",
-          strokeOpacity: 0.25,
-          strokeWeight: 10,
-          map,
-        });
-        // linha principal
-        polylineRef.current = new g.maps.Polyline({
-          path,
-          strokeColor: "#3b82f6",
-          strokeOpacity: 1,
-          strokeWeight: 5,
-          map,
-        });
+        const ds = new routesLib.DirectionsService();
 
+        // Sequência completa: origem -> paradas -> destino
+        const sequence: MapPoint[] = [origin, ...stops, destination];
+        clearAll();
         const bounds = new g.maps.LatLngBounds();
-        path.forEach((p: any) => bounds.extend(p));
-        map.fitBounds(bounds, 80);
+
+        // Para cada trecho, busca rota independente e desenha com cor própria
+        for (let i = 0; i < sequence.length - 1; i++) {
+          const a = sequence[i];
+          const b = sequence[i + 1];
+          try {
+            const res = await ds.route({
+              origin: { lat: a.lat, lng: a.lng },
+              destination: { lat: b.lat, lng: b.lng },
+              travelMode: "DRIVING" as any,
+            });
+            if (cancelled) return;
+            const path = res.routes[0]?.overview_path;
+            if (!path) continue;
+
+            const color = LEG_COLORS[i % LEG_COLORS.length];
+
+            // halo escuro (largura maior, baixa opacidade)
+            const halo = new g.maps.Polyline({
+              path,
+              strokeColor: "#0b1220",
+              strokeOpacity: 0.22,
+              strokeWeight: 10,
+              map,
+              zIndex: 1,
+            });
+            // linha principal colorida
+            const line = new g.maps.Polyline({
+              path,
+              strokeColor: color,
+              strokeOpacity: 1,
+              strokeWeight: 5,
+              map,
+              zIndex: 2,
+            });
+
+            halosRef.current.push(halo);
+            polylinesRef.current.push(line);
+            path.forEach((p: any) => bounds.extend(p));
+          } catch (err) {
+            console.warn(`Directions trecho ${i} falhou:`, err);
+          }
+        }
+
+        if (!cancelled && !bounds.isEmpty()) {
+          map.fitBounds(bounds, 80);
+        }
       } catch (e) {
         console.warn("Directions error:", e);
       }
@@ -278,12 +319,9 @@ const RouteLayer = ({
     fetchRoute();
     return () => {
       cancelled = true;
-      polylineRef.current?.setMap(null);
-      polylineBgRef.current?.setMap(null);
-      polylineRef.current = null;
-      polylineBgRef.current = null;
+      clearAll();
     };
-  }, [map, routesLib, origin.lat, origin.lng, destination.lat, destination.lng, stops]);
+  }, [map, routesLib, origin.lat, origin.lng, destination.lat, destination.lng, stopsKey]);
 
   return null;
 };
