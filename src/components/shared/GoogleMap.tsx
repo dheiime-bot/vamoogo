@@ -237,16 +237,6 @@ const RouteLayer = ({
   destination: MapPoint;
   stops: MapPoint[];
 }) => {
-
-const RouteLayer = ({
-  origin,
-  destination,
-  stops,
-}: {
-  origin: MapPoint;
-  destination: MapPoint;
-  stops: MapPoint[];
-}) => {
   const map = useMap();
   const routesLib = useMapsLibrary("routes");
   const polylinesRef = useRef<any[]>([]);
