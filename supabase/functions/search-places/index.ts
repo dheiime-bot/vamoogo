@@ -135,8 +135,23 @@ Deno.serve(async (req) => {
 
     if (cacheRes.error) console.error("cache rpc:", cacheRes.error);
 
+    // Helper haversine (km)
+    const dist = (la1: number, ln1: number, la2: number, ln2: number) => {
+      const R = 6371;
+      const toRad = (x: number) => (x * Math.PI) / 180;
+      const dLa = toRad(la2 - la1);
+      const dLn = toRad(ln2 - ln1);
+      const a = Math.sin(dLa / 2) ** 2 +
+        Math.cos(toRad(la1)) * Math.cos(toRad(la2)) * Math.sin(dLn / 2) ** 2;
+      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
     const strongCache = (cacheRes.data ?? []).filter((r: any) => (r.similarity ?? 0) >= 0.65);
-    const cachePredictions = strongCache.map(buildCachePrediction);
+    const cachePredictions = strongCache.map((r: any) => {
+      const p = buildCachePrediction(r);
+      if (hasLoc) p.distanceKm = dist(lat, lng, r.lat, r.lng);
+      return p;
+    });
 
     // SearchText (New API) → predictions
     const textPredictions = ((textRes as any)?.places ?? [])
@@ -159,6 +174,7 @@ Deno.serve(async (req) => {
           },
           types: p.types ?? [],
           openNow: typeof openNow === "boolean" ? openNow : null,
+          distanceKm: hasLoc ? dist(lat, lng, loc.latitude, loc.longitude) : undefined,
           source: "google_textsearch",
         };
       })
