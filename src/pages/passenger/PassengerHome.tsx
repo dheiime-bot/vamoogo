@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
-import { MapPin, Search, Users, Plus, Clock, ChevronRight, Car, Bike, Crown, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
+import { Users, Plus, Car, Bike, Crown, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
 import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passenger/OriginPicker";
-import { Home, User } from "lucide-react";
-import { searchLocations, getPopularLocations, getCategoryLabel, getCategoryIcon, CityLocation } from "@/data/cityLocations";
+import AddressAutocompleteField from "@/components/address/AddressAutocompleteField";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useFareEstimate } from "@/hooks/useFareEstimate";
-import { useCityCache } from "@/hooks/useCityCache";
+import type { PlaceDetails } from "@/services/googlePlaces";
+import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
 import { toast } from "sonner";
 
 const categories = [
@@ -29,14 +29,9 @@ const PassengerHome = () => {
   const { user } = useAuth();
   const [passengers, setPassengers] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("car");
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
-  const [stops, setStops] = useState<string[]>([]);
-  const [selectedStops, setSelectedStops] = useState<(CityLocation | null)[]>([]);
-  const [activeInput, setActiveInput] = useState<"origin" | "destination" | number | null>(null);
-  const [searchResults, setSearchResults] = useState<CityLocation[]>([]);
-  const [selectedOrigin, setSelectedOrigin] = useState<CityLocation | null>(null);
-  const [selectedDestination, setSelectedDestination] = useState<CityLocation | null>(null);
+  const [selectedOrigin, setSelectedOrigin] = useState<AppLocation | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<AppLocation | null>(null);
+  const [selectedStops, setSelectedStops] = useState<(AppLocation | null)[]>([]);
   const [isRequesting, setIsRequesting] = useState(false);
   const [recentRides, setRecentRides] = useState<any[]>([]);
   const [rideState, setRideState] = useState<RideState>("idle");
@@ -114,7 +109,7 @@ const PassengerHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
 
-  const confirmedStops = selectedStops.filter((s): s is CityLocation => !!s);
+  const confirmedStops = selectedStops.filter((s): s is AppLocation => !!s);
   const effectiveStops = returnToOrigin && selectedOrigin && selectedDestination
     ? [...confirmedStops, selectedDestination]
     : confirmedStops;
@@ -133,21 +128,6 @@ const PassengerHome = () => {
   const estimatedPrice = fare.price;
   const estimatedTime = fare.durationMin;
   const estimatedDistance = fare.distanceKm;
-
-  const handleSearch = (query: string) => {
-    if (query.length >= 2) setSearchResults(searchLocations(query));
-    else setSearchResults(getPopularLocations("Altamira", 8));
-  };
-
-  const selectLocation = (loc: CityLocation) => {
-    if (activeInput === "origin") { setOrigin(loc.name); setSelectedOrigin(loc); }
-    else if (activeInput === "destination") { setDestination(loc.name); setSelectedDestination(loc); }
-    else if (typeof activeInput === "number") {
-      const ns = [...stops]; ns[activeInput] = loc.name; setStops(ns);
-      const nss = [...selectedStops]; nss[activeInput] = loc; setSelectedStops(nss);
-    }
-    setActiveInput(null); setSearchResults([]);
-  };
 
   // Open payment modal instead of directly requesting
   const handleOpenPayment = () => {
@@ -229,13 +209,11 @@ const PassengerHome = () => {
 
   const resetRide = () => {
     setRideState("idle"); setActiveRide(null); setRating(0); setRatingComment("");
-    setSelectedOrigin(null); setSelectedDestination(null); setOrigin(""); setDestination("");
-    setStops([]); setSelectedStops([]);
+    setSelectedOrigin(null); setSelectedDestination(null); setSelectedStops([]);
     setDriverInfo(null); setPaymentMethod(null);
     setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps"); setReturnToOrigin(false);
   };
 
-  const showSuggestions = activeInput !== null;
   const isRideActive = ["searching", "accepted", "driver_arriving", "arrived", "in_progress"].includes(rideState);
 
   // Chat overlay
@@ -436,7 +414,6 @@ const PassengerHome = () => {
                 selectedOrigin={selectedOrigin}
                 onSelectOrigin={(loc, type) => {
                   setSelectedOrigin(loc);
-                  setOrigin(loc.name);
                   setOriginType(type);
                 }}
                 forOtherPerson={forOtherPerson}
@@ -447,28 +424,30 @@ const PassengerHome = () => {
 
               {/* Destination input */}
               <div className="space-y-2">
-                <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-                  <div className="h-2.5 w-2.5 rounded-full bg-destructive" />
-                  <input type="text" placeholder="Para onde vai?" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" value={destination}
-                    onChange={(e) => { setDestination(e.target.value); handleSearch(e.target.value); }}
-                    onFocus={() => { setActiveInput("destination"); handleSearch(destination); }}
-                  />
-                  {destination && <button onClick={() => { setDestination(""); setSelectedDestination(null); }}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>}
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                </div>
-                {stops.map((stop, i) => (
+                <AddressAutocompleteField
+                  label="Destino"
+                  placeholder="Para onde vai?"
+                  value={selectedDestination ? placeDetailsFromAppLocation(selectedDestination) : null}
+                  onChange={(place) => setSelectedDestination(place ? appLocationFromPlaceDetails(place) : null)}
+                />
+                {selectedStops.map((stop, i) => (
                   <div key={i} className="flex items-center gap-3 rounded-xl bg-muted p-3">
                     <div className="h-2.5 w-2.5 rounded-full bg-warning" />
-                    <input type="text" placeholder={`Parada ${i + 1}`} className="flex-1 bg-transparent text-sm outline-none" value={stop}
-                      onChange={(e) => {
-                        const ns = [...stops]; ns[i] = e.target.value; setStops(ns);
-                        const nss = [...selectedStops]; nss[i] = null; setSelectedStops(nss);
-                        handleSearch(e.target.value);
-                      }}
-                      onFocus={() => { setActiveInput(i); handleSearch(stop); }}
-                    />
+                    <div className="flex-1">
+                      <AddressAutocompleteField
+                        label={`Parada ${i + 1}`}
+                        placeholder={`Digite a parada ${i + 1}`}
+                        value={stop ? placeDetailsFromAppLocation(stop) : null}
+                        onChange={(place: PlaceDetails | null) => {
+                          setSelectedStops((prev) => {
+                            const next = [...prev];
+                            next[i] = place ? appLocationFromPlaceDetails(place) : null;
+                            return next;
+                          });
+                        }}
+                      />
+                    </div>
                     <button onClick={() => {
-                      setStops(stops.filter((_, j) => j !== i));
                       setSelectedStops(selectedStops.filter((_, j) => j !== i));
                     }}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>
                   </div>
@@ -480,7 +459,6 @@ const PassengerHome = () => {
                         toast.error("Desative o retorno para adicionar mais paradas");
                         return;
                       }
-                      setStops([...stops, ""]);
                       setSelectedStops([...selectedStops, null]);
                     }}
                     disabled={returnToOrigin}
@@ -514,22 +492,6 @@ const PassengerHome = () => {
                   </p>
                 )}
               </div>
-
-              {showSuggestions && (
-                <div className="rounded-xl border bg-card shadow-lg max-h-52 overflow-y-auto animate-fade-in">
-                  {searchResults.length > 0 ? searchResults.map((loc) => (
-                    <button key={loc.id} onClick={() => selectLocation(loc)}
-                      className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-muted transition-colors border-b border-border/50 last:border-b-0">
-                      <span className="text-lg mt-0.5">{getCategoryIcon(loc.category)}</span>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{loc.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{loc.address} • {getCategoryLabel(loc.category)}</p>
-                      </div>
-                    </button>
-                  )) : <p className="px-3 py-4 text-xs text-muted-foreground text-center">Nenhum local encontrado</p>}
-                  <button onClick={() => setActiveInput(null)} className="w-full px-3 py-2 text-xs text-primary font-medium border-t">Fechar</button>
-                </div>
-              )}
 
               {/* Passengers */}
               <div className="flex items-center justify-between rounded-xl border p-3">
