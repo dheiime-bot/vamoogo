@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Car, DollarSign, Settings, AlertTriangle, MapPin,
   Headphones, ScrollText, Megaphone, Ticket, BarChart3, LogOut,
   Search, Bell, Moon, Sun, RefreshCw, ChevronDown, ChevronRight, User,
-  Briefcase, Headset,
+  Briefcase, Headset, MessageCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -61,6 +61,7 @@ const navItems: NavItem[] = [
       { label: "Logs", path: "/admin/audit" },
     ],
   },
+  { icon: MessageCircle, label: "Chats", path: "/admin/chats" },
   { icon: Headphones, label: "Suporte", path: "/admin/support" },
 ];
 
