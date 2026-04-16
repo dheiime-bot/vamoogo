@@ -10,10 +10,13 @@ import AuthPage from "./pages/auth/AuthPage.tsx";
 import PassengerHome from "./pages/passenger/PassengerHome.tsx";
 import PassengerHistory from "./pages/passenger/PassengerHistory.tsx";
 import PassengerProfile from "./pages/passenger/PassengerProfile.tsx";
+import PassengerChats from "./pages/passenger/PassengerChats.tsx";
 import DriverHome from "./pages/driver/DriverHome.tsx";
 import DriverWallet from "./pages/driver/DriverWallet.tsx";
 import DriverRides from "./pages/driver/DriverRides.tsx";
 import DriverProfile from "./pages/driver/DriverProfile.tsx";
+import DriverChats from "./pages/driver/DriverChats.tsx";
+import AdminChats from "./pages/admin/AdminChats.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import AdminDrivers from "./pages/admin/AdminDrivers.tsx";
 import AdminPassengers from "./pages/admin/AdminPassengers.tsx";
@@ -44,11 +47,14 @@ const App = () => (
             <Route path="/passenger" element={<PassengerHome />} />
             <Route path="/passenger/history" element={<PassengerHistory />} />
             <Route path="/passenger/profile" element={<PassengerProfile />} />
+            <Route path="/passenger/chats" element={<PassengerChats />} />
             <Route path="/driver" element={<DriverHome />} />
             <Route path="/driver/wallet" element={<DriverWallet />} />
             <Route path="/driver/rides" element={<DriverRides />} />
             <Route path="/driver/profile" element={<DriverProfile />} />
+            <Route path="/driver/chats" element={<DriverChats />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/chats" element={<AdminChats />} />
             <Route path="/admin/drivers" element={<AdminDrivers />} />
             <Route path="/admin/passengers" element={<AdminPassengers />} />
             <Route path="/admin/rides" element={<AdminRides />} />
