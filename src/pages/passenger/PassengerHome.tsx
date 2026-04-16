@@ -44,9 +44,6 @@ const PassengerHome = () => {
   const [rideState, setRideState] = useState<RideState>("idle");
   const [activeRide, setActiveRide] = useState<any>(null);
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
-  const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
-  const [estimatedDistance, setEstimatedDistance] = useState<number | null>(null);
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
