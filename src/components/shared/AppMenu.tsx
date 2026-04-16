@@ -67,18 +67,25 @@ const AppMenu = ({ role, floating = true }: Props) => {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <button
-          aria-label="Abrir menu"
-          className={cn(
-            "flex h-11 w-11 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted",
-            floating && "fixed left-3 z-50"
-          )}
-          style={floating ? { top: "calc(env(safe-area-inset-top) + 0.75rem)" } : undefined}
-        >
-          <Menu className="h-5 w-5 text-foreground" />
-        </button>
-      </SheetTrigger>
+      <div
+        className={cn(
+          "flex items-center gap-2",
+          floating && "fixed left-3 z-50"
+        )}
+        style={floating ? { top: "calc(env(safe-area-inset-top) + 0.75rem)" } : undefined}
+      >
+        <SheetTrigger asChild>
+          <button
+            aria-label="Abrir menu"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
+          >
+            <Menu className="h-5 w-5 text-foreground" />
+          </button>
+        </SheetTrigger>
+        <span className="font-display text-xl font-extrabold text-gradient-primary leading-none select-none">
+          Vamoo!
+        </span>
+      </div>
 
       <SheetContent side="left" className="w-72 p-0 flex flex-col">
         <SheetHeader className="border-b p-4">
