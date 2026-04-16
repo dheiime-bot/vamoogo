@@ -488,7 +488,18 @@ const PassengerHome = () => {
                   </div>
                 ))}
                 <div className="flex items-center justify-between gap-2">
-                  <button onClick={() => { setStops([...stops, ""]); setSelectedStops([...selectedStops, null]); }} className="flex items-center gap-2 text-xs font-medium text-primary">
+                  <button
+                    onClick={() => {
+                      if (returnToOrigin) {
+                        toast.error("Desative o retorno para adicionar mais paradas");
+                        return;
+                      }
+                      setStops([...stops, ""]);
+                      setSelectedStops([...selectedStops, null]);
+                    }}
+                    disabled={returnToOrigin}
+                    className="flex items-center gap-2 text-xs font-medium text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
                     <Plus className="h-3.5 w-3.5" /> Adicionar parada
                   </button>
                   {selectedOrigin && selectedDestination && (
@@ -496,7 +507,7 @@ const PassengerHome = () => {
                       onClick={() => {
                         setReturnToOrigin((prev) => {
                           const next = !prev;
-                          toast.success(next ? "Retorno à origem ativado" : "Retorno à origem removido");
+                          toast.success(next ? "Retorno à origem ativado (última perna)" : "Retorno à origem removido");
                           return next;
                         });
                       }}
@@ -505,12 +516,17 @@ const PassengerHome = () => {
                           ? "bg-success/15 text-success ring-1 ring-success/30"
                           : "text-success bg-success/10 hover:bg-success/15"
                       }`}
-                      title="Fazer ida e volta, encerrando novamente na origem"
+                      title="Adiciona somente UMA volta ao ponto de embarque, sempre como última perna"
                     >
                       <Navigation className="h-3 w-3" /> {returnToOrigin ? "Remover retorno" : "Voltar à origem"}
                     </button>
                   )}
                 </div>
+                {returnToOrigin && (
+                  <p className="text-[11px] text-muted-foreground px-1">
+                    O retorno é cobrado como última perna da rota. Para adicionar paradas extras, remova o retorno.
+                  </p>
+                )}
               </div>
 
               {showSuggestions && (
@@ -557,25 +573,55 @@ const PassengerHome = () => {
               </div>
 
               {/* Estimate */}
-              {estimatedPrice && (
-                <div className="flex items-center justify-between rounded-xl bg-primary/5 border border-primary/20 p-3">
-                  <div>
-                    <span className="text-sm font-medium">Valor estimado</span>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                      <span className="flex items-center gap-1"><Navigation className="h-3 w-3" /> {estimatedDistance} km • ~{estimatedTime} min</span>
-                      {confirmedStops.length > 0 && (
-                        <span className="rounded-full bg-warning/15 text-warning px-2 py-0.5 font-semibold">
-                          +{confirmedStops.length} parada{confirmedStops.length > 1 ? "s" : ""} incluída{confirmedStops.length > 1 ? "s" : ""}
-                        </span>
-                      )}
-                      {returnToOrigin && (
-                        <span className="rounded-full bg-success/10 px-2 py-0.5 font-semibold text-success">
-                          ida e volta
-                        </span>
-                      )}
+              {estimatedPrice != null && (
+                <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-medium">Valor estimado</span>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                        <span className="flex items-center gap-1"><Navigation className="h-3 w-3" /> {estimatedDistance} km • ~{estimatedTime} min</span>
+                        {confirmedStops.length > 0 && (
+                          <span className="rounded-full bg-warning/15 text-warning px-2 py-0.5 font-semibold">
+                            +{confirmedStops.length} parada{confirmedStops.length > 1 ? "s" : ""}
+                          </span>
+                        )}
+                        {returnToOrigin && (
+                          <span className="rounded-full bg-success/10 px-2 py-0.5 font-semibold text-success">
+                            ida e volta
+                          </span>
+                        )}
+                      </div>
                     </div>
+                    <span className="text-xl font-extrabold text-primary">R$ {estimatedPrice.toFixed(2)}</span>
                   </div>
-                  <span className="text-xl font-extrabold text-primary">R$ {estimatedPrice.toFixed(2)}</span>
+
+                  {/* Breakdown por trecho */}
+                  {fare.legs.length > 1 && (() => {
+                    const labels: string[] = [
+                      selectedOrigin?.name || "Origem",
+                      ...effectiveStops.map((s, i) =>
+                        returnToOrigin && i === effectiveStops.length - 1
+                          ? `Retorno: ${selectedOrigin?.name || "origem"}`
+                          : s.name
+                      ),
+                      effectiveDestination?.name || "Destino",
+                    ];
+                    return (
+                      <div className="border-t border-primary/10 pt-2 space-y-1">
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Trechos</p>
+                        {fare.legs.map((leg, i) => (
+                          <div key={i} className="flex items-center justify-between text-xs">
+                            <span className="truncate flex-1 mr-2">
+                              <span className="font-semibold text-foreground">{i + 1}.</span>{" "}
+                              <span className="text-muted-foreground">{labels[leg.fromIndex]} → {labels[leg.toIndex]}</span>
+                              <span className="text-muted-foreground/70"> • {leg.km} km</span>
+                            </span>
+                            <span className="font-bold text-primary whitespace-nowrap">R$ {leg.price.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 

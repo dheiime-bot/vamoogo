@@ -26,10 +26,19 @@ interface Tariff {
   passenger_extra: number;
 }
 
+export interface FareLeg {
+  fromIndex: number; // 0 = origem; 1..N = paradas; N+1 = destino
+  toIndex: number;
+  km: number;
+  min: number;
+  price: number;
+}
+
 interface Result {
   distanceKm: number | null;
   durationMin: number | null;
   price: number | null;
+  legs: FareLeg[];
   loading: boolean;
   error: string | null;
 }
@@ -43,6 +52,8 @@ const haversineKm = (a: Point, b: Point) => {
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 };
+
+// (Preço por trecho é calculado por rateio proporcional ao "preço bruto" do trecho — ver mais abaixo.)
 
 const computePrice = (km: number, min: number, passengers: number, t: Tariff) => {
   const base = (t.base_fare + t.per_km * km + t.per_minute * min) * t.region_multiplier;
@@ -63,6 +74,7 @@ export const useFareEstimate = (
     distanceKm: null,
     durationMin: null,
     price: null,
+    legs: [],
     loading: false,
     error: null,
   });
@@ -72,7 +84,7 @@ export const useFareEstimate = (
 
   useEffect(() => {
     if (!origin || !destination) {
-      setState({ distanceKm: null, durationMin: null, price: null, loading: false, error: null });
+      setState({ distanceKm: null, durationMin: null, price: null, legs: [], loading: false, error: null });
       return;
     }
 
@@ -107,16 +119,13 @@ export const useFareEstimate = (
         const sequence: Point[] = [origin, ...validWaypoints, destination];
         console.log("[useFareEstimate] sequência:", sequence.length, "pontos •", validWaypoints.length, "paradas");
 
-        // 3) Tentar Distance Matrix por trecho (somando). Fallback: haversine + estimativa.
-        let km: number | null = null;
-        let min: number | null = null;
-
+        // 3) Coleta km/min POR TRECHO. Tenta Distance Matrix; senão, fallback haversine.
+        const legSpecs: { km: number; min: number }[] = [];
         const g = (window as any).google;
+        let usedDM = false;
         if (key && g?.maps?.DistanceMatrixService) {
           try {
             const svc = new g.maps.DistanceMatrixService();
-            let totalMeters = 0;
-            let totalSeconds = 0;
             for (let i = 0; i < sequence.length - 1; i++) {
               const a = sequence[i];
               const b = sequence[i + 1];
@@ -134,31 +143,56 @@ export const useFareEstimate = (
               });
               const elem = res?.rows?.[0]?.elements?.[0];
               if (elem && elem.status === "OK") {
-                totalMeters += elem.distance.value;
-                totalSeconds += elem.duration.value;
+                legSpecs.push({
+                  km: Math.round((elem.distance.value / 1000) * 10) / 10,
+                  min: Math.round(elem.duration.value / 60),
+                });
               } else {
                 throw new Error("Trecho sem rota");
               }
             }
-            km = Math.round((totalMeters / 1000) * 10) / 10;
-            min = Math.round(totalSeconds / 60);
+            usedDM = true;
           } catch (e) {
             console.warn("DistanceMatrix falhou, usando haversine:", e);
+            legSpecs.length = 0;
           }
         }
 
-        if (km == null || min == null) {
-          let totalKm = 0;
+        if (!usedDM) {
           for (let i = 0; i < sequence.length - 1; i++) {
-            totalKm += haversineKm(sequence[i], sequence[i + 1]);
+            const k = Math.round(haversineKm(sequence[i], sequence[i + 1]) * 10) / 10;
+            legSpecs.push({ km: k, min: Math.max(2, Math.round(k * 2.5)) });
           }
-          km = Math.round(totalKm * 10) / 10;
-          min = Math.max(3, Math.round(km * 2.5)); // ~24 km/h média urbana
         }
 
-        const price = computePrice(km, min, passengers, tariff);
+        const km = Math.round(legSpecs.reduce((s, l) => s + l.km, 0) * 10) / 10;
+        const min = legSpecs.reduce((s, l) => s + l.min, 0);
+
+        // Preço total (com min_fare + extras de passageiros)
+        const totalPrice = computePrice(km, min, passengers, tariff);
+
+        // Preço bruto por trecho (sem min_fare/extras), para rateio proporcional
+        const rawByLeg = legSpecs.map(
+          (l) => (tariff.base_fare + tariff.per_km * l.km + tariff.per_minute * l.min) * tariff.region_multiplier
+        );
+        const sumRaw = rawByLeg.reduce((a, b) => a + b, 0) || 1;
+        const legs: FareLeg[] = legSpecs.map((l, i) => ({
+          fromIndex: i,
+          toIndex: i + 1,
+          km: l.km,
+          min: l.min,
+          price: Math.round(((rawByLeg[i] / sumRaw) * totalPrice) * 100) / 100,
+        }));
+
+        // Ajuste de arredondamento — última perna absorve a diferença
+        const sumLegs = legs.reduce((s, l) => s + l.price, 0);
+        const diff = Math.round((totalPrice - sumLegs) * 100) / 100;
+        if (legs.length > 0 && diff !== 0) {
+          legs[legs.length - 1].price = Math.round((legs[legs.length - 1].price + diff) * 100) / 100;
+        }
+
         if (!cancelled) {
-          setState({ distanceKm: km, durationMin: min, price, loading: false, error: null });
+          setState({ distanceKm: km, durationMin: min, price: totalPrice, legs, loading: false, error: null });
         }
       } catch (e: any) {
         if (!cancelled) {
@@ -166,6 +200,7 @@ export const useFareEstimate = (
             distanceKm: null,
             durationMin: null,
             price: null,
+            legs: [],
             loading: false,
             error: e?.message || "Erro ao calcular tarifa",
           });
