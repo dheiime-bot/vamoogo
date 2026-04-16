@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { MapPin, User, Phone, Loader2, Navigation } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check, MapPin, User, Phone, Loader2, Navigation } from "lucide-react";
 import AddressAutocompleteField from "@/components/address/AddressAutocompleteField";
 import { useCityCache } from "@/hooks/useCityCache";
 import type { PlaceDetails } from "@/services/googlePlaces";
@@ -61,7 +61,7 @@ const OriginPicker = ({
 }: OriginPickerProps) => {
   const [loadingGps, setLoadingGps] = useState(false);
   const [gpsAddress, setGpsAddress] = useState<string>("");
-  const [gpsLoc, setGpsLoc] = React.useState<AppLocation | null>(null);
+  const [gpsLoc, setGpsLoc] = useState<AppLocation | null>(null);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
   const autoTried = useRef(false);
 
@@ -117,8 +117,6 @@ const OriginPicker = ({
     } else if (gpsLoc) {
       // Volta para GPS automaticamente
       onSelectOrigin(gpsLoc, "gps");
-      setQuery("");
-      setShowResults(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forOtherPerson]);
