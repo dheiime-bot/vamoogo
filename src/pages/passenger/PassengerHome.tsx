@@ -427,15 +427,22 @@ const PassengerHome = () => {
           {/* Normal idle form */}
           {rideState === "idle" && (
             <>
+              {/* Smart Origin Picker (GPS / Manual / Other person) */}
+              <OriginPicker
+                selectedOrigin={selectedOrigin}
+                onSelectOrigin={(loc, type) => {
+                  setSelectedOrigin(loc);
+                  setOrigin(loc.name);
+                  setOriginType(type);
+                }}
+                forOtherPerson={forOtherPerson}
+                onToggleOtherPerson={setForOtherPerson}
+                otherPerson={otherPerson}
+                onChangeOtherPerson={setOtherPerson}
+              />
+
+              {/* Destination input */}
               <div className="space-y-2">
-                <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-                  <div className="h-2.5 w-2.5 rounded-full bg-success" />
-                  <input type="text" placeholder="Onde você está?" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" value={origin}
-                    onChange={(e) => { setOrigin(e.target.value); handleSearch(e.target.value); }}
-                    onFocus={() => { setActiveInput("origin"); handleSearch(origin); }}
-                  />
-                  {origin && <button onClick={() => { setOrigin(""); setSelectedOrigin(null); }}><X className="h-3.5 w-3.5 text-muted-foreground" /></button>}
-                </div>
                 <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
                   <div className="h-2.5 w-2.5 rounded-full bg-destructive" />
                   <input type="text" placeholder="Para onde vai?" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" value={destination}
