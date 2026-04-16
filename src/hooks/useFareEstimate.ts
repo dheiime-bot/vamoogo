@@ -26,10 +26,19 @@ interface Tariff {
   passenger_extra: number;
 }
 
+export interface FareLeg {
+  fromIndex: number; // 0 = origem; 1..N = paradas; N+1 = destino
+  toIndex: number;
+  km: number;
+  min: number;
+  price: number;
+}
+
 interface Result {
   distanceKm: number | null;
   durationMin: number | null;
   price: number | null;
+  legs: FareLeg[];
   loading: boolean;
   error: string | null;
 }
@@ -42,6 +51,12 @@ const haversineKm = (a: Point, b: Point) => {
   const lat2 = (b.lat * Math.PI) / 180;
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+};
+
+// Preço bruto por trecho — sem aplicar min_fare nem extras de passageiros
+const computeLegPrice = (km: number, min: number, t: Tariff) => {
+  const base = (t.base_fare + t.per_km * km + t.per_minute * min) * t.region_multiplier;
+  return Math.round(base * 100) / 100;
 };
 
 const computePrice = (km: number, min: number, passengers: number, t: Tariff) => {
