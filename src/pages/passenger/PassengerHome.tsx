@@ -178,7 +178,9 @@ const PassengerHome = () => {
       passenger_count: passengers, distance_km: distanceKm, duration_minutes: durationMin,
       price, platform_fee: platformFee, driver_net: price - platformFee,
       payment_method: method as any,
-      stops: stops.filter(Boolean).length > 0 ? stops.filter(Boolean) : null,
+      stops: selectedStops.filter((s): s is CityLocation => !!s).length > 0
+        ? selectedStops.filter((s): s is CityLocation => !!s).map((s) => ({ name: s.name, address: s.address, lat: s.lat, lng: s.lng }))
+        : null,
       origin_type: originType,
       for_other_person: forOtherPerson,
       other_person_name: forOtherPerson ? otherPerson.name.trim() : null,
