@@ -515,6 +515,7 @@ export type Database = {
           duration_minutes: number | null
           for_other_person: boolean
           id: string
+          legs: Json | null
           origin_address: string
           origin_lat: number | null
           origin_lng: number | null
@@ -547,6 +548,7 @@ export type Database = {
           duration_minutes?: number | null
           for_other_person?: boolean
           id?: string
+          legs?: Json | null
           origin_address: string
           origin_lat?: number | null
           origin_lng?: number | null
@@ -579,6 +581,7 @@ export type Database = {
           duration_minutes?: number | null
           for_other_person?: boolean
           id?: string
+          legs?: Json | null
           origin_address?: string
           origin_lat?: number | null
           origin_lng?: number | null
