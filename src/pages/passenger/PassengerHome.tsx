@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { MapPin, Search, Users, Plus, Clock, ChevronRight, Car, Bike, Crown, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
 import BottomNav from "@/components/shared/BottomNav";
-import GoogleMap from "@/components/shared/GoogleMap";
+import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
@@ -190,6 +190,7 @@ const PassengerHome = () => {
       stops: effectiveStops.length > 0
         ? effectiveStops.map((s) => ({ name: s.name, address: s.address, lat: s.lat, lng: s.lng }))
         : null,
+      legs: fare.legs.length > 0 ? fare.legs : [],
       origin_type: originType,
       for_other_person: forOtherPerson,
       other_person_name: forOtherPerson ? otherPerson.name.trim() : null,
@@ -607,14 +608,21 @@ const PassengerHome = () => {
                       effectiveDestination?.name || "Destino",
                     ];
                     return (
-                      <div className="border-t border-primary/10 pt-2 space-y-1">
+                      <div className="border-t border-primary/10 pt-2 space-y-1.5">
                         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Trechos</p>
                         {fare.legs.map((leg, i) => (
-                          <div key={i} className="flex items-center justify-between text-xs">
-                            <span className="truncate flex-1 mr-2">
-                              <span className="font-semibold text-foreground">{i + 1}.</span>{" "}
-                              <span className="text-muted-foreground">{labels[leg.fromIndex]} → {labels[leg.toIndex]}</span>
-                              <span className="text-muted-foreground/70"> • {leg.km} km</span>
+                          <div key={i} className="flex items-center justify-between text-xs gap-2">
+                            <span className="flex items-start gap-2 truncate flex-1">
+                              <span
+                                className="mt-1 h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-background"
+                                style={{ backgroundColor: LEG_COLORS[i % LEG_COLORS.length] }}
+                                aria-label={`Cor do trecho ${i + 1}`}
+                              />
+                              <span className="truncate">
+                                <span className="font-semibold text-foreground">{i + 1}.</span>{" "}
+                                <span className="text-muted-foreground">{labels[leg.fromIndex]} → {labels[leg.toIndex]}</span>
+                                <span className="text-muted-foreground/70"> • {leg.km} km</span>
+                              </span>
                             </span>
                             <span className="font-bold text-primary whitespace-nowrap">R$ {leg.price.toFixed(2)}</span>
                           </div>

@@ -1,0 +1,1 @@
+ALTER TABLE public.rides ADD COLUMN IF NOT EXISTS legs jsonb DEFAULT '[]'::jsonb;
