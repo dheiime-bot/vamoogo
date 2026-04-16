@@ -55,7 +55,8 @@ export const useFareEstimate = (
   origin: Point | null,
   destination: Point | null,
   category: Cat,
-  passengers: number = 1
+  passengers: number = 1,
+  waypoints: Point[] = []
 ): Result => {
   const { key } = useGoogleMapsKey();
   const [state, setState] = useState<Result>({
@@ -65,6 +66,9 @@ export const useFareEstimate = (
     loading: false,
     error: null,
   });
+
+  // Serializa waypoints para uso estável em deps
+  const wpKey = waypoints.map((w) => `${w.lat.toFixed(5)},${w.lng.toFixed(5)}`).join("|");
 
   useEffect(() => {
     if (!origin || !destination) {
@@ -96,7 +100,10 @@ export const useFareEstimate = (
           passenger_extra: 2,
         };
 
-        // 2) Tentar Distance Matrix (mais preciso). Fallback: haversine + estimativa.
+        // 2) Sequência completa de pontos: origem → paradas → destino
+        const sequence: Point[] = [origin, ...waypoints, destination];
+
+        // 3) Tentar Distance Matrix por trecho (somando). Fallback: haversine + estimativa.
         let km: number | null = null;
         let min: number | null = null;
 
@@ -104,30 +111,44 @@ export const useFareEstimate = (
         if (key && g?.maps?.DistanceMatrixService) {
           try {
             const svc = new g.maps.DistanceMatrixService();
-            const res: any = await new Promise((resolve, reject) => {
-              svc.getDistanceMatrix(
-                {
-                  origins: [{ lat: origin.lat, lng: origin.lng }],
-                  destinations: [{ lat: destination.lat, lng: destination.lng }],
-                  travelMode: g.maps.TravelMode.DRIVING,
-                  unitSystem: g.maps.UnitSystem.METRIC,
-                },
-                (r: any, status: string) =>
-                  status === "OK" ? resolve(r) : reject(new Error(`DM:${status}`))
-              );
-            });
-            const elem = res?.rows?.[0]?.elements?.[0];
-            if (elem && elem.status === "OK") {
-              km = Math.round((elem.distance.value / 1000) * 10) / 10;
-              min = Math.round(elem.duration.value / 60);
+            let totalMeters = 0;
+            let totalSeconds = 0;
+            for (let i = 0; i < sequence.length - 1; i++) {
+              const a = sequence[i];
+              const b = sequence[i + 1];
+              const res: any = await new Promise((resolve, reject) => {
+                svc.getDistanceMatrix(
+                  {
+                    origins: [{ lat: a.lat, lng: a.lng }],
+                    destinations: [{ lat: b.lat, lng: b.lng }],
+                    travelMode: g.maps.TravelMode.DRIVING,
+                    unitSystem: g.maps.UnitSystem.METRIC,
+                  },
+                  (r: any, status: string) =>
+                    status === "OK" ? resolve(r) : reject(new Error(`DM:${status}`))
+                );
+              });
+              const elem = res?.rows?.[0]?.elements?.[0];
+              if (elem && elem.status === "OK") {
+                totalMeters += elem.distance.value;
+                totalSeconds += elem.duration.value;
+              } else {
+                throw new Error("Trecho sem rota");
+              }
             }
+            km = Math.round((totalMeters / 1000) * 10) / 10;
+            min = Math.round(totalSeconds / 60);
           } catch (e) {
             console.warn("DistanceMatrix falhou, usando haversine:", e);
           }
         }
 
         if (km == null || min == null) {
-          km = Math.round(haversineKm(origin, destination) * 10) / 10;
+          let totalKm = 0;
+          for (let i = 0; i < sequence.length - 1; i++) {
+            totalKm += haversineKm(sequence[i], sequence[i + 1]);
+          }
+          km = Math.round(totalKm * 10) / 10;
           min = Math.max(3, Math.round(km * 2.5)); // ~24 km/h média urbana
         }
 
@@ -152,7 +173,7 @@ export const useFareEstimate = (
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [origin?.lat, origin?.lng, destination?.lat, destination?.lng, category, passengers, key]);
+  }, [origin?.lat, origin?.lng, destination?.lat, destination?.lng, category, passengers, key, wpKey]);
 
   return state;
 };
