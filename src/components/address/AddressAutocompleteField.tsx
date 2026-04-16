@@ -108,24 +108,33 @@ export default function AddressAutocompleteField({
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  // requestId: garante que respostas tardias não sobrescrevam buscas mais recentes
+  const requestIdRef = useRef(0);
+
   const runSearch = useCallback((q: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (q.trim().length < 2) {
       setPredictions([]);
+      setLoading(false);
       return;
     }
-    setLoading(true);
+    // Debounce ULTRA curto (60ms) — quase instantâneo, ainda evita spam.
+    // O cache de prefixo no service garante resposta imediata na maioria dos casos.
     debounceRef.current = setTimeout(async () => {
+      const myId = ++requestIdRef.current;
+      setLoading(true);
       const results = await fetchAutocomplete({
         query: q,
         sessionToken: sessionTokenRef.current,
         lat: userLocRef.current?.lat,
         lng: userLocRef.current?.lng,
       });
+      // Ignora se outra busca já foi disparada
+      if (myId !== requestIdRef.current) return;
       setPredictions(results);
       setHighlight(0);
       setLoading(false);
-    }, 180);
+    }, 60);
   }, []);
 
   const handleInput = (v: string) => {
