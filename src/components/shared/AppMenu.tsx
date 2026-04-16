@@ -72,8 +72,9 @@ const AppMenu = ({ role, floating = true }: Props) => {
           aria-label="Abrir menu"
           className={cn(
             "flex h-11 w-11 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted",
-            floating && "fixed top-3 left-3 z-50"
+            floating && "fixed left-3 z-50"
           )}
+          style={floating ? { top: "calc(env(safe-area-inset-top) + 0.75rem)" } : undefined}
         >
           <Menu className="h-5 w-5 text-foreground" />
         </button>

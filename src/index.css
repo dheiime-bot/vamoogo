@@ -113,9 +113,28 @@
     @apply border-border;
   }
 
+  html, body, #root {
+    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    /* Respeita safe-areas do Android/iOS (status bar + nav bar) */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    box-sizing: border-box;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
@@ -167,6 +186,18 @@
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
+
+  /* Safe-area helpers (Android nav/status bar, iOS notch) */
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-x {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .mt-safe { margin-top: env(safe-area-inset-top); }
+  .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+  .h-screen-safe { height: 100vh; height: 100dvh; }
+  .min-h-screen-safe { min-height: 100vh; min-height: 100dvh; }
 }
 
 @keyframes slideUp {
