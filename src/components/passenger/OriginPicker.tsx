@@ -217,6 +217,7 @@ const OriginPicker = ({
         </div>
       )}
 
+      {mode === "manual" && (
       <div className={`rounded-xl border p-3 transition-colors ${forOtherPerson ? "border-primary bg-primary/5" : "border-border"}`}>
         <label className="flex items-center justify-between cursor-pointer">
           <div className="flex items-center gap-2.5">
