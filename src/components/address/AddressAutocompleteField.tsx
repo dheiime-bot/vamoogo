@@ -105,7 +105,7 @@ export default function AddressAutocompleteField({
       setHighlight(0);
       setOpen(results.length > 0);
       setLoading(false);
-    }, 280);
+    }, 180);
   }, []);
 
   const handleInput = (v: string) => {
