@@ -218,6 +218,7 @@ const PassengerHome = () => {
     setRideState("idle"); setActiveRide(null); setRating(0); setRatingComment("");
     setSelectedOrigin(null); setSelectedDestination(null); setOrigin(""); setDestination("");
     setDriverInfo(null); setPaymentMethod(null);
+    setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps");
   };
 
   const showSuggestions = activeInput !== null;
