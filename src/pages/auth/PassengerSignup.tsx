@@ -231,19 +231,20 @@ const PassengerSignup = () => {
     setLoading(false);
 
     if (error) {
-      const msg = error.message || "";
-      if (msg.includes("already registered") || msg.includes("already exists")) {
-        toast.error("Este e-mail já está cadastrado");
+      const { message, field } = friendlyAuthError(error);
+      toast.error(message, { duration: 6000 });
+      if (field === "password") {
+        setStep(1); // passo Segurança
+        setErr("password", message);
+      } else if (field === "email") {
         setStep(0);
-        setErr("email", "Este e-mail já está cadastrado");
-      } else if (msg.includes("duplicate") && msg.includes("cpf")) {
-        toast.error("CPF já cadastrado");
+        setErr("email", message);
+      } else if (field === "cpf") {
         setStep(0);
-      } else if (msg.includes("duplicate") && msg.includes("phone")) {
-        toast.error("Telefone já cadastrado");
+        setErr("cpf", message);
+      } else if (field === "phone") {
         setStep(0);
-      } else {
-        toast.error("Erro ao cadastrar: " + msg);
+        setErr("phone", message);
       }
       return;
     }
