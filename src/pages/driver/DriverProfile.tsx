@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
+import UserMenu from "@/components/shared/UserMenu";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EditProfileModal from "@/components/shared/EditProfileModal";
 import { useNavigate } from "react-router-dom";
@@ -216,6 +217,7 @@ const DriverProfile = () => {
 
       <AppMenu role="driver" />
       <NotificationBell />
+      <UserMenu role="driver" />
       <EditProfileModal open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );

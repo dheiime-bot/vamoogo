@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Clock, ChevronRight } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
+import UserMenu from "@/components/shared/UserMenu";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,6 +91,7 @@ const PassengerHistory = () => {
 
       <AppMenu role="passenger" />
       <NotificationBell />
+      <UserMenu role="passenger" />
     </div>
   );
 };
