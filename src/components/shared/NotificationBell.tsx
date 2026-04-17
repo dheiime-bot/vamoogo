@@ -8,7 +8,7 @@
  * Funciona para passageiro e motorista — usa apenas auth.uid().
  */
 import { useEffect, useMemo, useState } from "react";
-import { Bell, Check, MessageCircle, Wallet, Car, Megaphone, X } from "lucide-react";
+import { Bell, Check, MessageCircle, Wallet, Car, Megaphone, X, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
