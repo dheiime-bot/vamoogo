@@ -203,7 +203,50 @@ const PassengerHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
 
-  // (efeito de "motoristas próximos" removido a pedido — não exibimos mais essa informação)
+  // Motoristas online próximos no mapa (idle) — fetch inicial + realtime
+  useEffect(() => {
+    // Não mostra carrinhos genéricos enquanto há corrida ativa (já temos o motorista da corrida)
+    if (activeRide) {
+      setNearbyDrivers([]);
+      return;
+    }
+
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("driver_locations")
+        .select("driver_id,lat,lng,heading,category,is_online,updated_at")
+        .eq("is_online", true)
+        .limit(50);
+      if (cancelled || !data) return;
+      // Considera "online de verdade" apenas quem atualizou nos últimos 2 minutos
+      const cutoff = Date.now() - 2 * 60 * 1000;
+      setNearbyDrivers(
+        data
+          .filter((d) => new Date(d.updated_at as any).getTime() > cutoff)
+          .map((d) => ({
+            lat: Number(d.lat),
+            lng: Number(d.lng),
+            heading: (d.heading as any) ?? undefined,
+            category: (d.category as any) ?? undefined,
+          }))
+      );
+    };
+    load();
+
+    const channel = supabase
+      .channel("nearby-drivers")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "driver_locations" },
+        () => load()
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [activeRide]);
 
   const confirmedStops = selectedStops.filter((s): s is AppLocation => !!s);
   const effectiveStops = returnToOrigin && selectedOrigin && selectedDestination
