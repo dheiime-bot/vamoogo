@@ -1,4 +1,4 @@
-import { User, Camera, FileText, Phone, Mail, Shield, ArrowLeft } from "lucide-react";
+import { User, Camera, FileText, Phone, Mail, Shield, ArrowLeft, Car } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -7,12 +7,22 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const PassengerProfile = () => {
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, roles } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
     navigate("/");
   };
+
+  const calcAge = (iso?: string | null) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return Math.floor((Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  };
+  const age = calcAge(profile?.birth_date);
+  const isDriver = roles?.includes("driver");
+  const canBecomeDriver = !isDriver && age !== null && age >= 21;
 
   const displayName = profile?.full_name || "Usuário";
   const cpfMasked = profile?.cpf
