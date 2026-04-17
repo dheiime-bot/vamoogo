@@ -32,6 +32,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session?.user) {
           // Fetch profile
           setTimeout(async () => {
+            // Move signup uploads to user folder (runs once per signup)
+            const pendingKey = `signup_finalize_pending_${session.user.id}`;
+            if (sessionStorage.getItem(pendingKey) === "1") {
+              try {
+                await supabase.functions.invoke("finalize-signup-uploads");
+              } catch (err) {
+                console.error("finalize-signup-uploads failed", err);
+              } finally {
+                sessionStorage.removeItem(pendingKey);
+              }
+            }
+
             const { data: profileData } = await supabase
               .from("profiles")
               .select("*")
