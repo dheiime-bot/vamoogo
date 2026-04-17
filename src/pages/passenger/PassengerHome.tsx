@@ -13,6 +13,7 @@ import AddressAutocompleteField from "@/components/address/AddressAutocompleteFi
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useFareEstimate } from "@/hooks/useFareEstimate";
+import { useLiveEta } from "@/hooks/useLiveEta";
 import type { PlaceDetails } from "@/services/googlePlaces";
 import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
 import type { PixKeyType } from "@/lib/pix";
@@ -287,6 +288,15 @@ const PassengerHome = () => {
   const estimatedTime = fare.durationMin;
   const estimatedDistance = fare.distanceKm;
 
+  // ETA ao vivo: motorista → ponto de embarque (só durante driver_arriving)
+  const liveEta = useLiveEta(
+    driverLocation ? { lat: driverLocation.lat, lng: driverLocation.lng } : null,
+    activeRide?.origin_lat && activeRide?.origin_lng
+      ? { lat: Number(activeRide.origin_lat), lng: Number(activeRide.origin_lng) }
+      : null,
+    rideState === "driver_arriving"
+  );
+
   // Open payment modal instead of directly requesting
   const handleOpenPayment = () => {
     if (!selectedOrigin || !selectedDestination) { toast.error("Selecione origem e destino"); return; }
@@ -360,19 +370,79 @@ const PassengerHome = () => {
   };
 
   // Alterar destino — permitido APENAS com a corrida em andamento (in_progress).
-  // Antes disso (accepted/driver_arriving/arrived) a rota fica congelada.
+  // Recalcula preço, distância e tempo via Distance Matrix antes de gravar no banco.
   const handleChangeDestination = async () => {
     if (!activeRide || !newDestination) return;
     if (activeRide.status !== "in_progress") {
       toast.error("Só é possível alterar o destino com a corrida em andamento");
       return;
     }
+    // Origem do recálculo = posição atual do motorista (se disponível) ou origem original
+    const fromLat = driverLocation?.lat ?? Number(activeRide.origin_lat);
+    const fromLng = driverLocation?.lng ?? Number(activeRide.origin_lng);
+
+    // 1) Distância/tempo via Google (com fallback haversine)
+    let km = 0; let min = 0;
+    const g = (window as any).google;
+    if (g?.maps?.DistanceMatrixService) {
+      try {
+        const svc = new g.maps.DistanceMatrixService();
+        const res: any = await new Promise((resolve, reject) => {
+          svc.getDistanceMatrix(
+            {
+              origins: [{ lat: fromLat, lng: fromLng }],
+              destinations: [{ lat: newDestination.lat, lng: newDestination.lng }],
+              travelMode: g.maps.TravelMode.DRIVING,
+              unitSystem: g.maps.UnitSystem.METRIC,
+            },
+            (r: any, status: string) => (status === "OK" ? resolve(r) : reject(new Error(status)))
+          );
+        });
+        const elem = res?.rows?.[0]?.elements?.[0];
+        if (elem?.status === "OK") {
+          km = Math.round((elem.distance.value / 1000) * 10) / 10;
+          min = Math.round(elem.duration.value / 60);
+        }
+      } catch { /* usa fallback abaixo */ }
+    }
+    if (!km) {
+      const R = 6371;
+      const dLat = ((newDestination.lat - fromLat) * Math.PI) / 180;
+      const dLng = ((newDestination.lng - fromLng) * Math.PI) / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos((fromLat * Math.PI) / 180) * Math.cos((newDestination.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+      km = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
+      min = Math.max(2, Math.round(km * 2.5));
+    }
+
+    // 2) Soma com o já percorrido (origem → posição atual) para preço total justo
+    const startedKm = Number(activeRide.distance_km || 0);
+    const totalKm = Math.round((startedKm + km) * 10) / 10;
+    const totalMin = (activeRide.duration_minutes || 0) + min;
+
+    // 3) Recalcula preço via tariffs (mesma fórmula do useFareEstimate)
+    const { data: tariff } = await supabase
+      .from("tariffs")
+      .select("base_fare,per_km,per_minute,min_fare,region_multiplier,passenger_extra")
+      .eq("category", activeRide.category)
+      .eq("region", "default")
+      .maybeSingle();
+    const t = tariff || { base_fare: 5, per_km: 1.8, per_minute: 0.45, min_fare: 12, region_multiplier: 1, passenger_extra: 2 };
+    const base = (t.base_fare + t.per_km * totalKm + t.per_minute * totalMin) * t.region_multiplier;
+    const extras = Math.max(0, Math.min(activeRide.passenger_count || 1, 4) - 1) * (t.passenger_extra > 0 ? t.passenger_extra : 3) * totalKm;
+    const newPrice = Math.round(Math.max(base + extras, t.min_fare) * 100) / 100;
+    const newFee = await calcPlatformFee(newPrice, activeRide.category);
+
     const { error } = await supabase
       .from("rides")
       .update({
         destination_address: `${newDestination.name} - ${newDestination.address}`,
         destination_lat: newDestination.lat,
         destination_lng: newDestination.lng,
+        distance_km: totalKm,
+        duration_minutes: totalMin,
+        price: newPrice,
+        platform_fee: newFee,
+        driver_net: newPrice - newFee,
       })
       .eq("id", activeRide.id);
     if (error) {
@@ -384,17 +454,21 @@ const PassengerHome = () => {
       destination_address: `${newDestination.name} - ${newDestination.address}`,
       destination_lat: newDestination.lat,
       destination_lng: newDestination.lng,
+      distance_km: totalKm,
+      duration_minutes: totalMin,
+      price: newPrice,
+      platform_fee: newFee,
+      driver_net: newPrice - newFee,
     }));
     setSelectedDestination(newDestination);
     setShowChangeDest(false);
     setNewDestination(null);
-    toast.success("Destino atualizado — o motorista foi avisado");
-    // Avisa o motorista via mensagem no chat para garantir feedback imediato
+    toast.success(`Destino atualizado • R$ ${newPrice.toFixed(2)} • ${totalKm} km`);
     if (user) {
       supabase.from("chat_messages").insert({
         ride_id: activeRide.id,
         sender_id: user.id,
-        message: `📍 Destino alterado para: ${newDestination.name}`,
+        message: `📍 Destino alterado para: ${newDestination.name} • Novo valor: R$ ${newPrice.toFixed(2)} (${totalKm} km)`,
       }).then(() => {});
     }
   };
@@ -557,7 +631,16 @@ const PassengerHome = () => {
                     rideState === "arrived" ? "bg-success/10 text-success" :
                     "bg-primary/10 text-primary"
                   }`}>
-                    {rideState === "driver_arriving" && "🚗 Motorista a caminho"}
+                    {rideState === "driver_arriving" && (
+                      <div className="space-y-0.5">
+                        <p>🚗 Motorista a caminho</p>
+                        {liveEta && (
+                          <p className="text-xs font-medium opacity-80">
+                            Chega em ~{liveEta.minutes} min • {liveEta.km} km
+                          </p>
+                        )}
+                      </div>
+                    )}
                     {rideState === "arrived" && "📍 Motorista chegou!"}
                     {rideState === "in_progress" && "🛣️ Corrida em andamento"}
                   </div>
@@ -896,6 +979,22 @@ const PassengerHome = () => {
           className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background to-transparent px-4 pt-4"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
         >
+          {/* Indicador de motoristas próximos */}
+          <div className="mb-2 flex items-center justify-center">
+            {nearbyDrivers.length > 0 ? (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-[11px] font-semibold text-success ring-1 ring-success/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+                </span>
+                {nearbyDrivers.length} {nearbyDrivers.length === 1 ? "motorista próximo" : "motoristas próximos"}
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                Nenhum motorista por perto agora
+              </div>
+            )}
+          </div>
           <button
             onClick={handleOpenPayment}
             disabled={isRequesting || !selectedOrigin || !selectedDestination}
