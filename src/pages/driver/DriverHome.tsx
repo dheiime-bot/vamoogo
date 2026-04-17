@@ -345,20 +345,17 @@ const DriverHome = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="flex items-center justify-between bg-card border-b p-4">
+      <div className="flex items-center justify-between bg-card border-b p-4 pt-20">
         <div>
           <h1 className="text-lg font-bold font-display">Olá, {displayName}</h1>
           <p className="text-xs text-muted-foreground">{categoryLabel} • Saldo: R$ {Number(balance).toFixed(2)}</p>
         </div>
-        <button
-          onClick={handleToggleOnline}
-          className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all ${
-            isOnline ? "bg-success text-success-foreground shadow-glow" : "bg-muted text-muted-foreground"
-          }`}
-        >
-          <Power className="h-4 w-4" />
-          {isOnline ? "Online" : "Offline"}
-        </button>
+        {isOnline && (
+          <span className="flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success">
+            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
+            Online
+          </span>
+        )}
       </div>
 
       {lowBalance && (
