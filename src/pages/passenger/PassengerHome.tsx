@@ -548,25 +548,64 @@ const PassengerHome = () => {
               </div>
 
               {/* Passengers */}
-              <div className="flex items-center justify-between rounded-xl border p-3">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Passageiros</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setPassengers(Math.max(1, passengers - 1))} className="flex h-7 w-7 items-center justify-center rounded-full border text-sm font-bold">−</button>
-                  <span className="w-4 text-center text-sm font-bold">{passengers}</span>
-                  <button onClick={() => setPassengers(Math.min(4, passengers + 1))} className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">+</button>
-                </div>
-              </div>
+              {(() => {
+                const maxPax = selectedCategory === "moto" ? 1 : 4;
+                const atMax = passengers >= maxPax;
+                return (
+                  <div className="flex items-center justify-between rounded-xl border p-3">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Passageiros</span>
+                      {selectedCategory === "moto" && (
+                        <span className="text-[10px] text-muted-foreground">(moto: máx. 1)</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setPassengers(Math.max(1, passengers - 1))}
+                        disabled={passengers <= 1}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        −
+                      </button>
+                      <span className="w-4 text-center text-sm font-bold">{passengers}</span>
+                      <button
+                        onClick={() => {
+                          if (atMax) {
+                            if (selectedCategory === "moto") {
+                              toast.error("Moto comporta apenas 1 passageiro. Escolha Econômico ou Conforto.");
+                            }
+                            return;
+                          }
+                          setPassengers(Math.min(maxPax, passengers + 1));
+                        }}
+                        disabled={atMax}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Category selector */}
               <div className="flex gap-2">
                 {categories.map((cat) => (
-                  <button key={cat.id} onClick={() => setSelectedCategory(cat.id)}
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      // Moto comporta apenas 1 passageiro
+                      if (cat.id === "moto" && passengers > 1) {
+                        setPassengers(1);
+                        toast.info("Moto comporta apenas 1 passageiro");
+                      }
+                    }}
                     className={`flex flex-1 flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all ${
                       selectedCategory === cat.id ? "border-primary bg-primary/5 shadow-glow" : "border-transparent bg-muted hover:border-border"
-                    }`}>
+                    }`}
+                  >
                     <cat.icon className={`h-6 w-6 ${selectedCategory === cat.id ? "text-primary" : "text-muted-foreground"}`} />
                     <span className="text-xs font-semibold">{cat.label}</span>
                     <span className="text-[10px] text-muted-foreground">{cat.desc}</span>
