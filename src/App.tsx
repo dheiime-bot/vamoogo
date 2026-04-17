@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/auth/AuthPage.tsx";
@@ -40,6 +41,23 @@ import TestAutocomplete from "./pages/TestAutocomplete.tsx";
 
 const queryClient = new QueryClient();
 
+const ProtectedAdminRoute = ({ children }: { children: JSX.Element }) => {
+  const { user, roles, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!roles.includes("admin") && !roles.includes("master")) return <Navigate to="/passenger" replace />;
+
+  return children;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -64,21 +82,21 @@ const App = () => (
             <Route path="/driver/rides" element={<DriverRides />} />
             <Route path="/driver/profile" element={<DriverProfile />} />
             <Route path="/driver/chats" element={<DriverChats />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/chats" element={<AdminChats />} />
-            <Route path="/admin/drivers" element={<AdminDrivers />} />
-            <Route path="/admin/passengers" element={<AdminPassengers />} />
-            <Route path="/admin/rides" element={<AdminRides />} />
-            <Route path="/admin/finance" element={<AdminFinance />} />
-            <Route path="/admin/tariffs" element={<AdminTariffs />} />
-            <Route path="/admin/fraud" element={<AdminFraud />} />
-            <Route path="/admin/live" element={<AdminLive />} />
-            <Route path="/admin/support" element={<AdminSupport />} />
-            <Route path="/admin/campaigns" element={<AdminCampaigns />} />
-            <Route path="/admin/coupons" element={<AdminCoupons />} />
-            <Route path="/admin/reports" element={<AdminReports />} />
-            <Route path="/admin/audit" element={<AdminAudit />} />
-            <Route path="/admin/staff" element={<AdminStaff />} />
+            <Route path="/admin" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
+            <Route path="/admin/chats" element={<ProtectedAdminRoute><AdminChats /></ProtectedAdminRoute>} />
+            <Route path="/admin/drivers" element={<ProtectedAdminRoute><AdminDrivers /></ProtectedAdminRoute>} />
+            <Route path="/admin/passengers" element={<ProtectedAdminRoute><AdminPassengers /></ProtectedAdminRoute>} />
+            <Route path="/admin/rides" element={<ProtectedAdminRoute><AdminRides /></ProtectedAdminRoute>} />
+            <Route path="/admin/finance" element={<ProtectedAdminRoute><AdminFinance /></ProtectedAdminRoute>} />
+            <Route path="/admin/tariffs" element={<ProtectedAdminRoute><AdminTariffs /></ProtectedAdminRoute>} />
+            <Route path="/admin/fraud" element={<ProtectedAdminRoute><AdminFraud /></ProtectedAdminRoute>} />
+            <Route path="/admin/live" element={<ProtectedAdminRoute><AdminLive /></ProtectedAdminRoute>} />
+            <Route path="/admin/support" element={<ProtectedAdminRoute><AdminSupport /></ProtectedAdminRoute>} />
+            <Route path="/admin/campaigns" element={<ProtectedAdminRoute><AdminCampaigns /></ProtectedAdminRoute>} />
+            <Route path="/admin/coupons" element={<ProtectedAdminRoute><AdminCoupons /></ProtectedAdminRoute>} />
+            <Route path="/admin/reports" element={<ProtectedAdminRoute><AdminReports /></ProtectedAdminRoute>} />
+            <Route path="/admin/audit" element={<ProtectedAdminRoute><AdminAudit /></ProtectedAdminRoute>} />
+            <Route path="/admin/staff" element={<ProtectedAdminRoute><AdminStaff /></ProtectedAdminRoute>} />
             <Route path="/test-autocomplete" element={<TestAutocomplete />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -65,14 +65,30 @@ const AuthPage = () => {
     e.preventDefault();
     setIsLoading(true);
     const { error } = await signIn(email, password);
-    setIsLoading(false);
     if (error) {
+      setIsLoading(false);
       toast.error("Erro ao entrar: " + error.message);
       return;
     }
+
+    const { data: authData } = await supabase.auth.getUser();
+    const loggedUser = authData.user;
+    let nextPath = "/passenger";
+
+    if (loggedUser) {
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", loggedUser.id);
+      const roleList = (roleRows || []).map((row: any) => row.role);
+
+      if (roleList.includes("master") || roleList.includes("admin")) nextPath = "/admin";
+      else if (roleList.includes("driver") && !roleList.includes("passenger")) nextPath = "/driver";
+    }
+
+    setIsLoading(false);
     toast.success("Login realizado!");
-    // O redirecionamento real é feito dentro de cada home (ex: DriverHome bloqueia se não aprovado)
-    navigate("/passenger");
+    navigate(nextPath);
   };
 
   const handleForgotPassword = async () => {

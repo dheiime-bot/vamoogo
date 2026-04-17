@@ -622,7 +622,7 @@ const GoogleMapInner = ({
       {!animatedDriver &&
         nearbyDrivers.map((d, i) => (
           <AdvancedMarker key={`nb-${i}-${d.lat.toFixed(4)},${d.lng.toFixed(4)}`} position={{ lat: d.lat, lng: d.lng }}>
-            <div style={{ opacity: 0.85 }}>
+            <div className="rounded-full bg-card/90 p-1 shadow-lg ring-1 ring-border">
               {d.category === "moto" ? (
                 <MotoMarker heading={d.heading || 0} />
               ) : (
