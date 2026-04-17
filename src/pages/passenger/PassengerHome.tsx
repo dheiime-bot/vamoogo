@@ -280,7 +280,17 @@ const PassengerHome = () => {
 
           {/* Completed: Show summary */}
           {rideState === "completed" && activeRide && (
-            <RideSummary ride={activeRide} onRate={() => setRideState("rating")} />
+            <div className="space-y-3">
+              <RideSummary ride={activeRide} onRate={() => setRideState("rating")} />
+              {activeRide.payment_method === "pix" && (
+                <button
+                  onClick={() => setShowPixModal(true)}
+                  className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors"
+                >
+                  <QrCode className="h-4 w-4" /> Mostrar QR Code Pix
+                </button>
+              )}
+            </div>
           )}
 
           {/* Rating screen */}
