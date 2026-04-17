@@ -671,10 +671,24 @@ const DriverSignup = () => {
 
             <Field label="Número da CNH" icon={<FileText className="h-4 w-4" />} value={cnhNumber} onChange={handleCnhNumber} placeholder="11 dígitos" error={errors.cnh} maxLength={11} inputMode="numeric" />
 
-            <label className="flex items-center gap-2 cursor-pointer rounded-xl border bg-background p-3">
-              <input type="checkbox" checked={cnhEar} onChange={(e) => setCnhEar(e.target.checked)} className="h-4 w-4 rounded border-input accent-primary" />
-              <span className="text-xs">Minha CNH possui observação <strong>EAR</strong> (Exerce Atividade Remunerada)</span>
-            </label>
+            <div>
+              <label className={`flex items-center gap-2 cursor-pointer rounded-xl border bg-background p-3 ${errors.cnhEar ? "border-destructive" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={cnhEar}
+                  onChange={(e) => { setCnhEar(e.target.checked); if (e.target.checked) clearErr("cnhEar"); }}
+                  className="h-4 w-4 rounded border-input accent-primary"
+                />
+                <span className="text-xs">
+                  Confirmo que minha CNH possui a observação <strong>EAR</strong> (Exerce Atividade Remunerada) — <span className="text-destructive">obrigatório</span>
+                </span>
+              </label>
+              {errors.cnhEar && (
+                <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                  <AlertCircle className="h-3 w-3" /> {errors.cnhEar}
+                </p>
+              )}
+            </div>
 
             <DocumentUpload label="CNH (frente)" bucket="driver-documents" pathPrefix={`signup/${cpf.replace(/\D/g, "")}/cnh-frente`} value={cnhFrontUrl} onChange={setCnhFrontUrl} capture="environment" hint="Foto da frente da CNH, sem reflexos" />
             {errors.cnhFront && <p className="text-xs text-destructive flex items-center gap-1 -mt-2"><AlertCircle className="h-3 w-3" /> {errors.cnhFront}</p>}
