@@ -32,7 +32,7 @@ interface Props {
 type DialogKind =
   | null | "edit" | "approve" | "reject" | "request_docs" | "block" | "unblock"
   | "suspend" | "online_block" | "online_unblock" | "message" | "delete"
-  | "password" | "status" | "logs";
+  | "password" | "status" | "logs" | "balance";
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "em_analise", label: "Em análise" },
