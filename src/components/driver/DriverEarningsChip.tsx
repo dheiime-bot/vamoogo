@@ -46,11 +46,12 @@ const DriverEarningsChip = () => {
   return (
     <button
       onClick={() => navigate("/driver/wallet")}
-      className="fixed top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 rounded-full bg-card/95 backdrop-blur-md border border-border shadow-lg px-3.5 py-2 hover:scale-105 active:scale-95 transition-transform"
+      className="fixed left-1/2 -translate-x-1/2 z-40 flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted"
+      style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
       aria-label="Ver carteira"
     >
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Hoje</span>
-      <span className="text-sm font-extrabold text-primary">{formatBRL(earnings)}</span>
+      <span className="font-display text-[11px] font-bold uppercase tracking-wide text-muted-foreground leading-none">Hoje</span>
+      <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">{formatBRL(earnings)}</span>
     </button>
   );
 };
