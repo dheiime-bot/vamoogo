@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X, User as UserIcon, Phone, Mail, FileText, Calendar, ShieldCheck, Hash, AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/brFormat";
+import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 
 interface Props {
   passenger: any;
@@ -20,10 +20,8 @@ const PassengerDetailsModal = ({ passenger, onClose }: Props) => {
     (async () => {
       const map: Record<string, string> = {};
       for (const [key, url] of fields) {
-        if (!url) continue;
-        if (url.startsWith("http")) { map[key] = url; continue; }
-        const { data } = await supabase.storage.from("selfies").createSignedUrl(url, 3600);
-        if (data?.signedUrl) map[key] = data.signedUrl;
+        const resolved = await resolveStorageUrl("selfies", url);
+        if (resolved) map[key] = resolved;
       }
       setSigned(map);
     })();
