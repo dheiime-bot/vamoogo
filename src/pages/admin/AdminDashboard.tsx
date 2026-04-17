@@ -85,6 +85,28 @@ const AdminDashboard = () => {
       { name: "Em andamento", value: inProgress },
       { name: "Cancelada", value: cancelled },
     ]);
+
+    // Breakdown de cancelamentos (últimos 7 dias) — auditoria
+    const cancelledRides = await supabase
+      .from("rides")
+      .select("id, cancelled_by, passenger_id, driver_id")
+      .eq("status", "cancelled")
+      .gte("created_at", start7d.toISOString());
+    const cRows = cancelledRides.data || [];
+    let byPassenger = 0, byDriver = 0, bySystem = 0, byAdmin = 0, unknown = 0;
+    cRows.forEach((r: any) => {
+      if (!r.cancelled_by) { unknown++; return; }
+      if (r.cancelled_by === SYSTEM_USER) bySystem++;
+      else if (r.cancelled_by === r.passenger_id) byPassenger++;
+      else if (r.driver_id && r.cancelled_by === r.driver_id) byDriver++;
+      else byAdmin++;
+    });
+    const totalWk = wk.length;
+    setCancelStats({
+      total: cRows.length,
+      rate: totalWk > 0 ? Math.round((cRows.length / totalWk) * 100) : 0,
+      byPassenger, byDriver, bySystem, byAdmin, unknown,
+    });
   };
 
   useEffect(() => {
