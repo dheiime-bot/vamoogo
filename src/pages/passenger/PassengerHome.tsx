@@ -504,6 +504,7 @@ const PassengerHome = () => {
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
           stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
           driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
+          nearbyDrivers={nearbyDrivers}
           trackUserLocation={!selectedOrigin}
           showRoute={!!selectedOrigin && !!effectiveDestination}
           bottomInset={rideState === "idle" ? 96 : 0}
