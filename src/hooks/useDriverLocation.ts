@@ -57,8 +57,8 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
       return;
     }
 
-    // ⚡ Marca online IMEDIATAMENTE com a última posição conhecida (ou busca a última do banco).
-    // Assim o motorista entra na fila de despacho mesmo antes do GPS responder.
+    // ⚡ Marca online com a última posição conhecida (cache em memória ou banco).
+    // SÓ marca is_online=true se tivermos lat/lng VÁLIDOS (≠ 0). Senão aguardamos o GPS.
     (async () => {
       let lat = lastSentRef.current?.lat;
       let lng = lastSentRef.current?.lng;
@@ -68,22 +68,26 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
           .select("lat,lng")
           .eq("driver_id", driverId)
           .maybeSingle();
-        if (data && data.lat && data.lng) {
+        if (data && data.lat && data.lng && Number(data.lat) !== 0 && Number(data.lng) !== 0) {
           lat = Number(data.lat);
           lng = Number(data.lng);
           lastSentRef.current = { lat, lng, ts: Date.now() };
         }
       }
-      await supabase.from("driver_locations").upsert(
-        {
-          driver_id: driverId,
-          lat: lat ?? 0,
-          lng: lng ?? 0,
-          is_online: true,
-          category,
-        },
-        { onConflict: "driver_id" }
-      );
+      // Só sobe para online imediatamente se já temos coordenadas válidas.
+      if (lat && lng && lat !== 0 && lng !== 0) {
+        await supabase.from("driver_locations").upsert(
+          {
+            driver_id: driverId,
+            lat,
+            lng,
+            is_online: true,
+            category,
+          },
+          { onConflict: "driver_id" }
+        );
+      }
+      // Caso contrário, o broadcast do GPS abaixo fará o upsert assim que a 1ª posição chegar.
     })();
 
     if (!navigator.geolocation) {

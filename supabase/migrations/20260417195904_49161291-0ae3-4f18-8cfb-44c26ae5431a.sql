@@ -1,0 +1,1 @@
+UPDATE public.driver_locations SET is_online = false WHERE lat = 0 OR lng = 0;
