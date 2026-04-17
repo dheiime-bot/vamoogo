@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode, ChevronDown } from "lucide-react";
+import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
@@ -434,26 +434,53 @@ const PassengerHome = () => {
     );
   }
 
+  // Layout:
+  // - idle (sem form aberto): mapa ocupa a tela inteira + 1 botão "Para onde Vamoo?" no rodapé.
+  // - idle (form aberto): form aparece como sheet no topo, mapa fica visível embaixo.
+  // - corrida ativa / completed / rating: mapa em 68vh + bottom-sheet com infos da corrida.
+  const showFullMap = rideState === "idle" && !showRideForm;
+  const showFormSheet = rideState === "idle" && showRideForm;
+
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Map — maior durante corrida ativa pra acompanhar movimento ao vivo */}
+    <div className="min-h-screen bg-background">
+      {/* Map */}
       <div className="relative">
         <GoogleMap
-          className={`${isRideActive || rideState === "completed" ? "h-[68vh]" : "h-[58vh]"} rounded-none transition-all duration-300`}
+          className={`${
+            showFullMap
+              ? "h-screen"
+              : isRideActive || rideState === "completed" || rideState === "rating"
+                ? "h-[68vh]"
+                : "h-[40vh]"
+          } rounded-none transition-all duration-300`}
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
           stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
           driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
-          nearbyDrivers={rideState === "idle" ? nearbyDrivers : []}
           trackUserLocation={!selectedOrigin}
           showRoute={!!selectedOrigin && !!effectiveDestination}
         />
       </div>
 
-      {/* Bottom sheet — sem sobreposição do logo do Google */}
-      <div className="relative rounded-t-3xl bg-card shadow-lg animate-slide-up -mt-3">
+      {/* Bottom sheet — só aparece quando NÃO está em "tela cheia do mapa" */}
+      {!showFullMap && (
+      <div className="relative rounded-t-3xl bg-card shadow-lg animate-slide-up -mt-3 pb-24">
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted" />
+        {/* Header com botão fechar quando o form de pedido estiver aberto */}
+        {showFormSheet && (
+          <div className="flex items-center justify-between px-4 pt-2">
+            <h2 className="text-base font-bold font-display">Para onde Vamoo?</h2>
+            <button
+              onClick={() => setShowRideForm(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-muted hover:bg-muted/70 transition-colors"
+              aria-label="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
         <div className="p-4 pb-3 space-y-4">
+
 
           {/* Completed: Show summary */}
           {rideState === "completed" && activeRide && (
@@ -905,37 +932,33 @@ const PassengerHome = () => {
           )}
         </div>
       </div>
+      )}
 
-      {/* CTA fixo "Vamoo!" — só aparece em idle, respeitando safe-area */}
+      {/* CTA fixo "Para onde Vamoo?" / "Vamoo!" — só aparece em idle, respeitando safe-area */}
       {rideState === "idle" && (
         <div
-          className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background to-transparent px-4 pt-4"
+          className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
         >
-          {/* Indicador de motoristas próximos */}
-          <div className="mb-2 flex items-center justify-center">
-            {nearbyDrivers.length > 0 ? (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-[11px] font-semibold text-success ring-1 ring-success/20">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
-                </span>
-                {nearbyDrivers.length} {nearbyDrivers.length === 1 ? "motorista próximo" : "motoristas próximos"}
-              </div>
-            ) : (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
-                Nenhum motorista por perto agora
-              </div>
-            )}
-          </div>
-          <button
-            onClick={handleOpenPayment}
-            disabled={isRequesting || !selectedOrigin || !selectedDestination}
-            className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isRequesting && <Loader2 className="h-4 w-4 animate-spin" />}
-            Vamoo! 🚀
-          </button>
+          {!showRideForm ? (
+            // Estado inicial: 1 botão único, mapa ocupando a tela toda
+            <button
+              onClick={() => setShowRideForm(true)}
+              className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <Navigation className="h-5 w-5" /> Para onde Vamoo? 🚀
+            </button>
+          ) : (
+            // Form aberto: confirma a corrida
+            <button
+              onClick={handleOpenPayment}
+              disabled={isRequesting || !selectedOrigin || !selectedDestination}
+              className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isRequesting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Vamoo! 🚀
+            </button>
+          )}
         </div>
       )}
 
@@ -974,7 +997,6 @@ const PassengerHome = () => {
 
       <AppMenu role="passenger" />
       <NotificationBell />
-      <UserMenu role="passenger" />
     </div>
   );
 };
