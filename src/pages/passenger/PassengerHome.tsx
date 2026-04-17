@@ -47,6 +47,10 @@ const PassengerHome = () => {
     heading?: number;
     category?: "moto" | "economico" | "conforto";
   } | null>(null);
+  // Motoristas online próximos (visíveis no mapa do passageiro antes de pedir corrida)
+  const [nearbyDrivers, setNearbyDrivers] = useState<
+    { lat: number; lng: number; heading?: number; category?: "moto" | "economico" | "conforto" }[]
+  >([]);
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
