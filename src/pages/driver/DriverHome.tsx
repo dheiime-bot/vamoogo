@@ -616,8 +616,8 @@ const DriverHome = () => {
           )}
         </div>
       )}
-
-      {/* (Estados de idle são tratados pela tela inicial estilo passageiro acima) */}
+      </div>
+      {/* /card inferior dinâmico */}
 
       {/* Modal Pix — exibido pelo motorista quando vai cobrar */}
       <PixPaymentModal
@@ -639,6 +639,7 @@ const DriverHome = () => {
       <AppMenu role="driver" />
       <DriverEarningsChip />
       <NotificationBell />
+      <DriverHeartbeat lastSyncAt={lastSyncAt} isOnline={isOnline} />
       <DriverBottomNav />
     </div>
   );
