@@ -265,6 +265,9 @@ const DriverActionsMenu = ({ driver, onView, onChanged }: Props) => {
               <DropdownMenuItem onClick={() => setDialog("password")}>
                 <ShieldCheck className="mr-2 h-4 w-4" /> Trocar senha
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { setBalanceType("add"); setBalanceAmount(""); setBalanceReason(""); setDialog("balance"); }}>
+                <Wallet className="mr-2 h-4 w-4 text-success" /> Ajustar saldo (R$ {currentBalance.toFixed(2)})
+              </DropdownMenuItem>
             </>
           )}
 
