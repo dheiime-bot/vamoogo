@@ -40,20 +40,30 @@ const DriverRides = () => {
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const reload = async () => {
     if (!user) return;
-    setLoading(true);
-    supabase
+    const { data } = await supabase
       .from("rides")
       .select("id, ride_code, origin_address, destination_address, price, platform_fee, driver_net, distance_km, duration_minutes, passenger_count, rating, status, created_at, completed_at")
       .eq("driver_id", user.id)
       .in("status", ["completed", "cancelled"])
       .order("created_at", { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
-        if (data) setRides(data as any);
-        setLoading(false);
-      });
+      .limit(50);
+    if (data) setRides(data as any);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    setLoading(true);
+    reload();
+    // 🔄 Realtime: atualiza histórico do motorista sem recarregar
+    const channel = supabase
+      .channel(`driver-rides-history-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` }, reload)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Resumos por período (hoje / 7 dias / mês corrente) — apenas corridas completadas
