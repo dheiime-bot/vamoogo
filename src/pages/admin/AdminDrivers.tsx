@@ -83,7 +83,7 @@ const AdminDrivers = () => {
                       <p className="text-xs text-muted-foreground">{profile?.phone || ""}</p>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{profile?.cpf ? `***-${profile.cpf.slice(-2)}` : "—"}</td>
-                    <td className="px-4 py-3">{d.category === "moto" ? "Moto" : d.category === "premium" ? "Premium" : "Carro"}</td>
+                    <td className="px-4 py-3">{d.category === "moto" ? "Moto" : d.category === "conforto" ? "Conforto" : "Econômico"}</td>
                     <td className="px-4 py-3 font-semibold">R$ {d.balance?.toFixed(2)}</td>
                     <td className="px-4 py-3">{d.total_rides || 0}</td>
                     <td className="px-4 py-3"><StatusBadge status={statusMap[d.status] || "pending"} /></td>
