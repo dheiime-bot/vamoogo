@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, X, ImageIcon } from "lucide-react";
+import { Search, Eye, X, ImageIcon, User as UserIcon } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
