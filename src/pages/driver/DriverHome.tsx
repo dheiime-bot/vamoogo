@@ -6,6 +6,7 @@ import { getDriverStatusInfo } from "@/lib/driverStatus";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import DriverBottomNav from "@/components/driver/DriverBottomNav";
 
 import GoogleMap from "@/components/shared/GoogleMap";
 import { Home, User, History } from "lucide-react";
