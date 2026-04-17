@@ -4,9 +4,10 @@ import {
   LayoutDashboard, Users, Car, DollarSign, Settings, AlertTriangle, MapPin,
   Headphones, ScrollText, Megaphone, Ticket, BarChart3, LogOut,
   Search, Bell, Moon, Sun, RefreshCw, ChevronDown, ChevronRight, User,
-  Briefcase, Headset, MessageCircle,
+  Briefcase, Headset, MessageCircle, ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMaster } from "@/hooks/usePermission";
 import {
   Sidebar,
   SidebarContent,
@@ -76,6 +77,7 @@ const AppSidebar = () => {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { signOut, profile } = useAuth();
+  const isMaster = useIsMaster();
   const navigate = useNavigate();
 
   const isActive = (path: string) => location.pathname === path;
@@ -200,6 +202,17 @@ const AppSidebar = () => {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              {isMaster && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton tooltip="Funcionários" asChild isActive={isActive("/admin/staff")}>
+                    <NavLink to="/admin/staff">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Funcionários</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
               <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Conta" asChild>
