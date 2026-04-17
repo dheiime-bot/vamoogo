@@ -106,9 +106,24 @@ const PassengerDetailsModal = ({ passenger, onClose }: Props) => {
       </div>
 
       {zoomImg && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 animate-fade-in" onClick={() => setZoomImg(null)}>
-          <button className="absolute top-4 right-4 rounded-full bg-card p-2"><X className="h-5 w-5" /></button>
-          <img src={zoomImg} alt="Zoom" className="max-w-full max-h-full object-contain rounded-xl" />
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 animate-fade-in"
+          onClick={() => setZoomImg(null)}
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setZoomImg(null); }}
+            className="absolute top-4 right-4 rounded-full bg-card p-2 hover:bg-muted"
+            aria-label="Fechar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={zoomImg}
+            alt="Zoom"
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-full max-h-full object-contain rounded-xl"
+          />
         </div>
       )}
     </>
