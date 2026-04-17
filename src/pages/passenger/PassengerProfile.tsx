@@ -69,7 +69,29 @@ const PassengerProfile = () => {
           ))}
         </div>
 
-        <button onClick={handleLogout} className="mt-6 w-full rounded-xl border border-destructive/30 py-3 text-sm font-semibold text-destructive">
+        {canBecomeDriver && (
+          <button
+            onClick={() => navigate("/passenger/become-driver")}
+            className="mt-6 w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow flex items-center justify-center gap-2"
+          >
+            <Car className="h-4 w-4" /> Quero ser motorista
+          </button>
+        )}
+        {isDriver && (
+          <button
+            onClick={() => navigate("/driver/status")}
+            className="mt-6 w-full rounded-xl border border-primary/40 bg-primary/5 py-3 text-sm font-semibold text-primary flex items-center justify-center gap-2"
+          >
+            <Car className="h-4 w-4" /> Ver meu cadastro de motorista
+          </button>
+        )}
+        {!canBecomeDriver && !isDriver && age !== null && age < 21 && (
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Para se tornar motorista é necessário ter 21 anos ou mais.
+          </p>
+        )}
+
+        <button onClick={handleLogout} className="mt-4 w-full rounded-xl border border-destructive/30 py-3 text-sm font-semibold text-destructive">
           Sair da conta
         </button>
       </div>
