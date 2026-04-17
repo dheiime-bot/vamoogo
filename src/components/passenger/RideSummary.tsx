@@ -1,5 +1,6 @@
-import { MapPin, Clock, Navigation, Banknote, QrCode, CreditCard, Star, Check } from "lucide-react";
+import { MapPin, Clock, Navigation, Banknote, QrCode, CreditCard, Star, Check, Copy } from "lucide-react";
 import type { PaymentMethod } from "./PaymentMethodModal";
+import { toast } from "sonner";
 
 interface RideSummaryProps {
   ride: any;
@@ -16,6 +17,16 @@ const paymentLabels: Record<string, { label: string; icon: typeof Banknote }> = 
 const RideSummary = ({ ride, onRate }: RideSummaryProps) => {
   const pm = paymentLabels[ride.payment_method || "cash"];
 
+  const copyCode = async () => {
+    if (!ride.ride_code) return;
+    try {
+      await navigator.clipboard.writeText(ride.ride_code);
+      toast.success("Código copiado");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Success header */}
@@ -25,6 +36,16 @@ const RideSummary = ({ ride, onRate }: RideSummaryProps) => {
         </div>
         <h2 className="text-lg font-bold font-display">Corrida finalizada!</h2>
         <p className="text-sm text-muted-foreground">Obrigado por viajar com a Vamoo</p>
+        {ride.ride_code && (
+          <button
+            onClick={copyCode}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-mono font-semibold text-primary hover:bg-primary/10"
+            title="Copiar código da corrida"
+          >
+            {ride.ride_code}
+            <Copy className="h-3 w-3" />
+          </button>
+        )}
       </div>
 
       {/* Route */}
