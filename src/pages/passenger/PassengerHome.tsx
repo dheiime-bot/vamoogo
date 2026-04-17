@@ -498,7 +498,7 @@ const PassengerHome = () => {
               ? "h-screen"
               : isRideActive || rideState === "completed" || rideState === "rating"
                 ? "h-[68vh]"
-                : "h-[40vh]"
+                : "h-[45vh]"
           } rounded-none transition-all duration-300`}
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
@@ -507,7 +507,7 @@ const PassengerHome = () => {
           nearbyDrivers={nearbyDrivers}
           trackUserLocation={!selectedOrigin}
           showRoute={!!selectedOrigin && !!effectiveDestination}
-          bottomInset={rideState === "idle" ? 96 : 0}
+          bottomInset={showFullMap ? 96 : 0}
         />
       </div>
 
