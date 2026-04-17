@@ -524,10 +524,23 @@ const PassengerHome = () => {
         />
       </div>
 
-      {/* Bottom sheet — sem sobreposição do logo do Google */}
+      {/* Bottom sheet — só aparece em corrida ativa, completed/rating, ou quando o form de viagem está aberto */}
+      {(isRideActive || rideState === "completed" || rideState === "rating" || rideState === "payment" || (rideState === "idle" && showRideForm)) && (
       <div className="relative rounded-t-3xl bg-card shadow-lg animate-slide-up -mt-3">
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted" />
         <div className="p-4 pb-3 space-y-4">
+          {rideState === "idle" && showRideForm && (
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold font-display">Para onde Vamoo?</h2>
+              <button
+                onClick={() => setShowRideForm(false)}
+                className="rounded-full p-1.5 hover:bg-muted transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+          )}
 
           {/* Completed: Show summary */}
           {rideState === "completed" && activeRide && (
