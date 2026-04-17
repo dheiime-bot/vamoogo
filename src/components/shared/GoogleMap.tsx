@@ -558,6 +558,7 @@ const GoogleMapInner = ({
   interactive = true,
   showRoute = true,
   trackUserLocation = false,
+  bottomInset = 0,
 }: Omit<GoogleMapProps, "className" | "showCenterPin">) => {
   const [userLoc, setUserLoc] = useState<MapPoint | null>(null);
   const animatedDriver = useInterpolatedPosition(driverLocation || null);
