@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
         cpf: "11144477735",
         phone: "11988881234",
         user_type: "driver",
-        category: "car",
+        category: "economico",
         vehicle_model: "Toyota Corolla 2022",
         vehicle_color: "Prata",
         vehicle_plate: "ABC1D23",
