@@ -8,6 +8,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/auth/AuthPage.tsx";
 import PassengerSignup from "./pages/auth/PassengerSignup.tsx";
+import DriverSignup from "./pages/auth/DriverSignup.tsx";
 import PassengerHome from "./pages/passenger/PassengerHome.tsx";
 import PassengerHistory from "./pages/passenger/PassengerHistory.tsx";
 import PassengerProfile from "./pages/passenger/PassengerProfile.tsx";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/auth/passenger" element={<PassengerSignup />} />
+            <Route path="/auth/driver" element={<DriverSignup />} />
             <Route path="/passenger" element={<PassengerHome />} />
             <Route path="/passenger/history" element={<PassengerHistory />} />
             <Route path="/passenger/profile" element={<PassengerProfile />} />
