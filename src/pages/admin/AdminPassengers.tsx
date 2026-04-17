@@ -67,7 +67,14 @@ const AdminPassengers = () => {
   });
 
   return (
-    <AdminLayout title="Passageiros" actions={<span className="text-sm text-muted-foreground">{filtered.length} de {passengers.length}</span>}>
+    <AdminLayout title="Passageiros" actions={
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">{filtered.length} de {passengers.length}</span>
+        <button onClick={loadPassengers} disabled={loading} className="rounded-lg border bg-card p-2 hover:bg-muted disabled:opacity-50" title="Atualizar">
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        </button>
+      </div>
+    }>
       <div className="flex gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-xl border bg-card px-3 py-2">
           <Search className="h-4 w-4 text-muted-foreground" />
