@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode } from "lucide-react";
+import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode, Navigation as NavigationIcon } from "lucide-react";
+import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
@@ -218,8 +219,17 @@ const DriverHome = () => {
 
   const handleArrived = async () => {
     if (!activeRide) return;
+    const { error } = await supabase
+      .from("rides")
+      .update({ arrived_at: new Date().toISOString() } as any)
+      .eq("id", activeRide.id);
+    if (error) {
+      toast.error("Erro ao notificar chegada: " + error.message);
+      return;
+    }
+    setActiveRide({ ...activeRide, arrived_at: new Date().toISOString() });
     setRideState("arrived");
-    toast.success("Você chegou ao local de embarque!");
+    toast.success("Passageiro avisado: você chegou! 📍");
   };
 
   const handleStartRide = async () => {
