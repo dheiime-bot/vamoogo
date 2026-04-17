@@ -15,6 +15,7 @@ const DriverStatusPage = () => {
 
   // Reenvio de documentos (quando pendente_documentos ou reprovado)
   const [reuploading, setReuploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [cnhFront, setCnhFront] = useState<string | null>(driverData?.cnh_front_url || null);
   const [cnhBack, setCnhBack] = useState<string | null>(driverData?.cnh_back_url || null);
   const [crlv, setCrlv] = useState<string | null>(driverData?.crlv_url || null);
@@ -22,6 +23,40 @@ const DriverStatusPage = () => {
   const [criminalRecord, setCriminalRecord] = useState<string | null>(driverData?.criminal_record_url || null);
 
   const canReupload = ["pendente_documentos", "reprovado", "rejected"].includes(driverData?.status);
+
+  const handleRefresh = async () => {
+    if (!user || refreshing) return;
+    setRefreshing(true);
+    const previousStatus = driverData?.status;
+    try {
+      // Busca direto do banco (ignora cache do contexto)
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("status, analysis_message, analyzed_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+
+      await refreshProfile();
+
+      const newStatus = data?.status;
+      if (newStatus && newStatus !== previousStatus) {
+        const newInfo = getDriverStatusInfo(newStatus);
+        toast.success(`Status atualizado: ${newInfo.label}`);
+        // Se foi aprovado, redireciona para a home do motorista
+        if (newInfo.canDrive) {
+          setTimeout(() => navigate("/driver"), 800);
+        }
+      } else {
+        toast.info("Nenhuma novidade ainda. Tente novamente em instantes.");
+      }
+    } catch (err: any) {
+      toast.error("Erro ao atualizar: " + (err.message || "tente novamente"));
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
 
   const handleReupload = async () => {
     if (!user) return;
