@@ -42,20 +42,38 @@ import TestAutocomplete from "./pages/TestAutocomplete.tsx";
 
 const queryClient = new QueryClient();
 
+const AuthLoading = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+  </div>
+);
+
 const ProtectedAdminRoute = ({ children }: { children: JSX.Element }) => {
   const { user, roles, loading } = useAuth();
-
-  if (loading || (user && roles.length === 0)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
+  if (loading || (user && roles.length === 0)) return <AuthLoading />;
   if (!user) return <Navigate to="/" replace />;
   if (!roles.includes("admin") && !roles.includes("master")) return <Navigate to="/" replace />;
+  return children;
+};
 
+const ProtectedPassengerRoute = ({ children }: { children: JSX.Element }) => {
+  const { user, roles, loading } = useAuth();
+  if (loading || (user && roles.length === 0)) return <AuthLoading />;
+  if (!user) return <Navigate to="/auth" replace />;
+  // Admin/master também podem acessar para suporte; senão precisa ser passenger ou driver (driver-passageiro também usa o app)
+  if (!roles.includes("passenger") && !roles.includes("driver") && !roles.includes("admin") && !roles.includes("master")) {
+    return <Navigate to="/auth" replace />;
+  }
+  return children;
+};
+
+const ProtectedDriverRoute = ({ children }: { children: JSX.Element }) => {
+  const { user, roles, loading } = useAuth();
+  if (loading || (user && roles.length === 0)) return <AuthLoading />;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!roles.includes("driver") && !roles.includes("admin") && !roles.includes("master")) {
+    return <Navigate to="/passenger" replace />;
+  }
   return children;
 };
 
@@ -73,17 +91,17 @@ const App = () => (
             <Route path="/auth/passenger" element={<PassengerSignup />} />
             <Route path="/auth/driver" element={<DriverSignup />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
-            <Route path="/passenger" element={<PassengerHome />} />
-            <Route path="/passenger/history" element={<PassengerHistory />} />
-            <Route path="/passenger/profile" element={<PassengerProfile />} />
-            <Route path="/passenger/chats" element={<PassengerChats />} />
-            <Route path="/passenger/become-driver" element={<BecomeDriver />} />
-            <Route path="/driver" element={<DriverHome />} />
-            <Route path="/driver/status" element={<DriverStatusPage />} />
-            <Route path="/driver/wallet" element={<DriverWallet />} />
-            <Route path="/driver/rides" element={<DriverRides />} />
-            <Route path="/driver/profile" element={<DriverProfile />} />
-            <Route path="/driver/chats" element={<DriverChats />} />
+            <Route path="/passenger" element={<ProtectedPassengerRoute><PassengerHome /></ProtectedPassengerRoute>} />
+            <Route path="/passenger/history" element={<ProtectedPassengerRoute><PassengerHistory /></ProtectedPassengerRoute>} />
+            <Route path="/passenger/profile" element={<ProtectedPassengerRoute><PassengerProfile /></ProtectedPassengerRoute>} />
+            <Route path="/passenger/chats" element={<ProtectedPassengerRoute><PassengerChats /></ProtectedPassengerRoute>} />
+            <Route path="/passenger/become-driver" element={<ProtectedPassengerRoute><BecomeDriver /></ProtectedPassengerRoute>} />
+            <Route path="/driver" element={<ProtectedDriverRoute><DriverHome /></ProtectedDriverRoute>} />
+            <Route path="/driver/status" element={<ProtectedDriverRoute><DriverStatusPage /></ProtectedDriverRoute>} />
+            <Route path="/driver/wallet" element={<ProtectedDriverRoute><DriverWallet /></ProtectedDriverRoute>} />
+            <Route path="/driver/rides" element={<ProtectedDriverRoute><DriverRides /></ProtectedDriverRoute>} />
+            <Route path="/driver/profile" element={<ProtectedDriverRoute><DriverProfile /></ProtectedDriverRoute>} />
+            <Route path="/driver/chats" element={<ProtectedDriverRoute><DriverChats /></ProtectedDriverRoute>} />
             <Route path="/admin" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
             <Route path="/admin/chats" element={<ProtectedAdminRoute><AdminChats /></ProtectedAdminRoute>} />
             <Route path="/admin/drivers" element={<ProtectedAdminRoute><AdminDrivers /></ProtectedAdminRoute>} />
