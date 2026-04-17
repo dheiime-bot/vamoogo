@@ -74,7 +74,7 @@ const PassengerSignup = () => {
     if (!iso) return "Data inválida (use DD/MM/AAAA)";
     const a = calcAgeBR(v);
     if (a === null) return "Data inválida";
-    if (a < 18) return "Você precisa ter 18 anos ou mais";
+    if (a < 16) return "Cadastro permitido a partir de 16 anos";
     if (a > 110) return "Data inválida";
     return "";
   };
