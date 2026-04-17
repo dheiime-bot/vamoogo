@@ -146,6 +146,19 @@ const AppMenu = ({ role, floating = true }: Props) => {
           })}
         </nav>
 
+        {canBecomeDriver && (
+          <div className="border-t p-2">
+            <p className="px-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase">Motorista</p>
+            <button
+              onClick={() => go("/passenger/become-driver")}
+              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+            >
+              <Car className="h-4 w-4" />
+              Quero ser motorista
+            </button>
+          </div>
+        )}
+
         {hasBoth && (
           <div className="border-t p-2">
             <p className="px-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase">Modo</p>
