@@ -44,7 +44,9 @@ const paymentOptions: { id: PaymentMethod; label: string; icon: typeof Banknote;
 ];
 
 const PaymentMethodModal = ({
-  open, onClose, onConfirm, originName, destinationName,
+  open, onClose, onConfirm, originName, originAddress, destinationName, destinationAddress,
+  stops = [], returnToOrigin = false, passengerCount = 1,
+  forOtherPerson = false, otherPersonName, otherPersonPhone,
   distanceKm, durationMin, estimatedPrice, category,
 }: PaymentMethodModalProps) => {
   const [selected, setSelected] = useState<PaymentMethod | null>(null);
