@@ -192,7 +192,8 @@ const PassengerHome = () => {
     const durationMin = estimatedTime || 0;
     const basePrice = estimatedPrice || 0;
     const price = coupon ? Math.max(0, basePrice - coupon.discount) : basePrice;
-    const platformFee = Math.round(price * 0.15 * 100) / 100;
+    // Taxa configurável: override por categoria (tariffs.fee_percent) ou global (platform_settings.global_fee_percent)
+    const platformFee = await calcPlatformFee(price, selectedCategory as "moto" | "economico" | "conforto");
 
     const { data, error } = await supabase.from("rides").insert({
       passenger_id: user.id,
