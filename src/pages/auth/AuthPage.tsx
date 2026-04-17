@@ -305,8 +305,8 @@ const AuthPage = () => {
                   <div className="mt-1 flex gap-2">
                     {[
                       { id: "moto", label: "Moto", icon: Bike },
-                      { id: "car", label: "Carro", icon: Car },
-                      { id: "premium", label: "Premium", icon: Crown },
+                      { id: "economico", label: "Econômico", icon: Car },
+                      { id: "conforto", label: "Conforto", icon: Sparkles },
                     ].map((cat) => (
                       <button
                         key={cat.id}
