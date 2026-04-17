@@ -136,6 +136,12 @@ const NotificationBell = ({ floating = true }: Props) => {
     await supabase.from("notifications").update({ is_read: true, read_at: new Date().toISOString() }).eq("id", id);
   };
 
+  const deleteNotification = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    await supabase.from("notifications").delete().eq("id", id);
+  };
+
   const markAllRead = async () => {
     if (!user || unreadCount === 0) return;
     setItems((prev) => prev.map((i) => ({ ...i, is_read: true })));
