@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { brl } from "@/lib/brFormat";
+import { formatBRL } from "@/lib/brFormat";
 
 const DriverEarningsChip = () => {
   const { user } = useAuth();
@@ -50,7 +50,7 @@ const DriverEarningsChip = () => {
       aria-label="Ver carteira"
     >
       <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Hoje</span>
-      <span className="text-sm font-extrabold text-primary">{brl(earnings)}</span>
+      <span className="text-sm font-extrabold text-primary">{formatBRL(earnings)}</span>
     </button>
   );
 };
