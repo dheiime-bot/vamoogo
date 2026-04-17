@@ -507,6 +507,11 @@ const DriverHome = () => {
               <MessageCircle className="h-4 w-4 text-primary" /> Chat
             </button>
           </div>
+          <button
+            onClick={() => openGoogleMapsRoute(Number(activeRide.origin_lat), Number(activeRide.origin_lng), "Embarque")}
+            className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
+            <NavigationIcon className="h-4 w-4" /> Navegar até passageiro (Google Maps)
+          </button>
           <button onClick={handleArrived}
             className="w-full rounded-xl bg-info py-3 text-sm font-bold text-info-foreground flex items-center justify-center gap-2">
             <MapPin className="h-4 w-4" /> Cheguei ao local
@@ -551,6 +556,11 @@ const DriverHome = () => {
           <div className="text-xs text-muted-foreground">
             {activeRide.distance_km} km • ~{activeRide.duration_minutes} min • Taxa plataforma: R$ {Number(activeRide.platform_fee).toFixed(2)}
           </div>
+          <button
+            onClick={() => openGoogleMapsRoute(Number(activeRide.destination_lat), Number(activeRide.destination_lng), "Destino")}
+            className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
+            <NavigationIcon className="h-4 w-4" /> Navegar até destino (Google Maps)
+          </button>
           {activeRide.payment_method === "pix" ? (
             <button onClick={() => setShowPixModal(true)}
               className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
