@@ -7,6 +7,7 @@ import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
+import DriverHeartbeat from "@/components/driver/DriverHeartbeat";
 
 import GoogleMap from "@/components/shared/GoogleMap";
 import { Home, User, History } from "lucide-react";
@@ -64,7 +65,7 @@ const DriverHome = () => {
   const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
 
   // Faz broadcast da posição GPS quando online
-  useDriverLocation({ driverId: user?.id, isOnline, category: driverData?.category });
+  const { lastSyncAt } = useDriverLocation({ driverId: user?.id, isOnline, category: driverData?.category });
 
   // Stats do dia
   useEffect(() => {
@@ -432,6 +433,7 @@ const DriverHome = () => {
         <AppMenu role="driver" />
         <DriverEarningsChip />
         <NotificationBell />
+        <DriverHeartbeat lastSyncAt={lastSyncAt} isOnline={isOnline} />
         <DriverBottomNav />
       </div>
     );
