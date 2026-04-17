@@ -61,6 +61,9 @@ const PassengerHistory = () => {
           >
             <div className="flex items-start justify-between mb-3">
               <div>
+                {ride.ride_code && (
+                  <p className="text-xs font-mono font-semibold text-primary">{ride.ride_code}</p>
+                )}
                 <p className="text-xs text-muted-foreground">{new Date(ride.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                 <p className="text-xs font-medium text-muted-foreground">{catLabel(ride.category)} • {ride.distance_km} km • ~{ride.duration_minutes} min</p>
               </div>
