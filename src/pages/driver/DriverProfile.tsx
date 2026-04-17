@@ -14,7 +14,7 @@ const DriverProfile = () => {
   };
 
   const displayName = profile?.full_name || "Motorista";
-  const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "premium" ? "Premium" : "Carro";
+  const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
   const statusMap: Record<string, "pending" | "approved" | "rejected" | "blocked"> = {
     pending: "pending",
     approved: "approved",

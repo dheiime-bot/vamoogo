@@ -22,7 +22,7 @@ const PassengerHistory = () => {
   }, [user]);
 
   const filtered = filter === "all" ? rides : rides.filter((r) => r.status === filter);
-  const catLabel = (c: string) => c === "moto" ? "Moto" : c === "premium" ? "Premium" : "Carro";
+  const catLabel = (c: string) => c === "moto" ? "Moto" : c === "conforto" ? "Conforto" : "Econômico";
 
   return (
     <div className="min-h-screen bg-background pb-20">

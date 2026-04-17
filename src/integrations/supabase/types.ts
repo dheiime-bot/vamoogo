@@ -897,7 +897,7 @@ export type Database = {
         | "completed"
         | "cancelled"
       user_type: "passenger" | "driver" | "admin"
-      vehicle_category: "moto" | "car" | "premium"
+      vehicle_category: "moto" | "economico" | "conforto"
       withdrawal_status: "pending" | "approved" | "paid" | "rejected"
     }
     CompositeTypes: {
@@ -1040,7 +1040,7 @@ export const Constants = {
         "cancelled",
       ],
       user_type: ["passenger", "driver", "admin"],
-      vehicle_category: ["moto", "car", "premium"],
+      vehicle_category: ["moto", "economico", "conforto"],
       withdrawal_status: ["pending", "approved", "paid", "rejected"],
     },
   },

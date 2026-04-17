@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Mail, Lock, User, Phone, FileText, Camera, ArrowLeft, ArrowRight, Bike, Crown, Loader2 } from "lucide-react";
+import { Car, Mail, Lock, User, Phone, FileText, Camera, ArrowLeft, ArrowRight, Bike, Sparkles, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateCPF, formatCPF, formatPhone, formatPlate } from "@/lib/validators";
 import { toast } from "sonner";
@@ -24,7 +24,7 @@ const AuthPage = () => {
   const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
   const [cpfError, setCpfError] = useState("");
-  const [category, setCategory] = useState<string>("car");
+  const [category, setCategory] = useState<string>("economico");
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleColor, setVehicleColor] = useState("");
   const [vehiclePlate, setVehiclePlate] = useState("");
@@ -305,8 +305,8 @@ const AuthPage = () => {
                   <div className="mt-1 flex gap-2">
                     {[
                       { id: "moto", label: "Moto", icon: Bike },
-                      { id: "car", label: "Carro", icon: Car },
-                      { id: "premium", label: "Premium", icon: Crown },
+                      { id: "economico", label: "Econômico", icon: Car },
+                      { id: "conforto", label: "Conforto", icon: Sparkles },
                     ].map((cat) => (
                       <button
                         key={cat.id}

@@ -41,7 +41,7 @@ const PaymentMethodModal = ({
 
   if (!open) return null;
 
-  const catLabel = category === "moto" ? "Moto" : category === "premium" ? "Premium" : "Carro";
+  const catLabel = category === "moto" ? "Moto" : category === "conforto" ? "Conforto" : "Econômico";
   const finalPrice = appliedCoupon ? Math.max(0, estimatedPrice - appliedCoupon.discount) : estimatedPrice;
 
   const handleApplyCoupon = async () => {

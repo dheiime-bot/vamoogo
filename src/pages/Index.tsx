@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { MapPin, Shield, Zap, Users, Car, Bike, Crown, ArrowRight, CheckCircle2 } from "lucide-react";
+import { MapPin, Shield, Zap, Users, Car, Bike, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import vamooLogo from "@/assets/vamoo-logo.png";
 import vamooIcon from "@/assets/vamoo-icon.png";
 
@@ -12,8 +12,8 @@ const features = [
 
 const categories = [
   { icon: Bike, label: "Moto", desc: "Rápido e econômico", color: "from-primary to-accent" },
-  { icon: Car, label: "Carro", desc: "Conforto e praticidade", color: "from-primary to-info" },
-  { icon: Crown, label: "Premium", desc: "Experiência exclusiva", color: "from-accent to-warning" },
+  { icon: Car, label: "Econômico", desc: "Carro popular, tarifa acessível", color: "from-primary to-info" },
+  { icon: Sparkles, label: "Conforto", desc: "Mais espaço e qualidade", color: "from-accent to-warning" },
 ];
 
 const steps = [

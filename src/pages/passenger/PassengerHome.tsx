@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Car, Bike, Crown, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
+import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
@@ -15,9 +15,9 @@ import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocat
 import { toast } from "sonner";
 
 const categories = [
-  { id: "moto", label: "Moto", icon: Bike, desc: "Rápido" },
-  { id: "car", label: "Carro", icon: Car, desc: "Conforto" },
-  { id: "premium", label: "Premium", icon: Crown, desc: "VIP" },
+  { id: "moto", label: "Moto", icon: Bike, desc: "Rápido e barato" },
+  { id: "economico", label: "Econômico", icon: Car, desc: "Carro popular" },
+  { id: "conforto", label: "Conforto", icon: Sparkles, desc: "Mais espaço" },
 ];
 
 
@@ -28,7 +28,7 @@ const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", de
 const PassengerHome = () => {
   const { user } = useAuth();
   const [passengers, setPassengers] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState("car");
+  const [selectedCategory, setSelectedCategory] = useState("economico");
   const [selectedOrigin, setSelectedOrigin] = useState<AppLocation | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<AppLocation | null>(null);
   const [selectedStops, setSelectedStops] = useState<(AppLocation | null)[]>([]);
@@ -121,7 +121,7 @@ const PassengerHome = () => {
   const fare = useFareEstimate(
     selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng } : null,
     effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng } : null,
-    selectedCategory as "moto" | "car" | "premium",
+    selectedCategory as "moto" | "economico" | "conforto",
     passengers,
     effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng }))
   );
@@ -159,7 +159,7 @@ const PassengerHome = () => {
       origin_lat: selectedOrigin.lat, origin_lng: selectedOrigin.lng,
       destination_address: `${effectiveDestination.name} - ${effectiveDestination.address}`,
       destination_lat: effectiveDestination.lat, destination_lng: effectiveDestination.lng,
-      category: selectedCategory as "moto" | "car" | "premium",
+      category: selectedCategory as "moto" | "economico" | "conforto",
       passenger_count: passengers, distance_km: distanceKm, duration_minutes: durationMin,
       price, platform_fee: platformFee, driver_net: price - platformFee,
       payment_method: method as any,
