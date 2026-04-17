@@ -591,13 +591,19 @@ const DriverHome = () => {
       {isOnline && rideState === "idle" && !activeRide && (
         <div className="mx-4 mt-4 rounded-2xl border bg-card p-6 text-center">
           <div className="relative mx-auto h-12 w-12 mb-2">
-            <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
-            <div className="absolute inset-2 rounded-full bg-primary/10 flex items-center justify-center">
-              <Car className="h-5 w-5 text-primary" />
+            <div className="absolute inset-0 rounded-full bg-success/20 animate-ping" />
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-success">
+              <Power className="h-6 w-6 text-success-foreground" />
             </div>
           </div>
           <p className="text-sm font-medium mt-2">Aguardando corridas próximas...</p>
           <p className="text-xs text-muted-foreground">Você será notificado em segundos</p>
+          <button
+            onClick={handleToggleOnline}
+            className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10"
+          >
+            Ficar offline
+          </button>
         </div>
       )}
 
