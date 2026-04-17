@@ -1,4 +1,4 @@
-import { User, Camera, FileText, Phone, Mail, Shield, ArrowLeft } from "lucide-react";
+import { User, Camera, FileText, Phone, Mail, Shield, ArrowLeft, Car } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -7,12 +7,22 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const PassengerProfile = () => {
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, roles } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
     navigate("/");
   };
+
+  const calcAge = (iso?: string | null) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return Math.floor((Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  };
+  const age = calcAge(profile?.birth_date);
+  const isDriver = roles?.includes("driver");
+  const canBecomeDriver = !isDriver && age !== null && age >= 21;
 
   const displayName = profile?.full_name || "Usuário";
   const cpfMasked = profile?.cpf
@@ -59,7 +69,29 @@ const PassengerProfile = () => {
           ))}
         </div>
 
-        <button onClick={handleLogout} className="mt-6 w-full rounded-xl border border-destructive/30 py-3 text-sm font-semibold text-destructive">
+        {canBecomeDriver && (
+          <button
+            onClick={() => navigate("/passenger/become-driver")}
+            className="mt-6 w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow flex items-center justify-center gap-2"
+          >
+            <Car className="h-4 w-4" /> Quero ser motorista
+          </button>
+        )}
+        {isDriver && (
+          <button
+            onClick={() => navigate("/driver/status")}
+            className="mt-6 w-full rounded-xl border border-primary/40 bg-primary/5 py-3 text-sm font-semibold text-primary flex items-center justify-center gap-2"
+          >
+            <Car className="h-4 w-4" /> Ver meu cadastro de motorista
+          </button>
+        )}
+        {!canBecomeDriver && !isDriver && age !== null && age < 21 && (
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Para se tornar motorista é necessário ter 21 anos ou mais.
+          </p>
+        )}
+
+        <button onClick={handleLogout} className="mt-4 w-full rounded-xl border border-destructive/30 py-3 text-sm font-semibold text-destructive">
           Sair da conta
         </button>
       </div>
