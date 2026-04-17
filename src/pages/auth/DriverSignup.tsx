@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, ArrowRight, User, FileText, Calendar, Phone, Mail, Lock,
   Eye, EyeOff, Loader2, Camera, CheckCircle2, ShieldCheck, AlertCircle,
-  Car, Bike, Sparkles, KeyRound, CreditCard, Hash, Palette,
+  Car, Bike, Sparkles, KeyRound, CreditCard, Hash, Palette, Shield,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,16 +14,18 @@ import {
   isFakeName, isFakeEmail, isFakeCPF, isFakePhone, checkPasswordStrength,
 } from "@/lib/antiFake";
 import DocumentUpload from "@/components/auth/DocumentUpload";
+import LiveSelfieCapture from "@/components/auth/LiveSelfieCapture";
 import { toast } from "sonner";
 
-type StepKey = "dados" | "seguranca" | "selfie" | "veiculo" | "documentos" | "pix";
+type StepKey = "dados" | "seguranca" | "selfie" | "veiculo" | "documentos" | "antecedentes" | "pix";
 
 const STEPS: Array<{ key: StepKey; label: string }> = [
   { key: "dados", label: "Dados pessoais" },
   { key: "seguranca", label: "Segurança" },
-  { key: "selfie", label: "Selfie" },
+  { key: "selfie", label: "Selfie ao vivo" },
   { key: "veiculo", label: "Veículo" },
   { key: "documentos", label: "Documentos" },
+  { key: "antecedentes", label: "Antecedentes" },
   { key: "pix", label: "Pix" },
 ];
 
@@ -59,8 +61,14 @@ const DriverSignup = () => {
   const [showPwd, setShowPwd] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
 
-  // Selfie
+  // Selfie (ao vivo, com liveness)
   const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
+  const [selfieLivenessUrl, setSelfieLivenessUrl] = useState<string | null>(null);
+  const [livenessVerified, setLivenessVerified] = useState(false);
+
+  // Antecedentes criminais
+  const [criminalRecordUrl, setCriminalRecordUrl] = useState<string | null>(null);
+  const [criminalRecordDate, setCriminalRecordDate] = useState("");
 
   // Veículo
   const [category, setCategory] = useState<string>("economico");
