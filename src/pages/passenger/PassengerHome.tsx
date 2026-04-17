@@ -57,6 +57,9 @@ const PassengerHome = () => {
   const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
   const [returnToOrigin, setReturnToOrigin] = useState(false);
   const [showPixModal, setShowPixModal] = useState(false);
+  const [nearbyDrivers, setNearbyDrivers] = useState<Array<{ lat: number; lng: number; heading?: number; category?: "moto" | "economico" | "conforto" }>>([]);
+  const [showChangeDest, setShowChangeDest] = useState(false);
+  const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
 
   // Fetch recent rides
   useEffect(() => {
@@ -164,6 +167,68 @@ const PassengerHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
 
+  // Realtime: motoristas online próximos (só em idle, antes de pedir corrida)
+  useEffect(() => {
+    if (rideState !== "idle") {
+      setNearbyDrivers([]);
+      return;
+    }
+    const center = selectedOrigin
+      ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng }
+      : null;
+
+    const fetchNearby = async () => {
+      const { data } = await supabase
+        .from("driver_locations")
+        .select("driver_id,lat,lng,heading,category,is_online,updated_at")
+        .eq("is_online", true)
+        .limit(50);
+      if (!data) return;
+      // Filtra: últimos 5 min e (se temos origem) raio de 8km
+      const fresh = data.filter((d: any) => {
+        const age = Date.now() - new Date(d.updated_at).getTime();
+        if (age > 5 * 60 * 1000) return false;
+        if (center) {
+          const R = 6371;
+          const dLat = ((d.lat - center.lat) * Math.PI) / 180;
+          const dLng = ((d.lng - center.lng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) ** 2 +
+            Math.cos((center.lat * Math.PI) / 180) *
+              Math.cos((d.lat * Math.PI) / 180) *
+              Math.sin(dLng / 2) ** 2;
+          const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          if (km > 8) return false;
+        }
+        return true;
+      });
+      setNearbyDrivers(
+        fresh.map((d: any) => ({
+          lat: Number(d.lat),
+          lng: Number(d.lng),
+          heading: d.heading ?? undefined,
+          category: d.category ?? "economico",
+        }))
+      );
+    };
+    fetchNearby();
+
+    const channel = supabase
+      .channel("nearby-drivers")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "driver_locations" },
+        () => fetchNearby()
+      )
+      .subscribe();
+
+    const interval = setInterval(fetchNearby, 30000);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [rideState, selectedOrigin?.lat, selectedOrigin?.lng]);
+
   const confirmedStops = selectedStops.filter((s): s is AppLocation => !!s);
   const effectiveStops = returnToOrigin && selectedOrigin && selectedDestination
     ? [...confirmedStops, selectedDestination]
@@ -256,6 +321,46 @@ const PassengerHome = () => {
     toast("Corrida cancelada");
   };
 
+  // Alterar destino — permitido APENAS com a corrida em andamento (in_progress).
+  // Antes disso (accepted/driver_arriving/arrived) a rota fica congelada.
+  const handleChangeDestination = async () => {
+    if (!activeRide || !newDestination) return;
+    if (activeRide.status !== "in_progress") {
+      toast.error("Só é possível alterar o destino com a corrida em andamento");
+      return;
+    }
+    const { error } = await supabase
+      .from("rides")
+      .update({
+        destination_address: `${newDestination.name} - ${newDestination.address}`,
+        destination_lat: newDestination.lat,
+        destination_lng: newDestination.lng,
+      })
+      .eq("id", activeRide.id);
+    if (error) {
+      toast.error("Erro ao alterar destino: " + error.message);
+      return;
+    }
+    setActiveRide((r: any) => ({
+      ...r,
+      destination_address: `${newDestination.name} - ${newDestination.address}`,
+      destination_lat: newDestination.lat,
+      destination_lng: newDestination.lng,
+    }));
+    setSelectedDestination(newDestination);
+    setShowChangeDest(false);
+    setNewDestination(null);
+    toast.success("Destino atualizado — o motorista foi avisado");
+    // Avisa o motorista via mensagem no chat para garantir feedback imediato
+    if (user) {
+      supabase.from("chat_messages").insert({
+        ride_id: activeRide.id,
+        sender_id: user.id,
+        message: `📍 Destino alterado para: ${newDestination.name}`,
+      }).then(() => {});
+    }
+  };
+
   const handleSubmitRating = async () => {
     if (!activeRide || rating === 0) return;
     await supabase.from("rides").update({ rating }).eq("id", activeRide.id);
@@ -294,6 +399,7 @@ const PassengerHome = () => {
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
           stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
           driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
+          nearbyDrivers={rideState === "idle" ? nearbyDrivers : []}
           trackUserLocation={!selectedOrigin}
           showRoute={!!selectedOrigin && !!effectiveDestination}
         />
@@ -469,6 +575,55 @@ const PassengerHome = () => {
                     <Phone className="h-4 w-4 text-primary" /> Ligar
                   </button>
                 </div>
+              )}
+
+              {/* Aviso: rota congelada antes de iniciar */}
+              {(rideState === "accepted" || rideState === "driver_arriving" || rideState === "arrived") && (
+                <p className="text-[11px] text-center text-muted-foreground bg-muted/50 rounded-lg py-2 px-3">
+                  🔒 A rota fica bloqueada até o motorista iniciar a corrida. Você poderá alterar o destino após o início.
+                </p>
+              )}
+
+              {/* Alterar destino — só com corrida em andamento */}
+              {rideState === "in_progress" && (
+                <>
+                  {!showChangeDest ? (
+                    <button
+                      onClick={() => {
+                        setShowChangeDest(true);
+                        setNewDestination(selectedDestination);
+                      }}
+                      className="w-full rounded-xl border-2 border-dashed border-primary/40 py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Navigation className="h-4 w-4" /> Alterar destino
+                    </button>
+                  ) : (
+                    <div className="rounded-xl border-2 border-primary p-3 space-y-3 bg-primary/5">
+                      <p className="text-xs font-semibold text-primary">Novo destino</p>
+                      <AddressAutocompleteField
+                        label=""
+                        placeholder="Para onde mudar?"
+                        value={newDestination ? placeDetailsFromAppLocation(newDestination) : null}
+                        onChange={(place) => setNewDestination(place ? appLocationFromPlaceDetails(place) : null)}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => { setShowChangeDest(false); setNewDestination(null); }}
+                          className="rounded-xl border py-2.5 text-sm font-semibold hover:bg-muted transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleChangeDestination}
+                          disabled={!newDestination}
+                          className="rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-40"
+                        >
+                          Confirmar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {rideState === "searching" && (
