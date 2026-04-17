@@ -9,6 +9,8 @@ import Index from "./pages/Index.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/auth/AuthPage.tsx";
+import PassengerLogin from "./pages/auth/PassengerLogin.tsx";
+import DriverLogin from "./pages/auth/DriverLogin.tsx";
 import PassengerSignup from "./pages/auth/PassengerSignup.tsx";
 import DriverSignup from "./pages/auth/DriverSignup.tsx";
 import ResetPassword from "./pages/auth/ResetPassword.tsx";
@@ -59,10 +61,9 @@ const ProtectedAdminRoute = ({ children }: { children: JSX.Element }) => {
 const ProtectedPassengerRoute = ({ children }: { children: JSX.Element }) => {
   const { user, roles, loading } = useAuth();
   if (loading || (user && roles.length === 0)) return <AuthLoading />;
-  if (!user) return <Navigate to="/auth" replace />;
-  // Admin/master também podem acessar para suporte; senão precisa ser passenger ou driver (driver-passageiro também usa o app)
+  if (!user) return <Navigate to="/auth/passenger/login" replace />;
   if (!roles.includes("passenger") && !roles.includes("driver") && !roles.includes("admin") && !roles.includes("master")) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth/passenger/login" replace />;
   }
   return children;
 };
@@ -70,9 +71,9 @@ const ProtectedPassengerRoute = ({ children }: { children: JSX.Element }) => {
 const ProtectedDriverRoute = ({ children }: { children: JSX.Element }) => {
   const { user, roles, loading } = useAuth();
   if (loading || (user && roles.length === 0)) return <AuthLoading />;
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/auth/driver/login" replace />;
   if (!roles.includes("driver") && !roles.includes("admin") && !roles.includes("master")) {
-    return <Navigate to="/passenger" replace />;
+    return <Navigate to="/auth/driver/login" replace />;
   }
   return children;
 };
@@ -88,6 +89,8 @@ const App = () => (
             <Route path="/" element={<AdminLogin />} />
             <Route path="/landing" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/passenger/login" element={<PassengerLogin />} />
+            <Route path="/auth/driver/login" element={<DriverLogin />} />
             <Route path="/auth/passenger" element={<PassengerSignup />} />
             <Route path="/auth/driver" element={<DriverSignup />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
