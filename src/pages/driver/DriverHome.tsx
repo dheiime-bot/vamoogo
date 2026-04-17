@@ -283,6 +283,10 @@ const DriverHome = () => {
   };
 
   const handleToggleOnline = () => {
+    if ((driverData as any)?.online_blocked && !isOnline) {
+      toast.error("Você está impedido de ficar online. Entre em contato com o suporte.");
+      return;
+    }
     if (lowBalance && !isOnline) {
       toast.error("Saldo insuficiente. Recarregue para ficar online!");
       return;
