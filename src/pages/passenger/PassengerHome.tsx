@@ -1041,6 +1041,58 @@ const PassengerHome = () => {
         merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
       />
 
+      {/* Modal de avaliação — sobreposto sobre a tela inicial após corrida finalizar.
+          Fechar (X / overlay / Esc) chama resetRide para limpar o estado. */}
+      <Dialog
+        open={rideState === "rating" && !!activeRide}
+        onOpenChange={(o) => { if (!o) resetRide(); }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display">Como foi sua viagem?</DialogTitle>
+          </DialogHeader>
+          {activeRide && (
+            <div className="space-y-4 text-center pt-2">
+              {driverInfo && (
+                <p className="text-sm text-muted-foreground">Motorista: {driverInfo.profile?.full_name}</p>
+              )}
+              <RideSummary ride={activeRide} onRate={() => {}} hideRateButton />
+              {activeRide.payment_method === "pix" && (
+                <button
+                  onClick={() => setShowPixModal(true)}
+                  className="w-full rounded-xl border-2 border-primary bg-primary/5 py-2.5 text-sm font-bold text-primary flex items-center justify-center gap-2"
+                >
+                  <QrCode className="h-4 w-4" /> Mostrar QR Code Pix
+                </button>
+              )}
+              <div className="flex justify-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <button key={s} onClick={() => setRating(s)} className="transition-transform active:scale-95">
+                    <Star className={`h-9 w-9 ${s <= rating ? "text-warning fill-warning" : "text-muted-foreground"}`} />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                placeholder="Conte como foi a viagem (opcional)..."
+                value={ratingComment}
+                onChange={(e) => setRatingComment(e.target.value)}
+                className="w-full rounded-xl border bg-muted p-3 text-sm outline-none resize-none h-16"
+              />
+              <button
+                onClick={handleSubmitRating}
+                disabled={rating === 0}
+                className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50"
+              >
+                Enviar avaliação ⭐
+              </button>
+              <button onClick={resetRide} className="text-xs text-muted-foreground">
+                Pular avaliação
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <AppMenu role="passenger" />
       <NotificationBell />
     </div>
