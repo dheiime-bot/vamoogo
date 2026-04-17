@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Mail, Lock, User, Phone, FileText, Camera, ArrowLeft, ArrowRight, Bike, Crown, Loader2 } from "lucide-react";
+import { Car, Mail, Lock, User, Phone, FileText, Camera, ArrowLeft, ArrowRight, Bike, Sparkles, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateCPF, formatCPF, formatPhone, formatPlate } from "@/lib/validators";
 import { toast } from "sonner";
