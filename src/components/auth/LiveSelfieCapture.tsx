@@ -288,17 +288,29 @@ const LiveSelfieCapture = ({
 
       {/* Estado: idle (botão para iniciar) */}
       {step === "idle" && !preview && (
-        <button
-          type="button"
-          onClick={startCamera}
-          className="mt-1 flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-background py-8 hover:border-primary transition-colors"
-        >
-          <Camera className="h-7 w-7 text-muted-foreground" />
-          <span className="text-sm font-medium">Abrir câmera</span>
-          <span className="text-[10px] text-muted-foreground px-4 text-center">
-            Captura ao vivo com verificação anti-fraude. Fotos da galeria não são aceitas.
-          </span>
-        </button>
+        <div className="mt-1 space-y-2">
+          <button
+            type="button"
+            onClick={startCamera}
+            className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-background py-8 hover:border-primary transition-colors"
+          >
+            <Camera className="h-7 w-7 text-muted-foreground" />
+            <span className="text-sm font-medium">Abrir câmera ao vivo</span>
+            <span className="text-[10px] text-muted-foreground px-4 text-center">
+              Captura ao vivo com verificação anti-fraude (recomendado).
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => fallbackInputRef.current?.click()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border bg-background py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted"
+          >
+            <Upload className="h-4 w-4" /> Usar câmera do dispositivo (alternativa)
+          </button>
+          <p className="text-[10px] text-muted-foreground text-center px-2">
+            Se a câmera ao vivo não abrir, use a alternativa. A foto passará por análise manual.
+          </p>
+        </div>
       )}
 
       {/* Estado: câmera ativa */}
@@ -372,19 +384,37 @@ const LiveSelfieCapture = ({
             <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
             <p className="text-xs text-destructive">{errMsg}</p>
           </div>
-          <button
-            type="button"
-            onClick={() => { setStep("idle"); setErrMsg(""); }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-semibold"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> Tentar novamente
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => { setStep("idle"); setErrMsg(""); }}
+              className="flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-semibold"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Tentar novamente
+            </button>
+            <button
+              type="button"
+              onClick={() => fallbackInputRef.current?.click()}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground"
+            >
+              <Camera className="h-3.5 w-3.5" /> Usar câmera nativa
+            </button>
+          </div>
         </div>
       )}
 
       {hint && <p className="mt-1 text-[10px] text-muted-foreground">{hint}</p>}
 
       <canvas ref={canvasRef} className="hidden" />
+      {/* Input fallback oculto: dispara câmera nativa do celular */}
+      <input
+        ref={fallbackInputRef}
+        type="file"
+        accept="image/*"
+        capture="user"
+        onChange={handleFallbackFile}
+        className="hidden"
+      />
     </div>
   );
 };
