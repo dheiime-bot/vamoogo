@@ -103,6 +103,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => { cancelled = true; subscription.unsubscribe(); };
   }, [loadUserData]);
 
+  // 🔄 Realtime: atualiza profile/driver/roles automaticamente sem recarregar
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`auth-rt-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` }, () => {
+        loadUserData(user.id);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "drivers", filter: `user_id=eq.${user.id}` }, () => {
+        loadUserData(user.id);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_roles", filter: `user_id=eq.${user.id}` }, () => {
+        loadUserData(user.id);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, loadUserData]);
+
   const switchRole = async (role: AppRole) => {
     if (!roles.includes(role)) return;
     setActiveRole(role);
