@@ -1016,14 +1016,23 @@ const PassengerHome = () => {
               </div>
             )}
           </div>
-          <button
-            onClick={handleOpenPayment}
-            disabled={isRequesting || !selectedOrigin || !selectedDestination}
-            className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isRequesting && <Loader2 className="h-4 w-4 animate-spin" />}
-            Vamoo! 🚀
-          </button>
+          {!showRideForm ? (
+            <button
+              onClick={() => setShowRideForm(true)}
+              className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              Para onde Vamoo? 🚀
+            </button>
+          ) : (
+            <button
+              onClick={handleOpenPayment}
+              disabled={isRequesting || !selectedOrigin || !selectedDestination}
+              className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isRequesting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Vamoo! 🚀
+            </button>
+          )}
         </div>
       )}
 
