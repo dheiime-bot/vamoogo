@@ -651,7 +651,7 @@ const GoogleMapInner = ({
       {onMapClick && <ClickHandler onMapClick={onMapClick} />}
       {onCenterChange && <CenterTracker onCenterChange={onCenterChange} />}
       {interactive && (
-        <RecenterButton target={origin || animatedDriver || userLoc || null} />
+        <RecenterButton target={origin || animatedDriver || userLoc || null} bottomInset={bottomInset} />
       )}
     </Map>
   );
