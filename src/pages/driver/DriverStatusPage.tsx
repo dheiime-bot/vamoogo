@@ -204,10 +204,16 @@ const DriverStatusPage = () => {
         </div>
 
         <button
-          onClick={() => refreshProfile()}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted disabled:opacity-50"
         >
-          <RefreshCw className="h-3.5 w-3.5" /> Atualizar status
+          {refreshing ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="h-3.5 w-3.5" />
+          )}
+          {refreshing ? "Verificando..." : "Atualizar status"}
         </button>
       </div>
     </div>
