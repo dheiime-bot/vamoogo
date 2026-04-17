@@ -65,17 +65,34 @@ const LiveSelfieCapture = ({
       setStep("error");
       return;
     }
+    // 1) Mostrar a UI da câmera ANTES de pedir o stream para garantir que o
+    //    <video> esteja montado no DOM quando atribuirmos srcObject.
+    setStep("intro");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 720 } },
         audio: false,
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+      // 2) Pequeno tick para garantir que o React renderizou o <video>
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const v = videoRef.current;
+      if (v) {
+        v.srcObject = stream;
+        v.muted = true;
+        v.playsInline = true;
+        try {
+          await v.play();
+        } catch (playErr) {
+          console.warn("video.play() falhou, tentando novamente:", playErr);
+          // Em alguns navegadores precisa de outro tick
+          await new Promise((r) => setTimeout(r, 100));
+          await v.play().catch((e) => console.warn("retry play falhou:", e));
+        }
+      } else {
+        console.error("videoRef ainda não está disponível");
+        throw new Error("Elemento de vídeo não montado");
       }
-      setStep("intro");
     } catch (e: any) {
       console.error("getUserMedia error:", e);
       let msg = "Não foi possível acessar a câmera deste dispositivo.";
@@ -88,6 +105,7 @@ const LiveSelfieCapture = ({
       }
       setErrMsg(msg);
       setStep("error");
+      stopCamera();
     }
   };
 
