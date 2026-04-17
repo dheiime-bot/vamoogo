@@ -581,7 +581,7 @@ const DriverHome = () => {
 
       {/* In ride */}
       {rideState === "in_ride" && activeRide && (
-        <div className="mx-4 mt-4 rounded-2xl border bg-card p-4 space-y-3">
+        <div className="rounded-2xl border bg-card p-4 space-y-3 shadow-glow">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-sm font-bold text-success truncate">🛣️ Em corrida</span>
