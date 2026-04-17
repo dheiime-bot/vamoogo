@@ -54,6 +54,12 @@ const DriverHome = () => {
   // Faz broadcast da posição GPS quando online
   const { lastSyncAt } = useDriverLocation({ driverId: user?.id, isOnline, category: driverData?.category });
 
+  // Bootstrap: destrava áudio + pede permissão de notificação na 1ª interação
+  useEffect(() => {
+    unlockAudioOnce();
+    requestNotificationPermission().catch(() => {});
+  }, []);
+
   // Stats do dia
   useEffect(() => {
     if (!user) return;
