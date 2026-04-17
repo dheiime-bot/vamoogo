@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check } from "lucide-react";
+import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import StatusBadge from "@/components/shared/StatusBadge";
+import EditProfileModal from "@/components/shared/EditProfileModal";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,7 @@ import { pixKeyTypeLabel, type PixKeyType } from "@/lib/pix";
 const DriverProfile = () => {
   const navigate = useNavigate();
   const { profile, driverData, signOut, user, refreshProfile } = useAuth() as any;
+  const [editOpen, setEditOpen] = useState(false);
 
   const [pixKey, setPixKey] = useState<string>("");
   const [pixKeyType, setPixKeyType] = useState<PixKeyType>("cpf");
@@ -82,10 +84,14 @@ const DriverProfile = () => {
       <div className="relative -mt-10 px-4">
         <div className="rounded-2xl border bg-card p-5 shadow-md">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <User className="h-8 w-8 text-muted-foreground" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted overflow-hidden">
+              {profile?.selfie_url ? (
+                <img src={profile.selfie_url} alt="Foto" className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-8 w-8 text-muted-foreground" />
+              )}
             </div>
-            <div>
+            <div className="flex-1">
               <h2 className="text-lg font-bold">{displayName}</h2>
               <p className="text-sm text-muted-foreground">Motorista • {categoryLabel}</p>
               <div className="flex items-center gap-2 mt-1">
@@ -93,6 +99,12 @@ const DriverProfile = () => {
                 <span className="flex items-center gap-0.5 text-xs"><Star className="h-3 w-3 text-warning" /> {driverData?.rating || "0.00"}</span>
               </div>
             </div>
+            <button
+              onClick={() => setEditOpen(true)}
+              className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted flex items-center gap-1"
+            >
+              <Pencil className="h-3.5 w-3.5" /> Editar
+            </button>
           </div>
         </div>
 
@@ -181,6 +193,9 @@ const DriverProfile = () => {
         {driverData && (
           <div className="mt-4 rounded-2xl border bg-card p-4">
             <h3 className="text-sm font-semibold mb-3">Veículo</h3>
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Para alterar dados do veículo, entre em contato com o suporte.
+            </p>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "Modelo", value: driverData.vehicle_model || "N/A" },
@@ -201,6 +216,7 @@ const DriverProfile = () => {
 
       <AppMenu role="driver" />
       <NotificationBell />
+      <EditProfileModal open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
 };
