@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, X, ImageIcon, User as UserIcon } from "lucide-react";
+import { Search, X, ImageIcon, User as UserIcon, WifiOff } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
+import DriverActionsMenu from "@/components/admin/DriverActionsMenu";
 import { supabase } from "@/integrations/supabase/client";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { useAuth } from "@/contexts/AuthContext";
@@ -256,10 +257,11 @@ const AdminDrivers = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString("pt-BR")}</td>
-                    <td className="px-4 py-3">
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedDriver(d); }} className="rounded-lg p-1.5 hover:bg-primary/10" title="Ver detalhes">
-                        <Eye className="h-4 w-4 text-primary" />
-                      </button>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {d.online_blocked && <WifiOff className="h-3.5 w-3.5 text-warning" aria-label="Bloqueado de ficar online" />}
+                        <DriverActionsMenu driver={d} onView={() => setSelectedDriver(d)} onChanged={fetchDrivers} />
+                      </div>
                     </td>
                   </tr>
                 );
@@ -273,7 +275,8 @@ const AdminDrivers = () => {
             const info = getDriverStatusInfo(d.status);
             const t = thumbs[d.id] || {};
             return (
-              <button key={d.id} onClick={() => setSelectedDriver(d)} className="w-full p-4 text-left hover:bg-muted/30 transition-colors flex items-start gap-3">
+              <div key={d.id} className="flex items-start gap-3 p-4 hover:bg-muted/30 transition-colors">
+                <button onClick={() => setSelectedDriver(d)} className="flex items-start gap-3 flex-1 min-w-0 text-left">
                 {t.selfie ? (
                   <img
                     src={t.selfie}
@@ -294,9 +297,11 @@ const AdminDrivers = () => {
                   </div>
                   <p className="text-xs text-muted-foreground">{d.category} • {d.total_rides || 0} corridas • R$ {d.balance?.toFixed(2)}</p>
                   <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{d.vehicle_plate || "—"} • {d.vehicle_brand || ""} {d.vehicle_model || ""}</p>
-                  <p className="text-xs text-primary flex items-center gap-1 mt-1"><Eye className="h-3 w-3" /> Toque para analisar</p>
+                  {d.online_blocked && <p className="text-[10px] text-warning flex items-center gap-1 mt-1"><WifiOff className="h-3 w-3" /> Impedido de ficar online</p>}
                 </div>
-              </button>
+                </button>
+                <DriverActionsMenu driver={d} onView={() => setSelectedDriver(d)} onChanged={fetchDrivers} />
+              </div>
             );
           })}
         </div>
