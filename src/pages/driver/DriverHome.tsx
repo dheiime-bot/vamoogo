@@ -57,12 +57,6 @@ const DriverHome = () => {
   const lowBalance = balance < 5;
   const displayName = profile?.full_name?.split(" ")[0] || "Motorista";
 
-  // 🚨 Bloqueia acesso se não estiver aprovado
-  const statusInfo = getDriverStatusInfo(driverData?.status);
-  if (driverData && !statusInfo.canDrive) {
-    return <Navigate to="/driver/status" replace />;
-  }
-
   const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
 
   // Faz broadcast da posição GPS quando online
@@ -310,6 +304,12 @@ const DriverHome = () => {
     supabase.from("profiles").select("full_name").eq("user_id", activeRide.passenger_id).single()
       .then(({ data }) => setPassengerName(data?.full_name ?? "Passageiro"));
   }, [activeRide?.passenger_id]);
+
+  // 🚨 Bloqueia acesso se não estiver aprovado (após todos os hooks)
+  const statusInfo = getDriverStatusInfo(driverData?.status);
+  if (driverData && !statusInfo.canDrive) {
+    return <Navigate to="/driver/status" replace />;
+  }
 
   // Chat overlay (apenas quando corrida está ativa)
   if (showChat && activeRide) {
