@@ -81,7 +81,7 @@ const AuthPage = () => {
       return;
     }
     setIsLoading(true);
-    const redirectTo = `${window.location.origin}/auth`;
+    const redirectTo = `${window.location.origin}/auth/reset-password`;
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
     setIsLoading(false);
     if (error) {
