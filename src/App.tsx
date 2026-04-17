@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/auth/passenger" element={<PassengerSignup />} />
             <Route path="/auth/driver" element={<DriverSignup />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/passenger" element={<PassengerHome />} />
             <Route path="/passenger/history" element={<PassengerHistory />} />
             <Route path="/passenger/profile" element={<PassengerProfile />} />
