@@ -258,7 +258,7 @@ const PassengerHome = () => {
       {/* Map */}
       <div className="relative">
         <GoogleMap
-          className="h-[44vh] rounded-none"
+          className="h-[58vh] rounded-none"
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
           stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
@@ -271,7 +271,7 @@ const PassengerHome = () => {
       {/* Bottom sheet — sem sobreposição do logo do Google */}
       <div className="relative rounded-t-3xl bg-card shadow-lg animate-slide-up -mt-3">
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted" />
-        <div className="p-4 pb-32 space-y-4">
+        <div className="p-4 pb-3 space-y-4">
 
           {/* Completed: Show summary */}
           {rideState === "completed" && activeRide && (
