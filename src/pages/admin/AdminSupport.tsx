@@ -3,6 +3,7 @@ import { MessageCircle, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 
 const AdminSupport = () => {
@@ -15,6 +16,7 @@ const AdminSupport = () => {
   };
 
   useEffect(() => { fetchTickets(); }, []);
+  useRealtimeRefresh("support_tickets", fetchTickets, "admin-support");
 
   const respond = async (id: string) => {
     if (!response[id]) return;

@@ -3,6 +3,7 @@ import { Save, Bike, Car, Crown, Loader2, Percent } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 
 const AdminTariffs = () => {
@@ -11,7 +12,7 @@ const AdminTariffs = () => {
   const [globalFee, setGlobalFee] = useState<string>("15");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const loadAll = () => {
     Promise.all([
       supabase.from("tariffs").select("*").order("category"),
       supabase.from("platform_settings").select("value").eq("key", "global_fee_percent").maybeSingle(),
@@ -21,7 +22,9 @@ const AdminTariffs = () => {
         setGlobalFee(String(sRes.data.value));
       }
     });
-  }, []);
+  };
+  useEffect(() => { loadAll(); }, []);
+  useRealtimeRefresh(["tariffs", "platform_settings"], loadAll, "admin-tariffs");
 
   const updateTariff = (id: string, field: string, value: string) => {
     setTariffs((prev) =>

@@ -3,6 +3,7 @@ import { BarChart3, DollarSign, Car, Users, TrendingUp, Download } from "lucide-
 import AdminLayout from "@/components/admin/AdminLayout";
 import StatCard from "@/components/shared/StatCard";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 
 const AdminReports = () => {

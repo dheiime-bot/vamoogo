@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { Plus, ShieldAlert, Loader2 } from "lucide-react";
 
 interface StaffRow {
@@ -57,6 +58,7 @@ const AdminStaff = () => {
   };
 
   useEffect(() => { if (isMaster) loadData(); else setLoading(false); }, [isMaster]);
+  useRealtimeRefresh(["staff_users", "user_roles", "user_permissions"], () => { if (isMaster) loadData(); }, "admin-staff");
 
   const togglePerm = (id: string) => {
     setSelectedPerms((prev) => {

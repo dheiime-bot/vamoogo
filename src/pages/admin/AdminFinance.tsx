@@ -4,6 +4,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import StatCard from "@/components/shared/StatCard";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 
 const AdminFinance = () => {
@@ -35,6 +36,7 @@ const AdminFinance = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
+  useRealtimeRefresh(["withdrawals", "recharges", "rides", "drivers"], fetchData, "admin-finance");
 
   const handleWithdrawal = async (id: string, status: "approved" | "paid" | "rejected") => {
     await supabase.from("withdrawals").update({ status, processed_at: new Date().toISOString() }).eq("id", id);

@@ -3,6 +3,7 @@ import { Plus, Loader2, Copy, Trash2, TicketPercent } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 
 const AdminCoupons = () => {
@@ -20,6 +21,7 @@ const AdminCoupons = () => {
   };
 
   useEffect(() => { fetch_(); }, []);
+  useRealtimeRefresh("coupons", fetch_, "admin-coupons");
 
   const create = async () => {
     if (!form.code || !form.discount_value) { toast.error("Preencha código e valor"); return; }
