@@ -167,6 +167,68 @@ const PassengerHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
 
+  // Realtime: motoristas online próximos (só em idle, antes de pedir corrida)
+  useEffect(() => {
+    if (rideState !== "idle") {
+      setNearbyDrivers([]);
+      return;
+    }
+    const center = selectedOrigin
+      ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng }
+      : null;
+
+    const fetchNearby = async () => {
+      const { data } = await supabase
+        .from("driver_locations")
+        .select("driver_id,lat,lng,heading,category,is_online,updated_at")
+        .eq("is_online", true)
+        .limit(50);
+      if (!data) return;
+      // Filtra: últimos 5 min e (se temos origem) raio de 8km
+      const fresh = data.filter((d: any) => {
+        const age = Date.now() - new Date(d.updated_at).getTime();
+        if (age > 5 * 60 * 1000) return false;
+        if (center) {
+          const R = 6371;
+          const dLat = ((d.lat - center.lat) * Math.PI) / 180;
+          const dLng = ((d.lng - center.lng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) ** 2 +
+            Math.cos((center.lat * Math.PI) / 180) *
+              Math.cos((d.lat * Math.PI) / 180) *
+              Math.sin(dLng / 2) ** 2;
+          const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          if (km > 8) return false;
+        }
+        return true;
+      });
+      setNearbyDrivers(
+        fresh.map((d: any) => ({
+          lat: Number(d.lat),
+          lng: Number(d.lng),
+          heading: d.heading ?? undefined,
+          category: d.category ?? "economico",
+        }))
+      );
+    };
+    fetchNearby();
+
+    const channel = supabase
+      .channel("nearby-drivers")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "driver_locations" },
+        () => fetchNearby()
+      )
+      .subscribe();
+
+    const interval = setInterval(fetchNearby, 30000);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [rideState, selectedOrigin?.lat, selectedOrigin?.lng]);
+
   const confirmedStops = selectedStops.filter((s): s is AppLocation => !!s);
   const effectiveStops = returnToOrigin && selectedOrigin && selectedDestination
     ? [...confirmedStops, selectedDestination]
@@ -297,6 +359,7 @@ const PassengerHome = () => {
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
           stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
           driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
+          nearbyDrivers={rideState === "idle" ? nearbyDrivers : []}
           trackUserLocation={!selectedOrigin}
           showRoute={!!selectedOrigin && !!effectiveDestination}
         />
