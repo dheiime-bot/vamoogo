@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
+import DriverOfferAlert from "@/components/driver/DriverOfferAlert";
 import Index from "./pages/Index.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -97,6 +98,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <KeyboardAwareScroll />
+          <DriverOfferAlert />
           <Routes>
             <Route path="/" element={<AdminLogin />} />
             <Route path="/landing" element={<Index />} />
