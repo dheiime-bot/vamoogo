@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, Home, Clock, User, Wallet, MessageCircle, LogOut, Car } from "lucide-react";
+import { Menu, Home, Clock, User, Wallet, MessageCircle, LogOut, Car, ArrowLeftRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sheet,
@@ -45,13 +45,21 @@ const AppMenu = ({ role, floating = true }: Props) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, roles, switchRole } = useAuth();
 
   const items = role === "driver" ? DRIVER_ITEMS : PASSENGER_ITEMS;
+  const hasBoth = roles.includes("driver") && roles.includes("passenger");
 
   const go = (path: string) => {
     setOpen(false);
     navigate(path);
+  };
+
+  const handleSwitch = async (target: "passenger" | "driver") => {
+    setOpen(false);
+    await switchRole(target);
+    navigate(target === "driver" ? "/driver" : "/passenger");
+    toast.success(target === "driver" ? "Modo motorista" : "Modo passageiro");
   };
 
   const handleSignOut = async () => {
