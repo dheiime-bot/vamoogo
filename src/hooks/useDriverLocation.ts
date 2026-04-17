@@ -3,8 +3,11 @@
  * Hook que mantém a posição do motorista atualizada na tabela driver_locations
  * via watchPosition do navegador. Faz upsert a cada movimento significativo (>= 10m)
  * ou no máximo a cada 8s. Para de transmitir quando isOnline = false.
+ *
+ * Também marca is_online=false automaticamente ao fechar a aba (beforeunload)
+ * e expõe `lastSyncAt` para a UI exibir o heartbeat.
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Options {
@@ -31,6 +34,51 @@ function distanceMeters(a: GeolocationCoordinates, b: { lat: number; lng: number
 export function useDriverLocation({ driverId, isOnline, category }: Options) {
   const watchIdRef = useRef<number | null>(null);
   const lastSentRef = useRef<{ lat: number; lng: number; ts: number } | null>(null);
+  const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
+
+  // Auto-offline ao fechar/ocultar a aba
+  useEffect(() => {
+    if (!driverId || !isOnline || !category) return;
+
+    const markOffline = () => {
+      try {
+        const url = `https://xsbvfwxyxgnkfkafxtaa.supabase.co/rest/v1/driver_locations?on_conflict=driver_id`;
+        const body = JSON.stringify({
+          driver_id: driverId,
+          is_online: false,
+          lat: lastSentRef.current?.lat ?? 0,
+          lng: lastSentRef.current?.lng ?? 0,
+          category,
+        });
+        const blob = new Blob([body], { type: "application/json" });
+        // sendBeacon não permite headers customizados; o melhor esforço é via fetch keepalive
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates",
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYnZmd3h5eGdua2ZrYWZ4dGFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MjI5NzQsImV4cCI6MjA5MTM5ODk3NH0.4N9iepKAVEWq7wvPJ21kDH_AvWdXSHcwCpBshWMXjNA",
+          },
+          body,
+          keepalive: true,
+        }).catch(() => {});
+      } catch (_) {}
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") markOffline();
+    };
+
+    window.addEventListener("beforeunload", markOffline);
+    window.addEventListener("pagehide", markOffline);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      window.removeEventListener("beforeunload", markOffline);
+      window.removeEventListener("pagehide", markOffline);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [driverId, isOnline, category]);
 
   useEffect(() => {
     if (!driverId || !category) return;
@@ -54,6 +102,7 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
+      setLastSyncAt(null);
       return;
     }
 
@@ -74,7 +123,6 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
           lastSentRef.current = { lat, lng, ts: Date.now() };
         }
       }
-      // Só sobe para online imediatamente se já temos coordenadas válidas.
       if (lat && lng && lat !== 0 && lng !== 0) {
         await supabase.from("driver_locations").upsert(
           {
@@ -86,8 +134,8 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
           },
           { onConflict: "driver_id" }
         );
+        setLastSyncAt(Date.now());
       }
-      // Caso contrário, o broadcast do GPS abaixo fará o upsert assim que a 1ª posição chegar.
     })();
 
     if (!navigator.geolocation) {
@@ -114,16 +162,15 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
         },
         { onConflict: "driver_id" }
       );
+      setLastSyncAt(Date.now());
     };
 
-    // 1ª posição imediatamente
     navigator.geolocation.getCurrentPosition(
       (pos) => broadcast(pos.coords),
       (err) => console.warn("Geo error (getCurrentPosition):", err.message),
       { enableHighAccuracy: true, timeout: 10000 }
     );
 
-    // Watch contínuo
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => broadcast(pos.coords),
       (err) => console.warn("Watch error:", err.message),
@@ -137,4 +184,6 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
       }
     };
   }, [driverId, isOnline, category]);
+
+  return { lastSyncAt };
 }
