@@ -13,6 +13,7 @@ import {
 } from "@/lib/antiFake";
 import LiveSelfieCapture from "@/components/auth/LiveSelfieCapture";
 import { toast } from "sonner";
+import { friendlyAuthError } from "@/lib/authErrors";
 
 type StepKey = "dados" | "seguranca" | "selfie";
 

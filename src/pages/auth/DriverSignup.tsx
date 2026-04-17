@@ -16,6 +16,7 @@ import {
 import DocumentUpload from "@/components/auth/DocumentUpload";
 import LiveSelfieCapture from "@/components/auth/LiveSelfieCapture";
 import { toast } from "sonner";
+import { friendlyAuthError } from "@/lib/authErrors";
 
 type StepKey = "dados" | "seguranca" | "selfie" | "veiculo" | "documentos" | "antecedentes" | "pix";
 
