@@ -366,7 +366,7 @@ const DriverHome = () => {
     return <RideChat rideId={activeRide.id} driverName={passengerName} onBack={() => setShowChat(false)} />;
   }
 
-  // === TELA ÚNICA: mapa fullscreen sempre + card inferior que muda conforme o status ===
+  // === TELA ÚNICA: mapa fullscreen + botão Online sempre visíveis. Etapas viram mini pop-ups ===
   return (
     <div className="min-h-screen bg-background">
       <div className="relative">
@@ -383,241 +383,246 @@ const DriverHome = () => {
                 ? "car-conforto"
                 : "car-economico"
           }
-          bottomInset={rideState === "idle" ? 120 : 280}
+          bottomInset={rideState === "idle" ? 120 : 320}
         />
       </div>
 
-      {/* === Card inferior dinâmico — flutua sobre o mapa === */}
+      {/* === Botão Ficar Online — SEMPRE visível, fica fixo acima da bottom nav === */}
       <div
-        className="fixed inset-x-0 bottom-[72px] z-40 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
+        className="fixed inset-x-0 bottom-[72px] z-30 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)" }}
       >
-        {/* IDLE → Botão Ficar Online */}
-        {rideState === "idle" && (
-          <>
-            {lowBalance && !isOnline && (
-              <div className="mb-3 flex items-center gap-2 rounded-xl bg-warning/10 border border-warning/30 p-2.5">
-                <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
-                <p className="text-xs font-semibold text-warning">Saldo baixo — recarregue para ficar online</p>
+        {lowBalance && !isOnline && (
+          <div className="mb-3 flex items-center gap-2 rounded-xl bg-warning/10 border border-warning/30 p-2.5">
+            <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+            <p className="text-xs font-semibold text-warning">Saldo baixo — recarregue para ficar online</p>
+          </div>
+        )}
+        <button
+          onClick={handleToggleOnline}
+          disabled={(lowBalance && !isOnline) || !!activeRide || rideState === "offer"}
+          className={`w-full rounded-2xl py-4 text-base font-extrabold shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+            isOnline || activeRide
+              ? "bg-success text-success-foreground"
+              : "bg-gradient-primary text-primary-foreground"
+          }`}
+        >
+          {isOnline || activeRide ? (
+            <>
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-success-foreground opacity-60 animate-ping" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-success-foreground" />
+              </span>
+              {activeRide ? "Em corrida 🚗" : "Você está Online! 🚀"}
+            </>
+          ) : (
+            <>
+              <Power className="h-5 w-5" /> Ficar Online
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* === MINI POP-UPS das etapas da corrida — sobrepõem o mapa, acima do botão Online === */}
+
+      {/* OFERTA recebida — pop-up de tela cheia com countdown */}
+      {rideState === "offer" && pendingRide && pendingOffer && (
+        <div
+          className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)" }}
+        >
+          <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
+                  <Clock className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <span className="text-xs font-bold text-primary uppercase">Nova corrida</span>
+              </div>
+              <span className={`text-2xl font-extrabold tabular-nums ${offerCountdown <= 5 ? "text-destructive animate-pulse" : "text-warning"}`}>{offerCountdown}s</span>
+            </div>
+
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mb-3">
+              <div
+                className={`h-full transition-all duration-500 ease-linear ${offerCountdown <= 5 ? "bg-destructive" : "bg-primary"}`}
+                style={{ width: `${(offerCountdown / 15) * 100}%` }}
+              />
+            </div>
+
+            <div className="rounded-xl bg-muted/50 p-3 mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-muted-foreground">Você ganha</span>
+                <span className="text-2xl font-extrabold text-success">R$ {Number(pendingRide.driver_net).toFixed(2)}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Até passageiro</p>
+                  <p className="text-sm font-bold">{Number(pendingOffer.distance_to_pickup_km).toFixed(1)} km</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Corrida</p>
+                  <p className="text-sm font-bold">{pendingRide.distance_km} km</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Pagamento</p>
+                  <p className="text-sm font-bold">{paymentLabels[pendingRide.payment_method] || "—"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2 mb-3">
+              <div className="flex items-start gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-success mt-1.5" />
+                <div className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground">Embarque</p>
+                  <p className="text-sm font-medium truncate">{pendingRide.origin_address?.split(" - ")[0]}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-destructive mt-1.5" />
+                <div className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground">Destino</p>
+                  <p className="text-sm font-medium truncate">{pendingRide.destination_address?.split(" - ")[0]}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={handleReject}
+                className="flex-1 rounded-xl border-2 border-destructive py-3 text-sm font-bold text-destructive hover:bg-destructive/5 transition-colors">
+                Recusar
+              </button>
+              <button onClick={handleAccept}
+                className="flex-[2] rounded-xl bg-success py-3 text-sm font-bold text-success-foreground hover:opacity-90 transition-opacity">
+                Aceitar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GOING TO PASSENGER — mini pop-up compacto */}
+      {rideState === "going_to_passenger" && activeRide && (
+        <div
+          className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
+        >
+          <div className="rounded-2xl border bg-card p-3 shadow-glow space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs font-bold text-info truncate">A caminho do passageiro</span>
+                {activeRide.ride_code && (
+                  <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
+                )}
+              </div>
+              <span className="text-sm font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
+            </div>
+
+            <div className="flex items-start gap-2">
+              <MapPin className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
+              <p className="text-xs truncate">{activeRide.origin_address?.split(" - ")[0]}</p>
+            </div>
+
+            {activeRide.for_other_person && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 p-2 text-[11px]">
+                <span className="font-bold text-warning">Outra pessoa:</span> {activeRide.other_person_name} — <a href={`tel:${activeRide.other_person_phone?.replace(/\D/g, "")}`} className="font-mono font-bold text-primary">{activeRide.other_person_phone}</a>
               </div>
             )}
-            <button
-              onClick={handleToggleOnline}
-              disabled={lowBalance && !isOnline}
-              className={`w-full rounded-2xl py-4 text-base font-extrabold shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                isOnline
-                  ? "bg-success text-success-foreground"
-                  : "bg-gradient-primary text-primary-foreground"
-              }`}
-            >
-              {isOnline ? (
-                <>
-                  <span className="relative flex h-3 w-3">
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-success-foreground opacity-60 animate-ping" />
-                    <span className="relative inline-flex h-3 w-3 rounded-full bg-success-foreground" />
-                  </span>
-                  Você está Online! 🚀
-                </>
-              ) : (
-                <>
-                  <Power className="h-5 w-5" /> Ficar Online
-                </>
-              )}
-            </button>
-          </>
-        )}
 
-        {/* OFERTA recebida */}
-        {rideState === "offer" && pendingRide && pendingOffer && (
-          <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow animate-slide-up">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
-                <Clock className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <span className="text-xs font-bold text-primary uppercase">Nova corrida</span>
+            <div className="grid grid-cols-3 gap-1.5">
+              <button
+                onClick={() => {
+                  const phone = activeRide.for_other_person ? activeRide.other_person_phone : "";
+                  if (phone) window.location.href = `tel:${phone.replace(/\D/g, "")}`;
+                  else toast("Use o chat para falar com o solicitante");
+                }}
+                className="flex items-center justify-center gap-1 rounded-lg border py-2 text-xs font-semibold">
+                <Phone className="h-3.5 w-3.5 text-primary" /> Ligar
+              </button>
+              <button onClick={() => setShowChat(true)} className="flex items-center justify-center gap-1 rounded-lg border py-2 text-xs font-semibold">
+                <MessageCircle className="h-3.5 w-3.5 text-primary" /> Chat
+              </button>
+              <button
+                onClick={() => openGoogleMapsRoute(Number(activeRide.origin_lat), Number(activeRide.origin_lng), "Embarque")}
+                className="flex items-center justify-center gap-1 rounded-lg border py-2 text-xs font-semibold">
+                <NavigationIcon className="h-3.5 w-3.5 text-primary" /> Rota
+              </button>
             </div>
-            <span className={`text-2xl font-extrabold tabular-nums ${offerCountdown <= 5 ? "text-destructive animate-pulse" : "text-warning"}`}>{offerCountdown}s</span>
-          </div>
 
-          {/* Progress bar countdown */}
-          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mb-3">
-            <div
-              className={`h-full transition-all duration-500 ease-linear ${offerCountdown <= 5 ? "bg-destructive" : "bg-primary"}`}
-              style={{ width: `${(offerCountdown / 15) * 100}%` }}
-            />
-          </div>
-
-          <div className="rounded-xl bg-muted/50 p-3 mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">Você ganha</span>
-              <span className="text-2xl font-extrabold text-success">R$ {Number(pendingRide.driver_net).toFixed(2)}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <p className="text-[10px] text-muted-foreground">Até passageiro</p>
-                <p className="text-sm font-bold">{Number(pendingOffer.distance_to_pickup_km).toFixed(1)} km</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground">Corrida</p>
-                <p className="text-sm font-bold">{pendingRide.distance_km} km</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground">Pagamento</p>
-                <p className="text-sm font-bold">{paymentLabels[pendingRide.payment_method] || "—"}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2 mb-3">
-            <div className="flex items-start gap-2">
-              <div className="h-2.5 w-2.5 rounded-full bg-success mt-1.5" />
-              <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground">Embarque</p>
-                <p className="text-sm font-medium truncate">{pendingRide.origin_address?.split(" - ")[0]}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="h-2.5 w-2.5 rounded-full bg-destructive mt-1.5" />
-              <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground">Destino</p>
-                <p className="text-sm font-medium truncate">{pendingRide.destination_address?.split(" - ")[0]}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <button onClick={handleReject}
-              className="flex-1 rounded-xl border-2 border-destructive py-3 text-sm font-bold text-destructive hover:bg-destructive/5 transition-colors">
-              Recusar
-            </button>
-            <button onClick={handleAccept}
-              className="flex-[2] rounded-xl bg-success py-3 text-sm font-bold text-success-foreground hover:opacity-90 transition-opacity">
-              Aceitar corrida
+            <button onClick={handleArrived}
+              className="w-full rounded-xl bg-info py-2.5 text-sm font-bold text-info-foreground flex items-center justify-center gap-2">
+              <MapPin className="h-4 w-4" /> Cheguei ao local
             </button>
           </div>
         </div>
       )}
 
-      {/* Going to passenger */}
-      {rideState === "going_to_passenger" && activeRide && (
-        <div className="max-h-[60vh] overflow-y-auto rounded-2xl border bg-card p-4 space-y-3 shadow-glow">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm font-bold text-info truncate">A caminho do passageiro</span>
-              {activeRide.ride_code && (
-                <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
-              )}
-            </div>
-            <span className="font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
-          </div>
-
-          {/* Aviso: corrida para outra pessoa */}
-          {activeRide.for_other_person && (
-            <div className="rounded-xl border-2 border-warning bg-warning/10 p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-full bg-warning/20 flex items-center justify-center">
-                  <User className="h-3.5 w-3.5 text-warning" />
-                </div>
-                <p className="text-xs font-bold text-warning uppercase">Corrida para outra pessoa</p>
-              </div>
-              <div className="rounded-lg bg-card p-2.5 space-y-1">
-                <p className="text-xs text-muted-foreground">Quem vai embarcar</p>
-                <p className="text-sm font-bold">{activeRide.other_person_name}</p>
-                <a href={`tel:${activeRide.other_person_phone?.replace(/\D/g, "")}`} className="flex items-center gap-1.5 text-sm font-mono font-bold text-primary">
-                  <Phone className="h-3.5 w-3.5" /> {activeRide.other_person_phone}
-                </a>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 text-success mt-0.5 shrink-0" />
-            <p className="text-sm">{activeRide.origin_address?.split(" - ")[0]}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => {
-                const phone = activeRide.for_other_person ? activeRide.other_person_phone : "";
-                if (phone) window.location.href = `tel:${phone.replace(/\D/g, "")}`;
-                else toast("Use o chat para falar com o solicitante");
-              }}
-              className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold">
-              <Phone className="h-4 w-4 text-primary" /> Ligar {activeRide.for_other_person ? "passageiro" : ""}
-            </button>
-            <button onClick={() => setShowChat(true)} className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold hover:bg-muted">
-              <MessageCircle className="h-4 w-4 text-primary" /> Chat
-            </button>
-          </div>
-          <button
-            onClick={() => openGoogleMapsRoute(Number(activeRide.origin_lat), Number(activeRide.origin_lng), "Embarque")}
-            className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
-            <NavigationIcon className="h-4 w-4" /> Navegar até passageiro (Google Maps)
-          </button>
-          <button onClick={handleArrived}
-            className="w-full rounded-xl bg-info py-3 text-sm font-bold text-info-foreground flex items-center justify-center gap-2">
-            <MapPin className="h-4 w-4" /> Cheguei ao local
-          </button>
-        </div>
-      )}
-
-      {/* Arrived */}
+      {/* ARRIVED — mini pop-up */}
       {rideState === "arrived" && activeRide && (
-        <div className="rounded-2xl border bg-card p-4 space-y-3 shadow-glow">
-          {activeRide.ride_code && (
-            <div className="flex justify-center">
-              <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{activeRide.ride_code}</span>
+        <div
+          className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
+        >
+          <div className="rounded-2xl border bg-card p-3 shadow-glow space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-success">📍 Aguardando embarque</span>
+              {activeRide.ride_code && (
+                <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{activeRide.ride_code}</span>
+              )}
             </div>
-          )}
-          <div className="rounded-xl bg-success/10 p-3 text-center">
-            <p className="text-sm font-bold text-success">📍 Aguardando passageiro embarcar</p>
+            <button onClick={handleStartRide}
+              className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
+              <Play className="h-4 w-4" /> Iniciar corrida
+            </button>
           </div>
-          <button onClick={handleStartRide}
-            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
-            <Play className="h-4 w-4" /> Iniciar corrida
-          </button>
         </div>
       )}
 
-      {/* In ride */}
+      {/* IN RIDE — mini pop-up */}
       {rideState === "in_ride" && activeRide && (
-        <div className="rounded-2xl border bg-card p-4 space-y-3 shadow-glow">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm font-bold text-success truncate">🛣️ Em corrida</span>
-              {activeRide.ride_code && (
-                <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
-              )}
+        <div
+          className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
+        >
+          <div className="rounded-2xl border bg-card p-3 shadow-glow space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs font-bold text-success truncate">🛣️ Em corrida</span>
+                {activeRide.ride_code && (
+                  <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
+                )}
+              </div>
+              <span className="text-sm font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
             </div>
-            <span className="font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
+            <div className="flex items-start gap-2">
+              <Flag className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
+              <p className="text-xs truncate">{activeRide.destination_address?.split(" - ")[0]}</p>
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {activeRide.distance_km} km • ~{activeRide.duration_minutes} min • Taxa: R$ {Number(activeRide.platform_fee).toFixed(2)}
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                onClick={() => openGoogleMapsRoute(Number(activeRide.destination_lat), Number(activeRide.destination_lng), "Destino")}
+                className="flex items-center justify-center gap-1 rounded-lg border py-2 text-xs font-semibold">
+                <NavigationIcon className="h-3.5 w-3.5 text-primary" /> Rota
+              </button>
+              <button onClick={() => setShowChat(true)} className="flex items-center justify-center gap-1 rounded-lg border py-2 text-xs font-semibold">
+                <MessageCircle className="h-3.5 w-3.5 text-primary" /> Chat
+              </button>
+            </div>
+            {activeRide.payment_method === "pix" ? (
+              <button onClick={() => setShowPixModal(true)}
+                className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
+                <QrCode className="h-4 w-4" /> Cobrar (Gerar Pix)
+              </button>
+            ) : (
+              <button onClick={handleFinishRide}
+                className="w-full rounded-xl bg-success py-2.5 text-sm font-bold text-success-foreground flex items-center justify-center gap-2">
+                <Flag className="h-4 w-4" /> Finalizar corrida
+              </button>
+            )}
           </div>
-          <div className="flex items-start gap-2">
-            <Flag className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-            <p className="text-sm">{activeRide.destination_address?.split(" - ")[0]}</p>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {activeRide.distance_km} km • ~{activeRide.duration_minutes} min • Taxa plataforma: R$ {Number(activeRide.platform_fee).toFixed(2)}
-          </div>
-          <button
-            onClick={() => openGoogleMapsRoute(Number(activeRide.destination_lat), Number(activeRide.destination_lng), "Destino")}
-            className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
-            <NavigationIcon className="h-4 w-4" /> Navegar até destino (Google Maps)
-          </button>
-          {activeRide.payment_method === "pix" ? (
-            <button onClick={() => setShowPixModal(true)}
-              className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
-              <QrCode className="h-4 w-4" /> Cobrar (Gerar Pix)
-            </button>
-          ) : (
-            <button onClick={handleFinishRide}
-              className="w-full rounded-xl bg-success py-3 text-sm font-bold text-success-foreground flex items-center justify-center gap-2">
-              <Flag className="h-4 w-4" /> Finalizar corrida
-            </button>
-          )}
         </div>
       )}
-      </div>
-      {/* /card inferior dinâmico */}
+      {/* /mini pop-ups */}
 
       {/* Modal Pix — exibido pelo motorista quando vai cobrar */}
       <PixPaymentModal
