@@ -241,14 +241,18 @@ export type Database = {
           cnh_front_url: string | null
           cnh_number: string | null
           created_at: string
+          criminal_record_issued_at: string | null
+          criminal_record_url: string | null
           crlv_url: string | null
           daily_cancellations: number | null
           id: string
           last_cancellation_reset: string | null
+          liveness_verified: boolean | null
           pix_holder_name: string | null
           pix_key: string | null
           pix_key_type: string | null
           rating: number | null
+          selfie_liveness_url: string | null
           selfie_with_document_url: string | null
           status: Database["public"]["Enums"]["driver_status"]
           total_rides: number | null
@@ -271,14 +275,18 @@ export type Database = {
           cnh_front_url?: string | null
           cnh_number?: string | null
           created_at?: string
+          criminal_record_issued_at?: string | null
+          criminal_record_url?: string | null
           crlv_url?: string | null
           daily_cancellations?: number | null
           id?: string
           last_cancellation_reset?: string | null
+          liveness_verified?: boolean | null
           pix_holder_name?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
           rating?: number | null
+          selfie_liveness_url?: string | null
           selfie_with_document_url?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
@@ -301,14 +309,18 @@ export type Database = {
           cnh_front_url?: string | null
           cnh_number?: string | null
           created_at?: string
+          criminal_record_issued_at?: string | null
+          criminal_record_url?: string | null
           crlv_url?: string | null
           daily_cancellations?: number | null
           id?: string
           last_cancellation_reset?: string | null
+          liveness_verified?: boolean | null
           pix_holder_name?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
           rating?: number | null
+          selfie_liveness_url?: string | null
           selfie_with_document_url?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
