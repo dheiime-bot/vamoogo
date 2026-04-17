@@ -642,7 +642,7 @@ const DriverHome = () => {
 
       <AppMenu role="driver" />
       <NotificationBell />
-      <UserMenu role="driver" />
+      
     </div>
   );
 };
