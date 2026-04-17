@@ -160,7 +160,10 @@ const DriverHome = () => {
             setRideState("idle");
             setShowChat(false);
           } else if (["accepted", "in_progress"].includes(ride.status)) {
-            setActiveRide((prev: any) => (prev?.id === ride.id ? { ...prev, ...ride } : prev));
+            setActiveRide((prev: any) => (prev?.id === ride.id ? { ...prev, ...ride } : ride));
+            if (ride.status === "in_progress") setRideState("in_ride");
+            else if (ride.arrived_at) setRideState("arrived");
+            else setRideState("going_to_passenger");
           }
         })
       .subscribe();
@@ -221,25 +224,31 @@ const DriverHome = () => {
 
   const handleArrived = async () => {
     if (!activeRide) return;
+    const arrivedAt = new Date().toISOString();
     const { error } = await supabase
       .from("rides")
-      .update({ arrived_at: new Date().toISOString() } as any)
+      .update({ arrived_at: arrivedAt } as any)
       .eq("id", activeRide.id);
     if (error) {
       toast.error("Erro ao notificar chegada: " + error.message);
       return;
     }
-    setActiveRide({ ...activeRide, arrived_at: new Date().toISOString() });
+    setActiveRide({ ...activeRide, arrived_at: arrivedAt });
     setRideState("arrived");
     toast.success("Passageiro avisado: você chegou! 📍");
   };
 
   const handleStartRide = async () => {
     if (!activeRide) return;
-    await supabase.from("rides")
+    const startedAt = new Date().toISOString();
+    const { error } = await supabase.from("rides")
       .update({ status: "in_progress", started_at: new Date().toISOString() })
       .eq("id", activeRide.id);
-    setActiveRide({ ...activeRide, status: "in_progress" });
+    if (error) {
+      toast.error("Erro ao iniciar corrida: " + error.message);
+      return;
+    }
+    setActiveRide({ ...activeRide, status: "in_progress", started_at: startedAt });
     setRideState("in_ride");
     toast.success("Corrida iniciada!");
   };
