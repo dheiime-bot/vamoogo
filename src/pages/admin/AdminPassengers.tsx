@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Search, X, ImageIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Search, X, ImageIcon, RefreshCw } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import PassengerDetailsModal from "@/components/admin/PassengerDetailsModal";
@@ -12,15 +12,31 @@ const AdminPassengers = () => {
   const [selected, setSelected] = useState<any>(null);
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const [zoomImg, setZoomImg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    supabase
+  const loadPassengers = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_type", "passenger")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => { if (data) setPassengers(data); });
+      .order("created_at", { ascending: false });
+    if (data) setPassengers(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { loadPassengers(); }, [loadPassengers]);
+
+  // Realtime: novos passageiros aparecem automaticamente
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-passengers")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: "user_type=eq.passenger" }, () => {
+        loadPassengers();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [loadPassengers]);
 
   // Resolve thumbs (signed URLs) p/ selfies
   useEffect(() => {
@@ -51,7 +67,14 @@ const AdminPassengers = () => {
   });
 
   return (
-    <AdminLayout title="Passageiros" actions={<span className="text-sm text-muted-foreground">{filtered.length} de {passengers.length}</span>}>
+    <AdminLayout title="Passageiros" actions={
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">{filtered.length} de {passengers.length}</span>
+        <button onClick={loadPassengers} disabled={loading} className="rounded-lg border bg-card p-2 hover:bg-muted disabled:opacity-50" title="Atualizar">
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        </button>
+      </div>
+    }>
       <div className="flex gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-xl border bg-card px-3 py-2">
           <Search className="h-4 w-4 text-muted-foreground" />
