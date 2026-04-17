@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode } from "lucide-react";
+import { getDriverStatusInfo } from "@/lib/driverStatus";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import GoogleMap from "@/components/shared/GoogleMap";
