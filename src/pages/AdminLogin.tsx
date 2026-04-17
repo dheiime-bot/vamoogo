@@ -70,6 +70,26 @@ const AdminLogin = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError("Informe seu e-mail acima para receber o link de recuperação.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (resetErr) throw resetErr;
+      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+    } catch (err: any) {
+      setError(err?.message || "Erro ao enviar e-mail de recuperação.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
       {/* Background decorativo */}
@@ -155,6 +175,15 @@ const AdminLogin = () => {
                 "Entrar no painel"
               )}
             </Button>
+
+            <button
+              type="button"
+              onClick={handleResetPassword}
+              disabled={loading}
+              className="w-full text-sm text-primary hover:underline font-medium disabled:opacity-50"
+            >
+              Esqueci minha senha
+            </button>
           </form>
 
           {/* Footer */}
@@ -163,20 +192,11 @@ const AdminLogin = () => {
               <img src={vamooIcon} alt="Vamoo" className="w-5 h-5" />
               <span className="font-display font-bold text-gradient-primary text-sm">Vamoo Admin</span>
             </div>
-            <p className="text-xs text-muted-foreground">© 2026 Vamoo. Todos os direitos reservados.</p>
+            <p className="text-xs text-muted-foreground text-center">
+              Acesso exclusivo para administradores. Novos cadastros são criados pelo painel admin.
+            </p>
           </div>
         </div>
-
-        {/* Acesso para usuários comuns */}
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Não é administrador?{" "}
-          <button
-            onClick={() => navigate("/auth")}
-            className="text-primary hover:underline font-medium"
-          >
-            Entrar como passageiro ou motorista
-          </button>
-        </p>
       </div>
     </div>
   );
