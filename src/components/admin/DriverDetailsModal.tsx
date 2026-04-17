@@ -1,30 +1,49 @@
-import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserIcon, AlertCircle } from "lucide-react";
+import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserIcon, AlertCircle, FileWarning, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { getDriverStatusInfo } from "@/lib/driverStatus";
 
 interface DriverDetailsModalProps {
   driver: any;
   onClose: () => void;
-  onAction: (status: "approved" | "rejected" | "blocked") => void;
+  onAction: (status: string, message?: string) => void;
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: "Em análise", color: "bg-warning/15 text-warning" },
-  approved: { label: "Aprovado", color: "bg-success/15 text-success" },
-  rejected: { label: "Reprovado", color: "bg-warning/15 text-warning" },
-  blocked: { label: "Bloqueado", color: "bg-destructive/15 text-destructive" },
-};
+type ActionMode = null | "approve" | "reject" | "request_docs" | "block";
 
 const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalProps) => {
   const profile = driver.profiles;
-  const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
   const [zoomImg, setZoomImg] = useState<string | null>(null);
+  const [actionMode, setActionMode] = useState<ActionMode>(null);
+  const [message, setMessage] = useState("");
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
 
+  const status = getDriverStatusInfo(driver.status);
+
+  // Resolve URLs assinadas para documentos privados
   useEffect(() => {
-    if (profile?.selfie_url) setSelfieUrl(profile.selfie_url);
-  }, [profile]);
+    const fields: Array<[string, string, "selfies" | "driver-documents"]> = [
+      ["selfie_signup", profile?.selfie_signup_url, "selfies"],
+      ["selfie", profile?.selfie_url, "selfies"],
+      ["cnh_front", driver.cnh_front_url, "driver-documents"],
+      ["cnh_back", driver.cnh_back_url, "driver-documents"],
+      ["crlv", driver.crlv_url, "driver-documents"],
+      ["selfie_doc", driver.selfie_with_document_url, "driver-documents"],
+    ];
 
-  const status = statusConfig[driver.status] || statusConfig.pending;
+    (async () => {
+      const map: Record<string, string> = {};
+      for (const [key, url, bucket] of fields) {
+        if (!url) continue;
+        if (url.startsWith("http")) { map[key] = url; continue; }
+        // Tenta resolver path no bucket
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(url, 3600);
+        if (data?.signedUrl) map[key] = data.signedUrl;
+      }
+      setSignedUrls(map);
+    })();
+  }, [driver, profile]);
 
   const ImageBlock = ({ url, label, icon: Icon }: { url: string | null; label: string; icon: typeof FileText }) => (
     <div className="space-y-1.5">
@@ -45,6 +64,23 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
     </div>
   );
 
+  const handleConfirm = () => {
+    if (!actionMode) return;
+    if ((actionMode === "reject" || actionMode === "request_docs") && !message.trim()) {
+      toast.error("Escreva uma mensagem para o motorista");
+      return;
+    }
+    const map: Record<string, string> = {
+      approve: "aprovado",
+      reject: "reprovado",
+      request_docs: "pendente_documentos",
+      block: "blocked",
+    };
+    onAction(map[actionMode], message.trim() || undefined);
+    setActionMode(null);
+    setMessage("");
+  };
+
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={onClose}>
@@ -53,7 +89,7 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
           <div className="flex items-center justify-between p-4 border-b shrink-0">
             <div>
               <h2 className="text-lg font-bold font-display">{profile?.full_name || "Motorista"}</h2>
-              <span className={`inline-block mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.color}`}>
+              <span className={`inline-block mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.bg} ${status.color}`}>
                 {status.label}
               </span>
             </div>
@@ -64,6 +100,16 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
+            {/* Mensagem anterior se houver */}
+            {driver.analysis_message && (
+              <div className="rounded-xl bg-muted/50 border p-3">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1.5">
+                  <MessageSquare className="h-3 w-3" /> Última mensagem enviada
+                </p>
+                <p className="text-xs">{driver.analysis_message}</p>
+              </div>
+            )}
+
             {/* Personal info */}
             <div>
               <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Dados pessoais</p>
@@ -91,17 +137,33 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
                   <Car className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold">{driver.vehicle_model || "—"} <span className="text-muted-foreground">• {driver.vehicle_color || "—"}</span></p>
+                  <p className="text-sm font-bold">{driver.vehicle_brand} {driver.vehicle_model || "—"} <span className="text-muted-foreground">• {driver.vehicle_color || "—"} {driver.vehicle_year ? `• ${driver.vehicle_year}` : ""}</span></p>
                   <p className="text-xs text-muted-foreground">Placa: <span className="font-mono font-bold">{driver.vehicle_plate || "—"}</span> • {driver.category}</p>
                 </div>
               </div>
             </div>
 
+            {/* Pix */}
+            {driver.pix_key && (
+              <div>
+                <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Dados Pix</p>
+                <div className="rounded-xl border p-3 grid grid-cols-2 gap-2 text-xs">
+                  <div><p className="text-muted-foreground">Tipo</p><p className="font-medium capitalize">{driver.pix_key_type || "—"}</p></div>
+                  <div><p className="text-muted-foreground">Chave</p><p className="font-mono">{driver.pix_key}</p></div>
+                  <div className="col-span-2"><p className="text-muted-foreground">Favorecido</p><p className="font-medium">{driver.pix_holder_name || "—"}</p></div>
+                </div>
+              </div>
+            )}
+
             {/* Documents */}
             <div>
               <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Documentos enviados</p>
               <div className="grid grid-cols-2 gap-3">
-                <ImageBlock url={selfieUrl} label="Selfie de verificação" icon={UserIcon} />
+                <ImageBlock url={signedUrls.selfie_signup || signedUrls.selfie} label="Selfie do cadastro" icon={UserIcon} />
+                <ImageBlock url={signedUrls.selfie_doc} label="Selfie com documento" icon={UserIcon} />
+                <ImageBlock url={signedUrls.cnh_front} label="CNH (frente)" icon={FileText} />
+                <ImageBlock url={signedUrls.cnh_back} label="CNH (verso)" icon={FileText} />
+                <ImageBlock url={signedUrls.crlv} label="CRLV" icon={FileText} />
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                     <FileText className="h-3.5 w-3.5" /> CNH (nº)
@@ -110,8 +172,6 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
                     <p className="text-sm font-mono font-bold">{driver.cnh_number || "—"}</p>
                   </div>
                 </div>
-                <ImageBlock url={driver.cnh_front_url} label="CNH (frente)" icon={FileText} />
-                <ImageBlock url={driver.cnh_back_url} label="CNH (verso)" icon={FileText} />
               </div>
             </div>
 
@@ -132,18 +192,48 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
             </div>
           </div>
 
+          {/* Action input */}
+          {actionMode && (
+            <div className="border-t bg-muted/30 p-3 space-y-2 shrink-0">
+              <p className="text-xs font-semibold">
+                {actionMode === "approve" && "Confirmar aprovação?"}
+                {actionMode === "reject" && "Mensagem ao motorista (motivo da reprovação)"}
+                {actionMode === "request_docs" && "Quais documentos precisam ser reenviados?"}
+                {actionMode === "block" && "Confirmar bloqueio?"}
+              </p>
+              {(actionMode === "reject" || actionMode === "request_docs") && (
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={actionMode === "request_docs" ? "Ex: Reenvie a CNH com a foto mais nítida" : "Explique o motivo..."}
+                  rows={3}
+                  className="w-full rounded-xl border bg-card p-2 text-xs outline-none focus:border-primary"
+                />
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => { setActionMode(null); setMessage(""); }} className="rounded-xl border py-2 text-xs font-semibold hover:bg-muted">Cancelar</button>
+                <button onClick={handleConfirm} className="rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground hover:opacity-90">Confirmar</button>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
-          <div className="border-t bg-card p-4 shrink-0 grid grid-cols-3 gap-2">
-            <button onClick={() => onAction("approved")} className="flex items-center justify-center gap-1.5 rounded-xl bg-success py-3 text-xs font-bold text-success-foreground hover:opacity-90">
-              <CheckCircle className="h-4 w-4" /> Aprovar
-            </button>
-            <button onClick={() => onAction("rejected")} className="flex items-center justify-center gap-1.5 rounded-xl bg-warning py-3 text-xs font-bold text-warning-foreground hover:opacity-90">
-              <XCircle className="h-4 w-4" /> Reprovar
-            </button>
-            <button onClick={() => onAction("blocked")} className="flex items-center justify-center gap-1.5 rounded-xl bg-destructive py-3 text-xs font-bold text-destructive-foreground hover:opacity-90">
-              <Ban className="h-4 w-4" /> Bloquear
-            </button>
-          </div>
+          {!actionMode && (
+            <div className="border-t bg-card p-3 shrink-0 grid grid-cols-2 gap-2">
+              <button onClick={() => setActionMode("approve")} className="flex items-center justify-center gap-1.5 rounded-xl bg-success py-3 text-xs font-bold text-success-foreground hover:opacity-90">
+                <CheckCircle className="h-4 w-4" /> Aprovar
+              </button>
+              <button onClick={() => setActionMode("request_docs")} className="flex items-center justify-center gap-1.5 rounded-xl bg-info py-3 text-xs font-bold text-info-foreground hover:opacity-90">
+                <FileWarning className="h-4 w-4" /> Pedir docs
+              </button>
+              <button onClick={() => setActionMode("reject")} className="flex items-center justify-center gap-1.5 rounded-xl bg-warning py-3 text-xs font-bold text-warning-foreground hover:opacity-90">
+                <XCircle className="h-4 w-4" /> Reprovar
+              </button>
+              <button onClick={() => setActionMode("block")} className="flex items-center justify-center gap-1.5 rounded-xl bg-destructive py-3 text-xs font-bold text-destructive-foreground hover:opacity-90">
+                <Ban className="h-4 w-4" /> Bloquear
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
