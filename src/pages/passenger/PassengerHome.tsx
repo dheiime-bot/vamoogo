@@ -37,7 +37,12 @@ const PassengerHome = () => {
   const [recentRides, setRecentRides] = useState<any[]>([]);
   const [rideState, setRideState] = useState<RideState>("idle");
   const [activeRide, setActiveRide] = useState<any>(null);
-  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [driverLocation, setDriverLocation] = useState<{
+    lat: number;
+    lng: number;
+    heading?: number;
+    category?: "moto" | "economico" | "conforto";
+  } | null>(null);
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
@@ -95,17 +100,37 @@ const PassengerHome = () => {
     const driverId = activeRide.driver_id;
 
     // Fetch inicial
-    supabase.from("driver_locations").select("lat,lng").eq("driver_id", driverId).maybeSingle()
-      .then(({ data }) => { if (data) setDriverLocation({ lat: Number(data.lat), lng: Number(data.lng) }); });
+    supabase
+      .from("driver_locations")
+      .select("lat,lng,heading,category")
+      .eq("driver_id", driverId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data)
+          setDriverLocation({
+            lat: Number(data.lat),
+            lng: Number(data.lng),
+            heading: data.heading ?? undefined,
+            category: (data.category as any) ?? undefined,
+          });
+      });
 
     const channel = supabase
       .channel(`driver-location-${driverId}`)
-      .on("postgres_changes",
+      .on(
+        "postgres_changes",
         { event: "*", schema: "public", table: "driver_locations", filter: `driver_id=eq.${driverId}` },
         (payload) => {
           const loc = payload.new as any;
-          if (loc?.lat && loc?.lng) setDriverLocation({ lat: Number(loc.lat), lng: Number(loc.lng) });
-        })
+          if (loc?.lat && loc?.lng)
+            setDriverLocation({
+              lat: Number(loc.lat),
+              lng: Number(loc.lng),
+              heading: loc.heading ?? undefined,
+              category: loc.category ?? undefined,
+            });
+        }
+      )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
