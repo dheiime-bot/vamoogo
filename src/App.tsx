@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
 import Index from "./pages/Index.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -78,6 +79,15 @@ const ProtectedDriverRoute = ({ children }: { children: JSX.Element }) => {
   return children;
 };
 
+/**
+ * Hook global: empurra inputs/textareas focados para acima do teclado virtual no mobile,
+ * evitando que o teclado cubra o campo que está sendo preenchido.
+ */
+const KeyboardAwareScroll = () => {
+  useKeyboardAwareScroll();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -85,6 +95,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <KeyboardAwareScroll />
           <Routes>
             <Route path="/" element={<AdminLogin />} />
             <Route path="/landing" element={<Index />} />
