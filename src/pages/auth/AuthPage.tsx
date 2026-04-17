@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, Mail, Lock, User, Phone, FileText, Camera, ArrowLeft, ArrowRight, Bike, Sparkles, Loader2 } from "lucide-react";
+import { Car, Mail, Lock, User, Phone, FileText, ArrowLeft, ArrowRight, Bike, Sparkles, Loader2, Calendar, KeyRound, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { validateCPF, formatCPF, formatPhone, formatPlate } from "@/lib/validators";
+import DocumentUpload from "@/components/auth/DocumentUpload";
 import { toast } from "sonner";
 
 type AuthMode = "login" | "register";
 type UserType = "passenger" | "driver";
-type RegisterStep = 1 | 2 | 3;
 
 const AuthPage = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [userType, setUserType] = useState<UserType>("passenger");
-  const [step, setStep] = useState<RegisterStep>(1);
+  const [step, setStep] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
@@ -23,11 +24,31 @@ const AuthPage = () => {
   const [fullName, setFullName] = useState("");
   const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [cpfError, setCpfError] = useState("");
+
+  // Selfie (passageiro e motorista)
+  const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
+
+  // Veículo
   const [category, setCategory] = useState<string>("economico");
+  const [vehicleBrand, setVehicleBrand] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleColor, setVehicleColor] = useState("");
+  const [vehicleYear, setVehicleYear] = useState("");
   const [vehiclePlate, setVehiclePlate] = useState("");
+
+  // Documentos motorista
+  const [cnhNumber, setCnhNumber] = useState("");
+  const [cnhFrontUrl, setCnhFrontUrl] = useState<string | null>(null);
+  const [cnhBackUrl, setCnhBackUrl] = useState<string | null>(null);
+  const [crlvUrl, setCrlvUrl] = useState<string | null>(null);
+  const [selfieDocUrl, setSelfieDocUrl] = useState<string | null>(null);
+
+  // Pix
+  const [pixKey, setPixKey] = useState("");
+  const [pixKeyType, setPixKeyType] = useState("cpf");
+  const [pixHolderName, setPixHolderName] = useState("");
 
   const handleCpfChange = (value: string) => {
     const formatted = formatCPF(value);
@@ -50,45 +71,74 @@ const AuthPage = () => {
       return;
     }
     toast.success("Login realizado!");
-    navigate(userType === "passenger" ? "/passenger" : "/driver");
+    // O redirecionamento real é feito dentro de cada home (ex: DriverHome bloqueia se não aprovado)
+    navigate("/passenger");
   };
 
-  const handleRegisterStep = async (e: React.FormEvent) => {
+  const validateStep1 = (): boolean => {
+    const cleanCpf = cpf.replace(/\D/g, "");
+    if (!validateCPF(cleanCpf)) {
+      setCpfError("CPF inválido");
+      toast.error("CPF inválido");
+      return false;
+    }
+    if (!fullName.trim() || fullName.trim().length < 3) {
+      toast.error("Informe seu nome completo");
+      return false;
+    }
+    if (!birthDate) {
+      toast.error("Informe sua data de nascimento");
+      return false;
+    }
+    if (phone.replace(/\D/g, "").length < 10) {
+      toast.error("Telefone inválido");
+      return false;
+    }
+    if (!email.includes("@")) {
+      toast.error("E-mail inválido");
+      return false;
+    }
+    if (password.length < 8) {
+      toast.error("Senha deve ter no mínimo 8 caracteres");
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
+    if (step === 1 && !validateStep1()) return;
 
-    if (step === 1) {
-      // Validate CPF
-      const cleanCpf = cpf.replace(/\D/g, "");
-      if (!validateCPF(cleanCpf)) {
-        setCpfError("CPF inválido. Verifique os dígitos.");
-        return;
-      }
-      if (!fullName.trim() || fullName.trim().length < 3) {
-        toast.error("Informe seu nome completo");
-        return;
-      }
-      if (password.length < 8) {
-        toast.error("A senha deve ter no mínimo 8 caracteres");
-        return;
-      }
-      setStep(2);
+    if (step === 2 && !selfieUrl) {
+      toast.error("Tire sua selfie para continuar");
       return;
     }
 
-    if (step === 2) {
-      // For now skip actual OTP/selfie — go to step 3
-      if (userType === "passenger") {
-        // Passenger: finalize at step 2
-        await finalizeRegistration();
-        return;
-      }
-      setStep(3);
+    if (userType === "passenger" && step === 2) {
+      finalizeRegistration();
       return;
     }
 
-    if (step === 3) {
-      await finalizeRegistration();
+    if (userType === "driver") {
+      if (step === 3 && (!vehicleBrand || !vehicleModel || !vehicleColor || !vehiclePlate || !vehicleYear)) {
+        toast.error("Preencha todos os dados do veículo");
+        return;
+      }
+      if (step === 4 && (!cnhNumber || !cnhFrontUrl || !cnhBackUrl || !crlvUrl || !selfieDocUrl)) {
+        toast.error("Envie todos os documentos");
+        return;
+      }
+      if (step === 5) {
+        if (!pixKey || !pixHolderName) {
+          toast.error("Preencha os dados Pix");
+          return;
+        }
+        finalizeRegistration();
+        return;
+      }
     }
+
+    setStep((s) => s + 1);
   };
 
   const finalizeRegistration = async () => {
@@ -96,44 +146,76 @@ const AuthPage = () => {
     const cleanCpf = cpf.replace(/\D/g, "");
     const cleanPhone = phone.replace(/\D/g, "");
 
+    // Pré-checagem amigável de duplicidade (CPF)
+    const { data: dup } = await supabase.from("profiles").select("id").eq("cpf", cleanCpf).maybeSingle();
+    if (dup) {
+      setIsLoading(false);
+      toast.error("Já existe uma conta com este CPF");
+      return;
+    }
+
     const metadata: Record<string, string> = {
       full_name: fullName.trim(),
       cpf: cleanCpf,
       phone: cleanPhone,
+      birth_date: birthDate,
       user_type: userType,
+      selfie_signup_url: selfieUrl || "",
     };
 
     if (userType === "driver") {
       metadata.category = category;
+      metadata.vehicle_brand = vehicleBrand;
       metadata.vehicle_model = vehicleModel;
       metadata.vehicle_color = vehicleColor;
+      metadata.vehicle_year = vehicleYear;
       metadata.vehicle_plate = vehiclePlate.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      metadata.cnh_number = cnhNumber;
+      metadata.cnh_front_url = cnhFrontUrl || "";
+      metadata.cnh_back_url = cnhBackUrl || "";
+      metadata.crlv_url = crlvUrl || "";
+      metadata.selfie_with_document_url = selfieDocUrl || "";
+      metadata.pix_key = pixKey;
+      metadata.pix_key_type = pixKeyType;
+      metadata.pix_holder_name = pixHolderName;
     }
 
     const { error } = await signUp(email, password, metadata);
     setIsLoading(false);
 
     if (error) {
-      if (error.message?.includes("already registered")) {
-        toast.error("Este email já está cadastrado");
+      if (error.message?.includes("already registered") || error.message?.includes("already exists")) {
+        toast.error("Este e-mail já está cadastrado");
+      } else if (error.message?.includes("duplicate key") && error.message?.includes("phone")) {
+        toast.error("Este telefone já está cadastrado");
+      } else if (error.message?.includes("duplicate key") && error.message?.includes("plate")) {
+        toast.error("Esta placa já está cadastrada");
       } else {
         toast.error("Erro no cadastro: " + error.message);
       }
       return;
     }
 
-    toast.success("Conta criada com sucesso!");
-    navigate(userType === "passenger" ? "/passenger" : "/driver");
+    if (userType === "driver") {
+      toast.success("Cadastro enviado! Aguarde análise da equipe.");
+      navigate("/driver");
+    } else {
+      toast.success("Conta criada com sucesso!");
+      navigate("/passenger");
+    }
   };
 
-  const maxSteps = userType === "passenger" ? 2 : 3;
+  const maxSteps = userType === "passenger" ? 2 : 5;
+  const stepLabels = userType === "passenger"
+    ? ["Dados", "Selfie"]
+    : ["Dados", "Selfie", "Veículo", "Documentos", "Pix"];
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="bg-gradient-primary p-6 pb-10">
         <button
           onClick={() => {
-            if (mode === "register" && step > 1) setStep((s) => (s - 1) as RegisterStep);
+            if (mode === "register" && step > 1) setStep((s) => s - 1);
             else navigate("/");
           }}
           className="mb-4 text-primary-foreground/80"
@@ -147,7 +229,9 @@ const AuthPage = () => {
           <div>
             <h1 className="text-xl font-bold font-display text-primary-foreground">Vamoo</h1>
             <p className="text-xs text-primary-foreground/70">
-              {mode === "login" ? "Entre na sua conta" : `Cadastro - Etapa ${step}/${maxSteps}`}
+              {mode === "login"
+                ? "Entre na sua conta"
+                : `Cadastro - ${stepLabels[step - 1]} (${step}/${maxSteps})`}
             </p>
           </div>
         </div>
@@ -209,14 +293,15 @@ const AuthPage = () => {
             </div>
             <button type="submit" disabled={isLoading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50">
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Entrar como {userType === "passenger" ? "Passageiro" : "Motorista"}
+              Entrar
             </button>
           </form>
         )}
 
         {/* REGISTER */}
         {mode === "register" && (
-          <form onSubmit={handleRegisterStep} className="space-y-4 animate-fade-in">
+          <form onSubmit={handleNextStep} className="space-y-4 animate-fade-in">
+            {/* STEP 1: Dados pessoais */}
             {step === 1 && (
               <>
                 <div>
@@ -233,13 +318,12 @@ const AuthPage = () => {
                     <input type="text" placeholder="000.000.000-00" value={cpf} onChange={(e) => handleCpfChange(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" required maxLength={14} />
                   </div>
                   {cpfError && <p className="mt-1 text-xs text-destructive">{cpfError}</p>}
-                  <p className="mt-1 text-[10px] text-muted-foreground">Apenas 1 conta por CPF é permitida</p>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Email</label>
+                  <label className="text-xs font-medium text-muted-foreground">Data de nascimento</label>
                   <div className="mt-1 flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <input type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" required />
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" required max={new Date().toISOString().split("T")[0]} />
                   </div>
                 </div>
                 <div>
@@ -247,6 +331,13 @@ const AuthPage = () => {
                   <div className="mt-1 flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <input type="tel" placeholder="(11) 99999-0000" value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} className="flex-1 bg-transparent text-sm outline-none" required maxLength={15} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Email</label>
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <input type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" required />
                   </div>
                 </div>
                 <div>
@@ -259,45 +350,29 @@ const AuthPage = () => {
               </>
             )}
 
+            {/* STEP 2: Selfie */}
             {step === 2 && (
               <>
                 <div className="rounded-xl bg-info/10 border border-info/30 p-4">
-                  <p className="text-sm font-semibold text-info">Verificação de identidade</p>
-                  <p className="text-xs text-muted-foreground mt-1">Precisamos verificar sua identidade para sua segurança.</p>
+                  <p className="text-sm font-semibold text-info">Selfie de verificação</p>
+                  <p className="text-xs text-muted-foreground mt-1">Tire uma selfie clara para validarmos sua identidade. Esta foto é permanente.</p>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Selfie de verificação</label>
-                  <button type="button" className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-background py-8 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-                    <Camera className="h-5 w-5" /> Tirar selfie
-                  </button>
-                  <p className="mt-1 text-[10px] text-muted-foreground">Upload de selfie será implementado com storage</p>
-                </div>
-                {userType === "driver" && (
-                  <>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">CNH (frente)</label>
-                      <button type="button" className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-background py-6 text-sm text-muted-foreground hover:border-primary">
-                        <Camera className="h-5 w-5" /> Fotografar CNH (frente)
-                      </button>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">CNH (verso)</label>
-                      <button type="button" className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-background py-6 text-sm text-muted-foreground hover:border-primary">
-                        <Camera className="h-5 w-5" /> Fotografar CNH (verso)
-                      </button>
-                    </div>
-                    <div className="rounded-xl bg-warning/10 border border-warning/30 p-3">
-                      <p className="text-xs font-semibold text-warning">CNH com EAR obrigatória</p>
-                      <p className="text-[10px] text-muted-foreground">Sua CNH deve ter a observação EAR (Exerce Atividade Remunerada).</p>
-                    </div>
-                  </>
-                )}
+                <DocumentUpload
+                  label="Selfie"
+                  bucket="selfies"
+                  pathPrefix={`signup/${cpf.replace(/\D/g, "")}/selfie`}
+                  value={selfieUrl}
+                  onChange={setSelfieUrl}
+                  capture="user"
+                  hint="Aponte a câmera frontal e mantenha o rosto centralizado"
+                />
               </>
             )}
 
+            {/* STEP 3: Veículo (motorista) */}
             {step === 3 && userType === "driver" && (
               <>
-                <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
+                <div className="rounded-xl bg-primary/5 border border-primary/20 p-3">
                   <p className="text-sm font-semibold">Dados do veículo</p>
                 </div>
                 <div>
@@ -322,22 +397,106 @@ const AuthPage = () => {
                     ))}
                   </div>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Modelo do veículo</label>
-                  <div className="mt-1 rounded-xl border bg-background px-3 py-2.5">
-                    <input type="text" placeholder="Ex: Toyota Corolla 2022" value={vehicleModel} onChange={(e) => setVehicleModel(e.target.value)} className="w-full bg-transparent text-sm outline-none" required />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Marca</label>
+                    <input type="text" placeholder="Toyota" value={vehicleBrand} onChange={(e) => setVehicleBrand(e.target.value)} className="mt-1 w-full rounded-xl border bg-background px-3 py-2.5 text-sm outline-none" required />
                   </div>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Cor</label>
-                  <div className="mt-1 rounded-xl border bg-background px-3 py-2.5">
-                    <input type="text" placeholder="Ex: Prata" value={vehicleColor} onChange={(e) => setVehicleColor(e.target.value)} className="w-full bg-transparent text-sm outline-none" required />
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Modelo</label>
+                    <input type="text" placeholder="Corolla" value={vehicleModel} onChange={(e) => setVehicleModel(e.target.value)} className="mt-1 w-full rounded-xl border bg-background px-3 py-2.5 text-sm outline-none" required />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Cor</label>
+                    <input type="text" placeholder="Prata" value={vehicleColor} onChange={(e) => setVehicleColor(e.target.value)} className="mt-1 w-full rounded-xl border bg-background px-3 py-2.5 text-sm outline-none" required />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Ano</label>
+                    <input type="number" placeholder="2022" value={vehicleYear} onChange={(e) => setVehicleYear(e.target.value)} className="mt-1 w-full rounded-xl border bg-background px-3 py-2.5 text-sm outline-none" required min={2000} max={new Date().getFullYear() + 1} />
                   </div>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Placa</label>
-                  <div className="mt-1 rounded-xl border bg-background px-3 py-2.5">
-                    <input type="text" placeholder="Ex: ABC-1D23" value={vehiclePlate} onChange={(e) => setVehiclePlate(formatPlate(e.target.value))} className="w-full bg-transparent text-sm outline-none" required maxLength={8} />
+                  <input type="text" placeholder="ABC-1D23" value={vehiclePlate} onChange={(e) => setVehiclePlate(formatPlate(e.target.value))} className="mt-1 w-full rounded-xl border bg-background px-3 py-2.5 text-sm uppercase outline-none" required maxLength={8} />
+                </div>
+              </>
+            )}
+
+            {/* STEP 4: Documentos (motorista) */}
+            {step === 4 && userType === "driver" && (
+              <>
+                <div className="rounded-xl bg-warning/10 border border-warning/30 p-3">
+                  <p className="text-sm font-semibold text-warning">Documentos para análise</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">CNH deve ter EAR (Exerce Atividade Remunerada).</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Número da CNH</label>
+                  <input type="text" placeholder="00000000000" value={cnhNumber} onChange={(e) => setCnhNumber(e.target.value.replace(/\D/g, ""))} className="mt-1 w-full rounded-xl border bg-background px-3 py-2.5 text-sm outline-none" required maxLength={11} />
+                </div>
+                <DocumentUpload
+                  label="CNH (frente)"
+                  bucket="driver-documents"
+                  pathPrefix={`signup/${cpf.replace(/\D/g, "")}/cnh-frente`}
+                  value={cnhFrontUrl}
+                  onChange={setCnhFrontUrl}
+                  capture="environment"
+                />
+                <DocumentUpload
+                  label="CNH (verso)"
+                  bucket="driver-documents"
+                  pathPrefix={`signup/${cpf.replace(/\D/g, "")}/cnh-verso`}
+                  value={cnhBackUrl}
+                  onChange={setCnhBackUrl}
+                  capture="environment"
+                />
+                <DocumentUpload
+                  label="Documento do veículo (CRLV)"
+                  bucket="driver-documents"
+                  pathPrefix={`signup/${cpf.replace(/\D/g, "")}/crlv`}
+                  value={crlvUrl}
+                  onChange={setCrlvUrl}
+                  capture="environment"
+                />
+                <DocumentUpload
+                  label="Selfie segurando documento"
+                  bucket="driver-documents"
+                  pathPrefix={`signup/${cpf.replace(/\D/g, "")}/selfie-doc`}
+                  value={selfieDocUrl}
+                  onChange={setSelfieDocUrl}
+                  capture="user"
+                  hint="Segure sua CNH ao lado do rosto"
+                />
+              </>
+            )}
+
+            {/* STEP 5: Pix (motorista) */}
+            {step === 5 && userType === "driver" && (
+              <>
+                <div className="rounded-xl bg-primary/5 border border-primary/20 p-3">
+                  <p className="text-sm font-semibold">Dados financeiros (Pix)</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Para receber pagamentos das corridas.</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Tipo de chave</label>
+                  <select value={pixKeyType} onChange={(e) => setPixKeyType(e.target.value)} className="mt-1 w-full rounded-xl border bg-background px-3 py-2.5 text-sm outline-none">
+                    <option value="cpf">CPF</option>
+                    <option value="phone">Telefone</option>
+                    <option value="email">E-mail</option>
+                    <option value="random">Chave aleatória</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Chave Pix</label>
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5">
+                    <KeyRound className="h-4 w-4 text-muted-foreground" />
+                    <input type="text" placeholder="Sua chave Pix" value={pixKey} onChange={(e) => setPixKey(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" required />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Nome do favorecido</label>
+                  <div className="mt-1 flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5">
+                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                    <input type="text" placeholder="Como aparece no banco" value={pixHolderName} onChange={(e) => setPixHolderName(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" required />
                   </div>
                 </div>
               </>
@@ -346,7 +505,7 @@ const AuthPage = () => {
             {/* Progress dots */}
             <div className="flex justify-center gap-2 py-2">
               {Array.from({ length: maxSteps }).map((_, i) => (
-                <div key={i} className={`h-2 rounded-full transition-all ${step === i + 1 ? "w-6 bg-primary" : "w-2 bg-muted"}`} />
+                <div key={i} className={`h-2 rounded-full transition-all ${step === i + 1 ? "w-6 bg-primary" : i + 1 < step ? "w-2 bg-primary/50" : "w-2 bg-muted"}`} />
               ))}
             </div>
 
