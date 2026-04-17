@@ -19,6 +19,7 @@ const DriverStatusPage = () => {
   const [cnhBack, setCnhBack] = useState<string | null>(driverData?.cnh_back_url || null);
   const [crlv, setCrlv] = useState<string | null>(driverData?.crlv_url || null);
   const [selfieDoc, setSelfieDoc] = useState<string | null>(driverData?.selfie_with_document_url || null);
+  const [criminalRecord, setCriminalRecord] = useState<string | null>(driverData?.criminal_record_url || null);
 
   const canReupload = ["pendente_documentos", "reprovado", "rejected"].includes(driverData?.status);
 
@@ -30,6 +31,7 @@ const DriverStatusPage = () => {
       cnh_back_url: cnhBack,
       crlv_url: crlv,
       selfie_with_document_url: selfieDoc,
+      criminal_record_url: criminalRecord,
       status: "em_analise",
       analysis_message: null,
     }).eq("user_id", user.id);
@@ -137,6 +139,13 @@ const DriverStatusPage = () => {
               value={selfieDoc}
               onChange={setSelfieDoc}
               capture="user"
+            />
+            <DocumentUpload
+              label="Certidão de antecedentes criminais"
+              bucket="driver-documents"
+              pathPrefix={`${user?.id}/antecedentes`}
+              value={criminalRecord}
+              onChange={setCriminalRecord}
             />
             <button
               onClick={handleReupload}

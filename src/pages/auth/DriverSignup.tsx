@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, ArrowRight, User, FileText, Calendar, Phone, Mail, Lock,
   Eye, EyeOff, Loader2, Camera, CheckCircle2, ShieldCheck, AlertCircle,
-  Car, Bike, Sparkles, KeyRound, CreditCard, Hash, Palette,
+  Car, Bike, Sparkles, KeyRound, CreditCard, Hash, Palette, Shield,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,16 +14,18 @@ import {
   isFakeName, isFakeEmail, isFakeCPF, isFakePhone, checkPasswordStrength,
 } from "@/lib/antiFake";
 import DocumentUpload from "@/components/auth/DocumentUpload";
+import LiveSelfieCapture from "@/components/auth/LiveSelfieCapture";
 import { toast } from "sonner";
 
-type StepKey = "dados" | "seguranca" | "selfie" | "veiculo" | "documentos" | "pix";
+type StepKey = "dados" | "seguranca" | "selfie" | "veiculo" | "documentos" | "antecedentes" | "pix";
 
 const STEPS: Array<{ key: StepKey; label: string }> = [
   { key: "dados", label: "Dados pessoais" },
   { key: "seguranca", label: "Segurança" },
-  { key: "selfie", label: "Selfie" },
+  { key: "selfie", label: "Selfie ao vivo" },
   { key: "veiculo", label: "Veículo" },
   { key: "documentos", label: "Documentos" },
+  { key: "antecedentes", label: "Antecedentes" },
   { key: "pix", label: "Pix" },
 ];
 
@@ -59,8 +61,14 @@ const DriverSignup = () => {
   const [showPwd, setShowPwd] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
 
-  // Selfie
+  // Selfie (ao vivo, com liveness)
   const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
+  const [selfieLivenessUrl, setSelfieLivenessUrl] = useState<string | null>(null);
+  const [livenessVerified, setLivenessVerified] = useState(false);
+
+  // Antecedentes criminais
+  const [criminalRecordUrl, setCriminalRecordUrl] = useState<string | null>(null);
+  const [criminalRecordDate, setCriminalRecordDate] = useState("");
 
   // Veículo
   const [category, setCategory] = useState<string>("economico");
@@ -249,7 +257,33 @@ const DriverSignup = () => {
 
   const validateStepSelfie = (): boolean => {
     if (!selfieUrl) {
-      toast.error("Tire sua selfie para continuar");
+      toast.error("Tire sua selfie ao vivo para continuar");
+      return false;
+    }
+    if (!livenessVerified) {
+      toast.error("Verificação anti-fraude obrigatória. Repita a captura.");
+      return false;
+    }
+    return true;
+  };
+
+  const validateStepAntecedentes = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!criminalRecordUrl) errs.criminal = "Envie a certidão de antecedentes criminais";
+    if (!criminalRecordDate) errs.criminalDate = "Informe a data de emissão";
+    else {
+      const iso = parseDateBRtoISO(criminalRecordDate);
+      if (!iso) errs.criminalDate = "Data inválida (DD/MM/AAAA)";
+      else {
+        const issued = new Date(iso);
+        const days = (Date.now() - issued.getTime()) / (1000 * 60 * 60 * 24);
+        if (days < 0) errs.criminalDate = "Data não pode ser futura";
+        else if (days > 90) errs.criminalDate = "Certidão deve ter sido emitida nos últimos 90 dias";
+      }
+    }
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      toast.error("Corrija os campos destacados");
       return false;
     }
     return true;
@@ -334,7 +368,8 @@ const DriverSignup = () => {
     else if (step === 2) ok = validateStepSelfie();
     else if (step === 3) ok = await validateStepVeiculo();
     else if (step === 4) ok = validateStepDocumentos();
-    else if (step === 5) {
+    else if (step === 5) ok = validateStepAntecedentes();
+    else if (step === 6) {
       ok = validateStepPix();
       if (ok) return handleSubmit();
     }
@@ -373,6 +408,10 @@ const DriverSignup = () => {
       cnh_back_url: cnhBackUrl || "",
       crlv_url: crlvUrl || "",
       selfie_with_document_url: selfieDocUrl || "",
+      criminal_record_url: criminalRecordUrl || "",
+      criminal_record_issued_at: parseDateBRtoISO(criminalRecordDate) || "",
+      selfie_liveness_url: selfieLivenessUrl || "",
+      liveness_verified: livenessVerified ? "true" : "false",
       pix_key: pixKey.trim(),
       pix_key_type: pixKeyType,
       pix_holder_name: pixHolderName.trim(),
@@ -485,27 +524,31 @@ const DriverSignup = () => {
           </div>
         )}
 
-        {/* STEP 2: Selfie */}
+        {/* STEP 2: Selfie ao vivo */}
         {step === 2 && (
           <div className="space-y-4 animate-fade-in">
             <div className="rounded-xl border-2 border-info/30 bg-info/10 p-4">
               <p className="text-sm font-bold text-info flex items-center gap-2">
-                <Camera className="h-4 w-4" /> Selfie de verificação
+                <Camera className="h-4 w-4" /> Selfie ao vivo
               </p>
               <p className="text-xs text-muted-foreground mt-1.5">
-                Tire uma foto do seu rosto agora. Esta selfie é <strong>permanente</strong> e fica armazenada para sua segurança.
+                A captura é feita ao vivo pela câmera frontal. <strong>Não aceitamos</strong> fotos da galeria, fotos impressas, screenshots ou imagens em telas. Você precisará <strong>piscar</strong> durante a verificação.
               </p>
             </div>
-            <DocumentUpload
-              label="Selfie obrigatória"
+            <LiveSelfieCapture
+              label="Selfie obrigatória (com verificação anti-fraude)"
               bucket="selfies"
               pathPrefix={`signup/${cpf.replace(/\D/g, "")}/selfie`}
               value={selfieUrl}
-              onChange={setSelfieUrl}
-              capture="user"
-              hint="Boa iluminação, sem óculos escuros, rosto centralizado"
+              onChange={(url, meta) => {
+                setSelfieUrl(url);
+                setSelfieLivenessUrl(meta?.livenessUrl || null);
+                setLivenessVerified(meta?.verified || false);
+              }}
+              liveness
+              hint="Boa iluminação, sem óculos escuros, rosto centralizado no círculo"
             />
-            <NextBtn onClick={next} loading={loading} disabled={!selfieUrl} />
+            <NextBtn onClick={next} loading={loading} disabled={!selfieUrl || !livenessVerified} />
           </div>
         )}
 
@@ -579,8 +622,53 @@ const DriverSignup = () => {
           </div>
         )}
 
-        {/* STEP 5: Pix */}
+        {/* STEP 5: Antecedentes criminais */}
         {step === 5 && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="rounded-xl border-2 border-warning/30 bg-warning/10 p-4">
+              <p className="text-sm font-bold text-warning flex items-center gap-2">
+                <Shield className="h-4 w-4" /> Certidão de antecedentes criminais
+              </p>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Envie a certidão emitida pelo <strong>Tribunal de Justiça</strong> do seu estado ou pela <strong>Polícia Federal</strong>. A certidão deve estar dentro do prazo de validade (até 90 dias da emissão).
+              </p>
+              <a
+                href="https://www.tjsp.jus.br/CertidaoAntecedentes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block text-xs font-semibold text-primary underline"
+              >
+                Como emitir a certidão →
+              </a>
+            </div>
+
+            <DocumentUpload
+              label="Certidão de antecedentes criminais (PDF ou imagem)"
+              bucket="driver-documents"
+              pathPrefix={`signup/${cpf.replace(/\D/g, "")}/antecedentes`}
+              value={criminalRecordUrl}
+              onChange={setCriminalRecordUrl}
+              hint="Documento completo, todas as páginas legíveis"
+            />
+            {errors.criminal && <p className="text-xs text-destructive flex items-center gap-1 -mt-2"><AlertCircle className="h-3 w-3" /> {errors.criminal}</p>}
+
+            <Field
+              label="Data de emissão da certidão"
+              icon={<Calendar className="h-4 w-4" />}
+              value={criminalRecordDate}
+              onChange={(v) => { setCriminalRecordDate(formatDateBR(v)); clearErr("criminalDate"); }}
+              placeholder="DD/MM/AAAA"
+              error={errors.criminalDate}
+              maxLength={10}
+              inputMode="numeric"
+            />
+
+            <NextBtn onClick={next} loading={loading} />
+          </div>
+        )}
+
+        {/* STEP 6: Pix */}
+        {step === 6 && (
           <div className="space-y-4 animate-fade-in">
             <div className="rounded-xl border border-success/30 bg-success/10 p-4">
               <p className="text-sm font-bold text-success flex items-center gap-2">
