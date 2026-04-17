@@ -130,10 +130,12 @@ Deno.serve(async (req) => {
         .eq("ride_id", rideId).eq("status", "pending");
     }
 
-    // Nenhum motorista aceitou — cancela
+    // Nenhum motorista aceitou — cancela e marca como cancelamento do sistema
+    // UUID zero = "sistema/dispatch" (sem usuário humano associado)
+    const SYSTEM_USER = "00000000-0000-0000-0000-000000000000";
     console.log(`[dispatch] ❌ no driver accepted ${rideId} after ${MAX_ROUNDS} rounds`);
     await supabase.from("rides")
-      .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+      .update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: SYSTEM_USER })
       .eq("id", rideId).eq("status", "requested");
 
     return new Response(JSON.stringify({ ok: false, reason: "no_driver_available" }), {
