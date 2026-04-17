@@ -249,6 +249,38 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        {/* Cancelamentos — auditoria */}
+        <div className="rounded-2xl border bg-card shadow-sm lg:col-span-2">
+          <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center gap-2">
+              <XCircle className="h-4 w-4 text-destructive" />
+              <h3 className="text-sm font-bold">Cancelamentos (últimos 7 dias)</h3>
+            </div>
+            <span className={`text-xs font-bold px-2 py-1 rounded-full ${cancelStats.rate > 30 ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+              Taxa: {cancelStats.rate}%
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4">
+            {[
+              { label: "Total", value: cancelStats.total, color: "text-foreground", bg: "bg-muted" },
+              { label: "Passageiro", value: cancelStats.byPassenger, color: "text-warning", bg: "bg-warning/10" },
+              { label: "Motorista", value: cancelStats.byDriver, color: "text-info", bg: "bg-info/10" },
+              { label: "Sistema (timeout)", value: cancelStats.bySystem, color: "text-destructive", bg: "bg-destructive/10" },
+              { label: "Admin", value: cancelStats.byAdmin, color: "text-primary", bg: "bg-primary/10" },
+            ].map((c) => (
+              <div key={c.label} className={`rounded-xl ${c.bg} p-3 text-center`}>
+                <p className={`text-2xl font-extrabold ${c.color}`}>{c.value}</p>
+                <p className="text-[11px] font-medium text-muted-foreground mt-0.5">{c.label}</p>
+              </div>
+            ))}
+          </div>
+          {cancelStats.unknown > 0 && (
+            <div className="px-4 pb-3 text-xs text-muted-foreground">
+              ⚠️ {cancelStats.unknown} cancelamento(s) sem responsável registrado (corridas antigas).
+            </div>
+          )}
+        </div>
+
         {/* Recent rides table */}
         <div className="rounded-2xl border bg-card shadow-sm">
           <div className="flex items-center justify-between p-4 border-b">
