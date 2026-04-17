@@ -25,7 +25,12 @@ const DriverStatusPage = () => {
   const canReupload = ["pendente_documentos", "reprovado", "rejected"].includes(driverData?.status);
 
   const handleRefresh = async () => {
-    if (!user || refreshing) return;
+    console.log("[DriverStatusPage] handleRefresh clicked", { user: user?.id, refreshing });
+    if (!user) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+    if (refreshing) return;
     setRefreshing(true);
     const previousStatus = driverData?.status;
     try {
@@ -35,6 +40,7 @@ const DriverStatusPage = () => {
         .select("status, analysis_message, analyzed_at")
         .eq("user_id", user.id)
         .maybeSingle();
+      console.log("[DriverStatusPage] refresh result", { data, error, previousStatus });
       if (error) throw error;
 
       await refreshProfile();
@@ -43,7 +49,6 @@ const DriverStatusPage = () => {
       if (newStatus && newStatus !== previousStatus) {
         const newInfo = getDriverStatusInfo(newStatus);
         toast.success(`Status atualizado: ${newInfo.label}`);
-        // Se foi aprovado, redireciona para a home do motorista
         if (newInfo.canDrive) {
           setTimeout(() => navigate("/driver"), 800);
         }
@@ -51,6 +56,7 @@ const DriverStatusPage = () => {
         toast.info("Nenhuma novidade ainda. Tente novamente em instantes.");
       }
     } catch (err: any) {
+      console.error("[DriverStatusPage] refresh error", err);
       toast.error("Erro ao atualizar: " + (err.message || "tente novamente"));
     } finally {
       setRefreshing(false);
