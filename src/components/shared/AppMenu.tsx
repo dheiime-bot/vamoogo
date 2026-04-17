@@ -77,14 +77,14 @@ const AppMenu = ({ role, floating = true }: Props) => {
         <SheetTrigger asChild>
           <button
             aria-label="Abrir menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
+            className="flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted"
           >
             <Menu className="h-5 w-5 text-foreground" />
+            <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">
+              Menu
+            </span>
           </button>
         </SheetTrigger>
-        <span className="flex h-11 items-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 font-display text-xl font-extrabold text-gradient-primary leading-none select-none">
-          Vamoo!
-        </span>
       </div>
 
       <SheetContent side="left" className="w-72 p-0 flex flex-col">
