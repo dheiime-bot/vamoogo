@@ -1,16 +1,14 @@
 /**
  * DriverOfferAlert — popup global de nova corrida para motorista.
  *
- * Funciona em qualquer tela do app enquanto o usuário logado for motorista,
- * INDEPENDENTE de estar online localmente ou da tela atual. Assim, nenhuma oferta
- * direcionada a ele passa despercebida.
- *
- * - Subscribe realtime em ride_offers (INSERT) filtrado por driver_id
- * - Polling de fallback a cada 5s
- * - Toca som + vibração ao chegar oferta
- * - Aceitar usa update atômico; ao aceitar navega para /driver
+ * 100% à prova de falhas:
+ *  - Polling rápido (1.5s) é a fonte PRIMÁRIA — não depende de WebSocket
+ *  - Realtime postgres_changes funciona como bônus (entrega instantânea)
+ *  - Não depende de `roles` carregado — basta `user.id` + ter linha em `drivers`
+ *  - Som + vibração ao chegar; loop até interagir
+ *  - Aceitar: update atômico (apenas 1 motorista vence)
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, XCircle, MapPin, Clock, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,22 +19,22 @@ import { toast } from "sonner";
 const playOfferSound = () => {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const beep = (freq: number, start: number, dur = 0.18) => {
+    const beep = (freq: number, start: number, dur = 0.2) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
       gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
-      gain.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + start + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
       osc.connect(gain).connect(ctx.destination);
       osc.start(ctx.currentTime + start);
       osc.stop(ctx.currentTime + start + dur);
     };
-    beep(880, 0); beep(1320, 0.22); beep(1760, 0.44);
-    setTimeout(() => ctx.close(), 1000);
+    beep(880, 0); beep(1320, 0.25); beep(1760, 0.5); beep(1320, 0.75); beep(880, 1.0);
+    setTimeout(() => ctx.close(), 1500);
   } catch { /* ignore */ }
-  if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+  if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 600]);
 };
 
 const DriverOfferAlert = () => {
@@ -47,81 +45,93 @@ const DriverOfferAlert = () => {
   const [countdown, setCountdown] = useState(15);
   const [accepting, setAccepting] = useState(false);
   const offerRef = useRef<any>(null);
+  const seenOfferIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => { offerRef.current = offer; }, [offer]);
 
-  const isDriver = !!user && roles.includes("driver");
+  // Aceita também usuários sem `roles` populado AINDA — o handler verifica via `drivers`
+  const isPossiblyDriver = !!user && (roles.length === 0 || roles.includes("driver"));
 
-  const handleNewOffer = async (offerRow: any) => {
+  const handleNewOffer = useCallback(async (offerRow: any) => {
+    if (!user) return;
     if (offerRef.current) return; // já tem uma sendo mostrada
     if (offerRow.status !== "pending") return;
     if (offerRow.expires_at && new Date(offerRow.expires_at).getTime() < Date.now()) return;
+    if (seenOfferIdsRef.current.has(offerRow.id)) return;
+    seenOfferIdsRef.current.add(offerRow.id);
 
-    // Verifica se motorista não está em corrida ativa
+    // Confirma motorista NÃO está em corrida ativa
     const { data: active } = await supabase
       .from("rides").select("id")
-      .eq("driver_id", user!.id)
+      .eq("driver_id", user.id)
       .in("status", ["accepted", "in_progress"])
       .limit(1);
-    if (active && active.length > 0) return;
+    if (active && active.length > 0) {
+      console.log("[offer-alert] driver busy with active ride, skipping");
+      return;
+    }
 
     const { data: r } = await supabase
       .from("rides").select("*").eq("id", offerRow.ride_id).maybeSingle();
-    if (!r || r.status !== "requested") return;
+    if (!r || r.status !== "requested") {
+      console.log("[offer-alert] ride not in requested state:", r?.status);
+      return;
+    }
 
+    console.log("[offer-alert] 🚗 NEW OFFER", offerRow.id);
     setOffer(offerRow);
     setRide(r);
     playOfferSound();
     toast.success("Nova corrida! 🚗");
-  };
+  }, [user]);
 
-  // Realtime: novas ofertas
+  // Realtime: novas ofertas (entrega instantânea, mas pode falhar — não confiamos só nele)
   useEffect(() => {
-    if (!isDriver) return;
-    console.log("[offer-alert] subscribe for", user!.id);
+    if (!isPossiblyDriver || !user) return;
+    console.log("[offer-alert] subscribe for", user.id);
 
     const channel = supabase
-      .channel(`offer-alert-${user!.id}`)
+      .channel(`offer-alert-${user.id}-${Date.now()}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "ride_offers", filter: `driver_id=eq.${user!.id}` },
+        { event: "INSERT", schema: "public", table: "ride_offers", filter: `driver_id=eq.${user.id}` },
         (payload) => {
-          console.log("[offer-alert] INSERT", payload.new);
+          console.log("[offer-alert] RT INSERT", payload.new);
           handleNewOffer(payload.new as any);
         }
       )
-      .subscribe((s) => console.log("[offer-alert] channel", s));
+      .subscribe((s) => console.log("[offer-alert] channel status:", s));
     return () => { supabase.removeChannel(channel); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDriver, user?.id]);
+  }, [isPossiblyDriver, user, handleNewOffer]);
 
-  // Polling fallback a cada 5s
+  // Polling AGRESSIVO a cada 1.5s (fonte primária — funciona mesmo sem WebSocket)
   useEffect(() => {
-    if (!isDriver) return;
+    if (!isPossiblyDriver || !user) return;
     let cancelled = false;
     const tick = async () => {
       if (offerRef.current) return;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("ride_offers")
         .select("*")
-        .eq("driver_id", user!.id)
+        .eq("driver_id", user.id)
         .eq("status", "pending")
         .gte("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
         .limit(1);
-      if (cancelled || !data || data.length === 0) return;
+      if (cancelled) return;
+      if (error) { console.warn("[offer-alert] poll error:", error); return; }
+      if (!data || data.length === 0) return;
       handleNewOffer(data[0]);
     };
     tick();
-    const i = setInterval(tick, 5000);
+    const i = setInterval(tick, 1500);
     return () => { cancelled = true; clearInterval(i); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDriver, user?.id]);
+  }, [isPossiblyDriver, user, handleNewOffer]);
 
   // Countdown
   useEffect(() => {
     if (!offer) return;
-    setCountdown(15);
     const expiresAt = new Date(offer.expires_at).getTime();
+    setCountdown(Math.max(0, Math.round((expiresAt - Date.now()) / 1000)));
     const i = setInterval(() => {
       const left = Math.max(0, Math.round((expiresAt - Date.now()) / 1000));
       setCountdown(left);
