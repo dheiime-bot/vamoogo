@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, metadata: Record<string, string>) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -87,6 +87,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         emailRedirectTo: window.location.origin,
       },
     });
+    // Mark this user so we move signup/ uploads on first authenticated session.
+    if (!error && data?.user?.id) {
+      try {
+        sessionStorage.setItem(`signup_finalize_pending_${data.user.id}`, "1");
+      } catch {/* ignore */}
+    }
     return { error };
   };
 
