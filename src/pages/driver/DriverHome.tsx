@@ -643,44 +643,7 @@ const DriverHome = () => {
         </div>
       )}
 
-      {/* Waiting */}
-      {isOnline && rideState === "idle" && !activeRide && (
-        <div className="mx-4 mt-4 rounded-2xl border bg-card p-6 text-center">
-          <div className="relative mx-auto h-12 w-12 mb-2">
-            <div className="absolute inset-0 rounded-full bg-success/20 animate-ping" />
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-success">
-              <Power className="h-6 w-6 text-success-foreground" />
-            </div>
-          </div>
-          <p className="text-sm font-medium mt-2">Aguardando corridas próximas...</p>
-          <p className="text-xs text-muted-foreground">Você será notificado em segundos</p>
-          <button
-            onClick={handleToggleOnline}
-            className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10"
-          >
-            Ficar offline
-          </button>
-        </div>
-      )}
-
-      {!isOnline && rideState === "idle" && !activeRide && (
-        <div className="mx-4 mt-4 rounded-2xl border-dashed border-2 bg-muted/30 p-6 text-center">
-          <Power className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm font-medium">Você está offline</p>
-          <p className="text-xs text-muted-foreground mb-4">Toque no botão abaixo para receber corridas</p>
-          <button
-            onClick={handleToggleOnline}
-            disabled={lowBalance}
-            className="w-full rounded-xl bg-success py-3 text-sm font-bold text-success-foreground flex items-center justify-center gap-2 hover:bg-success/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-          >
-            <Power className="h-4 w-4" />
-            Ficar Online
-          </button>
-          {lowBalance && (
-            <p className="mt-2 text-xs text-destructive">Saldo insuficiente — recarregue para ficar online</p>
-          )}
-        </div>
-      )}
+      {/* (Estados de idle são tratados pela tela inicial estilo passageiro acima) */}
 
       {/* Modal Pix — exibido pelo motorista quando vai cobrar */}
       <PixPaymentModal
