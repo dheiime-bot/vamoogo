@@ -630,15 +630,21 @@ export type Database = {
         Row: {
           active_role: Database["public"]["Enums"]["app_role"] | null
           birth_date: string | null
+          blocked_at: string | null
+          blocked_by: string | null
+          blocked_reason: string | null
           cpf: string
           created_at: string
           email: string | null
           full_name: string
           id: string
+          is_suspect: boolean
           phone: string | null
           phone_verified: boolean | null
           selfie_signup_url: string | null
           selfie_url: string | null
+          status: Database["public"]["Enums"]["passenger_status"]
+          suspect_reason: string | null
           updated_at: string
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"]
@@ -646,15 +652,21 @@ export type Database = {
         Insert: {
           active_role?: Database["public"]["Enums"]["app_role"] | null
           birth_date?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           cpf: string
           created_at?: string
           email?: string | null
           full_name: string
           id?: string
+          is_suspect?: boolean
           phone?: string | null
           phone_verified?: boolean | null
           selfie_signup_url?: string | null
           selfie_url?: string | null
+          status?: Database["public"]["Enums"]["passenger_status"]
+          suspect_reason?: string | null
           updated_at?: string
           user_id: string
           user_type?: Database["public"]["Enums"]["user_type"]
@@ -662,15 +674,21 @@ export type Database = {
         Update: {
           active_role?: Database["public"]["Enums"]["app_role"] | null
           birth_date?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           cpf?: string
           created_at?: string
           email?: string | null
           full_name?: string
           id?: string
+          is_suspect?: boolean
           phone?: string | null
           phone_verified?: boolean | null
           selfie_signup_url?: string | null
           selfie_url?: string | null
+          status?: Database["public"]["Enums"]["passenger_status"]
+          suspect_reason?: string | null
           updated_at?: string
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"]
@@ -1105,6 +1123,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_user: { Args: { _user_id: string }; Returns: undefined }
+      admin_send_message: {
+        Args: { _message: string; _title: string; _user_id: string }
+        Returns: string
+      }
       become_driver: {
         Args: {
           _category: Database["public"]["Enums"]["vehicle_category"]
@@ -1207,6 +1230,7 @@ export type Database = {
         | "reprovado"
         | "pendente_documentos"
       fraud_severity: "light" | "moderate" | "probable"
+      passenger_status: "ativo" | "bloqueado" | "suspenso"
       payment_method: "cash" | "pix" | "debit" | "credit"
       recharge_method: "pix" | "card"
       recharge_status: "pending" | "completed" | "failed"
@@ -1359,6 +1383,7 @@ export const Constants = {
         "pendente_documentos",
       ],
       fraud_severity: ["light", "moderate", "probable"],
+      passenger_status: ["ativo", "bloqueado", "suspenso"],
       payment_method: ["cash", "pix", "debit", "credit"],
       recharge_method: ["pix", "card"],
       recharge_status: ["pending", "completed", "failed"],
