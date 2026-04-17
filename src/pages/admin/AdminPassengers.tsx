@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Search, X, ImageIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Search, X, ImageIcon, RefreshCw } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import PassengerDetailsModal from "@/components/admin/PassengerDetailsModal";
@@ -12,15 +12,31 @@ const AdminPassengers = () => {
   const [selected, setSelected] = useState<any>(null);
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const [zoomImg, setZoomImg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    supabase
+  const loadPassengers = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_type", "passenger")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => { if (data) setPassengers(data); });
+      .order("created_at", { ascending: false });
+    if (data) setPassengers(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { loadPassengers(); }, [loadPassengers]);
+
+  // Realtime: novos passageiros aparecem automaticamente
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-passengers")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: "user_type=eq.passenger" }, () => {
+        loadPassengers();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [loadPassengers]);
 
   // Resolve thumbs (signed URLs) p/ selfies
   useEffect(() => {
