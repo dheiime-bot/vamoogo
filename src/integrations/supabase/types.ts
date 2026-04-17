@@ -248,6 +248,8 @@ export type Database = {
           id: string
           last_cancellation_reset: string | null
           liveness_verified: boolean | null
+          online_blocked: boolean
+          online_blocked_reason: string | null
           pix_holder_name: string | null
           pix_key: string | null
           pix_key_type: string | null
@@ -286,6 +288,8 @@ export type Database = {
           id?: string
           last_cancellation_reset?: string | null
           liveness_verified?: boolean | null
+          online_blocked?: boolean
+          online_blocked_reason?: string | null
           pix_holder_name?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
@@ -324,6 +328,8 @@ export type Database = {
           id?: string
           last_cancellation_reset?: string | null
           liveness_verified?: boolean | null
+          online_blocked?: boolean
+          online_blocked_reason?: string | null
           pix_holder_name?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
