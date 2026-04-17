@@ -331,6 +331,14 @@ const AuthPage = () => {
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Entrar
             </button>
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={isLoading}
+              className="w-full text-center text-xs font-medium text-primary hover:underline disabled:opacity-50"
+            >
+              Esqueci minha senha
+            </button>
           </form>
         )}
 
