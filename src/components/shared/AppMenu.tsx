@@ -81,7 +81,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
           >
             <Menu className="h-5 w-5 text-foreground" />
             <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">
-              Menu
+              Vamoo!
             </span>
           </button>
         </SheetTrigger>
