@@ -98,8 +98,8 @@ const AuthPage = () => {
       toast.error("E-mail inválido");
       return false;
     }
-    if (password.length < 8) {
-      toast.error("Senha deve ter no mínimo 8 caracteres");
+    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+      toast.error("Senha deve ter no mínimo 8 caracteres, com letras e números");
       return false;
     }
     return true;
