@@ -159,7 +159,7 @@ const PassengerHome = () => {
       origin_lat: selectedOrigin.lat, origin_lng: selectedOrigin.lng,
       destination_address: `${effectiveDestination.name} - ${effectiveDestination.address}`,
       destination_lat: effectiveDestination.lat, destination_lng: effectiveDestination.lng,
-      category: selectedCategory as "moto" | "car" | "premium",
+      category: selectedCategory as "moto" | "economico" | "conforto",
       passenger_count: passengers, distance_km: distanceKm, duration_minutes: durationMin,
       price, platform_fee: platformFee, driver_net: price - platformFee,
       payment_method: method as any,
