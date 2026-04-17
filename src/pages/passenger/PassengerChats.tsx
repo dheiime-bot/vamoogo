@@ -3,6 +3,7 @@ import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppMenu from "@/components/shared/AppMenu";
+import NotificationBell from "@/components/shared/NotificationBell";
 import RideChat from "@/components/passenger/RideChat";
 
 interface ChatRow {
@@ -86,6 +87,7 @@ const PassengerChats = () => {
   return (
     <div className="min-h-screen bg-background">
       <AppMenu role="passenger" />
+      <NotificationBell />
       <header className="border-b bg-card px-4 py-4 pl-16">
         <h1 className="text-lg font-bold">Chats</h1>
         <p className="text-xs text-muted-foreground">Suas conversas com motoristas</p>
