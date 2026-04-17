@@ -135,10 +135,10 @@ const PassengerHome = () => {
           setRideState("in_progress");
           toast.success("Corrida iniciada!");
         } else if (ride.status === "completed") {
-          setRideState("completed");
+          // Volta o app para a tela inicial e abre o rating como modal sobreposto.
+          // O passageiro pode avaliar ou pular sem ficar preso na tela de resumo.
+          setRideState("rating");
           setDriverLocation(null);
-          // Pix é cobrado pelo motorista (QR Code aparece no app dele).
-          // O passageiro vê apenas o resumo final; pode reabrir o QR pelo botão se quiser.
           toast.success("Corrida finalizada!");
         } else if (ride.status === "cancelled") {
           setRideState("idle");
