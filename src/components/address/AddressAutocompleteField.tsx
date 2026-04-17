@@ -74,20 +74,55 @@ export default function AddressAutocompleteField({
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userLocRef = useRef<{ lat: number; lng: number } | null>(null);
+  const [, setLocTick] = useState(0); // força re-render quando GPS chegar
   const sessionTokenRef = useRef<string>(createSessionToken());
 
   const { recents, add: addRecent } = useRecentAddresses();
 
   // Captura geolocalização para location bias + cálculo de distância
+  // ESTRATÉGIA: prioriza alta precisão (mais demorada, mas correta para "cidade do dispositivo"),
+  // com fallback rápido sem alta precisão. E mantém um watch para acompanhar mudanças.
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
+
+    const apply = (pos: GeolocationPosition) => {
+      const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      const prev = userLocRef.current;
+      // Só atualiza se mudou >50m (evita re-renders desnecessários)
+      if (
+        !prev ||
+        Math.abs(prev.lat - next.lat) > 0.0005 ||
+        Math.abs(prev.lng - next.lng) > 0.0005
+      ) {
+        userLocRef.current = next;
+        setLocTick((t) => t + 1);
+        // Se a busca ainda não retornou bons resultados, re-roda com a nova localização
+        if (text.trim().length >= 2) runSearchRef.current?.(text);
+      }
+    };
+
+    // 1) Alta precisão (até 8s)
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        userLocRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      apply,
+      () => {
+        // 2) Fallback: baixa precisão é rápido
+        navigator.geolocation.getCurrentPosition(apply, () => {}, {
+          enableHighAccuracy: false,
+          timeout: 4000,
+          maximumAge: 5 * 60 * 1000,
+        });
       },
-      () => { /* sem permissão */ },
-      { enableHighAccuracy: false, timeout: 4000, maximumAge: 5 * 60 * 1000 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60 * 1000 }
     );
+
+    // 3) Watch leve para acompanhar mudanças de cidade (ex: usuário em movimento)
+    const watchId = navigator.geolocation.watchPosition(apply, () => {}, {
+      enableHighAccuracy: false,
+      maximumAge: 60 * 1000,
+      timeout: 15000,
+    });
+    return () => navigator.geolocation.clearWatch(watchId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -110,6 +145,8 @@ export default function AddressAutocompleteField({
 
   // requestId: garante que respostas tardias não sobrescrevam buscas mais recentes
   const requestIdRef = useRef(0);
+  // Ref para a função de busca (usada pelo callback de geolocalização)
+  const runSearchRef = useRef<((q: string) => void) | null>(null);
 
   const runSearch = useCallback((q: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -136,6 +173,10 @@ export default function AddressAutocompleteField({
       setLoading(false);
     }, 60);
   }, []);
+  // Mantém a ref de runSearch atualizada
+  useEffect(() => {
+    runSearchRef.current = runSearch;
+  }, [runSearch]);
 
   const handleInput = (v: string) => {
     setText(v);
