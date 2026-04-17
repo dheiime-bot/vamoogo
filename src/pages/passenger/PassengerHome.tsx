@@ -61,6 +61,7 @@ const PassengerHome = () => {
   const [nearbyDrivers, setNearbyDrivers] = useState<Array<{ lat: number; lng: number; heading?: number; category?: "moto" | "economico" | "conforto" }>>([]);
   const [showChangeDest, setShowChangeDest] = useState(false);
   const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
+  const [showRideForm, setShowRideForm] = useState(false);
 
   // Fetch recent rides
   useEffect(() => {
@@ -503,10 +504,16 @@ const PassengerHome = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Map — maior durante corrida ativa pra acompanhar movimento ao vivo */}
+      {/* Map — 80vh em idle (sem form), maior durante corrida ativa */}
       <div className="relative">
         <GoogleMap
-          className={`${isRideActive || rideState === "completed" ? "h-[68vh]" : "h-[58vh]"} rounded-none transition-all duration-300`}
+          className={`${
+            isRideActive || rideState === "completed"
+              ? "h-[68vh]"
+              : showRideForm
+              ? "h-[40vh]"
+              : "h-[80vh]"
+          } rounded-none transition-all duration-300`}
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
           stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
@@ -517,10 +524,23 @@ const PassengerHome = () => {
         />
       </div>
 
-      {/* Bottom sheet — sem sobreposição do logo do Google */}
+      {/* Bottom sheet — só aparece em corrida ativa, completed/rating, ou quando o form de viagem está aberto */}
+      {(isRideActive || rideState === "completed" || rideState === "rating" || rideState === "payment" || (rideState === "idle" && showRideForm)) && (
       <div className="relative rounded-t-3xl bg-card shadow-lg animate-slide-up -mt-3">
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted" />
         <div className="p-4 pb-3 space-y-4">
+          {rideState === "idle" && showRideForm && (
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold font-display">Para onde Vamoo?</h2>
+              <button
+                onClick={() => setShowRideForm(false)}
+                className="rounded-full p-1.5 hover:bg-muted transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+          )}
 
           {/* Completed: Show summary */}
           {rideState === "completed" && activeRide && (
@@ -972,6 +992,7 @@ const PassengerHome = () => {
           )}
         </div>
       </div>
+      )}
 
       {/* CTA fixo "Vamoo!" — só aparece em idle, respeitando safe-area */}
       {rideState === "idle" && (
@@ -995,14 +1016,23 @@ const PassengerHome = () => {
               </div>
             )}
           </div>
-          <button
-            onClick={handleOpenPayment}
-            disabled={isRequesting || !selectedOrigin || !selectedDestination}
-            className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isRequesting && <Loader2 className="h-4 w-4 animate-spin" />}
-            Vamoo! 🚀
-          </button>
+          {!showRideForm ? (
+            <button
+              onClick={() => setShowRideForm(true)}
+              className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              Para onde Vamoo? 🚀
+            </button>
+          ) : (
+            <button
+              onClick={handleOpenPayment}
+              disabled={isRequesting || !selectedOrigin || !selectedDestination}
+              className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isRequesting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Vamoo! 🚀
+            </button>
+          )}
         </div>
       )}
 
