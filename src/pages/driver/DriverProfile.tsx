@@ -84,10 +84,14 @@ const DriverProfile = () => {
       <div className="relative -mt-10 px-4">
         <div className="rounded-2xl border bg-card p-5 shadow-md">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <User className="h-8 w-8 text-muted-foreground" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted overflow-hidden">
+              {profile?.selfie_url ? (
+                <img src={profile.selfie_url} alt="Foto" className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-8 w-8 text-muted-foreground" />
+              )}
             </div>
-            <div>
+            <div className="flex-1">
               <h2 className="text-lg font-bold">{displayName}</h2>
               <p className="text-sm text-muted-foreground">Motorista • {categoryLabel}</p>
               <div className="flex items-center gap-2 mt-1">
@@ -95,6 +99,12 @@ const DriverProfile = () => {
                 <span className="flex items-center gap-0.5 text-xs"><Star className="h-3 w-3 text-warning" /> {driverData?.rating || "0.00"}</span>
               </div>
             </div>
+            <button
+              onClick={() => setEditOpen(true)}
+              className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-muted flex items-center gap-1"
+            >
+              <Pencil className="h-3.5 w-3.5" /> Editar
+            </button>
           </div>
         </div>
 
