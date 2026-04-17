@@ -107,12 +107,14 @@ const EditProfileModal = ({ open, onOpenChange }: Props) => {
         <DialogHeader>
           <DialogTitle>Editar meus dados</DialogTitle>
           <DialogDescription>
-            CPF, e-mail e dados do veículo só podem ser alterados pela equipe (suporte).
+            Você pode trocar sua <strong>foto de perfil</strong>. A selfie do cadastro fica
+            arquivada para auditoria. CPF, e-mail e dados do veículo só pelo suporte.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="flex flex-col items-center gap-2">
+            <p className="text-[11px] font-semibold uppercase text-muted-foreground">Foto de perfil</p>
             <div className="relative h-24 w-24 rounded-full bg-muted overflow-hidden border">
               {selfiePreview ? (
                 <img src={selfiePreview} alt="Selfie" className="h-full w-full object-cover" />
