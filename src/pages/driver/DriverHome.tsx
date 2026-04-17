@@ -449,9 +449,14 @@ const DriverHome = () => {
       {/* Going to passenger */}
       {rideState === "going_to_passenger" && activeRide && (
         <div className="mx-4 mt-4 rounded-2xl border bg-card p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-info">A caminho do passageiro</span>
-            <span className="font-extrabold">R$ {Number(activeRide.price).toFixed(2)}</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-sm font-bold text-info truncate">A caminho do passageiro</span>
+              {activeRide.ride_code && (
+                <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
+              )}
+            </div>
+            <span className="font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
           </div>
 
           {/* Aviso: corrida para outra pessoa */}
@@ -501,6 +506,11 @@ const DriverHome = () => {
       {/* Arrived */}
       {rideState === "arrived" && activeRide && (
         <div className="mx-4 mt-4 rounded-2xl border bg-card p-4 space-y-3">
+          {activeRide.ride_code && (
+            <div className="flex justify-center">
+              <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{activeRide.ride_code}</span>
+            </div>
+          )}
           <div className="rounded-xl bg-success/10 p-3 text-center">
             <p className="text-sm font-bold text-success">📍 Aguardando passageiro embarcar</p>
           </div>
@@ -514,9 +524,14 @@ const DriverHome = () => {
       {/* In ride */}
       {rideState === "in_ride" && activeRide && (
         <div className="mx-4 mt-4 rounded-2xl border bg-card p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-success">🛣️ Em corrida</span>
-            <span className="font-extrabold">R$ {Number(activeRide.price).toFixed(2)}</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-sm font-bold text-success truncate">🛣️ Em corrida</span>
+              {activeRide.ride_code && (
+                <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
+              )}
+            </div>
+            <span className="font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
           </div>
           <div className="flex items-start gap-2">
             <Flag className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
