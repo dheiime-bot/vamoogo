@@ -37,7 +37,11 @@ const AdminRides = () => {
   };
 
   const filtered = rides.filter((r) => {
-    const matchSearch = !search || r.origin_address?.toLowerCase().includes(search.toLowerCase()) || r.destination_address?.toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    const matchSearch = !search
+      || r.ride_code?.toLowerCase().includes(q)
+      || r.origin_address?.toLowerCase().includes(q)
+      || r.destination_address?.toLowerCase().includes(q);
     const matchStatus = filterStatus === "all" || r.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -51,7 +55,7 @@ const AdminRides = () => {
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-xl border bg-card px-3 py-2">
           <Search className="h-4 w-4 text-muted-foreground" />
-          <input placeholder="Buscar por endereço..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" />
+          <input placeholder="Buscar por código (VAMOO...) ou endereço..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" />
         </div>
         <div className="flex gap-1 overflow-x-auto">
           {["all", "requested", "accepted", "in_progress", "completed", "cancelled"].map((s) => (
@@ -68,7 +72,10 @@ const AdminRides = () => {
           <div key={ride.id} className="rounded-2xl border bg-card p-4 shadow-sm animate-slide-up" style={{ animationDelay: `${i * 30}ms`, animationFillMode: "both" }}>
             <div className="flex items-start justify-between mb-3">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {ride.ride_code && (
+                    <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{ride.ride_code}</span>
+                  )}
                   <span className="text-xs font-mono text-muted-foreground">{ride.id.slice(0, 8)}</span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-muted font-medium">{ride.category}</span>
                   <span className="text-xs text-muted-foreground">{ride.passenger_count} pass.</span>

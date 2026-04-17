@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Ride = {
   id: string;
+  ride_code: string | null;
   origin_address: string;
   destination_address: string;
   price: number | null;
@@ -43,7 +44,7 @@ const DriverRides = () => {
     setLoading(true);
     supabase
       .from("rides")
-      .select("id, origin_address, destination_address, price, platform_fee, driver_net, distance_km, duration_minutes, passenger_count, rating, status, created_at, completed_at")
+      .select("id, ride_code, origin_address, destination_address, price, platform_fee, driver_net, distance_km, duration_minutes, passenger_count, rating, status, created_at, completed_at")
       .eq("driver_id", user.id)
       .in("status", ["completed", "cancelled"])
       .order("created_at", { ascending: false })
@@ -107,7 +108,7 @@ const DriverRides = () => {
             >
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <span className="text-sm font-bold">#{ride.id.slice(0, 8).toUpperCase()}</span>
+                  <span className="text-sm font-bold font-mono text-primary">{ride.ride_code || `#${ride.id.slice(0, 8).toUpperCase()}`}</span>
                   <p className="text-xs text-muted-foreground">{formatDate(ride.created_at)}</p>
                 </div>
                 <StatusBadge status={ride.status as any} />
