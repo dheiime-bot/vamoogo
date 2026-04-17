@@ -62,7 +62,21 @@ const PassengerDetailsModal = ({ passenger, onClose }: Props) => {
         <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-card shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between p-4 border-b shrink-0">
             <div>
-              <h2 className="text-lg font-bold font-display">{passenger.full_name || "Passageiro"}</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold font-display">{passenger.full_name || "Passageiro"}</h2>
+                {passenger.status && (
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold capitalize ${
+                    passenger.status === "bloqueado" ? "bg-destructive/10 text-destructive"
+                    : passenger.status === "suspenso" ? "bg-warning/10 text-warning"
+                    : "bg-success/10 text-success"
+                  }`}>{passenger.status}</span>
+                )}
+                {passenger.is_suspect && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/10 text-warning font-semibold flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> Suspeito
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">ID {passenger.user_id?.slice(0, 8)}…</p>
             </div>
             <button onClick={onClose} className="rounded-full p-1.5 hover:bg-muted"><X className="h-5 w-5" /></button>

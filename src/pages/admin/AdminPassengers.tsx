@@ -174,19 +174,32 @@ const AdminPassengers = () => {
           </table>
         </div>
         <div className="md:hidden divide-y">
-          {filtered.map((p) => (
-            <button key={p.id} onClick={() => setSelected(p)} className="flex items-center gap-3 p-4 w-full text-left hover:bg-muted/30">
-              {thumbs[p.id] ? (
-                <img src={thumbs[p.id]} alt={p.full_name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/30" />
-              ) : (
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center"><UserIcon className="h-6 w-6 text-primary/70" /></div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="font-medium truncate">{p.full_name}</p>
-                <p className="text-xs text-muted-foreground truncate">{p.phone || p.email}</p>
+          {filtered.map((p) => {
+            const statusColor =
+              p.status === "bloqueado" ? "bg-destructive/10 text-destructive"
+              : p.status === "suspenso" ? "bg-warning/10 text-warning"
+              : "bg-success/10 text-success";
+            return (
+              <div key={p.id} className="flex items-center gap-3 p-4 hover:bg-muted/30">
+                <button onClick={() => setSelected(p)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+                  {thumbs[p.id] ? (
+                    <img src={thumbs[p.id]} alt={p.full_name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/30" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center"><UserIcon className="h-6 w-6 text-primary/70" /></div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate flex items-center gap-1.5">
+                      {p.full_name}
+                      {p.is_suspect && <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{p.phone || p.email}</p>
+                    <span className={`inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded-full font-semibold capitalize ${statusColor}`}>{p.status || "ativo"}</span>
+                  </div>
+                </button>
+                <PassengerActionsMenu passenger={p} onView={() => setSelected(p)} onChanged={loadPassengers} />
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
         {filtered.length === 0 && <EmptyState title="Nenhum passageiro encontrado" description="Não há passageiros que correspondam à busca atual." />}
       </div>
