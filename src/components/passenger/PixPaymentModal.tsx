@@ -13,6 +13,8 @@ interface PixPaymentModalProps {
   open: boolean;
   onClose: () => void;
   onMarkAsPaid?: () => void;
+  /** Texto do botão de confirmação (ex: "Já paguei" para passageiro, "Recebi — finalizar corrida" para motorista) */
+  confirmLabel?: string;
   driverName: string;
   pixKey: string | null;
   pixKeyType: PixKeyType | null;
