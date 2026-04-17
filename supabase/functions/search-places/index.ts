@@ -100,7 +100,10 @@ Deno.serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
+    // Service role para bypassar RLS no upsert do cache (apenas para sb_admin)
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(SUPABASE_URL, ANON);
+    const sbAdmin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY");
 
     // 2. Cache local DB (em paralelo com Google)
@@ -328,7 +331,7 @@ Deno.serve(async (req) => {
         country: "BR",
         last_synced_at: new Date().toISOString(),
       }));
-      sb.from("places")
+      sbAdmin.from("places")
         .upsert(upserts, { onConflict: "google_place_id" })
         .then(({ error }: any) => {
           if (error) console.error("cache upsert:", error.message);
