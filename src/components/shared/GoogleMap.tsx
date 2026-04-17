@@ -507,7 +507,7 @@ const MapStyler = () => {
 };
 
 /** Botão flutuante para recentralizar o mapa em um ponto preferido. */
-const RecenterButton = ({ target }: { target: MapPoint | null }) => {
+const RecenterButton = ({ target, bottomInset = 0 }: { target: MapPoint | null; bottomInset?: number }) => {
   const map = useMap();
 
   const handleClick = () => {
@@ -537,7 +537,8 @@ const RecenterButton = ({ target }: { target: MapPoint | null }) => {
       type="button"
       onClick={handleClick}
       aria-label="Recentralizar mapa"
-      className="absolute bottom-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-lg ring-1 ring-border hover:bg-muted transition-colors active:scale-95"
+      style={{ bottom: `calc(${bottomInset}px + 1rem)` }}
+      className="absolute right-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-lg ring-1 ring-border hover:bg-muted transition-colors active:scale-95"
     >
       <LocateFixed className="h-5 w-5 text-primary" />
     </button>
