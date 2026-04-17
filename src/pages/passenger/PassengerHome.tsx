@@ -992,6 +992,7 @@ const PassengerHome = () => {
           )}
         </div>
       </div>
+      )}
 
       {/* CTA fixo "Vamoo!" — só aparece em idle, respeitando safe-area */}
       {rideState === "idle" && (
