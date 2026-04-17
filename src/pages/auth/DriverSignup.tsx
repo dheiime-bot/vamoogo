@@ -417,6 +417,10 @@ const DriverSignup = () => {
       cnh_back_url: cnhBackUrl || "",
       crlv_url: crlvUrl || "",
       selfie_with_document_url: selfieDocUrl || "",
+      vehicle_photo_front_url: vehiclePhotoFront || "",
+      vehicle_photo_back_url: vehiclePhotoBack || "",
+      vehicle_photo_left_url: vehiclePhotoLeft || "",
+      vehicle_photo_right_url: vehiclePhotoRight || "",
       criminal_record_url: criminalRecordUrl || "",
       criminal_record_issued_at: parseDateBRtoISO(criminalRecordDate) || "",
       selfie_liveness_url: selfieLivenessUrl || "",
@@ -595,6 +599,61 @@ const DriverSignup = () => {
             </div>
 
             <Field label="Placa" icon={<Hash className="h-4 w-4" />} value={vehiclePlate} onChange={handlePlate} placeholder="ABC-1D23" error={errors.plate} maxLength={8} />
+
+            <div className="rounded-xl border border-info/30 bg-info/10 p-3 mt-2">
+              <p className="text-xs font-bold text-info">📸 Fotos do veículo</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Envie 4 fotos do veículo (frente, traseira e laterais). Use boa iluminação e mostre a placa visível.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <DocumentUpload
+                  label="Frente (com placa)"
+                  bucket="driver-documents"
+                  pathPrefix={`signup/${cpf.replace(/\D/g, "")}/veiculo-frente`}
+                  value={vehiclePhotoFront}
+                  onChange={(url) => { setVehiclePhotoFront(url); url && clearErr("photoFront"); }}
+                  capture="environment"
+                />
+                {errors.photoFront && <p className="text-[10px] text-destructive mt-1">{errors.photoFront}</p>}
+              </div>
+              <div>
+                <DocumentUpload
+                  label="Traseira (com placa)"
+                  bucket="driver-documents"
+                  pathPrefix={`signup/${cpf.replace(/\D/g, "")}/veiculo-traseira`}
+                  value={vehiclePhotoBack}
+                  onChange={(url) => { setVehiclePhotoBack(url); url && clearErr("photoBack"); }}
+                  capture="environment"
+                />
+                {errors.photoBack && <p className="text-[10px] text-destructive mt-1">{errors.photoBack}</p>}
+              </div>
+              <div>
+                <DocumentUpload
+                  label="Lateral esquerda"
+                  bucket="driver-documents"
+                  pathPrefix={`signup/${cpf.replace(/\D/g, "")}/veiculo-lat-esq`}
+                  value={vehiclePhotoLeft}
+                  onChange={(url) => { setVehiclePhotoLeft(url); url && clearErr("photoLeft"); }}
+                  capture="environment"
+                />
+                {errors.photoLeft && <p className="text-[10px] text-destructive mt-1">{errors.photoLeft}</p>}
+              </div>
+              <div>
+                <DocumentUpload
+                  label="Lateral direita"
+                  bucket="driver-documents"
+                  pathPrefix={`signup/${cpf.replace(/\D/g, "")}/veiculo-lat-dir`}
+                  value={vehiclePhotoRight}
+                  onChange={(url) => { setVehiclePhotoRight(url); url && clearErr("photoRight"); }}
+                  capture="environment"
+                />
+                {errors.photoRight && <p className="text-[10px] text-destructive mt-1">{errors.photoRight}</p>}
+              </div>
+            </div>
+
             <NextBtn onClick={next} loading={loading} />
           </div>
         )}
@@ -621,7 +680,7 @@ const DriverSignup = () => {
             <DocumentUpload label="CNH (verso)" bucket="driver-documents" pathPrefix={`signup/${cpf.replace(/\D/g, "")}/cnh-verso`} value={cnhBackUrl} onChange={setCnhBackUrl} capture="environment" hint="Foto do verso com observações" />
             {errors.cnhBack && <p className="text-xs text-destructive flex items-center gap-1 -mt-2"><AlertCircle className="h-3 w-3" /> {errors.cnhBack}</p>}
 
-            <DocumentUpload label="CRLV do veículo" bucket="driver-documents" pathPrefix={`signup/${cpf.replace(/\D/g, "")}/crlv`} value={crlvUrl} onChange={setCrlvUrl} capture="environment" hint="Documento do veículo (CRLV) atualizado" />
+            <DocumentUpload label="CRLV do veículo (PDF ou imagem)" bucket="driver-documents" pathPrefix={`signup/${cpf.replace(/\D/g, "")}/crlv`} value={crlvUrl} onChange={setCrlvUrl} capture="environment" acceptPdf hint="Documento do veículo (CRLV) atualizado — aceita PDF" />
             {errors.crlv && <p className="text-xs text-destructive flex items-center gap-1 -mt-2"><AlertCircle className="h-3 w-3" /> {errors.crlv}</p>}
 
             <DocumentUpload label="Selfie segurando a CNH" bucket="driver-documents" pathPrefix={`signup/${cpf.replace(/\D/g, "")}/selfie-doc`} value={selfieDocUrl} onChange={setSelfieDocUrl} capture="user" hint="Seu rosto + CNH visíveis na mesma foto" />
@@ -657,7 +716,8 @@ const DriverSignup = () => {
               pathPrefix={`signup/${cpf.replace(/\D/g, "")}/antecedentes`}
               value={criminalRecordUrl}
               onChange={setCriminalRecordUrl}
-              hint="Documento completo, todas as páginas legíveis"
+              acceptPdf
+              hint="Documento completo, todas as páginas legíveis — aceita PDF"
             />
             {errors.criminal && <p className="text-xs text-destructive flex items-center gap-1 -mt-2"><AlertCircle className="h-3 w-3" /> {errors.criminal}</p>}
 
