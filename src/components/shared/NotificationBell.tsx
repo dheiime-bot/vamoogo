@@ -214,9 +214,11 @@ const NotificationBell = ({ floating = true }: Props) => {
               {items.length > 0 && (
                 <button
                   onClick={clearAll}
-                  className="flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/20 transition-colors"
+                  aria-label="Excluir todas as notificações"
+                  title="Excluir todas"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                 >
-                  <X className="h-3.5 w-3.5" /> Limpar tudo
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
