@@ -115,7 +115,7 @@ const AdminDashboard = () => {
           { label: "Corridas Ativas", value: String(activeRides.length), icon: Car, color: "text-primary", bg: "bg-primary/10", trend: "+5%" },
           { label: "Corridas Finalizadas", value: String(stats.completedRides), icon: CheckCircle2, color: "text-success", bg: "bg-success/10", trend: "+10%" },
           { label: "Receita do Dia", value: `R$ ${stats.revenueToday.toFixed(0)}`, icon: DollarSign, color: "text-success", bg: "bg-success/10", trend: "+8%", large: true },
-          { label: "Motoristas Online", value: String(stats.totalDrivers), icon: Wifi, color: "text-info", bg: "bg-info/10", trend: "+3%" },
+          { label: "Motoristas Online", value: String(stats.driversOnline), icon: Wifi, color: "text-info", bg: "bg-info/10", trend: `${stats.totalDrivers} total` },
           { label: "Incidentes", value: String(stats.incidents), icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10", trend: "-1%" },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow">
