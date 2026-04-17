@@ -393,10 +393,10 @@ const DriverHome = () => {
           />
         </div>
 
-        {/* CTA fixo no rodapé */}
+        {/* CTA fixo logo acima da bottom nav do motorista */}
         <div
-          className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+          className="fixed inset-x-0 bottom-[72px] z-40 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)" }}
         >
           {lowBalance && !isOnline && (
             <div className="mb-3 flex items-center gap-2 rounded-xl bg-warning/10 border border-warning/30 p-2.5">
