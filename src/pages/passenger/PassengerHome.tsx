@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Car, Bike, Crown, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
+import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
@@ -15,9 +15,9 @@ import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocat
 import { toast } from "sonner";
 
 const categories = [
-  { id: "moto", label: "Moto", icon: Bike, desc: "Rápido" },
-  { id: "car", label: "Carro", icon: Car, desc: "Conforto" },
-  { id: "premium", label: "Premium", icon: Crown, desc: "VIP" },
+  { id: "moto", label: "Moto", icon: Bike, desc: "Rápido e barato" },
+  { id: "economico", label: "Econômico", icon: Car, desc: "Carro popular" },
+  { id: "conforto", label: "Conforto", icon: Sparkles, desc: "Mais espaço" },
 ];
 
 
