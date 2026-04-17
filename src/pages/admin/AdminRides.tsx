@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, XCircle, Play, Flag, ArrowRightLeft } from "lucide-react";
+import { Search, Eye, XCircle, Play, Flag, ArrowRightLeft, X } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,12 +36,21 @@ const AdminRides = () => {
     fetchRides();
   };
 
+  // Normaliza: "vamoo 1000" / "VAMOO1000" / "1000" → "VAMOO1000"
+  const normalizeCode = (s: string) => {
+    const cleaned = (s || "").toUpperCase().replace(/\s+/g, "");
+    if (/^\d+$/.test(cleaned)) return `VAMOO${cleaned}`;
+    return cleaned;
+  };
+
   const filtered = rides.filter((r) => {
-    const q = search.toLowerCase();
+    const q = search.toLowerCase().trim();
+    const codeQuery = normalizeCode(search);
     const matchSearch = !search
-      || r.ride_code?.toLowerCase().includes(q)
+      || (codeQuery && r.ride_code?.toUpperCase().includes(codeQuery))
       || r.origin_address?.toLowerCase().includes(q)
-      || r.destination_address?.toLowerCase().includes(q);
+      || r.destination_address?.toLowerCase().includes(q)
+      || r.id?.toLowerCase().startsWith(q);
     const matchStatus = filterStatus === "all" || r.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -51,11 +60,22 @@ const AdminRides = () => {
   };
 
   return (
-    <AdminLayout title="Corridas">
+    <AdminLayout title="Corridas" actions={<span className="text-sm text-muted-foreground">{filtered.length} de {rides.length}</span>}>
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-xl border bg-card px-3 py-2">
           <Search className="h-4 w-4 text-muted-foreground" />
-          <input placeholder="Buscar por código (VAMOO...) ou endereço..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" />
+          <input
+            autoFocus
+            placeholder="Buscar por chave (VAMOO1000 ou 1000), endereço ou ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 bg-transparent text-sm outline-none"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="rounded-full p-1 hover:bg-muted" title="Limpar">
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
         </div>
         <div className="flex gap-1 overflow-x-auto">
           {["all", "requested", "accepted", "in_progress", "completed", "cancelled"].map((s) => (
