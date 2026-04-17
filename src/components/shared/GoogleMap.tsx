@@ -27,6 +27,8 @@ interface GoogleMapProps {
   destination?: MapPoint | null;
   driverLocation?: MapPoint | null;
   stops?: MapPoint[];
+  /** Carrinhos de motoristas online próximos (mostrados em estado idle no mapa do passageiro). */
+  nearbyDrivers?: MapPoint[];
   onMapClick?: (lat: number, lng: number) => void;
   showCenterPin?: boolean;
   onCenterChange?: (lat: number, lng: number) => void;
@@ -547,6 +549,7 @@ const GoogleMapInner = ({
   destination,
   driverLocation,
   stops = [],
+  nearbyDrivers = [],
   onMapClick,
   onCenterChange,
   interactive = true,
@@ -615,6 +618,22 @@ const GoogleMapInner = ({
           )}
         </AdvancedMarker>
       )}
+      {/* Motoristas online próximos — só mostra quando NÃO há motorista ativo (animatedDriver) */}
+      {!animatedDriver &&
+        nearbyDrivers.map((d, i) => (
+          <AdvancedMarker key={`nb-${i}-${d.lat.toFixed(4)},${d.lng.toFixed(4)}`} position={{ lat: d.lat, lng: d.lng }}>
+            <div style={{ opacity: 0.85 }}>
+              {d.category === "moto" ? (
+                <MotoMarker heading={d.heading || 0} />
+              ) : (
+                <CarMarker
+                  heading={d.heading || 0}
+                  variant={d.category === "conforto" ? "conforto" : "economico"}
+                />
+              )}
+            </div>
+          </AdvancedMarker>
+        ))}
       {userLoc && !origin && (
         <AdvancedMarker position={{ lat: userLoc.lat, lng: userLoc.lng }}>
           <PassengerMarker />
