@@ -432,6 +432,7 @@ const DriverHome = () => {
         <AppMenu role="driver" />
         <DriverEarningsChip />
         <NotificationBell />
+        <DriverBottomNav />
       </div>
     );
   }
@@ -703,7 +704,7 @@ const DriverHome = () => {
       <AppMenu role="driver" />
       <DriverEarningsChip />
       <NotificationBell />
-      
+      <DriverBottomNav />
     </div>
   );
 };
