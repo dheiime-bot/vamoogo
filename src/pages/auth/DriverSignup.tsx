@@ -368,7 +368,8 @@ const DriverSignup = () => {
     else if (step === 2) ok = validateStepSelfie();
     else if (step === 3) ok = await validateStepVeiculo();
     else if (step === 4) ok = validateStepDocumentos();
-    else if (step === 5) {
+    else if (step === 5) ok = validateStepAntecedentes();
+    else if (step === 6) {
       ok = validateStepPix();
       if (ok) return handleSubmit();
     }
@@ -407,6 +408,10 @@ const DriverSignup = () => {
       cnh_back_url: cnhBackUrl || "",
       crlv_url: crlvUrl || "",
       selfie_with_document_url: selfieDocUrl || "",
+      criminal_record_url: criminalRecordUrl || "",
+      criminal_record_issued_at: parseDateBRtoISO(criminalRecordDate) || "",
+      selfie_liveness_url: selfieLivenessUrl || "",
+      liveness_verified: livenessVerified ? "true" : "false",
       pix_key: pixKey.trim(),
       pix_key_type: pixKeyType,
       pix_holder_name: pixHolderName.trim(),
