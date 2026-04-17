@@ -342,6 +342,62 @@ const DriverHome = () => {
     return <RideChat rideId={activeRide.id} driverName={passengerName} onBack={() => setShowChat(false)} />;
   }
 
+  const isIdleHome = rideState === "idle" && !activeRide && !pendingOffer;
+
+  // === Tela inicial estilo passageiro: mapa em tela cheia + CTA Ficar Online ===
+  if (isIdleHome) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="relative">
+          <GoogleMap
+            className="h-screen rounded-none transition-all duration-300"
+            trackUserLocation={true}
+            bottomInset={120}
+          />
+        </div>
+
+        {/* CTA fixo no rodapé */}
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+        >
+          {lowBalance && !isOnline && (
+            <div className="mb-3 flex items-center gap-2 rounded-xl bg-warning/10 border border-warning/30 p-2.5">
+              <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+              <p className="text-xs font-semibold text-warning">Saldo baixo — recarregue para ficar online</p>
+            </div>
+          )}
+          <button
+            onClick={handleToggleOnline}
+            disabled={lowBalance && !isOnline}
+            className={`w-full rounded-2xl py-4 text-base font-extrabold shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+              isOnline
+                ? "bg-success text-success-foreground"
+                : "bg-gradient-primary text-primary-foreground"
+            }`}
+          >
+            {isOnline ? (
+              <>
+                <span className="relative flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-success-foreground opacity-60 animate-ping" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-success-foreground" />
+                </span>
+                Você está Online! 🚀
+              </>
+            ) : (
+              <>
+                <Power className="h-5 w-5" /> Ficar Online
+              </>
+            )}
+          </button>
+        </div>
+
+        <AppMenu role="driver" />
+        <NotificationBell />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
