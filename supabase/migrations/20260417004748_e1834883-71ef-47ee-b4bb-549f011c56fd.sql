@@ -1,0 +1,1 @@
+UPDATE public.drivers SET pix_key = 'carlos.teste@vamoo.com.br', pix_key_type = 'email' WHERE user_id = 'b1f779ee-4b74-41fc-abfd-3c5f131fb4e5';
