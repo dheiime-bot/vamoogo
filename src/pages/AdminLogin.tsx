@@ -70,6 +70,26 @@ const AdminLogin = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError("Informe seu e-mail acima para receber o link de recuperação.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (resetErr) throw resetErr;
+      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+    } catch (err: any) {
+      setError(err?.message || "Erro ao enviar e-mail de recuperação.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
       {/* Background decorativo */}
