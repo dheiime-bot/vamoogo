@@ -56,6 +56,13 @@ const DriverHome = () => {
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
   const displayName = profile?.full_name?.split(" ")[0] || "Motorista";
+
+  // 🚨 Bloqueia acesso se não estiver aprovado
+  const statusInfo = getDriverStatusInfo(driverData?.status);
+  if (driverData && !statusInfo.canDrive) {
+    return <Navigate to="/driver/status" replace />;
+  }
+
   const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
 
   // Faz broadcast da posição GPS quando online
