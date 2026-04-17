@@ -1,13 +1,16 @@
-import { User, Camera, FileText, Phone, Mail, Shield, ArrowLeft, Car } from "lucide-react";
+import { useState } from "react";
+import { User, Camera, FileText, Phone, Mail, Shield, ArrowLeft, Car, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import StatusBadge from "@/components/shared/StatusBadge";
+import EditProfileModal from "@/components/shared/EditProfileModal";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const PassengerProfile = () => {
   const navigate = useNavigate();
   const { profile, signOut, roles } = useAuth();
+  const [editOpen, setEditOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
