@@ -6,6 +6,7 @@ import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
 import { supabase } from "@/integrations/supabase/client";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 
 const onlyDigits = (s: string) => (s || "").replace(/\D/g, "");
@@ -44,6 +45,7 @@ const AdminDrivers = () => {
   };
 
   useEffect(() => { fetchDrivers(); }, []);
+  useRealtimeRefresh(["drivers", "profiles"], fetchDrivers, "admin-drivers");
 
   // Thumbs: selfie / CNH frente / foto frontal do veículo
   useEffect(() => {

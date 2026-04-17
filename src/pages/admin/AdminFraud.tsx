@@ -3,6 +3,7 @@ import { Shield, Eye, AlertTriangle, CheckCircle, Ban } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 
 const AdminFraud = () => {
@@ -14,6 +15,7 @@ const AdminFraud = () => {
   };
 
   useEffect(() => { fetchAlerts(); }, []);
+  useRealtimeRefresh("fraud_alerts", fetchAlerts, "admin-fraud");
 
   const resolve = async (id: string, action: string) => {
     await supabase.from("fraud_alerts").update({ resolved: true, action_taken: action }).eq("id", id);

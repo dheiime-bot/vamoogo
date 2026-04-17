@@ -3,14 +3,17 @@ import { ScrollText } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 
 const AdminAudit = () => {
   const [logs, setLogs] = useState<any[]>([]);
 
-  useEffect(() => {
-    supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(50)
-      .then(({ data }) => { if (data) setLogs(data); });
-  }, []);
+  const load = async () => {
+    const { data } = await supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(50);
+    if (data) setLogs(data);
+  };
+  useEffect(() => { load(); }, []);
+  useRealtimeRefresh("audit_logs", load, "admin-audit");
 
   return (
     <AdminLayout title="Auditoria">

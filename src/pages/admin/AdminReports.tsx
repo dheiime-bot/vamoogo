@@ -3,6 +3,7 @@ import { BarChart3, DollarSign, Car, Users, TrendingUp, Download } from "lucide-
 import AdminLayout from "@/components/admin/AdminLayout";
 import StatCard from "@/components/shared/StatCard";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 
 const AdminReports = () => {
@@ -13,49 +14,47 @@ const AdminReports = () => {
   });
   const [dailyRides, setDailyRides] = useState<{ date: string; count: number; revenue: number }[]>([]);
 
-  useEffect(() => {
-    const fetch_ = async () => {
-      const [allRides, drivers, passengers] = await Promise.all([
-        supabase.from("rides").select("status, price, platform_fee, created_at"),
-        supabase.from("drivers").select("id", { count: "exact" }),
-        supabase.from("profiles").select("id", { count: "exact" }).eq("user_type", "passenger"),
-      ]);
+  const fetch_ = async () => {
+    const [allRides, drivers, passengers] = await Promise.all([
+      supabase.from("rides").select("status, price, platform_fee, created_at"),
+      supabase.from("drivers").select("id", { count: "exact" }),
+      supabase.from("profiles").select("id", { count: "exact" }).eq("user_type", "passenger"),
+    ]);
 
-      const rides = allRides.data || [];
-      const completed = rides.filter((r) => r.status === "completed");
-      const cancelled = rides.filter((r) => r.status === "cancelled");
-      const totalRevenue = completed.reduce((s, r) => s + (r.platform_fee || 0), 0);
-      const avgPrice = completed.length > 0 ? completed.reduce((s, r) => s + (r.price || 0), 0) / completed.length : 0;
+    const rides = allRides.data || [];
+    const completed = rides.filter((r) => r.status === "completed");
+    const cancelled = rides.filter((r) => r.status === "cancelled");
+    const totalRevenue = completed.reduce((s, r) => s + (r.platform_fee || 0), 0);
+    const avgPrice = completed.length > 0 ? completed.reduce((s, r) => s + (r.price || 0), 0) / completed.length : 0;
 
-      setStats({
-        totalRides: rides.length,
-        completedRides: completed.length,
-        cancelledRides: cancelled.length,
-        totalRevenue,
-        totalDrivers: drivers.count || 0,
-        totalPassengers: passengers.count || 0,
-        avgPrice,
-        cancelRate: rides.length > 0 ? (cancelled.length / rides.length) * 100 : 0,
-      });
+    setStats({
+      totalRides: rides.length,
+      completedRides: completed.length,
+      cancelledRides: cancelled.length,
+      totalRevenue,
+      totalDrivers: drivers.count || 0,
+      totalPassengers: passengers.count || 0,
+      avgPrice,
+      cancelRate: rides.length > 0 ? (cancelled.length / rides.length) * 100 : 0,
+    });
 
-      // Daily aggregation (last 7 days)
-      const days: Record<string, { count: number; revenue: number }> = {};
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        const key = d.toISOString().split("T")[0];
-        days[key] = { count: 0, revenue: 0 };
+    const days: Record<string, { count: number; revenue: number }> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      days[key] = { count: 0, revenue: 0 };
+    }
+    completed.forEach((r) => {
+      const key = r.created_at?.split("T")[0];
+      if (key && days[key]) {
+        days[key].count++;
+        days[key].revenue += r.platform_fee || 0;
       }
-      completed.forEach((r) => {
-        const key = r.created_at?.split("T")[0];
-        if (key && days[key]) {
-          days[key].count++;
-          days[key].revenue += r.platform_fee || 0;
-        }
-      });
-      setDailyRides(Object.entries(days).map(([date, d]) => ({ date, ...d })));
-    };
-    fetch_();
-  }, []);
+    });
+    setDailyRides(Object.entries(days).map(([date, d]) => ({ date, ...d })));
+  };
+  useEffect(() => { fetch_(); }, []);
+  useRealtimeRefresh(["rides", "drivers", "profiles"], fetch_, "admin-reports");
 
   const exportCSV = () => {
     const rows = [["Métrica", "Valor"]];

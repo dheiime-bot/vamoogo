@@ -3,6 +3,7 @@ import { Plus, Loader2, Megaphone } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 
 const AdminCampaigns = () => {
@@ -17,6 +18,7 @@ const AdminCampaigns = () => {
   };
 
   useEffect(() => { fetch_(); }, []);
+  useRealtimeRefresh("campaigns", fetch_, "admin-campaigns");
 
   const create = async () => {
     if (!form.name || !form.value) { toast.error("Preencha nome e valor"); return; }
