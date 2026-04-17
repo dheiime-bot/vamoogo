@@ -125,12 +125,13 @@ const DriverStatusPage = () => {
               capture="environment"
             />
             <DocumentUpload
-              label="CRLV"
+              label="CRLV (PDF ou imagem)"
               bucket="driver-documents"
               pathPrefix={`${user?.id}/crlv`}
               value={crlv}
               onChange={setCrlv}
               capture="environment"
+              acceptPdf
             />
             <DocumentUpload
               label="Selfie com documento"
@@ -141,11 +142,12 @@ const DriverStatusPage = () => {
               capture="user"
             />
             <DocumentUpload
-              label="Certidão de antecedentes criminais"
+              label="Certidão de antecedentes criminais (PDF ou imagem)"
               bucket="driver-documents"
               pathPrefix={`${user?.id}/antecedentes`}
               value={criminalRecord}
               onChange={setCriminalRecord}
+              acceptPdf
             />
             <button
               onClick={handleReupload}
