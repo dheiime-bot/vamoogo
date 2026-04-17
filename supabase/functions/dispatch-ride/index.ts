@@ -44,6 +44,10 @@ Deno.serve(async (req) => {
 
     console.log(`[dispatch] starting for ride ${rideId} cat=${ride.category} at ${ride.origin_lat},${ride.origin_lng}`);
 
+    // Limpa motoristas zumbi (sem heartbeat há > 2min) antes de buscar candidatos
+    const { data: zCount } = await supabase.rpc("cleanup_zombie_drivers");
+    if (zCount && zCount > 0) console.log(`[dispatch] cleaned ${zCount} zombie drivers`);
+
     for (let round = 0; round < MAX_ROUNDS; round++) {
       // Re-checa: corrida já pode ter sido aceita/cancelada
       const { data: cur } = await supabase

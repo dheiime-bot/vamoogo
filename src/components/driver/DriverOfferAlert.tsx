@@ -15,27 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/brFormat";
 import { toast } from "sonner";
-
-const playOfferSound = () => {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const beep = (freq: number, start: number, dur = 0.2) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
-      gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + dur);
-    };
-    beep(880, 0); beep(1320, 0.25); beep(1760, 0.5); beep(1320, 0.75); beep(880, 1.0);
-    setTimeout(() => ctx.close(), 1500);
-  } catch { /* ignore */ }
-  if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 600]);
-};
+import { playOfferAlert } from "@/lib/offerSound";
 
 const DriverOfferAlert = () => {
   const { user, roles } = useAuth();
@@ -80,7 +60,10 @@ const DriverOfferAlert = () => {
     console.log("[offer-alert] 🚗 NEW OFFER", offerRow.id);
     setOffer(offerRow);
     setRide(r);
-    playOfferSound();
+    playOfferAlert({
+      title: "Nova corrida! 🚗",
+      body: `${r.origin_address?.slice(0, 60) ?? "Embarque"} → ${r.destination_address?.slice(0, 60) ?? "Destino"}`,
+    });
     toast.success("Nova corrida! 🚗");
   }, [user]);
 

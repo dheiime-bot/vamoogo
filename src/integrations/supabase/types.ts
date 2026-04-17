@@ -1214,6 +1214,7 @@ export type Database = {
           phone_taken: boolean
         }[]
       }
+      cleanup_zombie_drivers: { Args: never; Returns: number }
       find_nearest_drivers: {
         Args: {
           _category: Database["public"]["Enums"]["vehicle_category"]
