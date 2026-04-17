@@ -622,8 +622,53 @@ const DriverSignup = () => {
           </div>
         )}
 
-        {/* STEP 5: Pix */}
+        {/* STEP 5: Antecedentes criminais */}
         {step === 5 && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="rounded-xl border-2 border-warning/30 bg-warning/10 p-4">
+              <p className="text-sm font-bold text-warning flex items-center gap-2">
+                <Shield className="h-4 w-4" /> Certidão de antecedentes criminais
+              </p>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Envie a certidão emitida pelo <strong>Tribunal de Justiça</strong> do seu estado ou pela <strong>Polícia Federal</strong>. A certidão deve estar dentro do prazo de validade (até 90 dias da emissão).
+              </p>
+              <a
+                href="https://www.tjsp.jus.br/CertidaoAntecedentes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block text-xs font-semibold text-primary underline"
+              >
+                Como emitir a certidão →
+              </a>
+            </div>
+
+            <DocumentUpload
+              label="Certidão de antecedentes criminais (PDF ou imagem)"
+              bucket="driver-documents"
+              pathPrefix={`signup/${cpf.replace(/\D/g, "")}/antecedentes`}
+              value={criminalRecordUrl}
+              onChange={setCriminalRecordUrl}
+              hint="Documento completo, todas as páginas legíveis"
+            />
+            {errors.criminal && <p className="text-xs text-destructive flex items-center gap-1 -mt-2"><AlertCircle className="h-3 w-3" /> {errors.criminal}</p>}
+
+            <Field
+              label="Data de emissão da certidão"
+              icon={<Calendar className="h-4 w-4" />}
+              value={criminalRecordDate}
+              onChange={(v) => { setCriminalRecordDate(formatDateBR(v)); clearErr("criminalDate"); }}
+              placeholder="DD/MM/AAAA"
+              error={errors.criminalDate}
+              maxLength={10}
+              inputMode="numeric"
+            />
+
+            <NextBtn onClick={next} loading={loading} />
+          </div>
+        )}
+
+        {/* STEP 6: Pix */}
+        {step === 6 && (
           <div className="space-y-4 animate-fade-in">
             <div className="rounded-xl border border-success/30 bg-success/10 p-4">
               <p className="text-sm font-bold text-success flex items-center gap-2">
