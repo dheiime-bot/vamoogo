@@ -35,6 +35,8 @@ interface GoogleMapProps {
   interactive?: boolean;
   showRoute?: boolean;
   trackUserLocation?: boolean;
+  /** Como mostrar a posição do próprio usuário no mapa: bonequinho (passageiro) ou carrinho (motorista). */
+  userMarkerVariant?: "passenger" | "car-economico" | "car-conforto" | "moto";
   /** Espaçamento extra no rodapé (px) — sobe o botão recentralizar e o logo do Google p/ não ficarem cobertos por CTAs. */
   bottomInset?: number;
 }
@@ -557,6 +559,7 @@ const GoogleMapInner = ({
   interactive = true,
   showRoute = true,
   trackUserLocation = false,
+  userMarkerVariant = "passenger",
   bottomInset = 0,
 }: Omit<GoogleMapProps, "className" | "showCenterPin">) => {
   const [userLoc, setUserLoc] = useState<MapPoint | null>(null);
@@ -639,7 +642,15 @@ const GoogleMapInner = ({
         ))}
       {userLoc && !origin && (
         <AdvancedMarker position={{ lat: userLoc.lat, lng: userLoc.lng }}>
-          <PassengerMarker />
+          {userMarkerVariant === "moto" ? (
+            <MotoMarker heading={0} />
+          ) : userMarkerVariant === "car-economico" ? (
+            <CarMarker heading={0} variant="economico" />
+          ) : userMarkerVariant === "car-conforto" ? (
+            <CarMarker heading={0} variant="conforto" />
+          ) : (
+            <PassengerMarker />
+          )}
         </AdvancedMarker>
       )}
 
