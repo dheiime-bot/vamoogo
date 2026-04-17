@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, X } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
 import { supabase } from "@/integrations/supabase/client";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+
+const onlyDigits = (s: string) => (s || "").replace(/\D/g, "");
+const normalizePlate = (s: string) => (s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
 
 const FILTERS: Array<{ id: string; label: string }> = [
   { id: "all", label: "Todos" },
@@ -76,9 +79,22 @@ const AdminDrivers = () => {
 
   const filtered = drivers.filter((d) => {
     const profile = (d as any).profiles;
-    const matchSearch = !search ||
-      profile?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      profile?.cpf?.includes(search);
+    const matchSearch = (() => {
+      if (!search) return true;
+      const q = search.toLowerCase().trim();
+      const qDigits = onlyDigits(search);
+      const qPlate = normalizePlate(search);
+      return (
+        profile?.full_name?.toLowerCase().includes(q) ||
+        profile?.email?.toLowerCase().includes(q) ||
+        (qDigits && (onlyDigits(profile?.cpf || "").includes(qDigits) || onlyDigits(profile?.phone || "").includes(qDigits) || onlyDigits(d.cnh_number || "").includes(qDigits))) ||
+        (qPlate && normalizePlate(d.vehicle_plate || "").includes(qPlate)) ||
+        d.vehicle_model?.toLowerCase().includes(q) ||
+        d.vehicle_brand?.toLowerCase().includes(q) ||
+        d.user_id?.toLowerCase().startsWith(q) ||
+        d.id?.toLowerCase().startsWith(q)
+      );
+    })();
     const matchStatus =
       filterStatus === "all" ||
       d.status === filterStatus ||
@@ -89,11 +105,22 @@ const AdminDrivers = () => {
   });
 
   return (
-    <AdminLayout title="Motoristas">
+    <AdminLayout title="Motoristas" actions={<span className="text-sm text-muted-foreground">{filtered.length} de {drivers.length}</span>}>
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-xl border bg-card px-3 py-2">
           <Search className="h-4 w-4 text-muted-foreground" />
-          <input placeholder="Buscar por nome ou CPF..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" />
+          <input
+            autoFocus
+            placeholder="Buscar por nome, CPF, telefone, CNH, placa, modelo ou ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 bg-transparent text-sm outline-none"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="rounded-full p-1 hover:bg-muted" title="Limpar">
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
         </div>
         <div className="flex gap-1 flex-wrap">
           {FILTERS.map((f) => (

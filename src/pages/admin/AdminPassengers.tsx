@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, Ban } from "lucide-react";
+import { Search, Eye, Ban, X } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
+
+const onlyDigits = (s: string) => (s || "").replace(/\D/g, "");
 
 const AdminPassengers = () => {
   const [passengers, setPassengers] = useState<any[]>([]);
@@ -17,16 +19,36 @@ const AdminPassengers = () => {
       .then(({ data }) => { if (data) setPassengers(data); });
   }, []);
 
-  const filtered = passengers.filter((p) =>
-    !search || p.full_name?.toLowerCase().includes(search.toLowerCase()) || p.cpf?.includes(search) || p.email?.includes(search)
-  );
+  const filtered = passengers.filter((p) => {
+    if (!search) return true;
+    const q = search.toLowerCase().trim();
+    const qDigits = onlyDigits(search);
+    return (
+      p.full_name?.toLowerCase().includes(q) ||
+      p.email?.toLowerCase().includes(q) ||
+      (qDigits && (onlyDigits(p.cpf || "").includes(qDigits) || onlyDigits(p.phone || "").includes(qDigits))) ||
+      p.user_id?.toLowerCase().startsWith(q) ||
+      p.id?.toLowerCase().startsWith(q)
+    );
+  });
 
   return (
-    <AdminLayout title="Passageiros" actions={<span className="text-sm text-muted-foreground">{passengers.length} registrados</span>}>
+    <AdminLayout title="Passageiros" actions={<span className="text-sm text-muted-foreground">{filtered.length} de {passengers.length}</span>}>
       <div className="flex gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-xl border bg-card px-3 py-2">
           <Search className="h-4 w-4 text-muted-foreground" />
-          <input placeholder="Buscar por nome, CPF ou email..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 bg-transparent text-sm outline-none" />
+          <input
+            autoFocus
+            placeholder="Buscar por nome, CPF, telefone, email ou ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 bg-transparent text-sm outline-none"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="rounded-full p-1 hover:bg-muted" title="Limpar">
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
         </div>
       </div>
 
