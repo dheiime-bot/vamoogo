@@ -54,6 +54,7 @@ const PassengerHome = () => {
   const [forOtherPerson, setForOtherPerson] = useState(false);
   const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
   const [returnToOrigin, setReturnToOrigin] = useState(false);
+  const [showPixModal, setShowPixModal] = useState(false);
 
   // Fetch recent rides
   useEffect(() => {
