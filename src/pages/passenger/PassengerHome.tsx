@@ -312,7 +312,7 @@ const PassengerHome = () => {
               </div>
               <button onClick={handleSubmitRating} disabled={rating === 0}
                 className="w-full rounded-xl bg-gradient-primary py-4 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50">
-                Enviar Avaliação ⭐
+                Enviar avaliação ⭐
               </button>
               <button onClick={resetRide} className="text-xs text-muted-foreground">
                 Pular avaliação

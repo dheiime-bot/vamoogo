@@ -312,7 +312,7 @@ const DriverHome = () => {
               <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
                 <Clock className="h-3.5 w-3.5 text-primary" />
               </div>
-              <span className="text-xs font-bold text-primary uppercase">Nova Corrida</span>
+              <span className="text-xs font-bold text-primary uppercase">Nova corrida</span>
             </div>
             <span className={`text-2xl font-extrabold tabular-nums ${offerCountdown <= 5 ? "text-destructive animate-pulse" : "text-warning"}`}>{offerCountdown}s</span>
           </div>
@@ -370,7 +370,7 @@ const DriverHome = () => {
             </button>
             <button onClick={handleAccept}
               className="flex-[2] rounded-xl bg-success py-3 text-sm font-bold text-success-foreground hover:opacity-90 transition-opacity">
-              Aceitar Corrida
+              Aceitar corrida
             </button>
           </div>
         </div>
@@ -436,7 +436,7 @@ const DriverHome = () => {
           </div>
           <button onClick={handleStartRide}
             className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
-            <Play className="h-4 w-4" /> Iniciar Corrida
+            <Play className="h-4 w-4" /> Iniciar corrida
           </button>
         </div>
       )}
@@ -457,7 +457,7 @@ const DriverHome = () => {
           </div>
           <button onClick={handleFinishRide}
             className="w-full rounded-xl bg-success py-3 text-sm font-bold text-success-foreground flex items-center justify-center gap-2">
-            <Flag className="h-4 w-4" /> Finalizar Corrida
+            <Flag className="h-4 w-4" /> Finalizar corrida
           </button>
         </div>
       )}
