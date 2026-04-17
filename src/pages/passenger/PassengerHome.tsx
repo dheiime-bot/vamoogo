@@ -61,6 +61,7 @@ const PassengerHome = () => {
   const [nearbyDrivers, setNearbyDrivers] = useState<Array<{ lat: number; lng: number; heading?: number; category?: "moto" | "economico" | "conforto" }>>([]);
   const [showChangeDest, setShowChangeDest] = useState(false);
   const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
+  const [showRideForm, setShowRideForm] = useState(false);
 
   // Fetch recent rides
   useEffect(() => {
