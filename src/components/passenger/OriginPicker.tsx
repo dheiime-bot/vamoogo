@@ -63,6 +63,8 @@ const OriginPicker = ({
   const [gpsAddress, setGpsAddress] = useState<string>("");
   const [gpsLoc, setGpsLoc] = useState<AppLocation | null>(null);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
+  /** Quando true, mostra o campo de busca manual mesmo no modo "minha corrida". */
+  const [manualMode, setManualMode] = useState(false);
   const autoTried = useRef(false);
 
   // Dispara cache de locais da cidade (1x por cidade) ao detectar GPS
