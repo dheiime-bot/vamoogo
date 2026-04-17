@@ -13,6 +13,7 @@ import AddressAutocompleteField from "@/components/address/AddressAutocompleteFi
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useFareEstimate } from "@/hooks/useFareEstimate";
+import { useLiveEta } from "@/hooks/useLiveEta";
 import type { PlaceDetails } from "@/services/googlePlaces";
 import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
 import type { PixKeyType } from "@/lib/pix";
