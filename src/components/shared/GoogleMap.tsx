@@ -576,7 +576,7 @@ const GoogleMapInner = ({
   return (
     <Map
       defaultCenter={ALTAMIRA_CENTER}
-      defaultZoom={16}
+      defaultZoom={14}
       mapId={MAP_ID}
       gestureHandling={interactive ? "greedy" : "none"}
       disableDefaultUI={true}
