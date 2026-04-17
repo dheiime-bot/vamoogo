@@ -35,7 +35,7 @@ const PassengerProfile = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-gradient-primary p-6 pb-16">
+      <div className="bg-gradient-primary p-6 pt-20 pb-16">
         <button onClick={() => navigate("/passenger")} className="mb-4 text-primary-foreground/80">
           <ArrowLeft className="h-5 w-5" />
         </button>

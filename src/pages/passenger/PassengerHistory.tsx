@@ -28,8 +28,8 @@ const PassengerHistory = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-card border-b p-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-card border-b p-4 pt-20">
+        <div className="flex items-center justify-between gap-2">
           <h1 className="text-lg font-bold font-display">Minhas Corridas</h1>
           <div className="flex gap-1">
             {(["all", "completed", "cancelled"] as const).map((f) => (
