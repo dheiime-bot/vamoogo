@@ -547,18 +547,15 @@ const PassengerHome = () => {
                 )}
               </div>
 
-              {/* Passengers */}
-              {(() => {
-                const maxPax = selectedCategory === "moto" ? 1 : 4;
+              {/* Passengers — oculto quando for moto (sempre 1) */}
+              {selectedCategory !== "moto" && (() => {
+                const maxPax = 4;
                 const atMax = passengers >= maxPax;
                 return (
                   <div className="flex items-center justify-between rounded-xl border p-3">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium">Passageiros</span>
-                      {selectedCategory === "moto" && (
-                        <span className="text-[10px] text-muted-foreground">(moto: máx. 1)</span>
-                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <button
@@ -570,15 +567,7 @@ const PassengerHome = () => {
                       </button>
                       <span className="w-4 text-center text-sm font-bold">{passengers}</span>
                       <button
-                        onClick={() => {
-                          if (atMax) {
-                            if (selectedCategory === "moto") {
-                              toast.error("Moto comporta apenas 1 passageiro. Escolha Econômico ou Conforto.");
-                            }
-                            return;
-                          }
-                          setPassengers(Math.min(maxPax, passengers + 1));
-                        }}
+                        onClick={() => setPassengers(Math.min(maxPax, passengers + 1))}
                         disabled={atMax}
                         className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed"
                       >
