@@ -242,6 +242,7 @@ const PassengerHome = () => {
     setSelectedOrigin(null); setSelectedDestination(null); setSelectedStops([]);
     setDriverInfo(null); setPaymentMethod(null);
     setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps"); setReturnToOrigin(false);
+    setShowPixModal(false);
   };
 
   const isRideActive = ["searching", "accepted", "driver_arriving", "arrived", "in_progress"].includes(rideState);
