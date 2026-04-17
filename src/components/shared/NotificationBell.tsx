@@ -152,6 +152,16 @@ const NotificationBell = ({ floating = true }: Props) => {
       .eq("is_read", false);
   };
 
+  // Auto-marca como lidas ao abrir o popover (UX padrão de apps modernos).
+  // Pequeno delay para o usuário "ver" o badge antes dele zerar.
+  useEffect(() => {
+    if (open && unreadCount > 0) {
+      const t = setTimeout(() => { markAllRead(); }, 800);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const clearAll = async () => {
     if (!user || items.length === 0) return;
     setItems([]);
