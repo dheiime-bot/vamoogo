@@ -24,7 +24,7 @@ const AuthPage = () => {
   const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
   const [cpfError, setCpfError] = useState("");
-  const [category, setCategory] = useState<string>("car");
+  const [category, setCategory] = useState<string>("economico");
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleColor, setVehicleColor] = useState("");
   const [vehiclePlate, setVehiclePlate] = useState("");
