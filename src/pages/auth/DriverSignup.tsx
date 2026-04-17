@@ -403,27 +403,24 @@ const DriverSignup = () => {
 
     // Pré-checagem de duplicidade (evita o erro genérico do GoTrue)
     try {
-      const { data: dupes } = await supabase
-        .from("profiles")
-        .select("cpf, phone")
-        .or(`cpf.eq.${cleanCpf},phone.eq.${cleanPhone}`)
-        .limit(2);
-      if (dupes && dupes.length > 0) {
-        const cpfDup = dupes.some((d: any) => d.cpf === cleanCpf);
-        const phoneDup = dupes.some((d: any) => d.phone === cleanPhone);
+      const { data: dupes } = await supabase.rpc("check_signup_dupes", {
+        _cpf: cleanCpf,
+        _phone: cleanPhone,
+      });
+      const row = Array.isArray(dupes) ? dupes[0] : dupes;
+      if (row?.cpf_taken) {
         setLoading(false);
-        if (cpfDup) {
-          toast.error("CPF já cadastrado em outra conta.", { duration: 6000 });
-          setErr("cpf", "CPF já cadastrado em outra conta.");
-          setStep(0);
-          return;
-        }
-        if (phoneDup) {
-          toast.error("Telefone já cadastrado em outra conta. Use outro número.", { duration: 6000 });
-          setErr("phone", "Telefone já cadastrado em outra conta.");
-          setStep(0);
-          return;
-        }
+        toast.error("CPF já cadastrado em outra conta.", { duration: 6000 });
+        setErr("cpf", "CPF já cadastrado em outra conta.");
+        setStep(0);
+        return;
+      }
+      if (row?.phone_taken) {
+        setLoading(false);
+        toast.error("Telefone já cadastrado em outra conta. Use outro número.", { duration: 6000 });
+        setErr("phone", "Telefone já cadastrado em outra conta.");
+        setStep(0);
+        return;
       }
     } catch {/* ignore — segue para o signUp */}
 
