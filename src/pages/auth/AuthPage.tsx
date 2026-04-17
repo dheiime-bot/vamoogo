@@ -106,6 +106,16 @@ const AuthPage = () => {
       toast.error("Informe sua data de nascimento");
       return false;
     }
+    // Idade mínima 16 anos
+    const today = new Date();
+    const bd = new Date(birthDate);
+    let age = today.getFullYear() - bd.getFullYear();
+    const m = today.getMonth() - bd.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
+    if (isNaN(age) || age < 16) {
+      toast.error("Cadastro permitido a partir de 16 anos");
+      return false;
+    }
     if (phone.replace(/\D/g, "").length < 10) {
       toast.error("Telefone inválido");
       return false;
