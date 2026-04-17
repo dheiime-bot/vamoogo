@@ -47,6 +47,42 @@ export type Database = {
         }
         Relationships: []
       }
+      balance_adjustments: {
+        Row: {
+          admin_id: string
+          amount: number
+          created_at: string
+          driver_id: string
+          id: string
+          new_balance: number
+          previous_balance: number
+          reason: string | null
+          type: string
+        }
+        Insert: {
+          admin_id: string
+          amount: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          new_balance: number
+          previous_balance: number
+          reason?: string | null
+          type: string
+        }
+        Update: {
+          admin_id?: string
+          amount?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          new_balance?: number
+          previous_balance?: number
+          reason?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           active: boolean
@@ -1129,6 +1165,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_balance: {
+        Args: {
+          _amount: number
+          _driver_id: string
+          _reason?: string
+          _type: string
+        }
+        Returns: Json
+      }
       admin_delete_user: { Args: { _user_id: string }; Returns: undefined }
       admin_send_message: {
         Args: { _message: string; _title: string; _user_id: string }
