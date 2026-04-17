@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check } from "lucide-react";
+import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import StatusBadge from "@/components/shared/StatusBadge";
+import EditProfileModal from "@/components/shared/EditProfileModal";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,7 @@ import { pixKeyTypeLabel, type PixKeyType } from "@/lib/pix";
 const DriverProfile = () => {
   const navigate = useNavigate();
   const { profile, driverData, signOut, user, refreshProfile } = useAuth() as any;
+  const [editOpen, setEditOpen] = useState(false);
 
   const [pixKey, setPixKey] = useState<string>("");
   const [pixKeyType, setPixKeyType] = useState<PixKeyType>("cpf");
