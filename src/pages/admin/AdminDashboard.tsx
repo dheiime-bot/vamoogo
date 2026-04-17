@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Car, DollarSign, AlertTriangle, Activity, ChevronRight, TrendingUp, Users, CheckCircle2, Wifi, MoreVertical, MapPin, Bell } from "lucide-react";
+import { Car, DollarSign, AlertTriangle, ChevronRight, CheckCircle2, Wifi, MoreVertical, MapPin, Bell, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 import AdminLayout from "@/components/admin/AdminLayout";
