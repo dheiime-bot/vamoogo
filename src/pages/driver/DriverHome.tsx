@@ -92,9 +92,11 @@ const DriverHome = () => {
       .order("created_at", { ascending: false }).limit(1)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          const r = data[0];
+          const r = data[0] as any;
           setActiveRide(r);
-          setRideState(r.status === "in_progress" ? "in_ride" : "going_to_passenger");
+          if (r.status === "in_progress") setRideState("in_ride");
+          else if (r.arrived_at) setRideState("arrived");
+          else setRideState("going_to_passenger");
         }
       });
   }, [user]);
