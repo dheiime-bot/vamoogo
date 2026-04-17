@@ -76,7 +76,7 @@ const DriverRides = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-card border-b p-4">
+      <div className="bg-card border-b p-4 pt-20">
         <h1 className="text-lg font-bold">Minhas Corridas</h1>
         <p className="text-xs text-muted-foreground">Histórico completo de corridas</p>
       </div>

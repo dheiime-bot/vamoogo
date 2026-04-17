@@ -65,7 +65,7 @@ const DriverWallet = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Balance header */}
-      <div className="bg-gradient-dark p-6 pb-10">
+      <div className="bg-gradient-dark p-6 pt-20 pb-10">
         <h1 className="text-lg font-bold font-display text-primary-foreground mb-1">Carteira</h1>
         <p className="text-3xl font-extrabold text-primary-foreground">R$ {balance.toFixed(2)}</p>
         <p className="text-sm text-primary-foreground/60">Saldo disponível</p>
