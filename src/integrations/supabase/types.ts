@@ -574,6 +574,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_role: Database["public"]["Enums"]["app_role"] | null
           birth_date: string | null
           cpf: string
           created_at: string
@@ -589,6 +590,7 @@ export type Database = {
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Insert: {
+          active_role?: Database["public"]["Enums"]["app_role"] | null
           birth_date?: string | null
           cpf: string
           created_at?: string
@@ -604,6 +606,7 @@ export type Database = {
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Update: {
+          active_role?: Database["public"]["Enums"]["app_role"] | null
           birth_date?: string | null
           cpf?: string
           created_at?: string
@@ -942,6 +945,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      become_driver: {
+        Args: {
+          _category: Database["public"]["Enums"]["vehicle_category"]
+          _cnh_back_url: string
+          _cnh_ear: boolean
+          _cnh_front_url: string
+          _cnh_number: string
+          _criminal_record_issued_at: string
+          _criminal_record_url: string
+          _crlv_url: string
+          _liveness_verified: boolean
+          _pix_holder_name: string
+          _pix_key: string
+          _pix_key_type: string
+          _selfie_liveness_url: string
+          _selfie_with_document_url: string
+          _vehicle_brand: string
+          _vehicle_color: string
+          _vehicle_model: string
+          _vehicle_photo_back_url: string
+          _vehicle_photo_front_url: string
+          _vehicle_photo_left_url: string
+          _vehicle_photo_right_url: string
+          _vehicle_plate: string
+          _vehicle_year: number
+        }
+        Returns: string
+      }
       check_signup_dupes: {
         Args: { _cpf: string; _phone: string }
         Returns: {
