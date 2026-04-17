@@ -490,7 +490,18 @@ const DriverHome = () => {
         <div className="mx-4 mt-4 rounded-2xl border-dashed border-2 bg-muted/30 p-6 text-center">
           <Power className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm font-medium">Você está offline</p>
-          <p className="text-xs text-muted-foreground">Toque em "Online" para receber corridas</p>
+          <p className="text-xs text-muted-foreground mb-4">Toque no botão abaixo para receber corridas</p>
+          <button
+            onClick={handleToggleOnline}
+            disabled={lowBalance}
+            className="w-full rounded-xl bg-success py-3 text-sm font-bold text-success-foreground flex items-center justify-center gap-2 hover:bg-success/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+          >
+            <Power className="h-4 w-4" />
+            Ficar Online
+          </button>
+          {lowBalance && (
+            <p className="mt-2 text-xs text-destructive">Saldo insuficiente — recarregue para ficar online</p>
+          )}
         </div>
       )}
 
