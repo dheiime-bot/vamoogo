@@ -631,7 +631,16 @@ const PassengerHome = () => {
                     rideState === "arrived" ? "bg-success/10 text-success" :
                     "bg-primary/10 text-primary"
                   }`}>
-                    {rideState === "driver_arriving" && "🚗 Motorista a caminho"}
+                    {rideState === "driver_arriving" && (
+                      <div className="space-y-0.5">
+                        <p>🚗 Motorista a caminho</p>
+                        {liveEta && (
+                          <p className="text-xs font-medium opacity-80">
+                            Chega em ~{liveEta.minutes} min • {liveEta.km} km
+                          </p>
+                        )}
+                      </div>
+                    )}
                     {rideState === "arrived" && "📍 Motorista chegou!"}
                     {rideState === "in_progress" && "🛣️ Corrida em andamento"}
                   </div>
