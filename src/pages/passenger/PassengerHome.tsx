@@ -430,6 +430,13 @@ const PassengerHome = () => {
     const totalKm = Math.round((startedKm + km) * 10) / 10;
     const totalMin = (activeRide.duration_minutes || 0) + min;
 
+    // 🔒 Sanity: rejeita totais absurdos (ex: bug de coordenada (0,0) gera milhares de km).
+    if (totalKm > 1000 || totalMin > 1440 || km > 500) {
+      console.error("[handleChangeDestination] sanity fail", { fromLat, fromLng, newDestination, km, min, totalKm, totalMin });
+      toast.error("Distância recalculada inválida. Verifique o destino e tente novamente.");
+      return;
+    }
+
     // 3) Recalcula preço via tariffs (mesma fórmula do useFareEstimate)
     const { data: tariff } = await supabase
       .from("tariffs")
@@ -443,6 +450,15 @@ const PassengerHome = () => {
     const newPrice = Math.round(Math.max(base + extras, t.min_fare) * 100) / 100;
     const newFee = await calcPlatformFee(newPrice, activeRide.category);
 
+    // Atualiza legs também: mantém perna inicial e adiciona/sobrescreve a perna do novo trecho
+    const prevLegs: any[] = Array.isArray(activeRide.legs) ? activeRide.legs : [];
+    const firstLeg = prevLegs[0] || { fromIndex: 0, toIndex: 1, km: startedKm, min: activeRide.duration_minutes || 0, price: 0 };
+    const firstPrice = Math.round((newPrice * (startedKm / Math.max(totalKm, 0.1))) * 100) / 100;
+    const newLegs = [
+      { ...firstLeg, price: firstPrice },
+      { fromIndex: 1, toIndex: 2, km, min, price: Math.round((newPrice - firstPrice) * 100) / 100 },
+    ];
+
     const { error } = await supabase
       .from("rides")
       .update({
@@ -454,6 +470,7 @@ const PassengerHome = () => {
         price: newPrice,
         platform_fee: newFee,
         driver_net: newPrice - newFee,
+        legs: newLegs,
       })
       .eq("id", activeRide.id);
     if (error) {
@@ -470,6 +487,7 @@ const PassengerHome = () => {
       price: newPrice,
       platform_fee: newFee,
       driver_net: newPrice - newFee,
+      legs: newLegs,
     }));
     setSelectedDestination(newDestination);
     setShowChangeDest(false);
