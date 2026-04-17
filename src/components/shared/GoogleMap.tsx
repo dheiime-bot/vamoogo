@@ -35,6 +35,8 @@ interface GoogleMapProps {
   interactive?: boolean;
   showRoute?: boolean;
   trackUserLocation?: boolean;
+  /** Espaçamento extra no rodapé (px) — sobe o botão recentralizar e o logo do Google p/ não ficarem cobertos por CTAs. */
+  bottomInset?: number;
 }
 
 const ALTAMIRA_CENTER = { lat: -3.2036, lng: -52.2108 };
