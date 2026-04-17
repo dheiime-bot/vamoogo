@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
-import UserMenu from "@/components/shared/UserMenu";
+
 import RideChat from "@/components/passenger/RideChat";
 
 interface ChatRow {
