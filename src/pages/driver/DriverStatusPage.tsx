@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import DocumentUpload from "@/components/auth/DocumentUpload";
-import { ArrowLeft, LogOut, Loader2, RefreshCw, MessageSquare } from "lucide-react";
+import { LogOut, Loader2, RefreshCw, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 const DriverStatusPage = () => {
