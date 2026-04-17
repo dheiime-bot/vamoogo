@@ -5,6 +5,7 @@ import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
+import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
 import GoogleMap from "@/components/shared/GoogleMap";
 import { Home, User, History } from "lucide-react";
@@ -428,6 +429,7 @@ const DriverHome = () => {
         </div>
 
         <AppMenu role="driver" />
+        <DriverEarningsChip />
         <NotificationBell />
       </div>
     );
@@ -698,6 +700,7 @@ const DriverHome = () => {
       />
 
       <AppMenu role="driver" />
+      <DriverEarningsChip />
       <NotificationBell />
       
     </div>
