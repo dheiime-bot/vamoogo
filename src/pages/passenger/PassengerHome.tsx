@@ -378,8 +378,19 @@ const PassengerHome = () => {
       return;
     }
     // Origem do recálculo = posição atual do motorista (se disponível) ou origem original
-    const fromLat = driverLocation?.lat ?? Number(activeRide.origin_lat);
-    const fromLng = driverLocation?.lng ?? Number(activeRide.origin_lng);
+    // 🔒 GUARD CRÍTICO: nunca use 0,0 como origem — gera "rotas" de milhares de km até o Brasil.
+    const candLat = driverLocation?.lat ?? (activeRide.origin_lat != null ? Number(activeRide.origin_lat) : NaN);
+    const candLng = driverLocation?.lng ?? (activeRide.origin_lng != null ? Number(activeRide.origin_lng) : NaN);
+    const fromLat = Number.isFinite(candLat) && candLat !== 0 ? candLat : NaN;
+    const fromLng = Number.isFinite(candLng) && candLng !== 0 ? candLng : NaN;
+    if (!Number.isFinite(fromLat) || !Number.isFinite(fromLng)) {
+      toast.error("Não foi possível obter a posição atual. Tente novamente em instantes.");
+      return;
+    }
+    if (!Number.isFinite(newDestination.lat) || !Number.isFinite(newDestination.lng) || newDestination.lat === 0 || newDestination.lng === 0) {
+      toast.error("Destino inválido. Selecione novamente.");
+      return;
+    }
 
     // 1) Distância/tempo via Google (com fallback haversine)
     let km = 0; let min = 0;
