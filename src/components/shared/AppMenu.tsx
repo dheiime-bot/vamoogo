@@ -24,7 +24,7 @@ const PASSENGER_ITEMS: MenuItem[] = [
   { icon: Home, label: "Início", path: "/passenger" },
   { icon: Clock, label: "Minhas corridas", path: "/passenger/history" },
   { icon: MessageCircle, label: "Chats", path: "/passenger/chats" },
-  { icon: User, label: "Perfil", path: "/passenger/profile" },
+  { icon: User, label: "Meus dados", path: "/passenger/profile" },
 ];
 
 const DRIVER_ITEMS: MenuItem[] = [
@@ -32,7 +32,7 @@ const DRIVER_ITEMS: MenuItem[] = [
   { icon: Car, label: "Corridas", path: "/driver/rides" },
   { icon: Wallet, label: "Carteira", path: "/driver/wallet" },
   { icon: MessageCircle, label: "Chats", path: "/driver/chats" },
-  { icon: User, label: "Perfil", path: "/driver/profile" },
+  { icon: User, label: "Meus dados", path: "/driver/profile" },
 ];
 
 interface Props {
