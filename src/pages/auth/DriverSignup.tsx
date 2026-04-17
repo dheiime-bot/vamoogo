@@ -257,7 +257,33 @@ const DriverSignup = () => {
 
   const validateStepSelfie = (): boolean => {
     if (!selfieUrl) {
-      toast.error("Tire sua selfie para continuar");
+      toast.error("Tire sua selfie ao vivo para continuar");
+      return false;
+    }
+    if (!livenessVerified) {
+      toast.error("Verificação anti-fraude obrigatória. Repita a captura.");
+      return false;
+    }
+    return true;
+  };
+
+  const validateStepAntecedentes = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!criminalRecordUrl) errs.criminal = "Envie a certidão de antecedentes criminais";
+    if (!criminalRecordDate) errs.criminalDate = "Informe a data de emissão";
+    else {
+      const iso = parseDateBRtoISO(criminalRecordDate);
+      if (!iso) errs.criminalDate = "Data inválida (DD/MM/AAAA)";
+      else {
+        const issued = new Date(iso);
+        const days = (Date.now() - issued.getTime()) / (1000 * 60 * 60 * 24);
+        if (days < 0) errs.criminalDate = "Data não pode ser futura";
+        else if (days > 90) errs.criminalDate = "Certidão deve ter sido emitida nos últimos 90 dias";
+      }
+    }
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      toast.error("Corrija os campos destacados");
       return false;
     }
     return true;
