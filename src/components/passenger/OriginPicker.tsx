@@ -63,6 +63,8 @@ const OriginPicker = ({
   const [gpsAddress, setGpsAddress] = useState<string>("");
   const [gpsLoc, setGpsLoc] = useState<AppLocation | null>(null);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
+  /** Quando true, mostra o campo de busca manual mesmo no modo "minha corrida". */
+  const [manualMode, setManualMode] = useState(false);
   const autoTried = useRef(false);
 
   // Dispara cache de locais da cidade (1x por cidade) ao detectar GPS
@@ -163,14 +165,25 @@ const OriginPicker = ({
 
   return (
     <div className="space-y-3">
-      {/* Origem: GPS (padrão) ou busca de endereço (quando outra pessoa) */}
-      {!forOtherPerson ? (
+      {/* Origem: GPS (padrão) ou busca de endereço (quando outra pessoa OU modo manual) */}
+      {!forOtherPerson && !manualMode ? (
         <div className="flex items-center gap-3 rounded-xl bg-success/5 border border-success/30 p-3">
           <div className="h-9 w-9 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
             <Navigation className="h-4 w-4 text-success" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-semibold text-success uppercase tracking-wide">Sua localização</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-[10px] font-semibold text-success uppercase tracking-wide">Sua localização</p>
+              {gpsAddress && !loadingGps && (
+                <button
+                  type="button"
+                  onClick={() => setManualMode(true)}
+                  className="text-[10px] font-medium text-primary hover:underline"
+                >
+                  (clique para inserir o endereço manualmente)
+                </button>
+              )}
+            </div>
             {loadingGps ? (
               <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                 <Loader2 className="h-3 w-3 animate-spin" /> Detectando...
@@ -192,14 +205,27 @@ const OriginPicker = ({
       ) : (
         <div className="space-y-2">
           <AddressAutocompleteField
-            label="Embarque da pessoa"
+            label={forOtherPerson ? "Embarque da pessoa" : "Endereço de embarque"}
             placeholder="Digite rua, número ou local popular"
             value={selectedManualOrigin}
             onChange={handleManualOriginChange}
             autoFocus
           />
 
-          {selectedOrigin && !selectedOrigin.id.startsWith("gps-") && (
+          {!forOtherPerson && manualMode && (
+            <button
+              type="button"
+              onClick={() => {
+                setManualMode(false);
+                if (gpsLoc) onSelectOrigin(gpsLoc, "gps");
+              }}
+              className="text-[11px] font-medium text-primary hover:underline px-1 flex items-center gap-1"
+            >
+              <Navigation className="h-3 w-3" /> Voltar para minha localização (GPS)
+            </button>
+          )}
+
+          {forOtherPerson && selectedOrigin && !selectedOrigin.id.startsWith("gps-") && (
             <p className="text-[10px] text-muted-foreground px-1 flex items-center gap-1">
               <MapPin className="h-3 w-3" /> Endereço da pessoa selecionado
             </p>
