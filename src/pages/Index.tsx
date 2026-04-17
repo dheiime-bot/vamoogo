@@ -4,9 +4,9 @@ import vamooLogo from "@/assets/vamoo-logo.png";
 import vamooIcon from "@/assets/vamoo-icon.png";
 
 const features = [
-  { icon: Shield, title: "Segurança Total", desc: "Verificação de identidade, selfie facial e validação de documentos para todos os usuários." },
+  { icon: Shield, title: "Segurança total", desc: "Verificação de identidade, selfie facial e validação de documentos para todos os usuários." },
   { icon: Zap, title: "Rapidez", desc: "Algoritmo inteligente conecta você ao motorista mais próximo em segundos." },
-  { icon: MapPin, title: "Cidades Brasileiras", desc: "Feito para cidades pequenas e médias, com tarifas justas e regionais." },
+  { icon: MapPin, title: "Cidades brasileiras", desc: "Feito para cidades pequenas e médias, com tarifas justas e regionais." },
   { icon: Users, title: "Comunidade", desc: "Modelo pré-pago que garante transparência para motoristas e passageiros." },
 ];
 

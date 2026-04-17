@@ -18,7 +18,7 @@ const DriverWallet = () => {
   const [pixKey, setPixKey] = useState("");
   const balance = driverData?.balance ?? 0;
 
-  const weekData = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"].map(d => ({ name: d, value: Math.floor(Math.random() * 100 + 20) }));
+  const weekData = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(d => ({ name: d, value: Math.floor(Math.random() * 100 + 20) }));
 
   useEffect(() => {
     if (!user) return;
@@ -46,7 +46,7 @@ const DriverWallet = () => {
   };
 
   const handleWithdraw = async () => {
-    if (!user || !withdrawAmount || !pixKey) { toast.error("Informe valor e chave PIX"); return; }
+    if (!user || !withdrawAmount || !pixKey) { toast.error("Informe o valor e a chave Pix"); return; }
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < 10) { toast.error("Valor mínimo: R$ 10"); return; }
     if (amount > balance) { toast.error("Saldo insuficiente"); return; }
@@ -106,10 +106,10 @@ const DriverWallet = () => {
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">Bônus: 5% para R$50+ | 10% para R$100+</p>
+            <p className="text-[10px] text-muted-foreground text-center">Bônus: 5% para R$ 50+ • 10% para R$ 100+</p>
             <div className="flex gap-3">
               <button onClick={() => handleRecharge(50)} disabled={loading} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-card border py-3 shadow-sm text-sm font-semibold disabled:opacity-50">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4 text-primary" />} PIX
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4 text-primary" />} Pix
               </button>
               <button onClick={() => handleRecharge(100)} disabled={loading} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-card border py-3 shadow-sm text-sm font-semibold disabled:opacity-50">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4 text-primary" />} Cartão
@@ -121,9 +121,9 @@ const DriverWallet = () => {
         {activeTab === "withdraw" && (
           <div className="space-y-4">
             <div className="rounded-xl border bg-card p-4 space-y-3">
-              <h3 className="text-sm font-semibold">Solicitar saque via PIX</h3>
-              <input type="number" placeholder="Valor (min. R$ 10)" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="w-full rounded-lg bg-muted p-3 text-sm outline-none" />
-              <input type="text" placeholder="Chave PIX" value={pixKey} onChange={(e) => setPixKey(e.target.value)} className="w-full rounded-lg bg-muted p-3 text-sm outline-none" />
+              <h3 className="text-sm font-semibold">Solicitar saque via Pix</h3>
+              <input type="number" placeholder="Valor (mín. R$ 10)" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="w-full rounded-lg bg-muted p-3 text-sm outline-none" />
+              <input type="text" placeholder="Chave Pix" value={pixKey} onChange={(e) => setPixKey(e.target.value)} className="w-full rounded-lg bg-muted p-3 text-sm outline-none" />
               <button onClick={handleWithdraw} disabled={loading || !withdrawAmount || !pixKey}
                 className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-50 flex items-center justify-center gap-2">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />} Solicitar saque
@@ -160,7 +160,7 @@ const DriverWallet = () => {
                   {tx.bonus > 0 ? <Gift className="h-4 w-4 text-success" /> : <ArrowDownLeft className="h-4 w-4 text-success" />}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Recarga {tx.method === "pix" ? "PIX" : "Cartão"}</p>
+                  <p className="text-sm font-medium">Recarga {tx.method === "pix" ? "Pix" : "Cartão"}</p>
                   <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString("pt-BR")}</p>
                 </div>
                 <div className="text-right">
