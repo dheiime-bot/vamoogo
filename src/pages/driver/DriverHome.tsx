@@ -643,8 +643,15 @@ const DriverHome = () => {
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
-      <NotificationBell />
-      <DriverHeartbeat lastSyncAt={lastSyncAt} isOnline={isOnline} />
+      <NotificationBell
+        connectionStatus={
+          !isOnline
+            ? "idle"
+            : !lastSyncAt || Date.now() - lastSyncAt > 60000
+              ? "disconnected"
+              : "connected"
+        }
+      />
       <DriverBottomNav />
     </div>
   );

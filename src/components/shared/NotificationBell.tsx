@@ -75,9 +75,11 @@ const formatTimeAgo = (iso: string) => {
 interface Props {
   /** Quando true, posiciona como botão fixo absoluto no topo direito. */
   floating?: boolean;
+  /** Status de conexão GPS — colore o sino: verde=conectado, vermelho=desconectado, neutro=idle */
+  connectionStatus?: "connected" | "disconnected" | "idle";
 }
 
-const NotificationBell = ({ floating = true }: Props) => {
+const NotificationBell = ({ floating = true, connectionStatus = "idle" }: Props) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -187,9 +189,38 @@ const NotificationBell = ({ floating = true }: Props) => {
           <button
             aria-label="Notificações"
             className="relative flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted"
+            title={
+              connectionStatus === "connected"
+                ? "GPS conectado"
+                : connectionStatus === "disconnected"
+                  ? "GPS desconectado"
+                  : "Notificações"
+            }
           >
-            <Bell className="h-5 w-5 text-foreground" />
-            <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">
+            <span className="relative flex">
+              <Bell
+                className={cn(
+                  "h-5 w-5 transition-colors",
+                  connectionStatus === "connected" && "text-success",
+                  connectionStatus === "disconnected" && "text-destructive",
+                  connectionStatus === "idle" && "text-foreground"
+                )}
+              />
+              {connectionStatus === "connected" && (
+                <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-success ring-2 ring-card animate-pulse" />
+              )}
+              {connectionStatus === "disconnected" && (
+                <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-card" />
+              )}
+            </span>
+            <span
+              className={cn(
+                "font-display text-base font-extrabold leading-none select-none",
+                connectionStatus === "connected" && "text-success",
+                connectionStatus === "disconnected" && "text-destructive",
+                connectionStatus === "idle" && "text-gradient-primary"
+              )}
+            >
               Avisos
             </span>
             {unreadCount > 0 && (
