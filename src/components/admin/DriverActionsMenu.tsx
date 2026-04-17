@@ -4,6 +4,7 @@ import {
   MoreVertical, Eye, FileText, CheckCircle, XCircle, FileWarning,
   Pencil, Ban, Unlock, PauseCircle, PlayCircle, Car, DollarSign, Star,
   CreditCard, MessageSquare, History, Trash2, ShieldCheck, RotateCw, WifiOff,
+  Wallet, Plus, Minus, Equal,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
