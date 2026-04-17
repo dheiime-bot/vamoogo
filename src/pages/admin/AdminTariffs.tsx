@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Save, Bike, Car, Crown, Loader2 } from "lucide-react";
+import { Save, Bike, Car, Crown, Loader2, Percent } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -7,48 +7,80 @@ import { toast } from "sonner";
 const AdminTariffs = () => {
   const [activeTab, setActiveTab] = useState("categories");
   const [tariffs, setTariffs] = useState<any[]>([]);
+  const [globalFee, setGlobalFee] = useState<string>("15");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    supabase.from("tariffs").select("*").order("category").then(({ data }) => {
-      if (data) setTariffs(data);
+    Promise.all([
+      supabase.from("tariffs").select("*").order("category"),
+      supabase.from("platform_settings").select("value").eq("key", "global_fee_percent").maybeSingle(),
+    ]).then(([tRes, sRes]) => {
+      if (tRes.data) setTariffs(tRes.data);
+      if (sRes.data?.value !== undefined && sRes.data?.value !== null) {
+        setGlobalFee(String(sRes.data.value));
+      }
     });
   }, []);
 
   const updateTariff = (id: string, field: string, value: string) => {
-    setTariffs((prev) => prev.map((t) => t.id === id ? { ...t, [field]: parseFloat(value.replace(",", ".")) || 0 } : t));
+    setTariffs((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, [field]: value === "" ? null : parseFloat(value.replace(",", ".")) || 0 } : t))
+    );
   };
 
   const saveTariffs = async () => {
     setSaving(true);
-    for (const t of tariffs) {
-      await supabase.from("tariffs").update({
-        base_fare: t.base_fare,
-        per_km: t.per_km,
-        per_minute: t.per_minute,
-        min_fare: t.min_fare,
-        passenger_extra: t.passenger_extra,
-        region_multiplier: t.region_multiplier,
-      }).eq("id", t.id);
+    try {
+      // Salva tarifas (incluindo override de fee_percent por categoria)
+      for (const t of tariffs) {
+        await supabase
+          .from("tariffs")
+          .update({
+            base_fare: t.base_fare,
+            per_km: t.per_km,
+            per_minute: t.per_minute,
+            min_fare: t.min_fare,
+            passenger_extra: t.passenger_extra,
+            region_multiplier: t.region_multiplier,
+            fee_percent: t.fee_percent === null || t.fee_percent === undefined || t.fee_percent === "" ? null : Number(t.fee_percent),
+          })
+          .eq("id", t.id);
+      }
+
+      // Salva taxa global
+      const pct = Math.max(0, Math.min(100, parseFloat(globalFee.replace(",", ".")) || 0));
+      await supabase
+        .from("platform_settings")
+        .update({ value: pct as any })
+        .eq("key", "global_fee_percent");
+
+      toast.success("Configurações salvas!");
+    } catch (e: any) {
+      toast.error("Erro ao salvar: " + (e?.message || ""));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    toast.success("Tarifas salvas!");
   };
 
   const tabs = [
     { id: "categories", label: "Categorias" },
     { id: "passengers", label: "Passageiros" },
-    { id: "fees", label: "Taxas" },
+    { id: "fees", label: "Taxa da plataforma" },
   ];
 
-  const catIcon: Record<string, any> = { moto: Bike, car: Car, premium: Crown };
+  const catIcon: Record<string, any> = { moto: Bike, economico: Car, conforto: Crown };
 
   return (
     <AdminLayout title="Configuração de Tarifas">
       <div className="flex gap-1 overflow-x-auto rounded-xl bg-muted p-1">
         {tabs.map((tab) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors ${activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
             {tab.label}
           </button>
         ))}
@@ -56,13 +88,17 @@ const AdminTariffs = () => {
 
       {activeTab === "categories" && (
         <div className="space-y-4">
-          {tariffs.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma tarifa configurada. Insira tarifas no banco.</p>}
+          {tariffs.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhuma tarifa configurada. Insira tarifas no banco.</p>
+          )}
           {tariffs.map((t) => {
             const Icon = catIcon[t.category] || Car;
             return (
               <div key={t.id} className="rounded-2xl border bg-card p-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="rounded-xl bg-primary/10 p-2.5"><Icon className="h-5 w-5 text-primary" /></div>
+                  <div className="rounded-xl bg-primary/10 p-2.5">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
                   <h3 className="text-base font-bold capitalize">{t.category}</h3>
                   <span className="text-xs text-muted-foreground">({t.region})</span>
                 </div>
@@ -77,8 +113,12 @@ const AdminTariffs = () => {
                       <label className="text-xs font-medium text-muted-foreground">{f.label}</label>
                       <div className="mt-1 flex items-center rounded-lg border bg-background px-3 py-2">
                         <span className="text-sm text-muted-foreground mr-1">R$</span>
-                        <input type="text" value={f.value?.toFixed(2)} onChange={(e) => updateTariff(t.id, f.field, e.target.value)}
-                          className="flex-1 bg-transparent text-sm font-semibold outline-none" />
+                        <input
+                          type="text"
+                          value={f.value?.toFixed(2)}
+                          onChange={(e) => updateTariff(t.id, f.field, e.target.value)}
+                          className="flex-1 bg-transparent text-sm font-semibold outline-none"
+                        />
                       </div>
                     </div>
                   ))}
@@ -98,8 +138,12 @@ const AdminTariffs = () => {
                 <span className="text-sm font-medium">Valor extra por passageiro adicional</span>
                 <div className="flex items-center rounded-lg border bg-background px-3 py-2">
                   <span className="text-sm text-muted-foreground mr-1">+R$</span>
-                  <input type="text" value={t.passenger_extra?.toFixed(2)} onChange={(e) => updateTariff(t.id, "passenger_extra", e.target.value)}
-                    className="w-16 bg-transparent text-sm font-bold outline-none" />
+                  <input
+                    type="text"
+                    value={t.passenger_extra?.toFixed(2)}
+                    onChange={(e) => updateTariff(t.id, "passenger_extra", e.target.value)}
+                    className="w-16 bg-transparent text-sm font-bold outline-none"
+                  />
                 </div>
               </div>
             </div>
@@ -108,13 +152,72 @@ const AdminTariffs = () => {
       )}
 
       {activeTab === "fees" && (
-        <div className="rounded-2xl border bg-card p-5 space-y-4">
-          <h3 className="font-bold">Taxa da plataforma</h3>
-          <p className="text-sm text-muted-foreground">A taxa é de 15% aplicada sobre o valor total da corrida. Configurável via platform_settings.</p>
+        <div className="space-y-4">
+          {/* Taxa global */}
+          <div className="rounded-2xl border bg-card p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="rounded-xl bg-primary/10 p-2.5">
+                <Percent className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold">Taxa global da plataforma</h3>
+                <p className="text-xs text-muted-foreground">
+                  Aplicada em todas as corridas, exceto quando uma categoria tem override.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 max-w-xs">
+              <label className="text-xs font-medium text-muted-foreground">Percentual padrão</label>
+              <div className="mt-1 flex items-center rounded-lg border bg-background px-3 py-2">
+                <input
+                  type="text"
+                  value={globalFee}
+                  onChange={(e) => setGlobalFee(e.target.value)}
+                  className="flex-1 bg-transparent text-base font-bold outline-none"
+                />
+                <span className="text-sm font-bold text-muted-foreground ml-1">%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Overrides por categoria */}
+          <div className="rounded-2xl border bg-card p-5">
+            <h3 className="text-base font-bold mb-1">Override por categoria</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              Deixe em branco para usar a taxa global. Preencha para sobrescrever apenas a categoria.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {tariffs.map((t) => {
+                const Icon = catIcon[t.category] || Car;
+                return (
+                  <div key={t.id} className="rounded-xl border bg-background p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Icon className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold capitalize">{t.category}</span>
+                    </div>
+                    <div className="flex items-center rounded-lg border bg-card px-3 py-2">
+                      <input
+                        type="text"
+                        placeholder={`global (${globalFee}%)`}
+                        value={t.fee_percent ?? ""}
+                        onChange={(e) => updateTariff(t.id, "fee_percent", e.target.value)}
+                        className="flex-1 bg-transparent text-sm font-bold outline-none placeholder:text-muted-foreground/60 placeholder:font-normal"
+                      />
+                      <span className="text-xs font-bold text-muted-foreground ml-1">%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
-      <button onClick={saveTariffs} disabled={saving} className="flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50">
+      <button
+        onClick={saveTariffs}
+        disabled={saving}
+        className="flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50"
+      >
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar configurações
       </button>
     </AdminLayout>

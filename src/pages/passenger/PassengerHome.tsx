@@ -15,6 +15,7 @@ import { useFareEstimate } from "@/hooks/useFareEstimate";
 import type { PlaceDetails } from "@/services/googlePlaces";
 import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
 import type { PixKeyType } from "@/lib/pix";
+import { calcPlatformFee } from "@/lib/platformFee";
 import { toast } from "sonner";
 
 const categories = [
