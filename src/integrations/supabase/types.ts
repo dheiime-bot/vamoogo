@@ -942,6 +942,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_signup_dupes: {
+        Args: { _cpf: string; _phone: string }
+        Returns: {
+          cpf_taken: boolean
+          phone_taken: boolean
+        }[]
+      }
       find_nearest_drivers: {
         Args: {
           _category: Database["public"]["Enums"]["vehicle_category"]
