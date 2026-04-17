@@ -333,7 +333,8 @@ const FitToPoints = ({ points }: { points: MapPoint[] }) => {
     if (!map || points.length === 0) return;
     if (points.length === 1) {
       map.panTo({ lat: points[0].lat, lng: points[0].lng });
-      map.setZoom(15);
+      // Mesmo nível do botão "recentralizar" para evitar zoom-in agressivo ao atualizar a localização
+      map.setZoom(16);
       return;
     }
     const g = (window as any).google;
