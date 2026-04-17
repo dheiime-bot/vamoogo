@@ -366,130 +366,70 @@ const DriverHome = () => {
     return <RideChat rideId={activeRide.id} driverName={passengerName} onBack={() => setShowChat(false)} />;
   }
 
-  const isIdleHome = rideState === "idle" && !activeRide && !pendingOffer;
-
-  // === Tela inicial estilo passageiro: mapa em tela cheia + CTA Ficar Online ===
-  if (isIdleHome) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="relative">
-          <GoogleMap
-            className="h-screen rounded-none transition-all duration-300"
-            trackUserLocation={true}
-            userMarkerVariant={
-              driverData?.category === "moto"
-                ? "moto"
-                : driverData?.category === "conforto"
-                  ? "car-conforto"
-                  : "car-economico"
-            }
-            bottomInset={120}
-          />
-        </div>
-
-        {/* CTA fixo logo acima da bottom nav do motorista */}
-        <div
-          className="fixed inset-x-0 bottom-[72px] z-40 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)" }}
-        >
-          {lowBalance && !isOnline && (
-            <div className="mb-3 flex items-center gap-2 rounded-xl bg-warning/10 border border-warning/30 p-2.5">
-              <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
-              <p className="text-xs font-semibold text-warning">Saldo baixo — recarregue para ficar online</p>
-            </div>
-          )}
-          <button
-            onClick={handleToggleOnline}
-            disabled={lowBalance && !isOnline}
-            className={`w-full rounded-2xl py-4 text-base font-extrabold shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-              isOnline
-                ? "bg-success text-success-foreground"
-                : "bg-gradient-primary text-primary-foreground"
-            }`}
-          >
-            {isOnline ? (
-              <>
-                <span className="relative flex h-3 w-3">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-success-foreground opacity-60 animate-ping" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full bg-success-foreground" />
-                </span>
-                Você está Online! 🚀
-              </>
-            ) : (
-              <>
-                <Power className="h-5 w-5" /> Ficar Online
-              </>
-            )}
-          </button>
-        </div>
-
-        <AppMenu role="driver" />
-        <DriverEarningsChip />
-        <NotificationBell />
-        <DriverHeartbeat lastSyncAt={lastSyncAt} isOnline={isOnline} />
-        <DriverBottomNav />
-      </div>
-    );
-  }
-
+  // === TELA ÚNICA: mapa fullscreen sempre + card inferior que muda conforme o status ===
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="flex items-center justify-between bg-card border-b p-4 pt-20">
-        <div>
-          <h1 className="text-lg font-bold font-display">Olá, {displayName}</h1>
-          <p className="text-xs text-muted-foreground">{categoryLabel} • Saldo: R$ {Number(balance).toFixed(2)}</p>
-        </div>
-        {isOnline && (
-          <span className="flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success">
-            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-            Online
-          </span>
-        )}
-      </div>
-
-      {lowBalance && (
-        <div className="mx-4 mt-3 flex items-center gap-3 rounded-xl bg-warning/10 border border-warning/30 p-3">
-          <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-warning">Saldo baixo!</p>
-            <p className="text-xs text-muted-foreground">Recarregue para ficar online.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Earnings */}
-      <div className="mx-4 mt-4 rounded-2xl bg-gradient-dark p-5">
-        <p className="text-xs text-muted-foreground mb-1">Ganhos hoje</p>
-        <p className="text-3xl font-extrabold text-primary-foreground">R$ {todayStats.earnings.toFixed(2)}</p>
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          {[
-            { label: "Corridas", value: String(todayStats.rides) },
-            { label: "Horas", value: `${todayStats.hours}h` },
-            { label: "Categoria", value: categoryLabel },
-          ].map((s) => (
-            <div key={s.label} className="text-center">
-              <p className="text-lg font-extrabold text-primary-foreground">{s.value}</p>
-              <p className="text-[10px] text-muted-foreground">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Map */}
-      <div className="px-4 mt-4">
+    <div className="min-h-screen bg-background">
+      <div className="relative">
         <GoogleMap
-          className="h-[200px]"
+          className="h-screen rounded-none transition-all duration-300"
           origin={(rideState === "going_to_passenger" || rideState === "arrived" || rideState === "in_ride") ? originPoint : null}
           destination={rideState === "in_ride" ? destPoint : null}
-          trackUserLocation={isOnline && !activeRide}
+          trackUserLocation={!activeRide}
           showRoute={rideState === "going_to_passenger" || rideState === "in_ride"}
+          userMarkerVariant={
+            driverData?.category === "moto"
+              ? "moto"
+              : driverData?.category === "conforto"
+                ? "car-conforto"
+                : "car-economico"
+          }
+          bottomInset={rideState === "idle" ? 120 : 280}
         />
       </div>
 
-      {/* OFERTA recebida */}
-      {rideState === "offer" && pendingRide && pendingOffer && (
-        <div className="mx-4 mt-4 rounded-2xl border-2 border-primary bg-card p-4 shadow-glow animate-slide-up">
+      {/* === Card inferior dinâmico — flutua sobre o mapa === */}
+      <div
+        className="fixed inset-x-0 bottom-[72px] z-40 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)" }}
+      >
+        {/* IDLE → Botão Ficar Online */}
+        {rideState === "idle" && (
+          <>
+            {lowBalance && !isOnline && (
+              <div className="mb-3 flex items-center gap-2 rounded-xl bg-warning/10 border border-warning/30 p-2.5">
+                <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+                <p className="text-xs font-semibold text-warning">Saldo baixo — recarregue para ficar online</p>
+              </div>
+            )}
+            <button
+              onClick={handleToggleOnline}
+              disabled={lowBalance && !isOnline}
+              className={`w-full rounded-2xl py-4 text-base font-extrabold shadow-glow transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+                isOnline
+                  ? "bg-success text-success-foreground"
+                  : "bg-gradient-primary text-primary-foreground"
+              }`}
+            >
+              {isOnline ? (
+                <>
+                  <span className="relative flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-success-foreground opacity-60 animate-ping" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-success-foreground" />
+                  </span>
+                  Você está Online! 🚀
+                </>
+              ) : (
+                <>
+                  <Power className="h-5 w-5" /> Ficar Online
+                </>
+              )}
+            </button>
+          </>
+        )}
+
+        {/* OFERTA recebida */}
+        {rideState === "offer" && pendingRide && pendingOffer && (
+          <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow animate-slide-up">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
@@ -561,7 +501,7 @@ const DriverHome = () => {
 
       {/* Going to passenger */}
       {rideState === "going_to_passenger" && activeRide && (
-        <div className="mx-4 mt-4 rounded-2xl border bg-card p-4 space-y-3">
+        <div className="max-h-[60vh] overflow-y-auto rounded-2xl border bg-card p-4 space-y-3 shadow-glow">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-sm font-bold text-info truncate">A caminho do passageiro</span>
@@ -623,7 +563,7 @@ const DriverHome = () => {
 
       {/* Arrived */}
       {rideState === "arrived" && activeRide && (
-        <div className="mx-4 mt-4 rounded-2xl border bg-card p-4 space-y-3">
+        <div className="rounded-2xl border bg-card p-4 space-y-3 shadow-glow">
           {activeRide.ride_code && (
             <div className="flex justify-center">
               <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{activeRide.ride_code}</span>
@@ -641,7 +581,7 @@ const DriverHome = () => {
 
       {/* In ride */}
       {rideState === "in_ride" && activeRide && (
-        <div className="mx-4 mt-4 rounded-2xl border bg-card p-4 space-y-3">
+        <div className="rounded-2xl border bg-card p-4 space-y-3 shadow-glow">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-sm font-bold text-success truncate">🛣️ Em corrida</span>
@@ -676,8 +616,8 @@ const DriverHome = () => {
           )}
         </div>
       )}
-
-      {/* (Estados de idle são tratados pela tela inicial estilo passageiro acima) */}
+      </div>
+      {/* /card inferior dinâmico */}
 
       {/* Modal Pix — exibido pelo motorista quando vai cobrar */}
       <PixPaymentModal
@@ -699,6 +639,7 @@ const DriverHome = () => {
       <AppMenu role="driver" />
       <DriverEarningsChip />
       <NotificationBell />
+      <DriverHeartbeat lastSyncAt={lastSyncAt} isOnline={isOnline} />
       <DriverBottomNav />
     </div>
   );
