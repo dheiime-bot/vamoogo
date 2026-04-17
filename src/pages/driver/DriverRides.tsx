@@ -167,7 +167,7 @@ const DriverRides = () => {
 
       <AppMenu role="driver" />
       <NotificationBell />
-      <UserMenu role="driver" />
+      
     </div>
   );
 };
