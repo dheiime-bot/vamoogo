@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
+import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
+import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
 import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passenger/OriginPicker";
@@ -13,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFareEstimate } from "@/hooks/useFareEstimate";
 import type { PlaceDetails } from "@/services/googlePlaces";
 import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
+import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 
 const categories = [
@@ -52,6 +54,7 @@ const PassengerHome = () => {
   const [forOtherPerson, setForOtherPerson] = useState(false);
   const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
   const [returnToOrigin, setReturnToOrigin] = useState(false);
+  const [showPixModal, setShowPixModal] = useState(false);
 
   // Fetch recent rides
   useEffect(() => {
@@ -81,6 +84,7 @@ const PassengerHome = () => {
         } else if (ride.status === "completed") {
           setRideState("completed");
           setDriverLocation(null);
+          if (ride.payment_method === "pix") setShowPixModal(true);
           toast.success("Corrida finalizada!");
         } else if (ride.status === "cancelled") {
           setRideState("idle");
@@ -238,6 +242,7 @@ const PassengerHome = () => {
     setSelectedOrigin(null); setSelectedDestination(null); setSelectedStops([]);
     setDriverInfo(null); setPaymentMethod(null);
     setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps"); setReturnToOrigin(false);
+    setShowPixModal(false);
   };
 
   const isRideActive = ["searching", "accepted", "driver_arriving", "arrived", "in_progress"].includes(rideState);
@@ -275,7 +280,17 @@ const PassengerHome = () => {
 
           {/* Completed: Show summary */}
           {rideState === "completed" && activeRide && (
-            <RideSummary ride={activeRide} onRate={() => setRideState("rating")} />
+            <div className="space-y-3">
+              <RideSummary ride={activeRide} onRate={() => setRideState("rating")} />
+              {activeRide.payment_method === "pix" && (
+                <button
+                  onClick={() => setShowPixModal(true)}
+                  className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors"
+                >
+                  <QrCode className="h-4 w-4" /> Mostrar QR Code Pix
+                </button>
+              )}
+            </div>
           )}
 
           {/* Rating screen */}
@@ -647,6 +662,18 @@ const PassengerHome = () => {
         durationMin={estimatedTime || 0}
         estimatedPrice={estimatedPrice || 0}
         category={selectedCategory}
+      />
+
+      {/* Pix Payment Modal — exibido ao final da corrida quando pagamento é Pix */}
+      <PixPaymentModal
+        open={showPixModal}
+        onClose={() => setShowPixModal(false)}
+        driverName={driverInfo?.profile?.full_name || "Motorista"}
+        pixKey={driverInfo?.pix_key || null}
+        pixKeyType={(driverInfo?.pix_key_type as PixKeyType) || null}
+        amount={Number(activeRide?.price || 0)}
+        rideId={activeRide?.id || ""}
+        merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
       />
 
       <AppMenu role="passenger" />

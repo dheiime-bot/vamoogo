@@ -201,8 +201,14 @@ const DriverHome = () => {
   const handleFinishRide = async () => {
     if (!activeRide || !user) return;
     const platformFee = Number(activeRide.platform_fee || 0);
+    const isPix = activeRide.payment_method === "pix";
+
     await supabase.from("rides")
-      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        ...(isPix ? { pix_paid_at: new Date().toISOString() } : {}),
+      })
       .eq("id", activeRide.id);
     if (driverData) {
       await supabase.from("drivers")
@@ -212,7 +218,11 @@ const DriverHome = () => {
         })
         .eq("user_id", user.id);
     }
-    toast.success(`Corrida finalizada! Taxa: R$ ${platformFee.toFixed(2)}`);
+    if (isPix) {
+      toast.success("Corrida finalizada! Confirme o recebimento do Pix com o passageiro.");
+    } else {
+      toast.success(`Corrida finalizada! Taxa: R$ ${platformFee.toFixed(2)}`);
+    }
     setActiveRide(null);
     setRideState("idle");
   };

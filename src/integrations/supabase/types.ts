@@ -241,6 +241,8 @@ export type Database = {
           daily_cancellations: number | null
           id: string
           last_cancellation_reset: string | null
+          pix_key: string | null
+          pix_key_type: string | null
           rating: number | null
           status: Database["public"]["Enums"]["driver_status"]
           total_rides: number | null
@@ -261,6 +263,8 @@ export type Database = {
           daily_cancellations?: number | null
           id?: string
           last_cancellation_reset?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
           rating?: number | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
@@ -281,6 +285,8 @@ export type Database = {
           daily_cancellations?: number | null
           id?: string
           last_cancellation_reset?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
           rating?: number | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
@@ -657,6 +663,7 @@ export type Database = {
           passenger_count: number
           passenger_id: string
           payment_method: Database["public"]["Enums"]["payment_method"] | null
+          pix_paid_at: string | null
           platform_fee: number | null
           price: number | null
           rating: number | null
@@ -690,6 +697,7 @@ export type Database = {
           passenger_count?: number
           passenger_id: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          pix_paid_at?: string | null
           platform_fee?: number | null
           price?: number | null
           rating?: number | null
@@ -723,6 +731,7 @@ export type Database = {
           passenger_count?: number
           passenger_id?: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          pix_paid_at?: string | null
           platform_fee?: number | null
           price?: number | null
           rating?: number | null

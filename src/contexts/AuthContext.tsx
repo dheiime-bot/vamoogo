@@ -11,6 +11,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, metadata: Record<string, string>) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -90,8 +91,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setDriverData(null);
   };
 
+  const refreshProfile = async () => {
+    if (!user) return;
+    const { data: profileData } = await supabase
+      .from("profiles").select("*").eq("user_id", user.id).single();
+    setProfile(profileData);
+    if (profileData?.user_type === "driver") {
+      const { data: driver } = await supabase
+        .from("drivers").select("*").eq("user_id", user.id).single();
+      setDriverData(driver);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, driverData, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, driverData, signUp, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
