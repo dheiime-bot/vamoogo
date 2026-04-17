@@ -68,6 +68,44 @@ const PassengerHome = () => {
       .then(({ data }) => { if (data) setRecentRides(data); });
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const loadActiveRide = async () => {
+      const { data: ride } = await supabase
+        .from("rides")
+        .select("*")
+        .eq("passenger_id", user.id)
+        .in("status", ["requested", "accepted", "in_progress"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!ride) return;
+
+      setActiveRide(ride);
+      setPaymentMethod((ride.payment_method as PaymentMethod) ?? null);
+
+      if (ride.status === "requested") setRideState("searching");
+      else if (ride.status === "in_progress") setRideState("in_progress");
+      else if (ride.arrived_at) setRideState("arrived");
+      else setRideState("driver_arriving");
+
+      if (ride.driver_id) {
+        const [{ data: driver }, { data: driverProfile }] = await Promise.all([
+          supabase.from("drivers").select("*").eq("user_id", ride.driver_id).maybeSingle(),
+          supabase.from("profiles").select("*").eq("user_id", ride.driver_id).maybeSingle(),
+        ]);
+
+        if (driver && driverProfile) {
+          setDriverInfo({ ...driver, profile: driverProfile });
+        }
+      }
+    };
+
+    loadActiveRide();
+  }, [user]);
+
   // Realtime: updates da corrida + posição do motorista
   useEffect(() => {
     if (!user) return;
