@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 const COLORS = ["hsl(210,100%,56%)", "hsl(145,100%,39%)", "hsl(38,95%,55%)", "hsl(0,84%,60%)"];
 
+const SYSTEM_USER = "00000000-0000-0000-0000-000000000000";
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ ridesToday: 0, completedRides: 0, revenueToday: 0, driversOnline: 0, incidents: 0, totalDrivers: 0, totalPassengers: 0 });
@@ -17,6 +19,7 @@ const AdminDashboard = () => {
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [statusData, setStatusData] = useState<any[]>([]);
   const [activeRides, setActiveRides] = useState<any[]>([]);
+  const [cancelStats, setCancelStats] = useState({ total: 0, rate: 0, byPassenger: 0, byDriver: 0, bySystem: 0, byAdmin: 0, unknown: 0 });
 
   const load = async () => {
     const startToday = new Date();
