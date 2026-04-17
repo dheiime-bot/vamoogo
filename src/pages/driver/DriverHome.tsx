@@ -542,6 +542,23 @@ const DriverHome = () => {
         </div>
       )}
 
+      {/* Modal Pix — exibido pelo motorista quando vai cobrar */}
+      <PixPaymentModal
+        open={showPixModal}
+        onClose={() => setShowPixModal(false)}
+        onMarkAsPaid={async () => {
+          await handleFinishRide();
+          setShowPixModal(false);
+        }}
+        confirmLabel="Recebi — finalizar corrida"
+        driverName={profile?.full_name || "Motorista"}
+        pixKey={driverData?.pix_key || null}
+        pixKeyType={(driverData?.pix_key_type as PixKeyType) || null}
+        amount={Number(activeRide?.price || 0)}
+        rideId={activeRide?.id || ""}
+        merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
+      />
+
       <AppMenu role="driver" />
       <NotificationBell />
     </div>
