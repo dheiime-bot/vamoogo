@@ -75,9 +75,11 @@ const formatTimeAgo = (iso: string) => {
 interface Props {
   /** Quando true, posiciona como botão fixo absoluto no topo direito. */
   floating?: boolean;
+  /** Status de conexão GPS — colore o sino: verde=conectado, vermelho=desconectado, neutro=idle */
+  connectionStatus?: "connected" | "disconnected" | "idle";
 }
 
-const NotificationBell = ({ floating = true }: Props) => {
+const NotificationBell = ({ floating = true, connectionStatus = "idle" }: Props) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
