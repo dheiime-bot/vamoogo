@@ -217,7 +217,7 @@ const DriverProfile = () => {
 
       <AppMenu role="driver" />
       <NotificationBell />
-      <UserMenu role="driver" />
+      
       <EditProfileModal open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
