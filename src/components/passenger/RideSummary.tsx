@@ -101,13 +101,15 @@ const RideSummary = ({ ride, onRate, hideRateButton = false }: RideSummaryProps)
         )}
       </div>
 
-      {/* Rate button */}
-      <button
-        onClick={onRate}
-        className="w-full rounded-xl bg-gradient-primary py-4 text-sm font-bold text-primary-foreground shadow-glow flex items-center justify-center gap-2"
-      >
-        <Star className="h-4 w-4" /> Avaliar motorista
-      </button>
+      {/* Rate button — escondido quando o resumo aparece dentro do modal de avaliação */}
+      {!hideRateButton && (
+        <button
+          onClick={onRate}
+          className="w-full rounded-xl bg-gradient-primary py-4 text-sm font-bold text-primary-foreground shadow-glow flex items-center justify-center gap-2"
+        >
+          <Star className="h-4 w-4" /> Avaliar motorista
+        </button>
+      )}
     </div>
   );
 };
