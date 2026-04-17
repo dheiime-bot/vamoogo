@@ -1,4 +1,4 @@
-import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserIcon, AlertCircle, FileWarning, MessageSquare } from "lucide-react";
+import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserIcon, AlertCircle, FileWarning, MessageSquare, ShieldCheck, Calendar, KeyRound, Hash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -30,6 +30,12 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
       ["cnh_back", driver.cnh_back_url, "driver-documents"],
       ["crlv", driver.crlv_url, "driver-documents"],
       ["selfie_doc", driver.selfie_with_document_url, "driver-documents"],
+      ["selfie_liveness", driver.selfie_liveness_url, "selfies"],
+      ["criminal", driver.criminal_record_url, "driver-documents"],
+      ["v_front", driver.vehicle_photo_front_url, "driver-documents"],
+      ["v_back", driver.vehicle_photo_back_url, "driver-documents"],
+      ["v_left", driver.vehicle_photo_left_url, "driver-documents"],
+      ["v_right", driver.vehicle_photo_right_url, "driver-documents"],
     ];
 
     (async () => {
@@ -126,6 +132,22 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
                   <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
                   <div className="min-w-0"><p className="text-[10px] text-muted-foreground">E-mail</p><p className="text-xs font-medium truncate">{profile?.email || "—"}</p></div>
                 </div>
+                <div className="rounded-lg bg-muted p-2.5 flex items-center gap-2">
+                  <Calendar className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div className="min-w-0"><p className="text-[10px] text-muted-foreground">Nascimento</p><p className="text-xs font-medium truncate">{profile?.birth_date ? new Date(profile.birth_date).toLocaleDateString("pt-BR") : "—"}</p></div>
+                </div>
+                <div className="rounded-lg bg-muted p-2.5 flex items-center gap-2">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div className="min-w-0"><p className="text-[10px] text-muted-foreground">Liveness</p><p className="text-xs font-medium truncate">{driver.liveness_verified ? "Verificado" : "Pendente"}</p></div>
+                </div>
+                <div className="rounded-lg bg-muted p-2.5 flex items-center gap-2">
+                  <Hash className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div className="min-w-0"><p className="text-[10px] text-muted-foreground">ID</p><p className="text-xs font-mono font-medium truncate">{driver.user_id?.slice(0, 8)}…</p></div>
+                </div>
+                <div className="rounded-lg bg-muted p-2.5 flex items-center gap-2">
+                  <Calendar className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div className="min-w-0"><p className="text-[10px] text-muted-foreground">Cadastrado</p><p className="text-xs font-medium truncate">{new Date(driver.created_at).toLocaleDateString("pt-BR")}</p></div>
+                </div>
               </div>
             </div>
 
@@ -160,18 +182,34 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
               <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Documentos enviados</p>
               <div className="grid grid-cols-2 gap-3">
                 <ImageBlock url={signedUrls.selfie_signup || signedUrls.selfie} label="Selfie do cadastro" icon={UserIcon} />
+                <ImageBlock url={signedUrls.selfie_liveness} label="Selfie ao vivo (liveness)" icon={ShieldCheck} />
                 <ImageBlock url={signedUrls.selfie_doc} label="Selfie com documento" icon={UserIcon} />
                 <ImageBlock url={signedUrls.cnh_front} label="CNH (frente)" icon={FileText} />
                 <ImageBlock url={signedUrls.cnh_back} label="CNH (verso)" icon={FileText} />
                 <ImageBlock url={signedUrls.crlv} label="CRLV" icon={FileText} />
+                <ImageBlock url={signedUrls.criminal} label={`Antecedentes${driver.criminal_record_issued_at ? ` (${new Date(driver.criminal_record_issued_at).toLocaleDateString("pt-BR")})` : ""}`} icon={FileText} />
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                     <FileText className="h-3.5 w-3.5" /> CNH (nº)
                   </p>
                   <div className="rounded-xl border bg-muted/30 p-3 h-full flex items-center">
-                    <p className="text-sm font-mono font-bold">{driver.cnh_number || "—"}</p>
+                    <div>
+                      <p className="text-sm font-mono font-bold">{driver.cnh_number || "—"}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">EAR: {driver.cnh_ear ? "Sim" : "Não"}</p>
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Vehicle photos */}
+            <div>
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Fotos do veículo</p>
+              <div className="grid grid-cols-2 gap-3">
+                <ImageBlock url={signedUrls.v_front} label="Frente" icon={Car} />
+                <ImageBlock url={signedUrls.v_back} label="Traseira" icon={Car} />
+                <ImageBlock url={signedUrls.v_left} label="Lateral esquerda" icon={Car} />
+                <ImageBlock url={signedUrls.v_right} label="Lateral direita" icon={Car} />
               </div>
             </div>
 
