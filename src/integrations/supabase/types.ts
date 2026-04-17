@@ -721,6 +721,7 @@ export type Database = {
           platform_fee: number | null
           price: number | null
           rating: number | null
+          ride_code: string
           started_at: string | null
           status: Database["public"]["Enums"]["ride_status"]
           stops: Json | null
@@ -755,6 +756,7 @@ export type Database = {
           platform_fee?: number | null
           price?: number | null
           rating?: number | null
+          ride_code: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
           stops?: Json | null
@@ -789,6 +791,7 @@ export type Database = {
           platform_fee?: number | null
           price?: number | null
           rating?: number | null
+          ride_code?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
           stops?: Json | null
