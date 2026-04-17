@@ -45,7 +45,7 @@ const queryClient = new QueryClient();
 const ProtectedAdminRoute = ({ children }: { children: JSX.Element }) => {
   const { user, roles, loading } = useAuth();
 
-  if (loading) {
+  if (loading || (user && roles.length === 0)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -53,8 +53,8 @@ const ProtectedAdminRoute = ({ children }: { children: JSX.Element }) => {
     );
   }
 
-  if (!user) return <Navigate to="/auth" replace />;
-  if (!roles.includes("admin") && !roles.includes("master")) return <Navigate to="/passenger" replace />;
+  if (!user) return <Navigate to="/" replace />;
+  if (!roles.includes("admin") && !roles.includes("master")) return <Navigate to="/" replace />;
 
   return children;
 };

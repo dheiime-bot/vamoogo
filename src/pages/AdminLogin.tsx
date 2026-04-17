@@ -15,13 +15,22 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingAdminRedirect, setPendingAdminRedirect] = useState(false);
 
-  // Se já estiver logado como admin/master, redireciona
   useEffect(() => {
     if (!authLoading && user && (roles.includes("admin") || roles.includes("master"))) {
       navigate("/admin", { replace: true });
+      return;
     }
-  }, [authLoading, user, roles, navigate]);
+
+    if (!authLoading && pendingAdminRedirect) {
+      setLoading(false);
+      if (!user || (!roles.includes("admin") && !roles.includes("master"))) {
+        setPendingAdminRedirect(false);
+        setError("Acesso restrito. Esta área é exclusiva para administradores.");
+      }
+    }
+  }, [authLoading, user, roles, navigate, pendingAdminRedirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +48,6 @@ const AdminLogin = () => {
         return;
       }
 
-      // Verifica papel admin/master
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess.session?.user.id;
       if (!uid) {
@@ -62,8 +70,8 @@ const AdminLogin = () => {
         return;
       }
 
+      setPendingAdminRedirect(true);
       toast.success("Bem-vindo, administrador!");
-      navigate("/admin", { replace: true });
     } catch (err: any) {
       setError(err?.message || "Erro ao entrar.");
       setLoading(false);
