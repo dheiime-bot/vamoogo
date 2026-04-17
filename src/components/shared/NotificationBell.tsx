@@ -218,11 +218,19 @@ const NotificationBell = ({ floating = true }: Props) => {
               items.map((n) => {
                 const Icon = iconFor(n.type);
                 return (
-                  <button
+                  <div
                     key={n.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleClick(n)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleClick(n);
+                      }
+                    }}
                     className={cn(
-                      "w-full flex gap-3 border-b px-4 py-3 text-left transition-colors hover:bg-muted/60 last:border-b-0",
+                      "group relative w-full flex gap-3 border-b px-4 py-3 text-left cursor-pointer transition-colors hover:bg-muted/60 last:border-b-0",
                       !n.is_read && "bg-primary/5"
                     )}
                   >
@@ -242,8 +250,19 @@ const NotificationBell = ({ floating = true }: Props) => {
                         <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.message}</p>
                       )}
                     </div>
-                    {!n.is_read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
-                  </button>
+                    {!n.is_read ? (
+                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label="Excluir notificação"
+                        onClick={(e) => deleteNotification(e, n.id)}
+                        className="shrink-0 self-start mt-0.5 rounded-full p-1 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 );
               })
             )}
