@@ -9,6 +9,7 @@ import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
 import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passenger/OriginPicker";
 import AddressAutocompleteField from "@/components/address/AddressAutocompleteField";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useFareEstimate } from "@/hooks/useFareEstimate";
