@@ -127,7 +127,7 @@ const DriverSignup = () => {
     if (!iso) return "Data inválida (use DD/MM/AAAA)";
     const a = calcAgeBR(v);
     if (a === null) return "Data inválida";
-    if (a < 16) return "Cadastro permitido a partir de 16 anos";
+    if (a < 20) return "Motorista precisa ter no mínimo 20 anos";
     if (a > 80) return "Data inválida";
     return "";
   };
@@ -331,13 +331,15 @@ const DriverSignup = () => {
   const validateStepDocumentos = (): boolean => {
     const errs: Record<string, string> = {};
     const ec = validateCnh(cnhNumber); if (ec) errs.cnh = ec;
+    if (!cnhEar) errs.cnhEar = "É obrigatório possuir CNH com observação EAR (Exerce Atividade Remunerada)";
     if (!cnhFrontUrl) errs.cnhFront = "Envie a frente da CNH";
     if (!cnhBackUrl) errs.cnhBack = "Envie o verso da CNH";
     if (!crlvUrl) errs.crlv = "Envie o CRLV do veículo";
     if (!selfieDocUrl) errs.selfieDoc = "Envie a selfie segurando o documento";
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
-      toast.error("Envie todos os documentos");
+      if (errs.cnhEar) toast.error(errs.cnhEar);
+      else toast.error("Envie todos os documentos");
       return false;
     }
     return true;
@@ -669,10 +671,24 @@ const DriverSignup = () => {
 
             <Field label="Número da CNH" icon={<FileText className="h-4 w-4" />} value={cnhNumber} onChange={handleCnhNumber} placeholder="11 dígitos" error={errors.cnh} maxLength={11} inputMode="numeric" />
 
-            <label className="flex items-center gap-2 cursor-pointer rounded-xl border bg-background p-3">
-              <input type="checkbox" checked={cnhEar} onChange={(e) => setCnhEar(e.target.checked)} className="h-4 w-4 rounded border-input accent-primary" />
-              <span className="text-xs">Minha CNH possui observação <strong>EAR</strong> (Exerce Atividade Remunerada)</span>
-            </label>
+            <div>
+              <label className={`flex items-center gap-2 cursor-pointer rounded-xl border bg-background p-3 ${errors.cnhEar ? "border-destructive" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={cnhEar}
+                  onChange={(e) => { setCnhEar(e.target.checked); if (e.target.checked) clearErr("cnhEar"); }}
+                  className="h-4 w-4 rounded border-input accent-primary"
+                />
+                <span className="text-xs">
+                  Confirmo que minha CNH possui a observação <strong>EAR</strong> (Exerce Atividade Remunerada) — <span className="text-destructive">obrigatório</span>
+                </span>
+              </label>
+              {errors.cnhEar && (
+                <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                  <AlertCircle className="h-3 w-3" /> {errors.cnhEar}
+                </p>
+              )}
+            </div>
 
             <DocumentUpload label="CNH (frente)" bucket="driver-documents" pathPrefix={`signup/${cpf.replace(/\D/g, "")}/cnh-frente`} value={cnhFrontUrl} onChange={setCnhFrontUrl} capture="environment" hint="Foto da frente da CNH, sem reflexos" />
             {errors.cnhFront && <p className="text-xs text-destructive flex items-center gap-1 -mt-2"><AlertCircle className="h-3 w-3" /> {errors.cnhFront}</p>}
