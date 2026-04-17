@@ -459,6 +459,7 @@ const PassengerHome = () => {
           driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
           trackUserLocation={!selectedOrigin}
           showRoute={!!selectedOrigin && !!effectiveDestination}
+          bottomInset={rideState === "idle" ? 96 : 0}
         />
       </div>
 

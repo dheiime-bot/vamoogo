@@ -35,6 +35,8 @@ interface GoogleMapProps {
   interactive?: boolean;
   showRoute?: boolean;
   trackUserLocation?: boolean;
+  /** Espaçamento extra no rodapé (px) — sobe o botão recentralizar e o logo do Google p/ não ficarem cobertos por CTAs. */
+  bottomInset?: number;
 }
 
 const ALTAMIRA_CENTER = { lat: -3.2036, lng: -52.2108 };
@@ -505,7 +507,7 @@ const MapStyler = () => {
 };
 
 /** Botão flutuante para recentralizar o mapa em um ponto preferido. */
-const RecenterButton = ({ target }: { target: MapPoint | null }) => {
+const RecenterButton = ({ target, bottomInset = 0 }: { target: MapPoint | null; bottomInset?: number }) => {
   const map = useMap();
 
   const handleClick = () => {
@@ -535,7 +537,7 @@ const RecenterButton = ({ target }: { target: MapPoint | null }) => {
       type="button"
       onClick={handleClick}
       aria-label="Recentralizar mapa"
-      className="absolute bottom-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-lg ring-1 ring-border hover:bg-muted transition-colors active:scale-95"
+      className="absolute bottom-4 right-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-lg ring-1 ring-border hover:bg-muted transition-colors active:scale-95"
     >
       <LocateFixed className="h-5 w-5 text-primary" />
     </button>
@@ -555,6 +557,7 @@ const GoogleMapInner = ({
   interactive = true,
   showRoute = true,
   trackUserLocation = false,
+  bottomInset = 0,
 }: Omit<GoogleMapProps, "className" | "showCenterPin">) => {
   const [userLoc, setUserLoc] = useState<MapPoint | null>(null);
   const animatedDriver = useInterpolatedPosition(driverLocation || null);
@@ -587,7 +590,7 @@ const GoogleMapInner = ({
       rotateControl={false}
       scaleControl={false}
       clickableIcons={false}
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: "100%", height: "100%", paddingBottom: bottomInset }}
     >
       <MapStyler />
 
@@ -647,7 +650,7 @@ const GoogleMapInner = ({
       {onMapClick && <ClickHandler onMapClick={onMapClick} />}
       {onCenterChange && <CenterTracker onCenterChange={onCenterChange} />}
       {interactive && (
-        <RecenterButton target={origin || animatedDriver || userLoc || null} />
+        <RecenterButton target={origin || animatedDriver || userLoc || null} bottomInset={bottomInset} />
       )}
     </Map>
   );
