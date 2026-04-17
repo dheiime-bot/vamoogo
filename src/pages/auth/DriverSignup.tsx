@@ -401,6 +401,32 @@ const DriverSignup = () => {
     const cleanPlate = vehiclePlate.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
     const isoBirth = parseDateBRtoISO(birthDate);
 
+    // Pré-checagem de duplicidade (evita o erro genérico do GoTrue)
+    try {
+      const { data: dupes } = await supabase
+        .from("profiles")
+        .select("cpf, phone")
+        .or(`cpf.eq.${cleanCpf},phone.eq.${cleanPhone}`)
+        .limit(2);
+      if (dupes && dupes.length > 0) {
+        const cpfDup = dupes.some((d: any) => d.cpf === cleanCpf);
+        const phoneDup = dupes.some((d: any) => d.phone === cleanPhone);
+        setLoading(false);
+        if (cpfDup) {
+          toast.error("CPF já cadastrado em outra conta.", { duration: 6000 });
+          setErr("cpf", "CPF já cadastrado em outra conta.");
+          setStep(0);
+          return;
+        }
+        if (phoneDup) {
+          toast.error("Telefone já cadastrado em outra conta. Use outro número.", { duration: 6000 });
+          setErr("phone", "Telefone já cadastrado em outra conta.");
+          setStep(0);
+          return;
+        }
+      }
+    } catch {/* ignore — segue para o signUp */}
+
     const metadata: Record<string, string> = {
       full_name: fullName.trim(),
       cpf: cleanCpf,
