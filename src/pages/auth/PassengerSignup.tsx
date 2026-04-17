@@ -11,7 +11,7 @@ import { formatDateBR, parseDateBRtoISO, calcAgeBR } from "@/lib/brFormat";
 import {
   isFakeName, isFakeEmail, isFakeCPF, isFakePhone, checkPasswordStrength,
 } from "@/lib/antiFake";
-import DocumentUpload from "@/components/auth/DocumentUpload";
+import LiveSelfieCapture from "@/components/auth/LiveSelfieCapture";
 import { toast } from "sonner";
 
 type StepKey = "dados" | "seguranca" | "selfie";
@@ -473,28 +473,26 @@ const PassengerSignup = () => {
           </div>
         )}
 
-        {/* STEP 2: Selfie */}
+        {/* STEP 2: Selfie ao vivo */}
         {step === 2 && (
           <div className="space-y-4 animate-fade-in">
             <div className="rounded-xl border-2 border-info/30 bg-info/10 p-4">
               <p className="text-sm font-bold text-info flex items-center gap-2">
-                <Camera className="h-4 w-4" /> Selfie de verificação
+                <Camera className="h-4 w-4" /> Selfie ao vivo
               </p>
               <p className="text-xs text-muted-foreground mt-1.5">
-                Tire uma foto do seu rosto agora para confirmarmos que é você.
-                Esta foto é <strong>permanente</strong> e fica armazenada para sua segurança,
-                mesmo que você troque a foto de perfil depois.
+                A foto é capturada ao vivo pela câmera frontal. <strong>Não aceitamos</strong> imagens da galeria, fotos impressas, screenshots ou imagens em telas. Você precisará <strong>piscar</strong> durante a verificação. Se tudo estiver OK, sua conta é liberada na hora.
               </p>
             </div>
 
-            <DocumentUpload
-              label="Selfie obrigatória"
+            <LiveSelfieCapture
+              label="Selfie obrigatória (com verificação anti-fraude)"
               bucket="selfies"
               pathPrefix={`signup/${cpf.replace(/\D/g, "")}/selfie`}
               value={selfieUrl}
-              onChange={setSelfieUrl}
-              capture="user"
-              hint="Use boa iluminação, sem óculos escuros, mantenha o rosto centralizado"
+              onChange={(url) => setSelfieUrl(url)}
+              liveness
+              hint="Boa iluminação, sem óculos escuros, rosto centralizado no círculo"
             />
 
             {/* Resumo */}
