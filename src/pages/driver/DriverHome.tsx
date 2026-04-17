@@ -501,7 +501,7 @@ const DriverHome = () => {
 
       {/* Going to passenger */}
       {rideState === "going_to_passenger" && activeRide && (
-        <div className="mx-4 mt-4 rounded-2xl border bg-card p-4 space-y-3">
+        <div className="max-h-[60vh] overflow-y-auto rounded-2xl border bg-card p-4 space-y-3 shadow-glow">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-sm font-bold text-info truncate">A caminho do passageiro</span>
