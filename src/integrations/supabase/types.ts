@@ -783,6 +783,7 @@ export type Database = {
           base_fare: number
           category: Database["public"]["Enums"]["vehicle_category"]
           created_at: string
+          fee_percent: number | null
           id: string
           min_fare: number
           passenger_extra: number
@@ -796,6 +797,7 @@ export type Database = {
           base_fare?: number
           category: Database["public"]["Enums"]["vehicle_category"]
           created_at?: string
+          fee_percent?: number | null
           id?: string
           min_fare?: number
           passenger_extra?: number
@@ -809,6 +811,7 @@ export type Database = {
           base_fare?: number
           category?: Database["public"]["Enums"]["vehicle_category"]
           created_at?: string
+          fee_percent?: number | null
           id?: string
           min_fare?: number
           passenger_extra?: number
