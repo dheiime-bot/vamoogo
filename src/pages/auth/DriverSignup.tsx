@@ -77,6 +77,11 @@ const DriverSignup = () => {
   const [vehicleColor, setVehicleColor] = useState("");
   const [vehicleYear, setVehicleYear] = useState("");
   const [vehiclePlate, setVehiclePlate] = useState("");
+  // Fotos do veículo (4 ângulos)
+  const [vehiclePhotoFront, setVehiclePhotoFront] = useState<string | null>(null);
+  const [vehiclePhotoBack, setVehiclePhotoBack] = useState<string | null>(null);
+  const [vehiclePhotoLeft, setVehiclePhotoLeft] = useState<string | null>(null);
+  const [vehiclePhotoRight, setVehiclePhotoRight] = useState<string | null>(null);
 
   // Documentos
   const [cnhNumber, setCnhNumber] = useState("");
@@ -296,6 +301,10 @@ const DriverSignup = () => {
     if (!vehicleColor.trim()) errs.color = "Informe a cor";
     const ey = validateYear(vehicleYear); if (ey) errs.year = ey;
     const ep = validatePlateField(vehiclePlate); if (ep) errs.plate = ep;
+    if (!vehiclePhotoFront) errs.photoFront = "Envie a foto da frente do veículo";
+    if (!vehiclePhotoBack) errs.photoBack = "Envie a foto da traseira do veículo";
+    if (!vehiclePhotoLeft) errs.photoLeft = "Envie a foto da lateral esquerda";
+    if (!vehiclePhotoRight) errs.photoRight = "Envie a foto da lateral direita";
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
       toast.error("Corrija os campos destacados");
