@@ -15,6 +15,19 @@ export interface FriendlyAuthError {
 export const friendlyAuthError = (error: any): FriendlyAuthError => {
   const raw = (error?.message || "").toLowerCase();
 
+  // Senha conhecida por ser fraca / fácil de adivinhar
+  if (
+    raw.includes("known to be weak") ||
+    raw.includes("weak and easy to guess") ||
+    raw.includes("easy to guess") ||
+    raw.includes("choose a different password")
+  ) {
+    return {
+      message: "Esta senha é fraca ou fácil de adivinhar. Escolha uma senha diferente, mais forte, com letras maiúsculas, minúsculas, números e símbolos.",
+      field: "password",
+    };
+  }
+
   // Senha vazada (Have I Been Pwned)
   if (raw.includes("pwned") || raw.includes("compromised") || raw.includes("data breach") || raw.includes("leaked")) {
     return {
