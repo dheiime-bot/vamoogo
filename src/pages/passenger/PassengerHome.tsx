@@ -634,7 +634,15 @@ const PassengerHome = () => {
         onClose={() => setRideState("idle")}
         onConfirm={handleConfirmRide}
         originName={selectedOrigin?.name || ""}
-        destinationName={returnToOrigin && selectedDestination ? `${selectedDestination.name} + retorno` : selectedDestination?.name || ""}
+        originAddress={selectedOrigin?.address}
+        destinationName={selectedDestination?.name || ""}
+        destinationAddress={selectedDestination?.address}
+        stops={confirmedStops.map((s) => ({ name: s.name, address: s.address }))}
+        returnToOrigin={returnToOrigin}
+        passengerCount={passengers}
+        forOtherPerson={forOtherPerson}
+        otherPersonName={otherPerson.name}
+        otherPersonPhone={otherPerson.phone}
         distanceKm={estimatedDistance || 0}
         durationMin={estimatedTime || 0}
         estimatedPrice={estimatedPrice || 0}
