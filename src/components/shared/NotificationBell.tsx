@@ -152,6 +152,13 @@ const NotificationBell = ({ floating = true }: Props) => {
       .eq("is_read", false);
   };
 
+  const clearAll = async () => {
+    if (!user || items.length === 0) return;
+    setItems([]);
+    await supabase.from("notifications").delete().eq("user_id", user.id);
+    toast.success("Notificações limpas");
+  };
+
   const handleClick = async (n: NotificationRow) => {
     setOpen(false);
     if (!n.is_read) await markAsRead(n.id);
