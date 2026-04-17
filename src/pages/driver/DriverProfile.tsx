@@ -193,6 +193,9 @@ const DriverProfile = () => {
         {driverData && (
           <div className="mt-4 rounded-2xl border bg-card p-4">
             <h3 className="text-sm font-semibold mb-3">Veículo</h3>
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Para alterar dados do veículo, entre em contato com o suporte.
+            </p>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "Modelo", value: driverData.vehicle_model || "N/A" },
@@ -213,6 +216,7 @@ const DriverProfile = () => {
 
       <AppMenu role="driver" />
       <NotificationBell />
+      <EditProfileModal open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
 };
