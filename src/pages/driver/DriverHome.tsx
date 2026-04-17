@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode } from "lucide-react";
+import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode, Navigation as NavigationIcon } from "lucide-react";
+import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
@@ -91,9 +92,11 @@ const DriverHome = () => {
       .order("created_at", { ascending: false }).limit(1)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          const r = data[0];
+          const r = data[0] as any;
           setActiveRide(r);
-          setRideState(r.status === "in_progress" ? "in_ride" : "going_to_passenger");
+          if (r.status === "in_progress") setRideState("in_ride");
+          else if (r.arrived_at) setRideState("arrived");
+          else setRideState("going_to_passenger");
         }
       });
   }, [user]);
@@ -218,8 +221,17 @@ const DriverHome = () => {
 
   const handleArrived = async () => {
     if (!activeRide) return;
+    const { error } = await supabase
+      .from("rides")
+      .update({ arrived_at: new Date().toISOString() } as any)
+      .eq("id", activeRide.id);
+    if (error) {
+      toast.error("Erro ao notificar chegada: " + error.message);
+      return;
+    }
+    setActiveRide({ ...activeRide, arrived_at: new Date().toISOString() });
     setRideState("arrived");
-    toast.success("Você chegou ao local de embarque!");
+    toast.success("Passageiro avisado: você chegou! 📍");
   };
 
   const handleStartRide = async () => {
@@ -497,6 +509,11 @@ const DriverHome = () => {
               <MessageCircle className="h-4 w-4 text-primary" /> Chat
             </button>
           </div>
+          <button
+            onClick={() => openGoogleMapsRoute(Number(activeRide.origin_lat), Number(activeRide.origin_lng), "Embarque")}
+            className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
+            <NavigationIcon className="h-4 w-4" /> Navegar até passageiro (Google Maps)
+          </button>
           <button onClick={handleArrived}
             className="w-full rounded-xl bg-info py-3 text-sm font-bold text-info-foreground flex items-center justify-center gap-2">
             <MapPin className="h-4 w-4" /> Cheguei ao local
@@ -541,6 +558,11 @@ const DriverHome = () => {
           <div className="text-xs text-muted-foreground">
             {activeRide.distance_km} km • ~{activeRide.duration_minutes} min • Taxa plataforma: R$ {Number(activeRide.platform_fee).toFixed(2)}
           </div>
+          <button
+            onClick={() => openGoogleMapsRoute(Number(activeRide.destination_lat), Number(activeRide.destination_lng), "Destino")}
+            className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
+            <NavigationIcon className="h-4 w-4" /> Navegar até destino (Google Maps)
+          </button>
           {activeRide.payment_method === "pix" ? (
             <button onClick={() => setShowPixModal(true)}
               className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">

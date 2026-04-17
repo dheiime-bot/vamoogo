@@ -750,6 +750,7 @@ export type Database = {
       }
       rides: {
         Row: {
+          arrived_at: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           category: Database["public"]["Enums"]["vehicle_category"]
@@ -785,6 +786,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          arrived_at?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           category?: Database["public"]["Enums"]["vehicle_category"]
@@ -820,6 +822,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          arrived_at?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           category?: Database["public"]["Enums"]["vehicle_category"]

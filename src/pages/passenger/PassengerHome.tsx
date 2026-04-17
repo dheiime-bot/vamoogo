@@ -72,14 +72,26 @@ const PassengerHome = () => {
       .channel("passenger-rides")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "rides", filter: `passenger_id=eq.${user.id}` }, async (payload) => {
         const ride = payload.new as any;
+        const prev = payload.old as any;
         setActiveRide(ride);
 
         if (ride.status === "accepted" && ride.driver_id) {
           const { data: driver } = await supabase.from("drivers").select("*").eq("user_id", ride.driver_id).single();
           const { data: driverProfile } = await supabase.from("profiles").select("*").eq("user_id", ride.driver_id).single();
           if (driver && driverProfile) setDriverInfo({ ...driver, profile: driverProfile });
-          setRideState("driver_arriving");
-          toast.success("Motorista a caminho! 🚗");
+          // Se já tem arrived_at quando chegou o accepted (race condition), pula direto
+          if (ride.arrived_at) {
+            setRideState("arrived");
+            toast.success("Seu motorista chegou! 📍");
+          } else {
+            setRideState("driver_arriving");
+            toast.success("Motorista a caminho! 🚗");
+          }
+        } else if (ride.status === "accepted" && ride.arrived_at && !prev?.arrived_at) {
+          // Motorista marcou chegada
+          setRideState("arrived");
+          toast.success("Seu motorista chegou! 📍", { duration: 6000 });
+          if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
         } else if (ride.status === "in_progress") {
           setRideState("in_progress");
           toast.success("Corrida iniciada!");
@@ -274,10 +286,10 @@ const PassengerHome = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Map */}
+      {/* Map — maior durante corrida ativa pra acompanhar movimento ao vivo */}
       <div className="relative">
         <GoogleMap
-          className="h-[58vh] rounded-none"
+          className={`${isRideActive || rideState === "completed" ? "h-[68vh]" : "h-[58vh]"} rounded-none transition-all duration-300`}
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
           stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
