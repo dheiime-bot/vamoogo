@@ -360,6 +360,8 @@ const PassengerHome = () => {
       }).then(() => {});
     }
   };
+
+  const handleSubmitRating = async () => {
     if (!activeRide || rating === 0) return;
     await supabase.from("rides").update({ rating }).eq("id", activeRide.id);
     toast.success("Avaliação enviada! Obrigado ⭐");
