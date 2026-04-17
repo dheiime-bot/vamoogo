@@ -331,13 +331,15 @@ const DriverSignup = () => {
   const validateStepDocumentos = (): boolean => {
     const errs: Record<string, string> = {};
     const ec = validateCnh(cnhNumber); if (ec) errs.cnh = ec;
+    if (!cnhEar) errs.cnhEar = "É obrigatório possuir CNH com observação EAR (Exerce Atividade Remunerada)";
     if (!cnhFrontUrl) errs.cnhFront = "Envie a frente da CNH";
     if (!cnhBackUrl) errs.cnhBack = "Envie o verso da CNH";
     if (!crlvUrl) errs.crlv = "Envie o CRLV do veículo";
     if (!selfieDocUrl) errs.selfieDoc = "Envie a selfie segurando o documento";
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
-      toast.error("Envie todos os documentos");
+      if (errs.cnhEar) toast.error(errs.cnhEar);
+      else toast.error("Envie todos os documentos");
       return false;
     }
     return true;
