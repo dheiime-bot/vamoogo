@@ -121,7 +121,7 @@ const PassengerHome = () => {
   const fare = useFareEstimate(
     selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng } : null,
     effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng } : null,
-    selectedCategory as "moto" | "car" | "premium",
+    selectedCategory as "moto" | "economico" | "conforto",
     passengers,
     effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng }))
   );
