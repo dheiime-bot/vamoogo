@@ -120,7 +120,8 @@ const PassengerHome = () => {
       });
 
     const channel = supabase
-      .channel(`driver-location-${driverId}`)
+      .channel(`driver-rt-${driverId}`)
+      // Posição GPS em tempo real
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "driver_locations", filter: `driver_id=eq.${driverId}` },
@@ -133,6 +134,15 @@ const PassengerHome = () => {
               heading: loc.heading ?? undefined,
               category: loc.category ?? undefined,
             });
+        }
+      )
+      // Dados do motorista (chave Pix, veículo, etc) em tempo real
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "drivers", filter: `user_id=eq.${driverId}` },
+        (payload) => {
+          const updated = payload.new as any;
+          setDriverInfo((prev) => (prev ? { ...prev, ...updated } : prev));
         }
       )
       .subscribe();

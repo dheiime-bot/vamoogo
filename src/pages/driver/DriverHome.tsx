@@ -130,6 +130,33 @@ const DriverHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [isOnline, user, pendingOffer, activeRide]);
 
+  // Realtime: sincronia de UPDATEs em rides atribuídas a este motorista
+  // (cobre cancelamento pelo passageiro, mudanças de status externas, etc)
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`driver-rides-${user.id}`)
+      .on("postgres_changes",
+        { event: "UPDATE", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` },
+        (payload) => {
+          const ride = payload.new as any;
+          if (ride.status === "cancelled") {
+            setActiveRide(null);
+            setRideState("idle");
+            setShowChat(false);
+            toast.error("O passageiro cancelou a corrida");
+          } else if (ride.status === "completed") {
+            setActiveRide(null);
+            setRideState("idle");
+            setShowChat(false);
+          } else if (["accepted", "in_progress"].includes(ride.status)) {
+            setActiveRide((prev: any) => (prev?.id === ride.id ? { ...prev, ...ride } : prev));
+          }
+        })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   // Countdown da oferta + auto-reject ao expirar
   useEffect(() => {
     if (rideState !== "offer" || !pendingOffer) return;
