@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, X } from "lucide-react";
+import { Search, Eye, X, ImageIcon } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,16 +26,40 @@ const AdminDrivers = () => {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
+  const [thumbs, setThumbs] = useState<Record<string, { selfie?: string; cnh?: string; vehicle?: string }>>({});
+  const [zoomImg, setZoomImg] = useState<string | null>(null);
 
   const fetchDrivers = async () => {
     const { data } = await supabase
       .from("drivers")
-      .select("*, profiles!inner(full_name, cpf, phone, email, selfie_url, selfie_signup_url)")
+      .select("*, profiles!inner(full_name, cpf, phone, email, birth_date, selfie_url, selfie_signup_url, phone_verified)")
       .order("created_at", { ascending: false });
     if (data) setDrivers(data);
   };
 
   useEffect(() => { fetchDrivers(); }, []);
+
+  // Thumbs: selfie / CNH frente / foto frontal do veículo
+  useEffect(() => {
+    const resolve = async (bucket: "selfies" | "driver-documents", url?: string | null) => {
+      if (!url) return undefined;
+      if (url.startsWith("http")) return url;
+      const { data } = await supabase.storage.from(bucket).createSignedUrl(url, 3600);
+      return data?.signedUrl;
+    };
+    (async () => {
+      const map: Record<string, { selfie?: string; cnh?: string; vehicle?: string }> = {};
+      for (const d of drivers) {
+        const profile = (d as any).profiles;
+        map[d.id] = {
+          selfie: await resolve("selfies", profile?.selfie_signup_url || profile?.selfie_url),
+          cnh: await resolve("driver-documents", d.cnh_front_url),
+          vehicle: await resolve("driver-documents", d.vehicle_photo_front_url),
+        };
+      }
+      setThumbs(map);
+    })();
+  }, [drivers]);
 
   const updateStatus = async (newStatus: string, message?: string) => {
     if (!selectedDriver || !user) return;
@@ -51,7 +75,6 @@ const AdminDrivers = () => {
       return;
     }
 
-    // Notificação para o motorista
     const titles: Record<string, string> = {
       aprovado: "Cadastro aprovado! 🎉",
       reprovado: "Cadastro reprovado",
@@ -136,12 +159,17 @@ const AdminDrivers = () => {
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/50">
               <tr>
+                <th className="px-3 py-3 text-left font-semibold">Selfie</th>
                 <th className="px-4 py-3 text-left font-semibold">Motorista</th>
                 <th className="px-4 py-3 text-left font-semibold">CPF</th>
                 <th className="px-4 py-3 text-left font-semibold">Categoria</th>
+                <th className="px-4 py-3 text-left font-semibold">Veículo</th>
+                <th className="px-3 py-3 text-left font-semibold">CNH</th>
+                <th className="px-3 py-3 text-left font-semibold">Foto veíc.</th>
                 <th className="px-4 py-3 text-left font-semibold">Saldo</th>
                 <th className="px-4 py-3 text-left font-semibold">Corridas</th>
                 <th className="px-4 py-3 text-left font-semibold">Status</th>
+                <th className="px-4 py-3 text-left font-semibold">Cadastro</th>
                 <th className="px-4 py-3 text-left font-semibold">Ações</th>
               </tr>
             </thead>
@@ -149,14 +177,46 @@ const AdminDrivers = () => {
               {filtered.map((d) => {
                 const profile = (d as any).profiles;
                 const info = getDriverStatusInfo(d.status);
+                const t = thumbs[d.id] || {};
                 return (
                   <tr key={d.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedDriver(d)}>
+                    <td className="px-3 py-2">
+                      {t.selfie ? (
+                        <button onClick={(e) => { e.stopPropagation(); setZoomImg(t.selfie!); }} className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary" title="Ver selfie">
+                          <img src={t.selfie} alt={profile?.full_name} className="h-full w-full object-cover" />
+                        </button>
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <p className="font-medium">{profile?.full_name || "—"}</p>
                       <p className="text-xs text-muted-foreground">{profile?.phone || ""}</p>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{profile?.cpf ? `***-${profile.cpf.slice(-2)}` : "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground font-mono">{profile?.cpf || "—"}</td>
                     <td className="px-4 py-3">{d.category === "moto" ? "Moto" : d.category === "conforto" ? "Conforto" : "Econômico"}</td>
+                    <td className="px-4 py-3">
+                      <p className="text-xs font-medium">{d.vehicle_brand || ""} {d.vehicle_model || "—"}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono">{d.vehicle_plate || "—"} • {d.vehicle_color || "—"}{d.vehicle_year ? ` • ${d.vehicle_year}` : ""}</p>
+                    </td>
+                    <td className="px-3 py-2">
+                      {t.cnh ? (
+                        <button onClick={(e) => { e.stopPropagation(); setZoomImg(t.cnh!); }} className="h-10 w-14 rounded-md overflow-hidden border hover:border-primary" title="Ver CNH">
+                          <img src={t.cnh} alt="CNH" className="h-full w-full object-cover" />
+                        </button>
+                      ) : (
+                        <div className="h-10 w-14 rounded-md bg-muted flex items-center justify-center"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
+                      {t.vehicle ? (
+                        <button onClick={(e) => { e.stopPropagation(); setZoomImg(t.vehicle!); }} className="h-10 w-14 rounded-md overflow-hidden border hover:border-primary" title="Ver veículo">
+                          <img src={t.vehicle} alt="Veículo" className="h-full w-full object-cover" />
+                        </button>
+                      ) : (
+                        <div className="h-10 w-14 rounded-md bg-muted flex items-center justify-center"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 font-semibold">R$ {d.balance?.toFixed(2)}</td>
                     <td className="px-4 py-3">{d.total_rides || 0}</td>
                     <td className="px-4 py-3">
@@ -164,6 +224,7 @@ const AdminDrivers = () => {
                         {info.label}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString("pt-BR")}</td>
                     <td className="px-4 py-3">
                       <button onClick={(e) => { e.stopPropagation(); setSelectedDriver(d); }} className="rounded-lg p-1.5 hover:bg-primary/10" title="Ver detalhes">
                         <Eye className="h-4 w-4 text-primary" />
@@ -179,16 +240,23 @@ const AdminDrivers = () => {
           {filtered.map((d) => {
             const profile = (d as any).profiles;
             const info = getDriverStatusInfo(d.status);
+            const t = thumbs[d.id] || {};
             return (
-              <button key={d.id} onClick={() => setSelectedDriver(d)} className="w-full p-4 text-left hover:bg-muted/30 transition-colors">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
+              <button key={d.id} onClick={() => setSelectedDriver(d)} className="w-full p-4 text-left hover:bg-muted/30 transition-colors flex items-start gap-3">
+                {t.selfie ? (
+                  <img src={t.selfie} alt={profile?.full_name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center shrink-0"><ImageIcon className="h-5 w-5 text-muted-foreground" /></div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between mb-1">
                     <p className="font-medium">{profile?.full_name || "—"}</p>
-                    <p className="text-xs text-muted-foreground">{d.category} • {d.total_rides || 0} corridas • R$ {d.balance?.toFixed(2)}</p>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${info.bg} ${info.color}`}>{info.label}</span>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${info.bg} ${info.color}`}>{info.label}</span>
+                  <p className="text-xs text-muted-foreground">{d.category} • {d.total_rides || 0} corridas • R$ {d.balance?.toFixed(2)}</p>
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{d.vehicle_plate || "—"} • {d.vehicle_brand || ""} {d.vehicle_model || ""}</p>
+                  <p className="text-xs text-primary flex items-center gap-1 mt-1"><Eye className="h-3 w-3" /> Toque para analisar</p>
                 </div>
-                <p className="text-xs text-primary flex items-center gap-1"><Eye className="h-3 w-3" /> Toque para analisar</p>
               </button>
             );
           })}
@@ -202,6 +270,13 @@ const AdminDrivers = () => {
           onClose={() => setSelectedDriver(null)}
           onAction={(status, msg) => updateStatus(status, msg)}
         />
+      )}
+
+      {zoomImg && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4 animate-fade-in" onClick={() => setZoomImg(null)}>
+          <button className="absolute top-4 right-4 rounded-full bg-card p-2"><X className="h-5 w-5" /></button>
+          <img src={zoomImg} alt="Zoom" className="max-w-full max-h-full object-contain rounded-xl" />
+        </div>
       )}
     </AdminLayout>
   );
