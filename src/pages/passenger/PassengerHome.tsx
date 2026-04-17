@@ -1041,7 +1041,7 @@ const PassengerHome = () => {
 
       <AppMenu role="passenger" />
       <NotificationBell />
-      <UserMenu role="passenger" />
+      
     </div>
   );
 };
