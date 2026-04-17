@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Clock, Navigation, Star } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
+import UserMenu from "@/components/shared/UserMenu";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
