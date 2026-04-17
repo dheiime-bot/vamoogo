@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Search, X, ImageIcon, RefreshCw } from "lucide-react";
+import { Search, X, User as UserIcon, RefreshCw } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
@@ -118,8 +118,8 @@ const AdminPassengers = () => {
                         <img src={thumbs[p.id]} alt={p.full_name} className="h-full w-full object-cover" />
                       </button>
                     ) : (
-                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center" title="Sem selfie">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center" title="Sem selfie">
+                        <UserIcon className="h-5 w-5 text-primary/70" />
                       </div>
                     )}
                   </td>
@@ -149,7 +149,7 @@ const AdminPassengers = () => {
               {thumbs[p.id] ? (
                 <img src={thumbs[p.id]} alt={p.full_name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/30" />
               ) : (
-                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center"><ImageIcon className="h-5 w-5 text-muted-foreground" /></div>
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center"><UserIcon className="h-6 w-6 text-primary/70" /></div>
               )}
               <div className="min-w-0 flex-1">
                 <p className="font-medium truncate">{p.full_name}</p>
