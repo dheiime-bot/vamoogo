@@ -93,7 +93,8 @@ export function isFakePhone(phone: string): { fake: boolean; reason?: string } {
 }
 
 /**
- * Verifica força da senha. Retorna score 0-4 e mensagem.
+ * Verifica senha. Regra simples: pelo menos 8 caracteres, contendo letras e números.
+ * Retorna `ok=true` quando a regra é atendida. `score` (0-4) é só visual.
  */
 export function checkPasswordStrength(password: string): {
   score: number;
@@ -101,27 +102,25 @@ export function checkPasswordStrength(password: string): {
   color: string;
   ok: boolean;
 } {
+  const hasMinLen = password.length >= 8;
+  const hasLetter = /[A-Za-z]/.test(password);
+  const hasDigit = /\d/.test(password);
+  const ok = hasMinLen && hasLetter && hasDigit;
+
+  // Score apenas para barra visual (não impede o cadastro)
   let score = 0;
-  if (password.length >= 8) score++;
+  if (hasMinLen) score++;
+  if (hasLetter && hasDigit) score++;
   if (password.length >= 12) score++;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
-  if (/\d/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
 
-  const labels = ["Muito fraca", "Fraca", "Razoável", "Boa", "Forte", "Excelente"];
-  const colors = [
-    "bg-destructive",
-    "bg-destructive",
-    "bg-warning",
-    "bg-warning",
-    "bg-success",
-    "bg-success",
-  ];
+  const labels = ["Muito curta", "Curta", "OK", "Boa", "Forte"];
+  const colors = ["bg-destructive", "bg-warning", "bg-success", "bg-success", "bg-success"];
 
   return {
     score,
-    label: labels[score],
-    color: colors[score],
-    ok: score >= 3 && password.length >= 8,
+    label: labels[Math.min(score, labels.length - 1)],
+    color: colors[Math.min(score, colors.length - 1)],
+    ok,
   };
 }
