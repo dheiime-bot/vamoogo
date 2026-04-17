@@ -175,7 +175,7 @@ const DriverWallet = () => {
       </div>
       <AppMenu role="driver" />
       <NotificationBell />
-      <UserMenu role="driver" />
+      
     </div>
   );
 };
