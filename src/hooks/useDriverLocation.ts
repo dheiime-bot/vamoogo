@@ -57,7 +57,39 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
       return;
     }
 
-    if (!navigator.geolocation) return;
+    // ⚡ Marca online IMEDIATAMENTE com a última posição conhecida (ou busca a última do banco).
+    // Assim o motorista entra na fila de despacho mesmo antes do GPS responder.
+    (async () => {
+      let lat = lastSentRef.current?.lat;
+      let lng = lastSentRef.current?.lng;
+      if (!lat || !lng) {
+        const { data } = await supabase
+          .from("driver_locations")
+          .select("lat,lng")
+          .eq("driver_id", driverId)
+          .maybeSingle();
+        if (data && data.lat && data.lng) {
+          lat = Number(data.lat);
+          lng = Number(data.lng);
+          lastSentRef.current = { lat, lng, ts: Date.now() };
+        }
+      }
+      await supabase.from("driver_locations").upsert(
+        {
+          driver_id: driverId,
+          lat: lat ?? 0,
+          lng: lng ?? 0,
+          is_online: true,
+          category,
+        },
+        { onConflict: "driver_id" }
+      );
+    })();
+
+    if (!navigator.geolocation) {
+      console.warn("Geolocalização não suportada pelo navegador.");
+      return;
+    }
 
     const broadcast = async (coords: GeolocationCoordinates) => {
       const now = Date.now();
@@ -83,14 +115,14 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
     // 1ª posição imediatamente
     navigator.geolocation.getCurrentPosition(
       (pos) => broadcast(pos.coords),
-      (err) => console.warn("Geo error:", err),
+      (err) => console.warn("Geo error (getCurrentPosition):", err.message),
       { enableHighAccuracy: true, timeout: 10000 }
     );
 
     // Watch contínuo
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => broadcast(pos.coords),
-      (err) => console.warn("Watch error:", err),
+      (err) => console.warn("Watch error:", err.message),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
 

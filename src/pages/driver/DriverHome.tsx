@@ -262,9 +262,30 @@ const DriverHome = () => {
       toast.error("Saldo insuficiente. Recarregue para ficar online!");
       return;
     }
-    setIsOnline(!isOnline);
-    if (!isOnline) toast.success("Você está Online! Aguardando corridas...");
-    else toast("Você está Offline");
+    // Se vai ficar online, pede permissão de GPS imediatamente para não cair em lat/lng = 0
+    if (!isOnline) {
+      if (!navigator.geolocation) {
+        toast.error("Seu navegador não suporta geolocalização.");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          setIsOnline(true);
+          toast.success("Você está Online! Aguardando corridas...");
+        },
+        (err) => {
+          console.warn("GPS negado/erro:", err.message);
+          toast.error(
+            "Não foi possível obter sua localização. Ative o GPS e permita o acesso para receber corridas.",
+            { duration: 6000 }
+          );
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+      return;
+    }
+    setIsOnline(false);
+    toast("Você está Offline");
   };
 
   const originPoint = activeRide
