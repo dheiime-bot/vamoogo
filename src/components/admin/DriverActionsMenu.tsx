@@ -536,6 +536,69 @@ const DriverActionsMenu = ({ driver, onView, onChanged }: Props) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Ajustar saldo */}
+      <Dialog open={dialog === "balance"} onOpenChange={(o) => !o && close()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Wallet className="h-5 w-5 text-success" /> Ajustar saldo do motorista</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-lg bg-muted p-3 text-center">
+              <p className="text-xs text-muted-foreground">Saldo atual</p>
+              <p className="text-2xl font-bold">R$ {currentBalance.toFixed(2)}</p>
+            </div>
+
+            <div>
+              <Label className="mb-1 block text-xs">Operação</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { v: "add" as const, label: "Adicionar", icon: Plus, color: "text-success border-success/40" },
+                  { v: "remove" as const, label: "Retirar", icon: Minus, color: "text-warning border-warning/40" },
+                  { v: "set" as const, label: "Definir", icon: Equal, color: "text-primary border-primary/40" },
+                ].map((opt) => (
+                  <button key={opt.v} onClick={() => setBalanceType(opt.v)}
+                    className={`flex flex-col items-center gap-1 rounded-lg border-2 p-2 text-xs font-semibold transition-all ${
+                      balanceType === opt.v ? `${opt.color} bg-muted` : "border-border text-muted-foreground"
+                    }`}>
+                    <opt.icon className="h-4 w-4" /> {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label>{balanceType === "set" ? "Novo saldo (R$)" : "Valor (R$)"}</Label>
+              <Input type="number" inputMode="decimal" step="0.01" min="0"
+                value={balanceAmount} onChange={(e) => setBalanceAmount(e.target.value)}
+                placeholder="0.00" autoFocus />
+            </div>
+
+            <div>
+              <Label>Motivo (recomendado)</Label>
+              <Textarea value={balanceReason} onChange={(e) => setBalanceReason(e.target.value)} rows={2}
+                placeholder="Ex: Estorno de corrida cancelada, bônus por desempenho, ajuste manual" />
+            </div>
+
+            {balanceAmount && !isNaN(parseFloat(balanceAmount.replace(",", "."))) && (
+              <div className="rounded-lg border border-dashed p-3 text-center">
+                <p className="text-xs text-muted-foreground">Novo saldo após ajuste</p>
+                <p className={`text-lg font-bold ${previewBalance > currentBalance ? "text-success" : previewBalance < currentBalance ? "text-warning" : ""}`}>
+                  R$ {previewBalance.toFixed(2)}
+                </p>
+              </div>
+            )}
+
+            <p className="text-[10px] text-muted-foreground">A ação é registrada na auditoria e o motorista será notificado.</p>
+          </div>
+          <DialogFooter>
+            <button onClick={close} className="rounded-lg border px-4 py-2 text-sm">Cancelar</button>
+            <button onClick={handleAdjustBalance} disabled={busy || !balanceAmount}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
+              Confirmar ajuste
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
