@@ -112,7 +112,7 @@ const PassengerProfile = () => {
 
       <AppMenu role="passenger" />
       <NotificationBell />
-      <UserMenu role="passenger" />
+      
       <EditProfileModal open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
