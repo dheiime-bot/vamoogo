@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Banknote, QrCode, CreditCard, Check, MapPin, Clock, Navigation, Tag, Loader2 } from "lucide-react";
+import { X, Banknote, QrCode, CreditCard, Check, MapPin, Clock, Navigation, Tag, Loader2, Users, RotateCcw, User as UserIcon, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -11,12 +11,25 @@ export interface AppliedCoupon {
   discount: number;
 }
 
+export interface RouteStop {
+  name: string;
+  address?: string;
+}
+
 interface PaymentMethodModalProps {
   open: boolean;
   onClose: () => void;
   onConfirm: (method: PaymentMethod, coupon: AppliedCoupon | null) => void;
   originName: string;
+  originAddress?: string;
   destinationName: string;
+  destinationAddress?: string;
+  stops?: RouteStop[];
+  returnToOrigin?: boolean;
+  passengerCount?: number;
+  forOtherPerson?: boolean;
+  otherPersonName?: string;
+  otherPersonPhone?: string;
   distanceKm: number;
   durationMin: number;
   estimatedPrice: number;
