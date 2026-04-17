@@ -321,7 +321,45 @@ const PassengerHome = () => {
     toast("Corrida cancelada");
   };
 
-  const handleSubmitRating = async () => {
+  // Alterar destino — permitido APENAS com a corrida em andamento (in_progress).
+  // Antes disso (accepted/driver_arriving/arrived) a rota fica congelada.
+  const handleChangeDestination = async () => {
+    if (!activeRide || !newDestination) return;
+    if (activeRide.status !== "in_progress") {
+      toast.error("Só é possível alterar o destino com a corrida em andamento");
+      return;
+    }
+    const { error } = await supabase
+      .from("rides")
+      .update({
+        destination_address: `${newDestination.name} - ${newDestination.address}`,
+        destination_lat: newDestination.lat,
+        destination_lng: newDestination.lng,
+      })
+      .eq("id", activeRide.id);
+    if (error) {
+      toast.error("Erro ao alterar destino: " + error.message);
+      return;
+    }
+    setActiveRide((r: any) => ({
+      ...r,
+      destination_address: `${newDestination.name} - ${newDestination.address}`,
+      destination_lat: newDestination.lat,
+      destination_lng: newDestination.lng,
+    }));
+    setSelectedDestination(newDestination);
+    setShowChangeDest(false);
+    setNewDestination(null);
+    toast.success("Destino atualizado — o motorista foi avisado");
+    // Avisa o motorista via mensagem no chat para garantir feedback imediato
+    if (user) {
+      supabase.from("chat_messages").insert({
+        ride_id: activeRide.id,
+        sender_id: user.id,
+        message: `📍 Destino alterado para: ${newDestination.name}`,
+      }).then(() => {});
+    }
+  };
     if (!activeRide || rating === 0) return;
     await supabase.from("rides").update({ rating }).eq("id", activeRide.id);
     toast.success("Avaliação enviada! Obrigado ⭐");
