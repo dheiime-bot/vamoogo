@@ -291,14 +291,34 @@ const PassengerHome = () => {
       toast.error("Informe nome e telefone do passageiro");
       return;
     }
+    // 🔒 GUARD CRÍTICO: nunca grava sem fare estável.
+    // Sem isso, race condition entre debounce e confirm pode salvar valores stale absurdos
+    // (ex: distance_km=5816 quando o real é 1.9km). Recalculamos sempre a partir de fare.legs.
+    if (fare.loading) {
+      toast.error("Aguarde o cálculo da tarifa terminar");
+      return;
+    }
+    if (!fare.legs || fare.legs.length === 0 || !fare.price || fare.price <= 0) {
+      toast.error("Não foi possível calcular o valor. Tente novamente.");
+      return;
+    }
     setPaymentMethod(method);
     setRideState("idle"); // Close modal temporarily
     setIsRequesting(true);
 
-    const distanceKm = estimatedDistance || 0;
-    const durationMin = estimatedTime || 0;
-    const basePrice = estimatedPrice || 0;
+    // ✅ FONTE ÚNICA DE VERDADE: derivamos tudo das legs (não dos campos top-level do hook)
+    // Isso garante consistência mesmo se o hook ainda estiver com setState pendente.
+    const distanceKm = Math.round(fare.legs.reduce((s, l) => s + l.km, 0) * 10) / 10;
+    const durationMin = fare.legs.reduce((s, l) => s + l.min, 0);
+    const basePrice = Math.round(fare.legs.reduce((s, l) => s + l.price, 0) * 100) / 100;
     const price = coupon ? Math.max(0, basePrice - coupon.discount) : basePrice;
+    // Sanity check: distância e duração devem ser plausíveis (max 1000km / 24h)
+    if (distanceKm > 1000 || durationMin > 1440) {
+      setIsRequesting(false);
+      toast.error("Distância calculada inválida. Recarregue a página.");
+      console.error("[handleConfirmRide] sanity fail", { distanceKm, durationMin, legs: fare.legs });
+      return;
+    }
     // Taxa configurável: override por categoria (tariffs.fee_percent) ou global (platform_settings.global_fee_percent)
     const platformFee = await calcPlatformFee(price, selectedCategory as "moto" | "economico" | "conforto");
 
