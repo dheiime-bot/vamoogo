@@ -1,8 +1,8 @@
 import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserIcon, AlertCircle, FileWarning, MessageSquare, ShieldCheck, Calendar, KeyRound, Hash } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
+import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 
 interface DriverDetailsModalProps {
   driver: any;
@@ -41,11 +41,8 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
     (async () => {
       const map: Record<string, string> = {};
       for (const [key, url, bucket] of fields) {
-        if (!url) continue;
-        if (url.startsWith("http")) { map[key] = url; continue; }
-        // Tenta resolver path no bucket
-        const { data } = await supabase.storage.from(bucket).createSignedUrl(url, 3600);
-        if (data?.signedUrl) map[key] = data.signedUrl;
+        const resolved = await resolveStorageUrl(bucket, url);
+        if (resolved) map[key] = resolved;
       }
       setSignedUrls(map);
     })();
