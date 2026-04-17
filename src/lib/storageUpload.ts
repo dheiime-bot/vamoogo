@@ -12,7 +12,10 @@ export const buildUploadPath = (pathPrefix: string, extension: string) => {
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2, 10);
 
-  return `${pathPrefix}-${Date.now()}-${unique}.${safeExt}`;
+  // Prefixo "signup/" garante compatibilidade com a RLS que permite
+  // uploads anônimos durante o cadastro (antes do usuário existir no auth).
+  const safePrefix = pathPrefix.replace(/^\/+|\/+$/g, "");
+  return `signup/${safePrefix}-${Date.now()}-${unique}.${safeExt}`;
 };
 
 export const fileToDataUrl = (file: Blob) => new Promise<string>((resolve, reject) => {
