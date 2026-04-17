@@ -526,6 +526,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          birth_date: string | null
           cpf: string
           created_at: string
           email: string | null
@@ -533,12 +534,14 @@ export type Database = {
           id: string
           phone: string | null
           phone_verified: boolean | null
+          selfie_signup_url: string | null
           selfie_url: string | null
           updated_at: string
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Insert: {
+          birth_date?: string | null
           cpf: string
           created_at?: string
           email?: string | null
@@ -546,12 +549,14 @@ export type Database = {
           id?: string
           phone?: string | null
           phone_verified?: boolean | null
+          selfie_signup_url?: string | null
           selfie_url?: string | null
           updated_at?: string
           user_id: string
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Update: {
+          birth_date?: string | null
           cpf?: string
           created_at?: string
           email?: string | null
@@ -559,6 +564,7 @@ export type Database = {
           id?: string
           phone?: string | null
           phone_verified?: boolean | null
+          selfie_signup_url?: string | null
           selfie_url?: string | null
           updated_at?: string
           user_id?: string
