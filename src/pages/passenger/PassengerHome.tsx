@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
+import NotificationBell from "@/components/shared/NotificationBell";
 import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import RideChat from "@/components/passenger/RideChat";
@@ -616,6 +617,7 @@ const PassengerHome = () => {
       />
 
       <AppMenu role="passenger" />
+      <NotificationBell />
     </div>
   );
 };

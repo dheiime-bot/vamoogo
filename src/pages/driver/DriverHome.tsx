@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
+import NotificationBell from "@/components/shared/NotificationBell";
 import GoogleMap from "@/components/shared/GoogleMap";
 import { Home, User, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -484,6 +485,7 @@ const DriverHome = () => {
       )}
 
       <AppMenu role="driver" />
+      <NotificationBell />
     </div>
   );
 };
