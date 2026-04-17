@@ -45,10 +45,20 @@ const AppMenu = ({ role, floating = true }: Props) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut, roles, switchRole } = useAuth();
+  const { user, signOut, roles, switchRole, profile } = useAuth();
 
   const items = role === "driver" ? DRIVER_ITEMS : PASSENGER_ITEMS;
   const hasBoth = roles.includes("driver") && roles.includes("passenger");
+
+  const calcAge = (iso?: string | null) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return Math.floor((Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  };
+  const age = calcAge(profile?.birth_date);
+  const isDriver = roles.includes("driver");
+  const canBecomeDriver = role === "passenger" && !isDriver && age !== null && age >= 21;
 
   const go = (path: string) => {
     setOpen(false);
