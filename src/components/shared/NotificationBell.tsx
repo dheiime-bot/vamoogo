@@ -163,9 +163,12 @@ const NotificationBell = ({ floating = true }: Props) => {
         <PopoverTrigger asChild>
           <button
             aria-label="Notificações"
-            className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
+            className="relative flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted"
           >
             <Bell className="h-5 w-5 text-foreground" />
+            <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">
+              Avisos
+            </span>
             {unreadCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground ring-2 ring-card">
                 {unreadCount > 9 ? "9+" : unreadCount}
