@@ -404,6 +404,13 @@ const PassengerHome = () => {
                     {rideState === "arrived" && "📍 Motorista chegou!"}
                     {rideState === "in_progress" && "🛣️ Corrida em andamento"}
                   </div>
+
+                  {activeRide?.ride_code && (
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Chave da corrida</span>
+                      <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{activeRide.ride_code}</span>
+                    </div>
+                  )}
                 </div>
               )}
 
