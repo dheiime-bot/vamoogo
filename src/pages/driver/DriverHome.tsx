@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X } from "lucide-react";
+import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import GoogleMap from "@/components/shared/GoogleMap";
@@ -8,6 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import RideChat from "@/components/passenger/RideChat";
+import PixPaymentModal from "@/components/passenger/PixPaymentModal";
+import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 
 
