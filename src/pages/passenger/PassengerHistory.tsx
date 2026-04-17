@@ -12,15 +12,27 @@ const PassengerHistory = () => {
   const [rides, setRides] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "completed" | "cancelled">("all");
 
-  useEffect(() => {
+  const reload = async () => {
     if (!user) return;
-    supabase
+    const { data } = await supabase
       .from("rides")
       .select("*")
       .eq("passenger_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(20)
-      .then(({ data }) => { if (data) setRides(data); });
+      .limit(20);
+    if (data) setRides(data);
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    reload();
+    // 🔄 Realtime: lista atualiza sozinha quando uma corrida muda
+    const channel = supabase
+      .channel(`passenger-history-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides", filter: `passenger_id=eq.${user.id}` }, reload)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const filtered = filter === "all" ? rides : rides.filter((r) => r.status === filter);
