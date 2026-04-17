@@ -2,3 +2,6 @@ project_id = "xsbvfwxyxgnkfkafxtaa"
 
 [functions.dispatch-ride]
 verify_jwt = false
+
+[functions.cleanup-signup-orphans]
+verify_jwt = false
