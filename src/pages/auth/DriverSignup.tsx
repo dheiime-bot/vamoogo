@@ -16,6 +16,7 @@ import {
 import DocumentUpload from "@/components/auth/DocumentUpload";
 import LiveSelfieCapture from "@/components/auth/LiveSelfieCapture";
 import { toast } from "sonner";
+import { friendlyAuthError } from "@/lib/authErrors";
 
 type StepKey = "dados" | "seguranca" | "selfie" | "veiculo" | "documentos" | "antecedentes" | "pix";
 
@@ -436,18 +437,23 @@ const DriverSignup = () => {
     setLoading(false);
 
     if (error) {
-      const msg = error.message || "";
-      if (msg.includes("already registered") || msg.includes("already exists")) {
-        toast.error("Este e-mail já está cadastrado");
-        setStep(0); setErr("email", "E-mail já cadastrado");
-      } else if (msg.includes("duplicate") && msg.includes("cpf")) {
-        toast.error("CPF já cadastrado"); setStep(0);
-      } else if (msg.includes("duplicate") && msg.includes("phone")) {
-        toast.error("Telefone já cadastrado"); setStep(0);
-      } else if (msg.includes("duplicate") && msg.includes("plate")) {
-        toast.error("Placa já cadastrada"); setStep(3);
-      } else {
-        toast.error("Erro ao cadastrar: " + msg);
+      const { message, field } = friendlyAuthError(error);
+      toast.error(message, { duration: 6000 });
+      if (field === "password") {
+        setStep(1); // Segurança
+        setErr("password", message);
+      } else if (field === "email") {
+        setStep(0);
+        setErr("email", message);
+      } else if (field === "cpf") {
+        setStep(0);
+        setErr("cpf", message);
+      } else if (field === "phone") {
+        setStep(0);
+        setErr("phone", message);
+      } else if (field === "plate") {
+        setStep(3);
+        setErr("plate", message);
       }
       return;
     }
