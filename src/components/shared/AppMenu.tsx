@@ -23,6 +23,7 @@ interface MenuItem {
 const PASSENGER_ITEMS: MenuItem[] = [
   { icon: Home, label: "Início", path: "/passenger" },
   { icon: Clock, label: "Minhas corridas", path: "/passenger/history" },
+  { icon: Wallet, label: "Carteira", path: "/passenger/wallet" },
   { icon: MessageCircle, label: "Chats", path: "/passenger/chats" },
   { icon: User, label: "Meus dados", path: "/passenger/profile" },
 ];
