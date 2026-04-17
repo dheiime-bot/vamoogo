@@ -175,6 +175,37 @@ const DriverActionsMenu = ({ driver, onView, onChanged }: Props) => {
     close();
   };
 
+  // ===== Ajuste de saldo =====
+  const currentBalance = Number(driver.balance ?? 0);
+  const [balanceType, setBalanceType] = useState<"add" | "remove" | "set">("add");
+  const [balanceAmount, setBalanceAmount] = useState("");
+  const [balanceReason, setBalanceReason] = useState("");
+  const previewBalance = (() => {
+    const n = parseFloat(balanceAmount.replace(",", "."));
+    if (isNaN(n) || n < 0) return currentBalance;
+    if (balanceType === "add") return currentBalance + n;
+    if (balanceType === "remove") return Math.max(0, currentBalance - n);
+    return n;
+  })();
+  const handleAdjustBalance = async () => {
+    const n = parseFloat(balanceAmount.replace(",", "."));
+    if (isNaN(n) || n < 0) return toast.error("Informe um valor válido");
+    if (balanceType === "remove" && n > currentBalance) {
+      return toast.error(`Saldo atual é R$ ${currentBalance.toFixed(2)} — não é possível retirar R$ ${n.toFixed(2)}`);
+    }
+    setBusy(true);
+    const { data, error } = await supabase.rpc("admin_adjust_balance" as any, {
+      _driver_id: driver.user_id, _type: balanceType, _amount: n,
+      _reason: balanceReason.trim() || null,
+    });
+    setBusy(false);
+    if (error) return toast.error("Erro: " + error.message);
+    const result = data as any;
+    toast.success(`Saldo atualizado: R$ ${Number(result?.new_balance ?? previewBalance).toFixed(2)}`);
+    setBalanceAmount(""); setBalanceReason("");
+    close(); onChanged();
+  };
+
   const isApproved = driver.status === "aprovado" || driver.status === "approved";
   const isBlocked = driver.status === "blocked";
   const onlineBlocked = !!driver.online_blocked;
