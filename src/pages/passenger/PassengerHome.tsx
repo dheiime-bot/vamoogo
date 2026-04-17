@@ -286,10 +286,10 @@ const PassengerHome = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Map */}
+      {/* Map — maior durante corrida ativa pra acompanhar movimento ao vivo */}
       <div className="relative">
         <GoogleMap
-          className="h-[58vh] rounded-none"
+          className={`${isRideActive || rideState === "completed" ? "h-[68vh]" : "h-[58vh]"} rounded-none transition-all duration-300`}
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
           stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
