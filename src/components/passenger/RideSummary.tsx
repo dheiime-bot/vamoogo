@@ -5,6 +5,8 @@ import { toast } from "sonner";
 interface RideSummaryProps {
   ride: any;
   onRate: () => void;
+  /** Esconde o botão "Avaliar motorista" — usado quando o resumo aparece dentro do modal de avaliação. */
+  hideRateButton?: boolean;
 }
 
 const paymentLabels: Record<string, { label: string; icon: typeof Banknote }> = {
@@ -14,7 +16,7 @@ const paymentLabels: Record<string, { label: string; icon: typeof Banknote }> = 
   credit: { label: "Cartão Crédito", icon: CreditCard },
 };
 
-const RideSummary = ({ ride, onRate }: RideSummaryProps) => {
+const RideSummary = ({ ride, onRate, hideRateButton = false }: RideSummaryProps) => {
   const pm = paymentLabels[ride.payment_method || "cash"];
 
   const copyCode = async () => {
@@ -99,13 +101,15 @@ const RideSummary = ({ ride, onRate }: RideSummaryProps) => {
         )}
       </div>
 
-      {/* Rate button */}
-      <button
-        onClick={onRate}
-        className="w-full rounded-xl bg-gradient-primary py-4 text-sm font-bold text-primary-foreground shadow-glow flex items-center justify-center gap-2"
-      >
-        <Star className="h-4 w-4" /> Avaliar motorista
-      </button>
+      {/* Rate button — escondido quando o resumo aparece dentro do modal de avaliação */}
+      {!hideRateButton && (
+        <button
+          onClick={onRate}
+          className="w-full rounded-xl bg-gradient-primary py-4 text-sm font-bold text-primary-foreground shadow-glow flex items-center justify-center gap-2"
+        >
+          <Star className="h-4 w-4" /> Avaliar motorista
+        </button>
+      )}
     </div>
   );
 };

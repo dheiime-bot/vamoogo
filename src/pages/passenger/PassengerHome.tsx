@@ -9,6 +9,7 @@ import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
 import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passenger/OriginPicker";
 import AddressAutocompleteField from "@/components/address/AddressAutocompleteField";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useFareEstimate } from "@/hooks/useFareEstimate";
@@ -135,10 +136,10 @@ const PassengerHome = () => {
           setRideState("in_progress");
           toast.success("Corrida iniciada!");
         } else if (ride.status === "completed") {
-          setRideState("completed");
+          // Volta o app para a tela inicial e abre o rating como modal sobreposto.
+          // O passageiro pode avaliar ou pular sem ficar preso na tela de resumo.
+          setRideState("rating");
           setDriverLocation(null);
-          // Pix é cobrado pelo motorista (QR Code aparece no app dele).
-          // O passageiro vê apenas o resumo final; pode reabrir o QR pelo botão se quiser.
           toast.success("Corrida finalizada!");
         } else if (ride.status === "cancelled") {
           setRideState("idle");
@@ -533,8 +534,9 @@ const PassengerHome = () => {
   // Layout:
   // - idle (sem form aberto): mapa ocupa a tela inteira + 1 botão "Para onde Vamoo?" no rodapé.
   // - idle (form aberto): form aparece como sheet no topo, mapa fica visível embaixo.
-  // - corrida ativa / completed / rating: mapa em 68vh + bottom-sheet com infos da corrida.
-  const showFullMap = rideState === "idle" && !showRideForm;
+  // - corrida ativa: mapa em 68vh + bottom-sheet com infos da corrida.
+  // - rating: a UI volta para o estado "idle" (mapa cheio) e abre Dialog modal de avaliação.
+  const showFullMap = (rideState === "idle" || rideState === "rating") && !showRideForm;
   const showFormSheet = rideState === "idle" && showRideForm;
 
   return (
@@ -545,7 +547,7 @@ const PassengerHome = () => {
           className={`${
             showFullMap
               ? "h-screen"
-              : isRideActive || rideState === "completed" || rideState === "rating"
+              : isRideActive
                 ? "h-[68vh]"
                 : "h-[45vh]"
           } rounded-none transition-all duration-300`}
@@ -580,62 +582,8 @@ const PassengerHome = () => {
         <div className="p-4 pb-3 space-y-4">
 
 
-          {/* Completed: Show summary */}
-          {rideState === "completed" && activeRide && (
-            <div className="space-y-3">
-              <RideSummary ride={activeRide} onRate={() => setRideState("rating")} />
-              {activeRide.payment_method === "pix" && (
-                <button
-                  onClick={() => setShowPixModal(true)}
-                  className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors"
-                >
-                  <QrCode className="h-4 w-4" /> Mostrar QR Code Pix
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Rating screen */}
-          {rideState === "rating" && activeRide && (
-            <div className="space-y-4 text-center py-4 animate-fade-in">
-              <div className="flex items-center justify-center gap-2">
-                <div className="h-12 w-12 rounded-xl bg-gradient-primary flex items-center justify-center">
-                  <Car className="h-6 w-6 text-primary-foreground" />
-                </div>
-              </div>
-              <h2 className="text-lg font-bold font-display">Como foi sua viagem?</h2>
-              {driverInfo && (
-                <p className="text-sm text-muted-foreground">Motorista: {driverInfo.profile?.full_name}</p>
-              )}
-              <div className="flex justify-center gap-2">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <button key={s} onClick={() => setRating(s)} className="transition-transform hover:scale-110 active:scale-95">
-                    <Star className={`h-10 w-10 ${s <= rating ? "text-warning fill-warning" : "text-muted-foreground"}`} />
-                  </button>
-                ))}
-              </div>
-              <textarea
-                placeholder="Conte como foi a viagem (opcional)..."
-                value={ratingComment}
-                onChange={(e) => setRatingComment(e.target.value)}
-                className="w-full rounded-xl border bg-muted p-3 text-sm outline-none resize-none h-20"
-              />
-              <div className="flex flex-wrap justify-center gap-2">
-                {["Educação", "Limpeza", "Direção segura", "Pontualidade"].map((tag) => (
-                  <button key={tag} className="rounded-full border px-3 py-1.5 text-xs font-medium hover:bg-primary/10 hover:border-primary transition-colors">
-                    {tag}
-                  </button>
-                ))}
-              </div>
-              <button onClick={handleSubmitRating} disabled={rating === 0}
-                className="w-full rounded-xl bg-gradient-primary py-4 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50">
-                Enviar avaliação ⭐
-              </button>
-              <button onClick={resetRide} className="text-xs text-muted-foreground">
-                Pular avaliação
-              </button>
-            </div>
-          )}
+          {/* Estado "completed" e "rating" agora usam Dialog (renderizado fora deste sheet)
+              para que o app volte direto à tela inicial após a corrida finalizar. */}
 
           {/* Active ride overlays */}
           {isRideActive && activeRide && (
@@ -1092,6 +1040,58 @@ const PassengerHome = () => {
         rideId={activeRide?.id || ""}
         merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
       />
+
+      {/* Modal de avaliação — sobreposto sobre a tela inicial após corrida finalizar.
+          Fechar (X / overlay / Esc) chama resetRide para limpar o estado. */}
+      <Dialog
+        open={rideState === "rating" && !!activeRide}
+        onOpenChange={(o) => { if (!o) resetRide(); }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display">Como foi sua viagem?</DialogTitle>
+          </DialogHeader>
+          {activeRide && (
+            <div className="space-y-4 text-center pt-2">
+              {driverInfo && (
+                <p className="text-sm text-muted-foreground">Motorista: {driverInfo.profile?.full_name}</p>
+              )}
+              <RideSummary ride={activeRide} onRate={() => {}} hideRateButton />
+              {activeRide.payment_method === "pix" && (
+                <button
+                  onClick={() => setShowPixModal(true)}
+                  className="w-full rounded-xl border-2 border-primary bg-primary/5 py-2.5 text-sm font-bold text-primary flex items-center justify-center gap-2"
+                >
+                  <QrCode className="h-4 w-4" /> Mostrar QR Code Pix
+                </button>
+              )}
+              <div className="flex justify-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <button key={s} onClick={() => setRating(s)} className="transition-transform active:scale-95">
+                    <Star className={`h-9 w-9 ${s <= rating ? "text-warning fill-warning" : "text-muted-foreground"}`} />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                placeholder="Conte como foi a viagem (opcional)..."
+                value={ratingComment}
+                onChange={(e) => setRatingComment(e.target.value)}
+                className="w-full rounded-xl border bg-muted p-3 text-sm outline-none resize-none h-16"
+              />
+              <button
+                onClick={handleSubmitRating}
+                disabled={rating === 0}
+                className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50"
+              >
+                Enviar avaliação ⭐
+              </button>
+              <button onClick={resetRide} className="text-xs text-muted-foreground">
+                Pular avaliação
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AppMenu role="passenger" />
       <NotificationBell />
