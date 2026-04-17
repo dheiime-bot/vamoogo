@@ -106,31 +106,131 @@ const PaymentMethodModal = ({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Route summary */}
-          <div className="rounded-2xl border bg-muted/50 p-4 space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-success shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground">Origem</p>
-                <p className="text-sm font-medium truncate">{originName}</p>
+          {/* Roteiro detalhado */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Navigation className="h-3.5 w-3.5 text-primary" /> Roteiro da viagem
+            </p>
+            <div className="rounded-2xl border bg-muted/50 p-4">
+              {/* Origem */}
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center shrink-0">
+                  <div className="mt-1.5 h-3 w-3 rounded-full bg-success ring-4 ring-success/20" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-success">Origem</p>
+                  <p className="text-sm font-semibold truncate">{originName}</p>
+                  {originAddress && originAddress !== originName && (
+                    <p className="text-xs text-muted-foreground truncate">{originAddress}</p>
+                  )}
+                </div>
               </div>
+
+              {/* Paradas intermediárias */}
+              {stops.map((stop, i) => (
+                <div key={i}>
+                  <div className="ml-1.5 h-4 border-l-2 border-dashed border-muted-foreground/40" />
+                  <div className="flex items-start gap-3">
+                    <div className="flex flex-col items-center shrink-0">
+                      <div className="mt-1.5 h-3 w-3 rounded-full bg-warning ring-4 ring-warning/20 flex items-center justify-center">
+                        <span className="text-[8px] font-bold text-warning-foreground">{i + 1}</span>
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-warning">Parada {i + 1}</p>
+                      <p className="text-sm font-semibold truncate">{stop.name}</p>
+                      {stop.address && stop.address !== stop.name && (
+                        <p className="text-xs text-muted-foreground truncate">{stop.address}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Destino */}
+              <div className="ml-1.5 h-4 border-l-2 border-dashed border-muted-foreground/40" />
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center shrink-0">
+                  <div className="mt-1.5 h-3 w-3 rounded-full bg-destructive ring-4 ring-destructive/20" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-destructive">Destino</p>
+                  <p className="text-sm font-semibold truncate">{destinationName}</p>
+                  {destinationAddress && destinationAddress !== destinationName && (
+                    <p className="text-xs text-muted-foreground truncate">{destinationAddress}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Retorno à origem */}
+              {returnToOrigin && (
+                <>
+                  <div className="ml-1.5 h-4 border-l-2 border-dashed border-primary/50" />
+                  <div className="flex items-start gap-3">
+                    <div className="flex flex-col items-center shrink-0">
+                      <div className="mt-1.5 h-3 w-3 rounded-full bg-primary ring-4 ring-primary/20 flex items-center justify-center">
+                        <RotateCcw className="h-2 w-2 text-primary-foreground" />
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-primary">Retorno</p>
+                      <p className="text-sm font-semibold truncate">{originName}</p>
+                      <p className="text-xs text-muted-foreground">Volta ao ponto de origem</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="ml-1 h-4 border-l-2 border-dashed border-muted-foreground/30" />
-            <div className="flex items-start gap-3">
-              <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-destructive shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground">Destino</p>
-                <p className="text-sm font-medium truncate">{destinationName}</p>
-              </div>
+
+            {/* Resumo de paradas + passageiros */}
+            <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-medium">
+                <MapPin className="h-3 w-3 text-primary" />
+                {stops.length === 0
+                  ? "Sem paradas"
+                  : `${stops.length} ${stops.length === 1 ? "parada" : "paradas"}`}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-medium">
+                <Users className="h-3 w-3 text-primary" />
+                {passengerCount} {passengerCount === 1 ? "passageiro" : "passageiros"}
+              </span>
+              {returnToOrigin && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
+                  <RotateCcw className="h-3 w-3" /> Ida e volta
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Trip details */}
+          {/* Para outra pessoa */}
+          {forOtherPerson && (otherPersonName || otherPersonPhone) && (
+            <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-primary mb-2 flex items-center gap-1.5">
+                <UserIcon className="h-3.5 w-3.5" /> Corrida para outra pessoa
+              </p>
+              <div className="space-y-1">
+                {otherPersonName && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <UserIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="font-semibold truncate">{otherPersonName}</span>
+                  </div>
+                )}
+                {otherPersonPhone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="font-medium">{otherPersonPhone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Detalhes da viagem */}
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
               <Navigation className="h-4 w-4 text-primary mx-auto mb-1" />
               <p className="text-xs text-muted-foreground">Distância</p>
-              <p className="text-sm font-bold">{distanceKm} km</p>
+              <p className="text-sm font-bold">{distanceKm.toFixed(1)} km</p>
             </div>
             <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
               <Clock className="h-4 w-4 text-primary mx-auto mb-1" />
