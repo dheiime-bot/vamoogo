@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -37,7 +38,9 @@ const AdminSupport = () => {
 
   return (
     <AdminLayout title="Suporte">
-      {tickets.length === 0 && <p className="text-center py-8 text-sm text-muted-foreground">Nenhum ticket de suporte</p>}
+      {tickets.length === 0 && (
+        <EmptyState icon={MessageCircle} title="Nenhum ticket de suporte" description="Solicitações abertas pelos usuários aparecerão aqui." />
+      )}
       {tickets.map((t) => (
         <div key={t.id} className="rounded-2xl border bg-card p-5 shadow-sm">
           <div className="flex items-start justify-between mb-3">

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Search, X, ImageIcon, RefreshCw } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import PassengerDetailsModal from "@/components/admin/PassengerDetailsModal";
 
@@ -157,7 +158,7 @@ const AdminPassengers = () => {
             </button>
           ))}
         </div>
-        {filtered.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">Nenhum passageiro encontrado</p>}
+        {filtered.length === 0 && <EmptyState title="Nenhum passageiro encontrado" description="Não há passageiros que correspondam à busca atual." />}
       </div>
 
       {selected && <PassengerDetailsModal passenger={selected} onClose={() => setSelected(null)} />}

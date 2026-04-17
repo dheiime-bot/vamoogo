@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Activity, MapPin, RefreshCw } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import GoogleMap from "@/components/shared/GoogleMap";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -91,7 +92,9 @@ const AdminLive = () => {
           <h3 className="text-sm font-bold">Corridas ativas ({activeRides.length})</h3>
         </div>
         <div className="divide-y max-h-80 overflow-y-auto">
-          {activeRides.length === 0 && <p className="p-4 text-sm text-muted-foreground">Nenhuma corrida ativa</p>}
+          {activeRides.length === 0 && (
+            <EmptyState icon={Activity} title="Nenhuma corrida ativa" description="Quando uma corrida estiver em andamento, aparecerá aqui em tempo real." />
+          )}
           {activeRides.map((r) => (
             <div key={r.id} className="p-4 hover:bg-muted/50 transition-colors">
               <div className="flex items-center justify-between mb-1">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Save, Bike, Car, Crown, Loader2, Percent } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -89,7 +90,7 @@ const AdminTariffs = () => {
       {activeTab === "categories" && (
         <div className="space-y-4">
           {tariffs.length === 0 && (
-            <p className="text-sm text-muted-foreground">Nenhuma tarifa configurada. Insira tarifas no banco.</p>
+            <EmptyState title="Nenhuma tarifa configurada" description="Configure as tarifas por categoria para começar a precificar corridas." />
           )}
           {tariffs.map((t) => {
             const Icon = catIcon[t.category] || Car;
