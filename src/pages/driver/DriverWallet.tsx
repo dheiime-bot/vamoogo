@@ -21,15 +21,27 @@ const DriverWallet = () => {
 
   const weekData = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(d => ({ name: d, value: Math.floor(Math.random() * 100 + 20) }));
 
-  useEffect(() => {
+  const reload = async () => {
     if (!user) return;
-    Promise.all([
+    const [rech, with_] = await Promise.all([
       supabase.from("recharges").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("withdrawals").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10),
-    ]).then(([rech, with_]) => {
-      if (rech.data) setRecharges(rech.data);
-      if (with_.data) setWithdrawals(with_.data);
-    });
+    ]);
+    if (rech.data) setRecharges(rech.data);
+    if (with_.data) setWithdrawals(with_.data);
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    reload();
+    // 🔄 Realtime: atualiza recargas/saques sem precisar recarregar a página
+    const channel = supabase
+      .channel(`wallet-rt-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "recharges", filter: `driver_id=eq.${user.id}` }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "withdrawals", filter: `driver_id=eq.${user.id}` }, reload)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleRecharge = async (amount: number) => {
