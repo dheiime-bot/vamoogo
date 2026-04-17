@@ -49,6 +49,7 @@ const DriverHome = () => {
   const [offerCountdown, setOfferCountdown] = useState(15);
   const [showChat, setShowChat] = useState(false);
   const [passengerName, setPassengerName] = useState<string>("");
+  const [showPixModal, setShowPixModal] = useState(false);
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
