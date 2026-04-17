@@ -32,16 +32,25 @@ const AdminDrivers = () => {
   const [zoomImg, setZoomImg] = useState<string | null>(null);
 
   const fetchDrivers = async () => {
-    const { data, error } = await supabase
+    const { data: drvs, error } = await supabase
       .from("drivers")
-      .select("*, profiles(full_name, cpf, phone, email, birth_date, selfie_url, selfie_signup_url, phone_verified)")
+      .select("*")
       .order("created_at", { ascending: false });
     if (error) {
       toast.error("Erro ao carregar motoristas: " + error.message);
       console.error("[AdminDrivers] fetch error", error);
       return;
     }
-    setDrivers(data || []);
+    const ids = (drvs || []).map((d) => d.user_id).filter(Boolean);
+    let profMap: Record<string, any> = {};
+    if (ids.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, cpf, phone, email, birth_date, selfie_url, selfie_signup_url, phone_verified")
+        .in("user_id", ids);
+      (profs || []).forEach((p) => { profMap[p.user_id] = p; });
+    }
+    setDrivers((drvs || []).map((d) => ({ ...d, profiles: profMap[d.user_id] || null })));
   };
 
   useEffect(() => { fetchDrivers(); }, []);
