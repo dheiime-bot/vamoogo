@@ -23,6 +23,40 @@ const memCache = new Map<string, { at: number; data: any }>();
 const MEM_TTL_MS = 60_000;
 const MAX_MEM_ENTRIES = 200;
 
+// Cache de "cidade do dispositivo" por coordenada arredondada (lat,lng → "Altamira-PA").
+// Reduz chamadas de reverse-geocoding e estabiliza o viés geográfico.
+const cityCache = new Map<string, { at: number; city: string | null; state: string | null }>();
+const CITY_TTL_MS = 30 * 60_000; // 30 min
+const CITY_PRECISION = 2; // ~1 km de granularidade
+
+async function reverseGeocodeCity(lat: number, lng: number, apiKey: string) {
+  const k = `${lat.toFixed(CITY_PRECISION)},${lng.toFixed(CITY_PRECISION)}`;
+  const hit = cityCache.get(k);
+  if (hit && Date.now() - hit.at < CITY_TTL_MS) return hit;
+  try {
+    const url =
+      `https://maps.googleapis.com/maps/api/geocode/json` +
+      `?latlng=${lat},${lng}` +
+      `&language=pt-BR&result_type=locality|administrative_area_level_2` +
+      `&key=${apiKey}`;
+    const r = await fetch(url).then((r) => r.json());
+    const comps = r?.results?.[0]?.address_components ?? [];
+    const city =
+      comps.find((c: any) =>
+        c.types?.includes("locality") || c.types?.includes("administrative_area_level_2")
+      )?.long_name ?? null;
+    const state = comps.find((c: any) => c.types?.includes("administrative_area_level_1"))
+      ?.short_name ?? null;
+    const value = { at: Date.now(), city, state };
+    cityCache.set(k, value);
+    return value;
+  } catch {
+    const value = { at: Date.now(), city: null, state: null };
+    cityCache.set(k, value);
+    return value;
+  }
+}
+
 function memGet(key: string) {
   const hit = memCache.get(key);
   if (!hit) return null;
@@ -89,10 +123,31 @@ Deno.serve(async (req) => {
     }
 
     // 3. Google Places API (New) v1 — searchText (POIs) + Autocomplete legacy (endereços) em paralelo
-    // RAIO REDUZIDO para 15km → foca na cidade do dispositivo. Resultados de outras cidades
-    // ainda podem aparecer (Google ignora bias quando não há match local), mas serão
-    // penalizados na ordenação abaixo.
-    const CITY_RADIUS_M = 15000;
+    // RAIO REDUZIDO para 12km → foca na cidade do dispositivo. Resultados fora ainda podem
+    // aparecer no fallback, mas são fortemente penalizados na ordenação.
+    const CITY_RADIUS_M = 12000;
+
+    // Descobre a CIDADE do dispositivo (cache 30 min). Usamos para enriquecer a textQuery
+    // quando o usuário não digitou nome de cidade — isso garante que ruas/lugares de
+    // OUTRAS cidades com o mesmo nome NÃO apareçam antes dos da cidade do usuário.
+    let deviceCity: string | null = null;
+    let deviceState: string | null = null;
+    if (hasLoc) {
+      const c = await reverseGeocodeCity(lat, lng, apiKey);
+      deviceCity = c.city;
+      deviceState = c.state;
+    }
+
+    // Se a query NÃO menciona a cidade, anexamos para forçar viés. Ex:
+    //   "rua das flores"  →  "rua das flores em Altamira PA"
+    const queryHasCity =
+      deviceCity != null &&
+      q.toLowerCase().includes(deviceCity.toLowerCase());
+    const enrichedQuery =
+      hasLoc && deviceCity && !queryHasCity
+        ? `${q} ${deviceCity}${deviceState ? " " + deviceState : ""}`
+        : q;
+
     const locationBias = hasLoc
       ? { circle: { center: { latitude: lat, longitude: lng }, radius: CITY_RADIUS_M } }
       : undefined;
@@ -105,7 +160,7 @@ Deno.serve(async (req) => {
     // Tentamos PRIMEIRO com locationRestriction (apenas cidade local).
     // Se vier vazio, fazemos fallback com locationBias (cidade preferida, mas aceita fora).
     const buildSearchTextBody = (useRestriction: boolean) => ({
-      textQuery: q,
+      textQuery: enrichedQuery,
       languageCode: "pt-BR",
       regionCode: "BR",
       maxResultCount: 8,
@@ -128,7 +183,7 @@ Deno.serve(async (req) => {
         .catch((e) => ({ error: String(e) }));
 
     // Autocomplete legacy — campeão para endereços/ruas (mais barato)
-    // RAIO 15km + sem strictBounds (permite leve overflow para ruas que cruzam bairros vizinhos).
+    // RAIO 12km + strictBounds=false (permite overflow leve para ruas que cruzam bairros vizinhos).
     const sessionParam = sessionToken ? `&sessiontoken=${encodeURIComponent(sessionToken)}` : "";
     const locParam = hasLoc ? `&location=${lat},${lng}&radius=${CITY_RADIUS_M}` : "";
     const autocompleteUrl =
@@ -225,17 +280,19 @@ Deno.serve(async (req) => {
     pushUnique(autoPredictions);
 
     // ORDENAÇÃO INTELIGENTE: prioriza cidade do dispositivo
-    // - Score = distância (km), com PESO BÔNUS para cache (já validado pela cidade)
-    // - Itens sem distância (autocomplete puro) ficam no meio (peso neutro 8km)
-    // - Itens >50km recebem penalidade pesada (provavelmente outra cidade)
+    // - Score = distância (km); BÔNUS forte para cache (já validado pela cidade)
+    // - Itens sem distância (autocomplete puro) recebem peso neutro = raio da cidade
+    // - Penalidade FORTE para qualquer item fora do raio da cidade (>15 km)
+    // - Penalidade extrema para outro estado (>200 km)
     let final = merged;
     if (hasLoc) {
       const score = (p: any): number => {
-        const d = typeof p.distanceKm === "number" ? p.distanceKm : 8;
+        const d = typeof p.distanceKm === "number" ? p.distanceKm : 10;
         let s = d;
-        if (p.source === "cache") s -= 2; // bônus para cache local
-        if (d > 50) s += 100; // penalidade forte para outras cidades
-        if (d > 200) s += 1000; // outro estado: vai pro fim
+        if (p.source === "cache") s -= 3; // bônus para cache local (já é da cidade)
+        if (d > 15) s += 50; // saiu do raio da cidade
+        if (d > 50) s += 200; // outra cidade próxima
+        if (d > 200) s += 2000; // outro estado: vai pro fim
         return s;
       };
       final = [...merged].sort((a, b) => score(a) - score(b));
@@ -246,6 +303,9 @@ Deno.serve(async (req) => {
       predictions: final,
       source: "hybrid",
       debug: {
+        deviceCity,
+        deviceState,
+        enrichedQuery: enrichedQuery !== q ? enrichedQuery : undefined,
         cache: cachePredictions.length,
         text: textPredictions.length,
         auto: autoPredictions.length,
