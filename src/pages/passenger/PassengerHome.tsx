@@ -288,6 +288,15 @@ const PassengerHome = () => {
   const estimatedTime = fare.durationMin;
   const estimatedDistance = fare.distanceKm;
 
+  // ETA ao vivo: motorista → ponto de embarque (só durante driver_arriving)
+  const liveEta = useLiveEta(
+    driverLocation ? { lat: driverLocation.lat, lng: driverLocation.lng } : null,
+    activeRide?.origin_lat && activeRide?.origin_lng
+      ? { lat: Number(activeRide.origin_lat), lng: Number(activeRide.origin_lng) }
+      : null,
+    rideState === "driver_arriving"
+  );
+
   // Open payment modal instead of directly requesting
   const handleOpenPayment = () => {
     if (!selectedOrigin || !selectedDestination) { toast.error("Selecione origem e destino"); return; }
