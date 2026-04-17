@@ -32,7 +32,13 @@ const AdminRides = () => {
   }, []);
 
   const updateRide = async (id: string, update: any, msg: string) => {
-    await supabase.from("rides").update(update).eq("id", id);
+    // Se for cancelamento, registra quem cancelou (admin atual) para auditoria
+    let payload = update;
+    if (update?.status === "cancelled") {
+      const { data: { user } } = await supabase.auth.getUser();
+      payload = { ...update, cancelled_by: user?.id ?? null };
+    }
+    await supabase.from("rides").update(payload).eq("id", id);
     toast.success(msg);
     fetchRides();
   };
