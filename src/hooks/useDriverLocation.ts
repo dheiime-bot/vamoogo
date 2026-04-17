@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface Options {
   driverId: string | undefined;
   isOnline: boolean;
-  category: "moto" | "car" | "premium" | undefined;
+  category: "moto" | "economico" | "conforto" | undefined;
 }
 
 const MIN_INTERVAL_MS = 8000;
