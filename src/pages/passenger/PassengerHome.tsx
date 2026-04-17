@@ -664,6 +664,18 @@ const PassengerHome = () => {
         category={selectedCategory}
       />
 
+      {/* Pix Payment Modal — exibido ao final da corrida quando pagamento é Pix */}
+      <PixPaymentModal
+        open={showPixModal}
+        onClose={() => setShowPixModal(false)}
+        driverName={driverInfo?.profile?.full_name || "Motorista"}
+        pixKey={driverInfo?.pix_key || null}
+        pixKeyType={(driverInfo?.pix_key_type as PixKeyType) || null}
+        amount={Number(activeRide?.price || 0)}
+        rideId={activeRide?.id || ""}
+        merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
+      />
+
       <AppMenu role="passenger" />
       <NotificationBell />
     </div>
