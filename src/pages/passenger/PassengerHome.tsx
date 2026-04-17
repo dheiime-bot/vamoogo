@@ -577,6 +577,55 @@ const PassengerHome = () => {
                 </div>
               )}
 
+              {/* Aviso: rota congelada antes de iniciar */}
+              {(rideState === "accepted" || rideState === "driver_arriving" || rideState === "arrived") && (
+                <p className="text-[11px] text-center text-muted-foreground bg-muted/50 rounded-lg py-2 px-3">
+                  🔒 A rota fica bloqueada até o motorista iniciar a corrida. Você poderá alterar o destino após o início.
+                </p>
+              )}
+
+              {/* Alterar destino — só com corrida em andamento */}
+              {rideState === "in_progress" && (
+                <>
+                  {!showChangeDest ? (
+                    <button
+                      onClick={() => {
+                        setShowChangeDest(true);
+                        setNewDestination(selectedDestination);
+                      }}
+                      className="w-full rounded-xl border-2 border-dashed border-primary/40 py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Navigation className="h-4 w-4" /> Alterar destino
+                    </button>
+                  ) : (
+                    <div className="rounded-xl border-2 border-primary p-3 space-y-3 bg-primary/5">
+                      <p className="text-xs font-semibold text-primary">Novo destino</p>
+                      <AddressAutocompleteField
+                        label=""
+                        placeholder="Para onde mudar?"
+                        value={newDestination ? placeDetailsFromAppLocation(newDestination) : null}
+                        onChange={(place) => setNewDestination(place ? appLocationFromPlaceDetails(place) : null)}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => { setShowChangeDest(false); setNewDestination(null); }}
+                          className="rounded-xl border py-2.5 text-sm font-semibold hover:bg-muted transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleChangeDestination}
+                          disabled={!newDestination}
+                          className="rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-40"
+                        >
+                          Confirmar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
               {rideState === "searching" && (
                 <button onClick={handleCancelRide}
                   className="w-full rounded-xl border border-destructive/30 py-3.5 text-sm font-bold text-destructive hover:bg-destructive/5 transition-colors">
