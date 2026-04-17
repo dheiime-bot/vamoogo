@@ -10,7 +10,7 @@
  */
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, MapPin, Clock, Loader2, CheckCircle2, XCircle, RefreshCw, Power, Wallet } from "lucide-react";
+import { Car, MapPin, Clock, Loader2, CheckCircle2, XCircle, RefreshCw, Power } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
@@ -130,7 +130,7 @@ const DriverOffers = () => {
     const usedIds = new Set(offerItems.map((i) => i.ride.id));
     const openItems: Item[] = (openRides || [])
       .filter((r: any) => !usedIds.has(r.id))
-      .map((r: any) => {
+      .map((r: any): Item => {
         const dist =
           coords && r.origin_lat && r.origin_lng
             ? haversine([coords.lat, coords.lng], [r.origin_lat, r.origin_lng])
