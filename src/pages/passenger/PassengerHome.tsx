@@ -534,8 +534,9 @@ const PassengerHome = () => {
   // Layout:
   // - idle (sem form aberto): mapa ocupa a tela inteira + 1 botão "Para onde Vamoo?" no rodapé.
   // - idle (form aberto): form aparece como sheet no topo, mapa fica visível embaixo.
-  // - corrida ativa / completed / rating: mapa em 68vh + bottom-sheet com infos da corrida.
-  const showFullMap = rideState === "idle" && !showRideForm;
+  // - corrida ativa: mapa em 68vh + bottom-sheet com infos da corrida.
+  // - rating: a UI volta para o estado "idle" (mapa cheio) e abre Dialog modal de avaliação.
+  const showFullMap = (rideState === "idle" || rideState === "rating") && !showRideForm;
   const showFormSheet = rideState === "idle" && showRideForm;
 
   return (
@@ -546,7 +547,7 @@ const PassengerHome = () => {
           className={`${
             showFullMap
               ? "h-screen"
-              : isRideActive || rideState === "completed" || rideState === "rating"
+              : isRideActive
                 ? "h-[68vh]"
                 : "h-[45vh]"
           } rounded-none transition-all duration-300`}
