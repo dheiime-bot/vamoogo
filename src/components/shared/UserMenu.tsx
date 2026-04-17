@@ -50,7 +50,7 @@ const UserMenu = ({ role, floating = true }: Props) => {
 
   return (
     <div
-      className={cn(floating && "fixed right-[120px] z-50")}
+      className={cn(floating && "fixed right-16 z-50")}
       style={floating ? { top: "calc(env(safe-area-inset-top) + 0.75rem)" } : undefined}
     >
       <DropdownMenu>
