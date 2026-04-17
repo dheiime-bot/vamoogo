@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X } from "lucide-react";
+import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import GoogleMap from "@/components/shared/GoogleMap";
@@ -8,6 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import RideChat from "@/components/passenger/RideChat";
+import PixPaymentModal from "@/components/passenger/PixPaymentModal";
+import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 
 
@@ -47,6 +49,7 @@ const DriverHome = () => {
   const [offerCountdown, setOfferCountdown] = useState(15);
   const [showChat, setShowChat] = useState(false);
   const [passengerName, setPassengerName] = useState<string>("");
+  const [showPixModal, setShowPixModal] = useState(false);
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
@@ -492,10 +495,17 @@ const DriverHome = () => {
           <div className="text-xs text-muted-foreground">
             {activeRide.distance_km} km • ~{activeRide.duration_minutes} min • Taxa plataforma: R$ {Number(activeRide.platform_fee).toFixed(2)}
           </div>
-          <button onClick={handleFinishRide}
-            className="w-full rounded-xl bg-success py-3 text-sm font-bold text-success-foreground flex items-center justify-center gap-2">
-            <Flag className="h-4 w-4" /> Finalizar corrida
-          </button>
+          {activeRide.payment_method === "pix" ? (
+            <button onClick={() => setShowPixModal(true)}
+              className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
+              <QrCode className="h-4 w-4" /> Cobrar (Gerar Pix)
+            </button>
+          ) : (
+            <button onClick={handleFinishRide}
+              className="w-full rounded-xl bg-success py-3 text-sm font-bold text-success-foreground flex items-center justify-center gap-2">
+              <Flag className="h-4 w-4" /> Finalizar corrida
+            </button>
+          )}
         </div>
       )}
 
@@ -531,6 +541,23 @@ const DriverHome = () => {
           )}
         </div>
       )}
+
+      {/* Modal Pix — exibido pelo motorista quando vai cobrar */}
+      <PixPaymentModal
+        open={showPixModal}
+        onClose={() => setShowPixModal(false)}
+        onMarkAsPaid={async () => {
+          await handleFinishRide();
+          setShowPixModal(false);
+        }}
+        confirmLabel="Recebi — finalizar corrida"
+        driverName={profile?.full_name || "Motorista"}
+        pixKey={driverData?.pix_key || null}
+        pixKeyType={(driverData?.pix_key_type as PixKeyType) || null}
+        amount={Number(activeRide?.price || 0)}
+        rideId={activeRide?.id || ""}
+        merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
+      />
 
       <AppMenu role="driver" />
       <NotificationBell />

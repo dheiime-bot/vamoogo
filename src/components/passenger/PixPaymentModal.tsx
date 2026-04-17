@@ -13,6 +13,8 @@ interface PixPaymentModalProps {
   open: boolean;
   onClose: () => void;
   onMarkAsPaid?: () => void;
+  /** Texto do botão de confirmação (ex: "Já paguei" para passageiro, "Recebi — finalizar corrida" para motorista) */
+  confirmLabel?: string;
   driverName: string;
   pixKey: string | null;
   pixKeyType: PixKeyType | null;
@@ -22,7 +24,7 @@ interface PixPaymentModalProps {
 }
 
 const PixPaymentModal = ({
-  open, onClose, onMarkAsPaid,
+  open, onClose, onMarkAsPaid, confirmLabel = "Já paguei",
   driverName, pixKey, pixKeyType, amount, rideId, merchantCity,
 }: PixPaymentModalProps) => {
   const [copied, setCopied] = useState(false);
@@ -156,7 +158,7 @@ const PixPaymentModal = ({
               className="w-full rounded-xl bg-success py-3 text-sm font-bold text-success-foreground flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {marking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              Já paguei
+              {confirmLabel}
             </button>
           )}
           <button onClick={onClose} className="w-full rounded-xl border py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">

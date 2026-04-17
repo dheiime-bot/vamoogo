@@ -84,7 +84,8 @@ const PassengerHome = () => {
         } else if (ride.status === "completed") {
           setRideState("completed");
           setDriverLocation(null);
-          if (ride.payment_method === "pix") setShowPixModal(true);
+          // Pix é cobrado pelo motorista (QR Code aparece no app dele).
+          // O passageiro vê apenas o resumo final; pode reabrir o QR pelo botão se quiser.
           toast.success("Corrida finalizada!");
         } else if (ride.status === "cancelled") {
           setRideState("idle");
