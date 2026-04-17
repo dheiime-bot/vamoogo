@@ -65,38 +65,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    let cancelled = false;
 
-        if (session?.user) {
-          setTimeout(async () => {
-            const pendingKey = `signup_finalize_pending_${session.user.id}`;
-            if (sessionStorage.getItem(pendingKey) === "1") {
-              try { await supabase.functions.invoke("finalize-signup-uploads"); }
-              catch (err) { console.error("finalize-signup-uploads failed", err); }
-              finally { sessionStorage.removeItem(pendingKey); }
-            }
-            await loadUserData(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-          setDriverData(null);
-          setRoles([]);
-          setActiveRole(null);
+    const handleSession = async (sess: Session | null) => {
+      if (cancelled) return;
+      setSession(sess);
+      setUser(sess?.user ?? null);
+
+      if (sess?.user) {
+        const pendingKey = `signup_finalize_pending_${sess.user.id}`;
+        if (sessionStorage.getItem(pendingKey) === "1") {
+          try { await supabase.functions.invoke("finalize-signup-uploads"); }
+          catch (err) { console.error("finalize-signup-uploads failed", err); }
+          finally { sessionStorage.removeItem(pendingKey); }
         }
-        setLoading(false);
+        await loadUserData(sess.user.id);
+      } else {
+        setProfile(null);
+        setDriverData(null);
+        setRoles([]);
+        setActiveRole(null);
+      }
+      if (!cancelled) setLoading(false);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        // Defer async work so we don't block the auth callback
+        setTimeout(() => handleSession(session), 0);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (!session) setLoading(false);
+      handleSession(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => { cancelled = true; subscription.unsubscribe(); };
   }, [loadUserData]);
 
   const switchRole = async (role: AppRole) => {
