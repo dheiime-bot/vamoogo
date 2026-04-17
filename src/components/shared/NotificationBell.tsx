@@ -152,6 +152,13 @@ const NotificationBell = ({ floating = true }: Props) => {
       .eq("is_read", false);
   };
 
+  const clearAll = async () => {
+    if (!user || items.length === 0) return;
+    setItems([]);
+    await supabase.from("notifications").delete().eq("user_id", user.id);
+    toast.success("Notificações limpas");
+  };
+
   const handleClick = async (n: NotificationRow) => {
     setOpen(false);
     if (!n.is_read) await markAsRead(n.id);
@@ -195,14 +202,24 @@ const NotificationBell = ({ floating = true }: Props) => {
                 {unreadCount > 0 ? `${unreadCount} não lida${unreadCount > 1 ? "s" : ""}` : "Tudo em dia"}
               </p>
             </div>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/70 transition-colors"
-              >
-                <Check className="h-3.5 w-3.5" /> Marcar todas
-              </button>
-            )}
+            <div className="flex items-center gap-1.5">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/70 transition-colors"
+                >
+                  <Check className="h-3.5 w-3.5" /> Marcar todas
+                </button>
+              )}
+              {items.length > 0 && (
+                <button
+                  onClick={clearAll}
+                  className="flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/20 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" /> Limpar tudo
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="max-h-[60vh] overflow-y-auto">
