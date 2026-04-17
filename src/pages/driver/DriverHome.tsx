@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode, Navigation as NavigationIcon } from "lucide-react";
 import { openGoogleMapsRoute } from "@/lib/externalNav";
@@ -101,44 +101,72 @@ const DriverHome = () => {
       });
   }, [user]);
 
-  // Realtime: novas ofertas
+  // Refs para o handler de realtime ler estado mais recente sem reinscrever o canal
+  const pendingOfferRef = useRef<any>(null);
+  const activeRideRef = useRef<any>(null);
+  useEffect(() => { pendingOfferRef.current = pendingOffer; }, [pendingOffer]);
+  useEffect(() => { activeRideRef.current = activeRide; }, [activeRide]);
+
+  // Polling de fallback: a cada 4s busca ofertas pendentes (caso o realtime falhe)
   useEffect(() => {
     if (!isOnline || !user) return;
-
-    const checkExisting = async () => {
-      const { data } = await supabase.from("ride_offers").select("*, rides(*)")
+    let cancelled = false;
+    const fetchPending = async () => {
+      if (pendingOfferRef.current || activeRideRef.current) return;
+      const { data, error } = await supabase.from("ride_offers").select("*, rides(*)")
         .eq("driver_id", user.id).eq("status", "pending")
         .gte("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false }).limit(1);
-      if (data && data.length > 0 && !pendingOffer && !activeRide) {
+      if (cancelled) return;
+      if (error) { console.warn("[driver] poll offers error", error); return; }
+      if (data && data.length > 0) {
         const offer = data[0];
+        console.log("[driver] poll found pending offer", offer.id);
+        if (!offer.rides || offer.rides.status !== "requested") return;
         setPendingOffer(offer);
         setPendingRide(offer.rides);
         setRideState("offer");
         playOfferSound();
+        toast.success("Nova corrida! 🚗");
       }
     };
-    checkExisting();
+    fetchPending();
+    const intv = setInterval(fetchPending, 4000);
+    return () => { cancelled = true; clearInterval(intv); };
+  }, [isOnline, user]);
+
+  // Realtime: novas ofertas (canal estável — só re-cria quando isOnline/user mudam)
+  useEffect(() => {
+    if (!isOnline || !user) return;
+    console.log("[driver] subscribing to ride_offers for", user.id);
 
     const channel = supabase.channel(`driver-offers-${user.id}`)
       .on("postgres_changes",
         { event: "INSERT", schema: "public", table: "ride_offers", filter: `driver_id=eq.${user.id}` },
         async (payload) => {
-          if (activeRide || pendingOffer) return;
+          console.log("[driver] realtime ride_offers INSERT received", payload.new);
+          if (activeRideRef.current || pendingOfferRef.current) {
+            console.log("[driver] skipping offer — already busy");
+            return;
+          }
           const offer = payload.new as any;
-          // Busca a corrida associada
           const { data: ride } = await supabase.from("rides").select("*").eq("id", offer.ride_id).single();
-          if (!ride || ride.status !== "requested") return;
+          if (!ride || ride.status !== "requested") {
+            console.log("[driver] skipping offer — ride not in requested state", ride?.status);
+            return;
+          }
           setPendingOffer(offer);
           setPendingRide(ride);
           setRideState("offer");
           playOfferSound();
           toast.success("Nova corrida! 🚗");
         })
-      .subscribe();
+      .subscribe((status) => {
+        console.log("[driver] ride_offers channel status:", status);
+      });
 
     return () => { supabase.removeChannel(channel); };
-  }, [isOnline, user, pendingOffer, activeRide]);
+  }, [isOnline, user]);
 
   // Realtime: sincronia de UPDATEs em rides atribuídas a este motorista
   // (cobre cancelamento pelo passageiro, mudanças de status externas, etc)
