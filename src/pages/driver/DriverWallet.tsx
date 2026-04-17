@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Wallet, CreditCard, QrCode, ArrowDownLeft, ArrowUpRight, Gift, Home, User, Loader2, Banknote, History, BarChart3 } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
+import NotificationBell from "@/components/shared/NotificationBell";
 import { BarChart, Bar, XAxis, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,6 +173,7 @@ const DriverWallet = () => {
         )}
       </div>
       <AppMenu role="driver" />
+      <NotificationBell />
     </div>
   );
 };

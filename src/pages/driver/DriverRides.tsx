@@ -1,5 +1,6 @@
 import { Clock, MapPin, Navigation, Star } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
+import NotificationBell from "@/components/shared/NotificationBell";
 import StatusBadge from "@/components/shared/StatusBadge";
 
 const rides = [
@@ -64,6 +65,7 @@ const DriverRides = () => (
     </div>
 
     <AppMenu role="driver" />
+    <NotificationBell />
   </div>
 );
 

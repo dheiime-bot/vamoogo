@@ -1,5 +1,6 @@
 import { User, Camera, FileText, Phone, Mail, Shield, ArrowLeft } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
+import NotificationBell from "@/components/shared/NotificationBell";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -64,6 +65,7 @@ const PassengerProfile = () => {
       </div>
 
       <AppMenu role="passenger" />
+      <NotificationBell />
     </div>
   );
 };
