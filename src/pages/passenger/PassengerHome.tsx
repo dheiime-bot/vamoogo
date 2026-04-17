@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote } from "lucide-react";
+import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
+import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
 import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passenger/OriginPicker";
@@ -13,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFareEstimate } from "@/hooks/useFareEstimate";
 import type { PlaceDetails } from "@/services/googlePlaces";
 import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
+import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 
 const categories = [
