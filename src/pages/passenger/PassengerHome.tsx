@@ -378,8 +378,19 @@ const PassengerHome = () => {
       return;
     }
     // Origem do recálculo = posição atual do motorista (se disponível) ou origem original
-    const fromLat = driverLocation?.lat ?? Number(activeRide.origin_lat);
-    const fromLng = driverLocation?.lng ?? Number(activeRide.origin_lng);
+    // 🔒 GUARD CRÍTICO: nunca use 0,0 como origem — gera "rotas" de milhares de km até o Brasil.
+    const candLat = driverLocation?.lat ?? (activeRide.origin_lat != null ? Number(activeRide.origin_lat) : NaN);
+    const candLng = driverLocation?.lng ?? (activeRide.origin_lng != null ? Number(activeRide.origin_lng) : NaN);
+    const fromLat = Number.isFinite(candLat) && candLat !== 0 ? candLat : NaN;
+    const fromLng = Number.isFinite(candLng) && candLng !== 0 ? candLng : NaN;
+    if (!Number.isFinite(fromLat) || !Number.isFinite(fromLng)) {
+      toast.error("Não foi possível obter a posição atual. Tente novamente em instantes.");
+      return;
+    }
+    if (!Number.isFinite(newDestination.lat) || !Number.isFinite(newDestination.lng) || newDestination.lat === 0 || newDestination.lng === 0) {
+      toast.error("Destino inválido. Selecione novamente.");
+      return;
+    }
 
     // 1) Distância/tempo via Google (com fallback haversine)
     let km = 0; let min = 0;
@@ -419,6 +430,13 @@ const PassengerHome = () => {
     const totalKm = Math.round((startedKm + km) * 10) / 10;
     const totalMin = (activeRide.duration_minutes || 0) + min;
 
+    // 🔒 Sanity: rejeita totais absurdos (ex: bug de coordenada (0,0) gera milhares de km).
+    if (totalKm > 1000 || totalMin > 1440 || km > 500) {
+      console.error("[handleChangeDestination] sanity fail", { fromLat, fromLng, newDestination, km, min, totalKm, totalMin });
+      toast.error("Distância recalculada inválida. Verifique o destino e tente novamente.");
+      return;
+    }
+
     // 3) Recalcula preço via tariffs (mesma fórmula do useFareEstimate)
     const { data: tariff } = await supabase
       .from("tariffs")
@@ -432,6 +450,15 @@ const PassengerHome = () => {
     const newPrice = Math.round(Math.max(base + extras, t.min_fare) * 100) / 100;
     const newFee = await calcPlatformFee(newPrice, activeRide.category);
 
+    // Atualiza legs também: mantém perna inicial e adiciona/sobrescreve a perna do novo trecho
+    const prevLegs: any[] = Array.isArray(activeRide.legs) ? activeRide.legs : [];
+    const firstLeg = prevLegs[0] || { fromIndex: 0, toIndex: 1, km: startedKm, min: activeRide.duration_minutes || 0, price: 0 };
+    const firstPrice = Math.round((newPrice * (startedKm / Math.max(totalKm, 0.1))) * 100) / 100;
+    const newLegs = [
+      { ...firstLeg, price: firstPrice },
+      { fromIndex: 1, toIndex: 2, km, min, price: Math.round((newPrice - firstPrice) * 100) / 100 },
+    ];
+
     const { error } = await supabase
       .from("rides")
       .update({
@@ -443,6 +470,7 @@ const PassengerHome = () => {
         price: newPrice,
         platform_fee: newFee,
         driver_net: newPrice - newFee,
+        legs: newLegs,
       })
       .eq("id", activeRide.id);
     if (error) {
@@ -459,6 +487,7 @@ const PassengerHome = () => {
       price: newPrice,
       platform_fee: newFee,
       driver_net: newPrice - newFee,
+      legs: newLegs,
     }));
     setSelectedDestination(newDestination);
     setShowChangeDest(false);
