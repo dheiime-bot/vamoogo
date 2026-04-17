@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Search, X, User as UserIcon, RefreshCw } from "lucide-react";
+import { Search, X, User as UserIcon, RefreshCw, AlertTriangle } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import PassengerDetailsModal from "@/components/admin/PassengerDetailsModal";
+import PassengerActionsMenu from "@/components/admin/PassengerActionsMenu";
 
 const onlyDigits = (s: string) => (s || "").replace(/\D/g, "");
 
@@ -109,64 +110,96 @@ const AdminPassengers = () => {
                 <th className="px-4 py-3 text-left font-semibold">CPF</th>
                 <th className="px-4 py-3 text-left font-semibold">Nascimento</th>
                 <th className="px-4 py-3 text-left font-semibold">Contato</th>
+                <th className="px-4 py-3 text-left font-semibold">Status</th>
                 <th className="px-4 py-3 text-left font-semibold">Verificações</th>
                 <th className="px-4 py-3 text-left font-semibold">Cadastro</th>
-                <th className="px-4 py-3 text-left font-semibold">ID</th>
+                <th className="px-4 py-3 text-right font-semibold">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelected(p)}>
-                  <td className="px-3 py-2">
-                    {thumbs[p.id] ? (
-                      <button onClick={(e) => { e.stopPropagation(); setZoomImg(thumbs[p.id]); }} className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center" title="Ver selfie">
-                        <img
-                          src={thumbs[p.id]}
-                          alt={p.full_name}
-                          className="h-full w-full object-cover"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                        />
-                      </button>
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center" title="Sem selfie">
-                        <UserIcon className="h-5 w-5 text-primary/70" />
+              {filtered.map((p) => {
+                const statusColor =
+                  p.status === "bloqueado" ? "bg-destructive/10 text-destructive"
+                  : p.status === "suspenso" ? "bg-warning/10 text-warning"
+                  : "bg-success/10 text-success";
+                return (
+                  <tr key={p.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelected(p)}>
+                    <td className="px-3 py-2">
+                      {thumbs[p.id] ? (
+                        <button onClick={(e) => { e.stopPropagation(); setZoomImg(thumbs[p.id]); }} className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center" title="Ver selfie">
+                          <img
+                            src={thumbs[p.id]}
+                            alt={p.full_name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                          />
+                        </button>
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center" title="Sem selfie">
+                          <UserIcon className="h-5 w-5 text-primary/70" />
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-medium">
+                      <div className="flex items-center gap-1.5">
+                        {p.full_name}
+                        {p.is_suspect && <AlertTriangle className="h-3.5 w-3.5 text-warning" aria-label="Suspeito" />}
                       </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 font-medium">{p.full_name}</td>
-                  <td className="px-4 py-3 text-muted-foreground font-mono">{p.cpf || "—"}</td>
-                  <td className="px-4 py-3 text-xs">{p.birth_date ? new Date(p.birth_date).toLocaleDateString("pt-BR") : "—"}</td>
-                  <td className="px-4 py-3">
-                    <p className="text-xs">{p.phone || "—"}</p>
-                    <p className="text-xs text-muted-foreground">{p.email || "—"}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1">
-                      <span className={`text-xs px-1.5 py-0.5 rounded ${p.selfie_url || p.selfie_signup_url ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>Selfie</span>
-                      <span className={`text-xs px-1.5 py-0.5 rounded ${p.phone_verified ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>OTP</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
-                  <td className="px-4 py-3 font-mono text-[10px] text-muted-foreground">{p.user_id?.slice(0, 8)}…</td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground font-mono">{p.cpf || "—"}</td>
+                    <td className="px-4 py-3 text-xs">{p.birth_date ? new Date(p.birth_date).toLocaleDateString("pt-BR") : "—"}</td>
+                    <td className="px-4 py-3">
+                      <p className="text-xs">{p.phone || "—"}</p>
+                      <p className="text-xs text-muted-foreground">{p.email || "—"}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold capitalize ${statusColor}`}>
+                        {p.status || "ativo"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${p.selfie_url || p.selfie_signup_url ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>Selfie</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${p.phone_verified ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>OTP</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
+                    <td className="px-4 py-3 text-right">
+                      <PassengerActionsMenu passenger={p} onView={() => setSelected(p)} onChanged={loadPassengers} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
         <div className="md:hidden divide-y">
-          {filtered.map((p) => (
-            <button key={p.id} onClick={() => setSelected(p)} className="flex items-center gap-3 p-4 w-full text-left hover:bg-muted/30">
-              {thumbs[p.id] ? (
-                <img src={thumbs[p.id]} alt={p.full_name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/30" />
-              ) : (
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center"><UserIcon className="h-6 w-6 text-primary/70" /></div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="font-medium truncate">{p.full_name}</p>
-                <p className="text-xs text-muted-foreground truncate">{p.phone || p.email}</p>
+          {filtered.map((p) => {
+            const statusColor =
+              p.status === "bloqueado" ? "bg-destructive/10 text-destructive"
+              : p.status === "suspenso" ? "bg-warning/10 text-warning"
+              : "bg-success/10 text-success";
+            return (
+              <div key={p.id} className="flex items-center gap-3 p-4 hover:bg-muted/30">
+                <button onClick={() => setSelected(p)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+                  {thumbs[p.id] ? (
+                    <img src={thumbs[p.id]} alt={p.full_name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/30" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center"><UserIcon className="h-6 w-6 text-primary/70" /></div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate flex items-center gap-1.5">
+                      {p.full_name}
+                      {p.is_suspect && <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{p.phone || p.email}</p>
+                    <span className={`inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded-full font-semibold capitalize ${statusColor}`}>{p.status || "ativo"}</span>
+                  </div>
+                </button>
+                <PassengerActionsMenu passenger={p} onView={() => setSelected(p)} onChanged={loadPassengers} />
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
         {filtered.length === 0 && <EmptyState title="Nenhum passageiro encontrado" description="Não há passageiros que correspondam à busca atual." />}
       </div>
