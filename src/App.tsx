@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/auth/AuthPage.tsx";
 import PassengerSignup from "./pages/auth/PassengerSignup.tsx";
 import DriverSignup from "./pages/auth/DriverSignup.tsx";
+import ResetPassword from "./pages/auth/ResetPassword.tsx";
 import PassengerHome from "./pages/passenger/PassengerHome.tsx";
 import PassengerHistory from "./pages/passenger/PassengerHistory.tsx";
 import PassengerProfile from "./pages/passenger/PassengerProfile.tsx";
