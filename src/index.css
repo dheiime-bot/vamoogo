@@ -215,6 +215,28 @@
   50% { transform: translateY(-10px); }
 }
 
+/* Animações dos veículos no mapa — sensação contínua de "movimento" */
+@keyframes vehicle-bob {
+  0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+  50%      { transform: translateY(-1.5px) rotate(1.2deg); }
+}
+@keyframes wheel-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes moto-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-2px) rotate(2deg); }
+}
+@keyframes exhaust-puff {
+  0%   { opacity: 0.55; transform: translate(0, 0) scale(0.6); }
+  100% { opacity: 0;    transform: translate(-6px, -4px) scale(1.4); }
+}
+.anim-vehicle-bob { animation: vehicle-bob 1.6s ease-in-out infinite; transform-origin: 50% 70%; }
+.anim-moto-bob    { animation: moto-bob 1.2s ease-in-out infinite; transform-origin: 50% 70%; }
+.anim-wheel-spin  { animation: wheel-spin 0.6s linear infinite; transform-origin: 50% 50%; }
+.anim-exhaust     { animation: exhaust-puff 0.9s ease-out infinite; }
+
 /* Limpeza visual do Google Maps:
    - Esconde "Atalhos do teclado", "Dados cartográficos", "Termos", "Reportar erro"
    - PRESERVA o logo "Google" no canto inferior esquerdo (exigência dos Termos da API)
