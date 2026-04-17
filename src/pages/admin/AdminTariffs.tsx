@@ -104,10 +104,11 @@ const AdminTariffs = () => {
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
-                    { label: "Taxa base", field: "base_fare", value: t.base_fare },
-                    { label: "Por KM", field: "per_km", value: t.per_km },
-                    { label: "Por minuto", field: "per_minute", value: t.per_minute },
-                    { label: "Tarifa mínima", field: "min_fare", value: t.min_fare },
+                    { label: "Taxa base", field: "base_fare", value: t.base_fare, suffix: "" },
+                    { label: "Por KM", field: "per_km", value: t.per_km, suffix: "/km" },
+                    { label: "Por minuto", field: "per_minute", value: t.per_minute, suffix: "/min" },
+                    { label: "Tarifa mínima", field: "min_fare", value: t.min_fare, suffix: "" },
+                    { label: "Extra por passageiro", field: "passenger_extra", value: t.passenger_extra, suffix: "/km", hint: "R$ por km, por passageiro além do 1º" },
                   ].map((f) => (
                     <div key={f.label}>
                       <label className="text-xs font-medium text-muted-foreground">{f.label}</label>
@@ -119,7 +120,9 @@ const AdminTariffs = () => {
                           onChange={(e) => updateTariff(t.id, f.field, e.target.value)}
                           className="flex-1 bg-transparent text-sm font-semibold outline-none"
                         />
+                        {f.suffix && <span className="text-[10px] text-muted-foreground ml-1">{f.suffix}</span>}
                       </div>
+                      {f.hint && <p className="text-[10px] text-muted-foreground mt-0.5">{f.hint}</p>}
                     </div>
                   ))}
                 </div>
