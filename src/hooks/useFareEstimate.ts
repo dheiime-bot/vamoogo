@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGoogleMapsKey } from "@/hooks/useGoogleMapsKey";
 
-type Cat = "moto" | "car" | "premium";
+type Cat = "moto" | "economico" | "conforto";
 
 interface Point { lat: number; lng: number }
 
