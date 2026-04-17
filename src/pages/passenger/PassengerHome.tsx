@@ -28,7 +28,7 @@ const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", de
 const PassengerHome = () => {
   const { user } = useAuth();
   const [passengers, setPassengers] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState("car");
+  const [selectedCategory, setSelectedCategory] = useState("economico");
   const [selectedOrigin, setSelectedOrigin] = useState<AppLocation | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<AppLocation | null>(null);
   const [selectedStops, setSelectedStops] = useState<(AppLocation | null)[]>([]);
