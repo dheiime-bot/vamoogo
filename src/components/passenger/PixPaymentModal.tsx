@@ -24,7 +24,7 @@ interface PixPaymentModalProps {
 }
 
 const PixPaymentModal = ({
-  open, onClose, onMarkAsPaid,
+  open, onClose, onMarkAsPaid, confirmLabel = "Já paguei",
   driverName, pixKey, pixKeyType, amount, rideId, merchantCity,
 }: PixPaymentModalProps) => {
   const [copied, setCopied] = useState(false);
