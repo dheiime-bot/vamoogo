@@ -605,7 +605,14 @@ const GoogleMapInner = ({
       ))}
       {animatedDriver && (
         <AdvancedMarker position={{ lat: animatedDriver.lat, lng: animatedDriver.lng }}>
-          <CarMarker heading={animatedDriver.heading || 0} />
+          {animatedDriver.category === "moto" ? (
+            <MotoMarker heading={animatedDriver.heading || 0} />
+          ) : (
+            <CarMarker
+              heading={animatedDriver.heading || 0}
+              variant={animatedDriver.category === "conforto" ? "conforto" : "economico"}
+            />
+          )}
         </AdvancedMarker>
       )}
       {userLoc && !origin && (
