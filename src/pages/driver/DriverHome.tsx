@@ -352,6 +352,13 @@ const DriverHome = () => {
           <GoogleMap
             className="h-screen rounded-none transition-all duration-300"
             trackUserLocation={true}
+            userMarkerVariant={
+              driverData?.category === "moto"
+                ? "moto"
+                : driverData?.category === "conforto"
+                  ? "car-conforto"
+                  : "car-economico"
+            }
             bottomInset={120}
           />
         </div>
