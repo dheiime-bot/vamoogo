@@ -116,7 +116,7 @@ const DriverHome = () => {
         setPendingOffer(offer);
         setPendingRide(offer.rides);
         setRideState("offer");
-        playOfferSound();
+        playOfferSound(offer.rides);
         toast.success("Nova corrida! 🚗");
       }
     };
@@ -148,8 +148,8 @@ const DriverHome = () => {
           setPendingOffer(offer);
           setPendingRide(ride);
           setRideState("offer");
-          playOfferSound();
-          toast.success("Nova corrida! 🚗");
+        playOfferSound(ride);
+        toast.success("Nova corrida! 🚗");
         })
       .subscribe((status) => {
         console.log("[driver] ride_offers channel status:", status);
