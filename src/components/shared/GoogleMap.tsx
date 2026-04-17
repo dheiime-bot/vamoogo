@@ -449,8 +449,8 @@ const FitToPoints = ({ points }: { points: MapPoint[] }) => {
     if (!map || points.length === 0) return;
     if (points.length === 1) {
       map.panTo({ lat: points[0].lat, lng: points[0].lng });
-      // Mesmo nível do botão "recentralizar" para evitar zoom-in agressivo ao atualizar a localização
-      map.setZoom(16);
+      // Mesmo nível do botão "recentralizar" — visão de bairro, sem zoom agressivo
+      map.setZoom(14);
       return;
     }
     const g = (window as any).google;
@@ -512,18 +512,18 @@ const RecenterButton = ({ target }: { target: MapPoint | null }) => {
     if (!map) return;
     if (target) {
       map.panTo({ lat: target.lat, lng: target.lng });
-      map.setZoom(16);
+      map.setZoom(14);
       return;
     }
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           map.panTo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          map.setZoom(16);
+          map.setZoom(14);
         },
         () => {
           map.panTo(ALTAMIRA_CENTER);
-          map.setZoom(14);
+          map.setZoom(13);
         },
         { enableHighAccuracy: true, timeout: 6000 }
       );
