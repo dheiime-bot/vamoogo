@@ -979,6 +979,22 @@ const PassengerHome = () => {
           className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background to-transparent px-4 pt-4"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
         >
+          {/* Indicador de motoristas próximos */}
+          <div className="mb-2 flex items-center justify-center">
+            {nearbyDrivers.length > 0 ? (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-[11px] font-semibold text-success ring-1 ring-success/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+                </span>
+                {nearbyDrivers.length} {nearbyDrivers.length === 1 ? "motorista próximo" : "motoristas próximos"}
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                Nenhum motorista por perto agora
+              </div>
+            )}
+          </div>
           <button
             onClick={handleOpenPayment}
             disabled={isRequesting || !selectedOrigin || !selectedDestination}
