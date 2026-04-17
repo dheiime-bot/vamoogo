@@ -89,7 +89,7 @@ const DriverChats = () => {
       <AppMenu role="driver" />
       <NotificationBell />
       
-      <header className="border-b bg-card px-4 py-4 pl-16">
+      <header className="border-b bg-card px-4 py-4 pt-20">
         <h1 className="text-lg font-bold">Chats</h1>
         <p className="text-xs text-muted-foreground">Suas conversas com passageiros</p>
       </header>

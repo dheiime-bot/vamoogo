@@ -77,7 +77,7 @@ const DriverProfile = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-gradient-dark p-6 pb-16">
+      <div className="bg-gradient-dark p-6 pt-20 pb-16">
         <button onClick={() => navigate("/driver")} className="mb-4 text-primary-foreground/80"><ArrowLeft className="h-5 w-5" /></button>
         <h1 className="text-lg font-bold text-primary-foreground">Meu perfil</h1>
       </div>
