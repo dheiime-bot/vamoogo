@@ -231,6 +231,9 @@ export type Database = {
       }
       drivers: {
         Row: {
+          analysis_message: string | null
+          analyzed_at: string | null
+          analyzed_by: string | null
           balance: number
           category: Database["public"]["Enums"]["vehicle_category"]
           cnh_back_url: string | null
@@ -238,21 +241,29 @@ export type Database = {
           cnh_front_url: string | null
           cnh_number: string | null
           created_at: string
+          crlv_url: string | null
           daily_cancellations: number | null
           id: string
           last_cancellation_reset: string | null
+          pix_holder_name: string | null
           pix_key: string | null
           pix_key_type: string | null
           rating: number | null
+          selfie_with_document_url: string | null
           status: Database["public"]["Enums"]["driver_status"]
           total_rides: number | null
           updated_at: string
           user_id: string
+          vehicle_brand: string | null
           vehicle_color: string | null
           vehicle_model: string | null
           vehicle_plate: string | null
+          vehicle_year: number | null
         }
         Insert: {
+          analysis_message?: string | null
+          analyzed_at?: string | null
+          analyzed_by?: string | null
           balance?: number
           category?: Database["public"]["Enums"]["vehicle_category"]
           cnh_back_url?: string | null
@@ -260,21 +271,29 @@ export type Database = {
           cnh_front_url?: string | null
           cnh_number?: string | null
           created_at?: string
+          crlv_url?: string | null
           daily_cancellations?: number | null
           id?: string
           last_cancellation_reset?: string | null
+          pix_holder_name?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
           rating?: number | null
+          selfie_with_document_url?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
           updated_at?: string
           user_id: string
+          vehicle_brand?: string | null
           vehicle_color?: string | null
           vehicle_model?: string | null
           vehicle_plate?: string | null
+          vehicle_year?: number | null
         }
         Update: {
+          analysis_message?: string | null
+          analyzed_at?: string | null
+          analyzed_by?: string | null
           balance?: number
           category?: Database["public"]["Enums"]["vehicle_category"]
           cnh_back_url?: string | null
@@ -282,19 +301,24 @@ export type Database = {
           cnh_front_url?: string | null
           cnh_number?: string | null
           created_at?: string
+          crlv_url?: string | null
           daily_cancellations?: number | null
           id?: string
           last_cancellation_reset?: string | null
+          pix_holder_name?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
           rating?: number | null
+          selfie_with_document_url?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_rides?: number | null
           updated_at?: string
           user_id?: string
+          vehicle_brand?: string | null
           vehicle_color?: string | null
           vehicle_model?: string | null
           vehicle_plate?: string | null
+          vehicle_year?: number | null
         }
         Relationships: []
       }
@@ -942,7 +966,16 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "driver" | "passenger"
-      driver_status: "pending" | "approved" | "rejected" | "blocked"
+      driver_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "blocked"
+        | "cadastro_enviado"
+        | "em_analise"
+        | "aprovado"
+        | "reprovado"
+        | "pendente_documentos"
       fraud_severity: "light" | "moderate" | "probable"
       payment_method: "cash" | "pix" | "debit" | "credit"
       recharge_method: "pix" | "card"
@@ -1084,7 +1117,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "driver", "passenger"],
-      driver_status: ["pending", "approved", "rejected", "blocked"],
+      driver_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "blocked",
+        "cadastro_enviado",
+        "em_analise",
+        "aprovado",
+        "reprovado",
+        "pendente_documentos",
+      ],
       fraud_severity: ["light", "moderate", "probable"],
       payment_method: ["cash", "pix", "debit", "credit"],
       recharge_method: ["pix", "card"],
