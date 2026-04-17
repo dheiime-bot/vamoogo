@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, X, ImageIcon } from "lucide-react";
+import { Search, Eye, X, ImageIcon, User as UserIcon } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
@@ -60,9 +60,16 @@ const AdminDrivers = () => {
   useEffect(() => {
     const resolve = async (bucket: "selfies" | "driver-documents", url?: string | null) => {
       if (!url) return undefined;
+      // Extrai caminho interno de signed URLs antigas e gera URL fresca
+      const re = new RegExp(`/object/(?:sign|public)/${bucket}/([^?]+)`);
+      const m = url.match(re);
+      const path = m ? decodeURIComponent(m[1]) : (url.startsWith("http") ? null : url);
+      if (path) {
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
+        if (data?.signedUrl) return data.signedUrl;
+      }
       if (url.startsWith("http")) return url;
-      const { data } = await supabase.storage.from(bucket).createSignedUrl(url, 3600);
-      return data?.signedUrl;
+      return undefined;
     };
     (async () => {
       const map: Record<string, { selfie?: string; cnh?: string; vehicle?: string }> = {};
@@ -199,11 +206,18 @@ const AdminDrivers = () => {
                   <tr key={d.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedDriver(d)}>
                     <td className="px-3 py-2">
                       {t.selfie ? (
-                        <button onClick={(e) => { e.stopPropagation(); setZoomImg(t.selfie!); }} className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary" title="Ver selfie">
-                          <img src={t.selfie} alt={profile?.full_name} className="h-full w-full object-cover" />
+                        <button onClick={(e) => { e.stopPropagation(); setZoomImg(t.selfie!); }} className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center" title="Ver selfie">
+                          <img
+                            src={t.selfie}
+                            alt={profile?.full_name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                          />
                         </button>
                       ) : (
-                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center" title="Sem selfie">
+                          <UserIcon className="h-5 w-5 text-primary/70" />
+                        </div>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -261,9 +275,17 @@ const AdminDrivers = () => {
             return (
               <button key={d.id} onClick={() => setSelectedDriver(d)} className="w-full p-4 text-left hover:bg-muted/30 transition-colors flex items-start gap-3">
                 {t.selfie ? (
-                  <img src={t.selfie} alt={profile?.full_name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
+                  <img
+                    src={t.selfie}
+                    alt={profile?.full_name}
+                    className="h-12 w-12 rounded-full object-cover border-2 border-primary/30 shrink-0"
+                    onError={(e) => {
+                      const el = e.currentTarget as HTMLImageElement;
+                      el.outerHTML = '<div class="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary/70"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>';
+                    }}
+                  />
                 ) : (
-                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center shrink-0"><ImageIcon className="h-5 w-5 text-muted-foreground" /></div>
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center shrink-0"><UserIcon className="h-6 w-6 text-primary/70" /></div>
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between mb-1">

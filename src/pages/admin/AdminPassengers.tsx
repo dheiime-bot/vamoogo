@@ -46,9 +46,14 @@ const AdminPassengers = () => {
       for (const p of passengers) {
         const url = p.selfie_url || p.selfie_signup_url;
         if (!url) continue;
-        if (url.startsWith("http")) { map[p.id] = url; continue; }
-        const { data } = await supabase.storage.from("selfies").createSignedUrl(url, 3600);
-        if (data?.signedUrl) map[p.id] = data.signedUrl;
+        // Se for signed URL antiga, extrai o path interno e gera uma nova fresca
+        const signedMatch = url.match(/\/object\/(?:sign|public)\/selfies\/([^?]+)/);
+        const path = signedMatch ? decodeURIComponent(signedMatch[1]) : (url.startsWith("http") ? null : url);
+        if (path) {
+          const { data } = await supabase.storage.from("selfies").createSignedUrl(path, 3600);
+          if (data?.signedUrl) { map[p.id] = data.signedUrl; continue; }
+        }
+        if (url.startsWith("http")) map[p.id] = url;
       }
       setThumbs(map);
     })();
@@ -114,8 +119,13 @@ const AdminPassengers = () => {
                 <tr key={p.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelected(p)}>
                   <td className="px-3 py-2">
                     {thumbs[p.id] ? (
-                      <button onClick={(e) => { e.stopPropagation(); setZoomImg(thumbs[p.id]); }} className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary transition-colors" title="Ver selfie">
-                        <img src={thumbs[p.id]} alt={p.full_name} className="h-full w-full object-cover" />
+                      <button onClick={(e) => { e.stopPropagation(); setZoomImg(thumbs[p.id]); }} className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center" title="Ver selfie">
+                        <img
+                          src={thumbs[p.id]}
+                          alt={p.full_name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                        />
                       </button>
                     ) : (
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center" title="Sem selfie">
