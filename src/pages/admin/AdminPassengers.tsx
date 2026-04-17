@@ -46,9 +46,14 @@ const AdminPassengers = () => {
       for (const p of passengers) {
         const url = p.selfie_url || p.selfie_signup_url;
         if (!url) continue;
-        if (url.startsWith("http")) { map[p.id] = url; continue; }
-        const { data } = await supabase.storage.from("selfies").createSignedUrl(url, 3600);
-        if (data?.signedUrl) map[p.id] = data.signedUrl;
+        // Se for signed URL antiga, extrai o path interno e gera uma nova fresca
+        const signedMatch = url.match(/\/object\/(?:sign|public)\/selfies\/([^?]+)/);
+        const path = signedMatch ? decodeURIComponent(signedMatch[1]) : (url.startsWith("http") ? null : url);
+        if (path) {
+          const { data } = await supabase.storage.from("selfies").createSignedUrl(path, 3600);
+          if (data?.signedUrl) { map[p.id] = data.signedUrl; continue; }
+        }
+        if (url.startsWith("http")) map[p.id] = url;
       }
       setThumbs(map);
     })();

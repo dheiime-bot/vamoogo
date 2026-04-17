@@ -60,9 +60,16 @@ const AdminDrivers = () => {
   useEffect(() => {
     const resolve = async (bucket: "selfies" | "driver-documents", url?: string | null) => {
       if (!url) return undefined;
+      // Extrai caminho interno de signed URLs antigas e gera URL fresca
+      const re = new RegExp(`/object/(?:sign|public)/${bucket}/([^?]+)`);
+      const m = url.match(re);
+      const path = m ? decodeURIComponent(m[1]) : (url.startsWith("http") ? null : url);
+      if (path) {
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
+        if (data?.signedUrl) return data.signedUrl;
+      }
       if (url.startsWith("http")) return url;
-      const { data } = await supabase.storage.from(bucket).createSignedUrl(url, 3600);
-      return data?.signedUrl;
+      return undefined;
     };
     (async () => {
       const map: Record<string, { selfie?: string; cnh?: string; vehicle?: string }> = {};
