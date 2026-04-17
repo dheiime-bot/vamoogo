@@ -128,13 +128,14 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
   };
 
   const handleResetPassword = async () => {
-    if (!passenger.email) return toast.error("Passageiro sem e-mail cadastrado");
+    if (newPassword.length < 6) return toast.error("Senha precisa ter pelo menos 6 caracteres");
     setBusy(true);
-    const redirectTo = `${window.location.origin}/auth/reset-password`;
-    const { error } = await supabase.auth.resetPasswordForEmail(passenger.email, { redirectTo });
+    const { data, error } = await supabase.functions.invoke("admin-set-password", {
+      body: { user_id: passenger.user_id, new_password: newPassword },
+    });
     setBusy(false);
-    if (error) return toast.error("Erro: " + error.message);
-    toast.success("E-mail de redefinição enviado");
+    if (error || (data as any)?.error) return toast.error("Erro: " + (error?.message || (data as any)?.error));
+    toast.success("Senha redefinida com sucesso");
     close();
   };
 
@@ -155,8 +156,8 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
           {isAdmin && (
             <DropdownMenuItem onClick={() => setDialog("edit")}><Pencil className="mr-2 h-4 w-4" /> Editar dados</DropdownMenuItem>
           )}
-          {isAdmin && passenger.email && (
-            <DropdownMenuItem onClick={() => setDialog("password")}><ShieldCheck className="mr-2 h-4 w-4" /> Redefinir senha</DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem onClick={() => setDialog("password")}><ShieldCheck className="mr-2 h-4 w-4" /> Trocar senha</DropdownMenuItem>
           )}
 
           <DropdownMenuSeparator />
@@ -220,21 +221,23 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
         </DialogContent>
       </Dialog>
 
-      {/* Reset password */}
-      <AlertDialog open={dialog === "password"} onOpenChange={(o) => !o && close()}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Enviar redefinição de senha?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Um e-mail será enviado para <b>{passenger.email}</b> com um link para definir nova senha.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={close}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleResetPassword} disabled={busy}>Enviar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Trocar senha direto */}
+      <Dialog open={dialog === "password"} onOpenChange={(o) => !o && close()}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Trocar senha do passageiro</DialogTitle></DialogHeader>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              A nova senha entra em vigor imediatamente. O usuário será notificado e poderá entrar com ela. Link por e-mail só é enviado quando o próprio usuário pedir "Esqueci minha senha" no app.
+            </p>
+            <Label>Nova senha (mínimo 6 caracteres)</Label>
+            <Input type="text" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Ex: SenhaTemp@2025" autoComplete="new-password" />
+          </div>
+          <DialogFooter>
+            <button onClick={close} className="rounded-lg border px-4 py-2 text-sm">Cancelar</button>
+            <button onClick={handleResetPassword} disabled={busy || newPassword.length < 6} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">Trocar senha</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Block */}
       <AlertDialog open={dialog === "block"} onOpenChange={(o) => !o && close()}>
