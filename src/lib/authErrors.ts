@@ -57,13 +57,20 @@ export const friendlyAuthError = (error: any): FriendlyAuthError => {
   }
   // Duplicidades (vindas de constraints do banco)
   if (raw.includes("duplicate") && raw.includes("cpf")) {
-    return { message: "CPF já cadastrado.", field: "cpf" };
+    return { message: "CPF já cadastrado em outra conta.", field: "cpf" };
   }
   if (raw.includes("duplicate") && raw.includes("phone")) {
-    return { message: "Telefone já cadastrado.", field: "phone" };
+    return { message: "Telefone já cadastrado em outra conta. Use outro número.", field: "phone" };
   }
   if (raw.includes("duplicate") && raw.includes("plate")) {
-    return { message: "Placa já cadastrada.", field: "plate" };
+    return { message: "Placa já cadastrada em outra conta.", field: "plate" };
+  }
+  // Erro genérico do GoTrue quando o trigger handle_new_user falha (quase sempre unique constraint de CPF/telefone/placa)
+  if (raw.includes("database error saving new user") || raw.includes("unexpected_failure")) {
+    return {
+      message: "Não foi possível concluir o cadastro. Provavelmente o CPF, telefone ou placa já está cadastrado em outra conta. Verifique seus dados.",
+      field: "generic",
+    };
   }
   // Rate limit
   if (raw.includes("rate limit") || raw.includes("too many")) {
