@@ -50,7 +50,7 @@ const DriverHome = () => {
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
   const displayName = profile?.full_name?.split(" ")[0] || "Motorista";
-  const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "premium" ? "Premium" : "Carro";
+  const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
 
   // Faz broadcast da posição GPS quando online
   useDriverLocation({ driverId: user?.id, isOnline, category: driverData?.category });
