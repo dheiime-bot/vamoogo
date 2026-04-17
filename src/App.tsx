@@ -9,6 +9,8 @@ import Index from "./pages/Index.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/auth/AuthPage.tsx";
+import PassengerLogin from "./pages/auth/PassengerLogin.tsx";
+import DriverLogin from "./pages/auth/DriverLogin.tsx";
 import PassengerSignup from "./pages/auth/PassengerSignup.tsx";
 import DriverSignup from "./pages/auth/DriverSignup.tsx";
 import ResetPassword from "./pages/auth/ResetPassword.tsx";
@@ -88,6 +90,8 @@ const App = () => (
             <Route path="/" element={<AdminLogin />} />
             <Route path="/landing" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/passenger/login" element={<PassengerLogin />} />
+            <Route path="/auth/driver/login" element={<DriverLogin />} />
             <Route path="/auth/passenger" element={<PassengerSignup />} />
             <Route path="/auth/driver" element={<DriverSignup />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
