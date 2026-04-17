@@ -75,6 +75,22 @@ const AuthPage = () => {
     navigate("/passenger");
   };
 
+  const handleForgotPassword = async () => {
+    if (!email || !email.includes("@")) {
+      toast.error("Digite seu e-mail no campo acima para recuperar a senha");
+      return;
+    }
+    setIsLoading(true);
+    const redirectTo = `${window.location.origin}/auth`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    setIsLoading(false);
+    if (error) {
+      toast.error("Erro ao enviar e-mail: " + error.message);
+      return;
+    }
+    toast.success("Enviamos um link de recuperação para seu e-mail. Verifique a caixa de entrada.");
+  };
+
   const validateStep1 = (): boolean => {
     const cleanCpf = cpf.replace(/\D/g, "");
     if (!validateCPF(cleanCpf)) {
