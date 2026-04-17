@@ -599,14 +599,24 @@ const PassengerHome = () => {
 
                   {/* Breakdown por trecho */}
                   {fare.legs.length > 1 && (() => {
+                    // Usa endereço real em vez de "Minha localização"; mostra nome só se for lugar salvo (Casa, Trabalho, etc.)
+                    const displayLabel = (loc: AppLocation | null | undefined, fallback: string) => {
+                      if (!loc) return fallback;
+                      const isGeneric = !loc.name || loc.name === "Minha localização" || loc.name === loc.address;
+                      if (isGeneric) return loc.address || fallback;
+                      // Nome customizado ("Casa") + endereço resumido entre parênteses
+                      const shortAddr = loc.address?.split(",").slice(0, 2).join(",").trim();
+                      return shortAddr ? `${loc.name} (${shortAddr})` : loc.name;
+                    };
+                    const originLabel = displayLabel(selectedOrigin, "Origem");
                     const labels: string[] = [
-                      selectedOrigin?.name || "Origem",
+                      originLabel,
                       ...effectiveStops.map((s, i) =>
                         returnToOrigin && i === effectiveStops.length - 1
-                          ? `Retorno: ${selectedOrigin?.name || "origem"}`
-                          : s.name
+                          ? `Retorno: ${originLabel}`
+                          : displayLabel(s as AppLocation, `Parada ${i + 1}`)
                       ),
-                      effectiveDestination?.name || "Destino",
+                      displayLabel(effectiveDestination, "Destino"),
                     ];
                     return (
                       <div className="border-t border-primary/10 pt-2 space-y-1.5">
