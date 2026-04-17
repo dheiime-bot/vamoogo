@@ -84,6 +84,7 @@ const PassengerHome = () => {
         } else if (ride.status === "completed") {
           setRideState("completed");
           setDriverLocation(null);
+          if (ride.payment_method === "pix") setShowPixModal(true);
           toast.success("Corrida finalizada!");
         } else if (ride.status === "cancelled") {
           setRideState("idle");
