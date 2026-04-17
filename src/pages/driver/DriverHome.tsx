@@ -495,10 +495,17 @@ const DriverHome = () => {
           <div className="text-xs text-muted-foreground">
             {activeRide.distance_km} km • ~{activeRide.duration_minutes} min • Taxa plataforma: R$ {Number(activeRide.platform_fee).toFixed(2)}
           </div>
-          <button onClick={handleFinishRide}
-            className="w-full rounded-xl bg-success py-3 text-sm font-bold text-success-foreground flex items-center justify-center gap-2">
-            <Flag className="h-4 w-4" /> Finalizar corrida
-          </button>
+          {activeRide.payment_method === "pix" ? (
+            <button onClick={() => setShowPixModal(true)}
+              className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
+              <QrCode className="h-4 w-4" /> Cobrar (Gerar Pix)
+            </button>
+          ) : (
+            <button onClick={handleFinishRide}
+              className="w-full rounded-xl bg-success py-3 text-sm font-bold text-success-foreground flex items-center justify-center gap-2">
+              <Flag className="h-4 w-4" /> Finalizar corrida
+            </button>
+          )}
         </div>
       )}
 
