@@ -18,7 +18,6 @@ import PassengerHome from "./pages/passenger/PassengerHome.tsx";
 import PassengerHistory from "./pages/passenger/PassengerHistory.tsx";
 import PassengerProfile from "./pages/passenger/PassengerProfile.tsx";
 import PassengerChats from "./pages/passenger/PassengerChats.tsx";
-import PassengerWallet from "./pages/passenger/PassengerWallet.tsx";
 import BecomeDriver from "./pages/passenger/BecomeDriver.tsx";
 import DriverHome from "./pages/driver/DriverHome.tsx";
 import DriverStatusPage from "./pages/driver/DriverStatusPage.tsx";
@@ -99,7 +98,6 @@ const App = () => (
             <Route path="/passenger/history" element={<ProtectedPassengerRoute><PassengerHistory /></ProtectedPassengerRoute>} />
             <Route path="/passenger/profile" element={<ProtectedPassengerRoute><PassengerProfile /></ProtectedPassengerRoute>} />
             <Route path="/passenger/chats" element={<ProtectedPassengerRoute><PassengerChats /></ProtectedPassengerRoute>} />
-            <Route path="/passenger/wallet" element={<ProtectedPassengerRoute><PassengerWallet /></ProtectedPassengerRoute>} />
             <Route path="/passenger/become-driver" element={<ProtectedPassengerRoute><BecomeDriver /></ProtectedPassengerRoute>} />
             <Route path="/driver" element={<ProtectedDriverRoute><DriverHome /></ProtectedDriverRoute>} />
             <Route path="/driver/status" element={<ProtectedDriverRoute><DriverStatusPage /></ProtectedDriverRoute>} />

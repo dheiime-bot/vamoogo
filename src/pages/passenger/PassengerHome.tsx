@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
-
 import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
@@ -39,9 +38,9 @@ const PassengerHome = () => {
   const [selectedDestination, setSelectedDestination] = useState<AppLocation | null>(null);
   const [selectedStops, setSelectedStops] = useState<(AppLocation | null)[]>([]);
   const [isRequesting, setIsRequesting] = useState(false);
-  const [recentRides, setRecentRides] = useState<any[]>([]);
   const [rideState, setRideState] = useState<RideState>("idle");
   const [activeRide, setActiveRide] = useState<any>(null);
+  const [showRideForm, setShowRideForm] = useState(false);
   const [driverLocation, setDriverLocation] = useState<{
     lat: number;
     lng: number;
@@ -58,17 +57,10 @@ const PassengerHome = () => {
   const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
   const [returnToOrigin, setReturnToOrigin] = useState(false);
   const [showPixModal, setShowPixModal] = useState(false);
-  const [nearbyDrivers, setNearbyDrivers] = useState<Array<{ lat: number; lng: number; heading?: number; category?: "moto" | "economico" | "conforto" }>>([]);
   const [showChangeDest, setShowChangeDest] = useState(false);
   const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
-  const [showRideForm, setShowRideForm] = useState(false);
 
-  // Fetch recent rides
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("rides").select("*").eq("passenger_id", user.id).order("created_at", { ascending: false }).limit(3)
-      .then(({ data }) => { if (data) setRecentRides(data); });
-  }, [user]);
+  // (recentRides removido — não estava em uso na UI)
 
   useEffect(() => {
     if (!user) return;
@@ -207,67 +199,7 @@ const PassengerHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
 
-  // Realtime: motoristas online próximos (só em idle, antes de pedir corrida)
-  useEffect(() => {
-    if (rideState !== "idle") {
-      setNearbyDrivers([]);
-      return;
-    }
-    const center = selectedOrigin
-      ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng }
-      : null;
-
-    const fetchNearby = async () => {
-      const { data } = await supabase
-        .from("driver_locations")
-        .select("driver_id,lat,lng,heading,category,is_online,updated_at")
-        .eq("is_online", true)
-        .limit(50);
-      if (!data) return;
-      // Filtra: últimos 5 min e (se temos origem) raio de 8km
-      const fresh = data.filter((d: any) => {
-        const age = Date.now() - new Date(d.updated_at).getTime();
-        if (age > 5 * 60 * 1000) return false;
-        if (center) {
-          const R = 6371;
-          const dLat = ((d.lat - center.lat) * Math.PI) / 180;
-          const dLng = ((d.lng - center.lng) * Math.PI) / 180;
-          const a =
-            Math.sin(dLat / 2) ** 2 +
-            Math.cos((center.lat * Math.PI) / 180) *
-              Math.cos((d.lat * Math.PI) / 180) *
-              Math.sin(dLng / 2) ** 2;
-          const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          if (km > 8) return false;
-        }
-        return true;
-      });
-      setNearbyDrivers(
-        fresh.map((d: any) => ({
-          lat: Number(d.lat),
-          lng: Number(d.lng),
-          heading: d.heading ?? undefined,
-          category: d.category ?? "economico",
-        }))
-      );
-    };
-    fetchNearby();
-
-    const channel = supabase
-      .channel("nearby-drivers")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "driver_locations" },
-        () => fetchNearby()
-      )
-      .subscribe();
-
-    const interval = setInterval(fetchNearby, 30000);
-    return () => {
-      clearInterval(interval);
-      supabase.removeChannel(channel);
-    };
-  }, [rideState, selectedOrigin?.lat, selectedOrigin?.lng]);
+  // (efeito de "motoristas próximos" removido a pedido — não exibimos mais essa informação)
 
   const confirmedStops = selectedStops.filter((s): s is AppLocation => !!s);
   const effectiveStops = returnToOrigin && selectedOrigin && selectedDestination
@@ -502,45 +434,53 @@ const PassengerHome = () => {
     );
   }
 
+  // Layout:
+  // - idle (sem form aberto): mapa ocupa a tela inteira + 1 botão "Para onde Vamoo?" no rodapé.
+  // - idle (form aberto): form aparece como sheet no topo, mapa fica visível embaixo.
+  // - corrida ativa / completed / rating: mapa em 68vh + bottom-sheet com infos da corrida.
+  const showFullMap = rideState === "idle" && !showRideForm;
+  const showFormSheet = rideState === "idle" && showRideForm;
+
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Map — 80vh em idle (sem form), maior durante corrida ativa */}
+    <div className="min-h-screen bg-background">
+      {/* Map */}
       <div className="relative">
         <GoogleMap
           className={`${
-            isRideActive || rideState === "completed"
-              ? "h-[68vh]"
-              : showRideForm
-              ? "h-[40vh]"
-              : "h-[80vh]"
+            showFullMap
+              ? "h-screen"
+              : isRideActive || rideState === "completed" || rideState === "rating"
+                ? "h-[68vh]"
+                : "h-[40vh]"
           } rounded-none transition-all duration-300`}
           origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
           destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
           stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
           driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
-          nearbyDrivers={rideState === "idle" ? nearbyDrivers : []}
           trackUserLocation={!selectedOrigin}
           showRoute={!!selectedOrigin && !!effectiveDestination}
         />
       </div>
 
-      {/* Bottom sheet — só aparece em corrida ativa, completed/rating, ou quando o form de viagem está aberto */}
-      {(isRideActive || rideState === "completed" || rideState === "rating" || rideState === "payment" || (rideState === "idle" && showRideForm)) && (
-      <div className="relative rounded-t-3xl bg-card shadow-lg animate-slide-up -mt-3">
+      {/* Bottom sheet — só aparece quando NÃO está em "tela cheia do mapa" */}
+      {!showFullMap && (
+      <div className="relative rounded-t-3xl bg-card shadow-lg animate-slide-up -mt-3 pb-24">
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted" />
+        {/* Header com botão fechar quando o form de pedido estiver aberto */}
+        {showFormSheet && (
+          <div className="flex items-center justify-between px-4 pt-2">
+            <h2 className="text-base font-bold font-display">Para onde Vamoo?</h2>
+            <button
+              onClick={() => setShowRideForm(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-muted hover:bg-muted/70 transition-colors"
+              aria-label="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
         <div className="p-4 pb-3 space-y-4">
-          {rideState === "idle" && showRideForm && (
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold font-display">Para onde Vamoo?</h2>
-              <button
-                onClick={() => setShowRideForm(false)}
-                className="rounded-full p-1.5 hover:bg-muted transition-colors"
-                aria-label="Fechar"
-              >
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </div>
-          )}
+
 
           {/* Completed: Show summary */}
           {rideState === "completed" && activeRide && (
@@ -994,36 +934,22 @@ const PassengerHome = () => {
       </div>
       )}
 
-      {/* CTA fixo "Vamoo!" — só aparece em idle, respeitando safe-area */}
+      {/* CTA fixo "Para onde Vamoo?" / "Vamoo!" — só aparece em idle, respeitando safe-area */}
       {rideState === "idle" && (
         <div
-          className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background to-transparent px-4 pt-4"
+          className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
         >
-          {/* Indicador de motoristas próximos */}
-          <div className="mb-2 flex items-center justify-center">
-            {nearbyDrivers.length > 0 ? (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-[11px] font-semibold text-success ring-1 ring-success/20">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
-                </span>
-                {nearbyDrivers.length} {nearbyDrivers.length === 1 ? "motorista próximo" : "motoristas próximos"}
-              </div>
-            ) : (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
-                Nenhum motorista por perto agora
-              </div>
-            )}
-          </div>
           {!showRideForm ? (
+            // Estado inicial: 1 botão único, mapa ocupando a tela toda
             <button
               onClick={() => setShowRideForm(true)}
               className="w-full rounded-2xl bg-gradient-primary py-4 text-base font-extrabold text-primary-foreground shadow-glow transition-transform active:scale-[0.98] flex items-center justify-center gap-2"
             >
-              Para onde Vamoo? 🚀
+              <Navigation className="h-5 w-5" /> Para onde Vamoo? 🚀
             </button>
           ) : (
+            // Form aberto: confirma a corrida
             <button
               onClick={handleOpenPayment}
               disabled={isRequesting || !selectedOrigin || !selectedDestination}
@@ -1071,7 +997,6 @@ const PassengerHome = () => {
 
       <AppMenu role="passenger" />
       <NotificationBell />
-      
     </div>
   );
 };
