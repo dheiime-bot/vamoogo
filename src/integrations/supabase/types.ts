@@ -261,6 +261,10 @@ export type Database = {
           vehicle_brand: string | null
           vehicle_color: string | null
           vehicle_model: string | null
+          vehicle_photo_back_url: string | null
+          vehicle_photo_front_url: string | null
+          vehicle_photo_left_url: string | null
+          vehicle_photo_right_url: string | null
           vehicle_plate: string | null
           vehicle_year: number | null
         }
@@ -295,6 +299,10 @@ export type Database = {
           vehicle_brand?: string | null
           vehicle_color?: string | null
           vehicle_model?: string | null
+          vehicle_photo_back_url?: string | null
+          vehicle_photo_front_url?: string | null
+          vehicle_photo_left_url?: string | null
+          vehicle_photo_right_url?: string | null
           vehicle_plate?: string | null
           vehicle_year?: number | null
         }
@@ -329,6 +337,10 @@ export type Database = {
           vehicle_brand?: string | null
           vehicle_color?: string | null
           vehicle_model?: string | null
+          vehicle_photo_back_url?: string | null
+          vehicle_photo_front_url?: string | null
+          vehicle_photo_left_url?: string | null
+          vehicle_photo_right_url?: string | null
           vehicle_plate?: string | null
           vehicle_year?: number | null
         }
