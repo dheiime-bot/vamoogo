@@ -127,7 +127,7 @@ const DriverSignup = () => {
     if (!iso) return "Data inválida (use DD/MM/AAAA)";
     const a = calcAgeBR(v);
     if (a === null) return "Data inválida";
-    if (a < 16) return "Cadastro permitido a partir de 16 anos";
+    if (a < 20) return "Motorista precisa ter no mínimo 20 anos";
     if (a > 80) return "Data inválida";
     return "";
   };
