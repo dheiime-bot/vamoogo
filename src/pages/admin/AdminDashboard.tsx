@@ -18,49 +18,82 @@ const AdminDashboard = () => {
   const [statusData, setStatusData] = useState<any[]>([]);
   const [activeRides, setActiveRides] = useState<any[]>([]);
 
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
+  const load = async () => {
+    const startToday = new Date();
+    startToday.setHours(0, 0, 0, 0);
+    const start7d = new Date(); start7d.setDate(start7d.getDate() - 6); start7d.setHours(0,0,0,0);
 
-    Promise.all([
-      supabase.from("rides").select("id, price, platform_fee, status, created_at", { count: "exact" }).gte("created_at", today),
-      supabase.from("rides").select("id", { count: "exact" }).eq("status", "completed"),
-      supabase.from("drivers").select("id", { count: "exact" }),
-      supabase.from("profiles").select("id", { count: "exact" }).eq("user_type", "passenger"),
-      supabase.from("incidents").select("id", { count: "exact" }).eq("status", "open"),
+    const [todayRides, completedRes, driversRes, passRes, incidentsRes, ridesData, activeData, onlineRes, weekRides] = await Promise.all([
+      supabase.from("rides").select("id, price, platform_fee, status, created_at", { count: "exact" }).gte("created_at", startToday.toISOString()),
+      supabase.from("rides").select("id", { count: "exact", head: true }).eq("status", "completed"),
+      supabase.from("drivers").select("id", { count: "exact", head: true }),
+      supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "passenger"),
+      supabase.from("incidents").select("id", { count: "exact", head: true }).eq("status", "open"),
       supabase.from("rides").select("*").order("created_at", { ascending: false }).limit(8),
       supabase.from("rides").select("*").in("status", ["requested", "accepted", "in_progress"]).order("created_at", { ascending: false }).limit(5),
-    ]).then(([todayRides, completedRes, driversRes, passRes, incidentsRes, ridesData, activeData]) => {
-      const rides = todayRides.data || [];
-      const revenue = rides.reduce((s, r) => s + (r.platform_fee || 0), 0);
+      supabase.from("driver_locations").select("driver_id", { count: "exact", head: true }).eq("is_online", true),
+      supabase.from("rides").select("created_at,status,platform_fee,price").gte("created_at", start7d.toISOString()),
+    ]);
 
-      setStats({
-        ridesToday: todayRides.count || rides.length,
-        completedRides: completedRes.count || 0,
-        revenueToday: revenue,
-        driversOnline: 0,
-        incidents: incidentsRes.count || 0,
-        totalDrivers: driversRes.count || 0,
-        totalPassengers: passRes.count || 0,
-      });
+    const rides = todayRides.data || [];
+    const revenue = rides.reduce((s, r) => s + Number(r.platform_fee || 0), 0);
 
-      setRecentRides(ridesData.data || []);
-      setActiveRides(activeData.data || []);
-
-      // Generate chart data from rides
-      const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-      setChartData(days.map((d, i) => ({ name: d, Vamoo: Math.floor(Math.random() * 80 + 20) })));
-      setRevenueData(["Mon", "Tue", "Wed", "Thu", "Fri"].map((d) => ({ name: d, Vamoo: Math.floor(Math.random() * 200 + 50) })));
-      
-      // Status pie
-      const completed = (ridesData.data || []).filter(r => r.status === "completed").length;
-      const inProgress = (ridesData.data || []).filter(r => ["in_progress", "accepted", "requested"].includes(r.status)).length;
-      const cancelled = (ridesData.data || []).filter(r => r.status === "cancelled").length;
-      setStatusData([
-        { name: "Finalizada", value: completed || 3 },
-        { name: "Em andamento", value: inProgress || 1 },
-        { name: "Cancelada", value: cancelled || 1 },
-      ]);
+    setStats({
+      ridesToday: todayRides.count || rides.length,
+      completedRides: completedRes.count || 0,
+      revenueToday: revenue,
+      driversOnline: onlineRes.count || 0,
+      incidents: incidentsRes.count || 0,
+      totalDrivers: driversRes.count || 0,
+      totalPassengers: passRes.count || 0,
     });
+
+    setRecentRides(ridesData.data || []);
+    setActiveRides(activeData.data || []);
+
+    // Real chart data — last 7 days
+    const dayLabels = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    const buckets: Record<string, { count: number; rev: number }> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
+      buckets[d.toISOString().slice(0,10)] = { count: 0, rev: 0 };
+    }
+    (weekRides.data || []).forEach((r: any) => {
+      const k = new Date(r.created_at).toISOString().slice(0,10);
+      if (buckets[k]) {
+        buckets[k].count += 1;
+        buckets[k].rev += Number(r.platform_fee || 0);
+      }
+    });
+    const ordered = Object.entries(buckets).map(([k, v]) => {
+      const d = new Date(k);
+      return { name: dayLabels[d.getDay()], Vamoo: v.count, rev: Math.round(v.rev) };
+    });
+    setChartData(ordered.map(o => ({ name: o.name, Vamoo: o.Vamoo })));
+    setRevenueData(ordered.map(o => ({ name: o.name, Vamoo: o.rev })));
+
+    // Status pie — real numbers from last 7 days
+    const wk = weekRides.data || [];
+    const completed = wk.filter((r: any) => r.status === "completed").length;
+    const inProgress = wk.filter((r: any) => ["in_progress","accepted","requested"].includes(r.status)).length;
+    const cancelled = wk.filter((r: any) => r.status === "cancelled").length;
+    setStatusData([
+      { name: "Finalizada", value: completed },
+      { name: "Em andamento", value: inProgress },
+      { name: "Cancelada", value: cancelled },
+    ]);
+  };
+
+  useEffect(() => {
+    load();
+    const ch = supabase
+      .channel("admin-dashboard")
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "driver_locations" }, () => load())
+      .subscribe();
+    const t = setInterval(load, 30_000);
+    return () => { supabase.removeChannel(ch); clearInterval(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const rideStatusLabel = (s: string) => {
