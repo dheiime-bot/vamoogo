@@ -57,6 +57,9 @@ const PassengerHome = () => {
   const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
   const [returnToOrigin, setReturnToOrigin] = useState(false);
   const [showPixModal, setShowPixModal] = useState(false);
+  const [nearbyDrivers, setNearbyDrivers] = useState<Array<{ lat: number; lng: number; heading?: number; category?: "moto" | "economico" | "conforto" }>>([]);
+  const [showChangeDest, setShowChangeDest] = useState(false);
+  const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
 
   // Fetch recent rides
   useEffect(() => {
