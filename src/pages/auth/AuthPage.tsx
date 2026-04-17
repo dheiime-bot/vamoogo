@@ -269,6 +269,10 @@ const AuthPage = () => {
                   navigate("/auth/passenger");
                   return;
                 }
+                if (m.id === "register" && userType === "driver") {
+                  navigate("/auth/driver");
+                  return;
+                }
                 setMode(m.id); setStep(1);
               }}
               className={`pb-2 text-sm font-semibold transition-colors ${
@@ -280,13 +284,13 @@ const AuthPage = () => {
           ))}
         </div>
 
-        {/* Quick CTA na tela de login para passageiro */}
-        {mode === "login" && userType === "passenger" && (
+        {/* Quick CTA na tela de login */}
+        {mode === "login" && (
           <button
-            onClick={() => navigate("/auth/passenger")}
+            onClick={() => navigate(userType === "driver" ? "/auth/driver" : "/auth/passenger")}
             className="mb-5 w-full rounded-xl border border-primary/30 bg-primary/5 py-2.5 text-xs font-semibold text-primary hover:bg-primary/10"
           >
-            Ainda não tem conta? Cadastre-se como passageiro →
+            Ainda não tem conta? Cadastre-se como {userType === "driver" ? "motorista" : "passageiro"} →
           </button>
         )}
 
