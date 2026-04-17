@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Shield, Eye, AlertTriangle, CheckCircle, Ban } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -47,7 +48,9 @@ const AdminFraud = () => {
         </p>
       </div>
 
-      {alerts.length === 0 && <p className="text-center py-8 text-sm text-muted-foreground">Nenhum alerta de fraude</p>}
+      {alerts.length === 0 && (
+        <EmptyState icon={Shield} title="Nenhum alerta de fraude" description="Padrões suspeitos detectados pela plataforma serão listados aqui." />
+      )}
 
       {alerts.map((alert, i) => (
         <div key={alert.id} className={`rounded-2xl border bg-card p-5 shadow-sm animate-slide-up ${alert.resolved ? "opacity-60" : ""}`}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Eye, X, ImageIcon } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
 import { supabase } from "@/integrations/supabase/client";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
@@ -261,7 +262,7 @@ const AdminDrivers = () => {
             );
           })}
         </div>
-        {filtered.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">Nenhum motorista encontrado</p>}
+        {filtered.length === 0 && <EmptyState title="Nenhum motorista encontrado" description="Não há motoristas que correspondam ao filtro/busca atual." />}
       </div>
 
       {selectedDriver && (

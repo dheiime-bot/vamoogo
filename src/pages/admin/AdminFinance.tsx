@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { DollarSign, TrendingUp, ArrowDownLeft, Wallet, Download, CheckCircle, XCircle, Banknote } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import StatCard from "@/components/shared/StatCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -72,7 +73,7 @@ const AdminFinance = () => {
           <div className="p-4 border-b"><h3 className="text-sm font-bold">Saques pendentes</h3></div>
           <div className="divide-y">
             {withdrawals.filter((w) => w.status === "pending").length === 0 && (
-              <p className="p-4 text-sm text-muted-foreground">Nenhum saque pendente</p>
+              <EmptyState icon={ArrowDownLeft} title="Nenhum saque pendente" description="Solicitações de saque dos motoristas aparecerão aqui." />
             )}
             {withdrawals.filter((w) => w.status === "pending").map((w) => (
               <div key={w.id} className="flex items-center gap-3 p-4">
@@ -95,7 +96,9 @@ const AdminFinance = () => {
         <div className="rounded-2xl border bg-card shadow-sm">
           <div className="p-4 border-b"><h3 className="text-sm font-bold">Recargas recentes</h3></div>
           <div className="divide-y">
-            {recharges.length === 0 && <p className="p-4 text-sm text-muted-foreground">Nenhuma recarga</p>}
+            {recharges.length === 0 && (
+              <EmptyState icon={Wallet} title="Nenhuma recarga" description="As recargas feitas pelos motoristas serão listadas aqui." />
+            )}
             {recharges.slice(0, 10).map((r) => (
               <div key={r.id} className="flex items-center gap-3 p-4">
                 <ArrowDownLeft className="h-4 w-4 text-success" />

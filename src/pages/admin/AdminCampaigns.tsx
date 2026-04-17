@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Megaphone } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -58,7 +59,9 @@ const AdminCampaigns = () => {
         </div>
       )}
 
-      {campaigns.length === 0 && !showForm && <p className="text-center py-8 text-sm text-muted-foreground">Nenhuma campanha criada</p>}
+      {campaigns.length === 0 && !showForm && (
+        <EmptyState icon={Megaphone} title="Nenhuma campanha criada" description="Lance campanhas para engajar motoristas e passageiros." />
+      )}
       {campaigns.map((c) => (
         <div key={c.id} className={`rounded-2xl border bg-card p-5 shadow-sm ${!c.active ? "opacity-60" : ""}`}>
           <div className="flex items-start justify-between mb-2">

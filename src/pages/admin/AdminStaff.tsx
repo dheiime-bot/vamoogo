@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMaster } from "@/hooks/usePermission";
 import { supabase } from "@/integrations/supabase/client";
@@ -187,7 +188,7 @@ const AdminStaff = () => {
         {loading ? (
           <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
         ) : staff.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-10">Nenhum funcionário cadastrado.</p>
+          <EmptyState icon={ShieldAlert} title="Nenhum funcionário cadastrado" description="Cadastre administradores para colaborar na gestão da plataforma." />
         ) : (
           <Table>
             <TableHeader>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Copy, Trash2 } from "lucide-react";
+import { Plus, Loader2, Copy, Trash2, TicketPercent } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -93,7 +94,9 @@ const AdminCoupons = () => {
         </div>
       )}
 
-      {coupons.length === 0 && !showForm && <p className="text-center py-8 text-sm text-muted-foreground">Nenhum cupom criado</p>}
+      {coupons.length === 0 && !showForm && (
+        <EmptyState icon={TicketPercent} title="Nenhum cupom criado" description="Crie cupons promocionais para oferecer descontos aos passageiros." />
+      )}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {coupons.map((c) => (
           <div key={c.id} className={`rounded-2xl border bg-card p-4 shadow-sm ${!c.active || isExpired(c) ? "opacity-60" : ""}`}>

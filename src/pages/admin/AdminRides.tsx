@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Eye, XCircle, Play, Flag, ArrowRightLeft, X } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -87,7 +88,7 @@ const AdminRides = () => {
       </div>
 
       <div className="space-y-3">
-        {filtered.length === 0 && <p className="text-center py-8 text-sm text-muted-foreground">Nenhuma corrida encontrada</p>}
+        {filtered.length === 0 && <EmptyState title="Nenhuma corrida encontrada" description="Ajuste os filtros ou aguarde novas corridas serem solicitadas." />}
         {filtered.map((ride, i) => (
           <div key={ride.id} className="rounded-2xl border bg-card p-4 shadow-sm animate-slide-up" style={{ animationDelay: `${i * 30}ms`, animationFillMode: "both" }}>
             <div className="flex items-start justify-between mb-3">

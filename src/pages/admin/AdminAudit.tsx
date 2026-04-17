@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ScrollText } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 
 const AdminAudit = () => {
@@ -14,11 +15,7 @@ const AdminAudit = () => {
   return (
     <AdminLayout title="Auditoria">
       {logs.length === 0 && (
-        <div className="text-center py-12">
-          <ScrollText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Nenhum log de auditoria registrado</p>
-          <p className="text-xs text-muted-foreground mt-1">Ações administrativas serão registradas aqui automaticamente</p>
-        </div>
+        <EmptyState icon={ScrollText} title="Nenhum log de auditoria" description="Ações administrativas serão registradas aqui automaticamente." />
       )}
       <div className="space-y-2">
         {logs.map((log) => (
