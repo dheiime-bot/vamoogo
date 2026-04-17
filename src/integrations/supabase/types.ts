@@ -1030,7 +1030,7 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
-      app_role: "admin" | "driver" | "passenger"
+      app_role: "admin" | "driver" | "passenger" | "master"
       driver_status:
         | "pending"
         | "approved"
@@ -1181,7 +1181,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "driver", "passenger"],
+      app_role: ["admin", "driver", "passenger", "master"],
       driver_status: [
         "pending",
         "approved",
