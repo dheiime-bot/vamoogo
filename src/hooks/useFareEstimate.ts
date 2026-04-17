@@ -53,11 +53,18 @@ const haversineKm = (a: Point, b: Point) => {
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 };
 
-// (Preço por trecho é calculado por rateio proporcional ao "preço bruto" do trecho — ver mais abaixo.)
+// Regra de passageiros adicionais:
+//   • Passageiro 1 paga o preço calculado normalmente.
+//   • Passageiros 2, 3 e 4 adicionam R$ EXTRA_PER_KM por km cada.
+// O valor por km do extra é configurável via tariffs.passenger_extra (interpretado como R$/km).
+// Se o admin não configurar, usamos R$ 3,00/km como padrão.
+const DEFAULT_EXTRA_PER_KM = 3.0;
 
 const computePrice = (km: number, min: number, passengers: number, t: Tariff) => {
   const base = (t.base_fare + t.per_km * km + t.per_minute * min) * t.region_multiplier;
-  const extras = Math.max(0, passengers - 1) * t.passenger_extra;
+  const extraPerKm = t.passenger_extra > 0 ? t.passenger_extra : DEFAULT_EXTRA_PER_KM;
+  const additional = Math.max(0, Math.min(passengers, 4) - 1); // máximo 3 extras (2,3,4)
+  const extras = additional * extraPerKm * km;
   const total = Math.max(base + extras, t.min_fare);
   return Math.round(total * 100) / 100;
 };

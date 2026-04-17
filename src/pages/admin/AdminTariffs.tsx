@@ -131,11 +131,15 @@ const AdminTariffs = () => {
 
       {activeTab === "passengers" && (
         <div className="rounded-2xl border bg-card p-5">
-          <h3 className="font-bold mb-4">Adicional por passageiro</h3>
+          <h3 className="font-bold mb-1">Adicional por passageiro extra</h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            Valor cobrado <strong>por km</strong> para cada passageiro além do primeiro (até o 4º).
+            O 1º passageiro paga apenas o preço calculado normalmente.
+          </p>
           {tariffs.slice(0, 1).map((t) => (
             <div key={t.id} className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Valor extra por passageiro adicional</span>
+                <span className="text-sm font-medium">R$ por km, por passageiro extra</span>
                 <div className="flex items-center rounded-lg border bg-background px-3 py-2">
                   <span className="text-sm text-muted-foreground mr-1">+R$</span>
                   <input
@@ -144,7 +148,11 @@ const AdminTariffs = () => {
                     onChange={(e) => updateTariff(t.id, "passenger_extra", e.target.value)}
                     className="w-16 bg-transparent text-sm font-bold outline-none"
                   />
+                  <span className="text-xs text-muted-foreground ml-1">/km</span>
                 </div>
+              </div>
+              <div className="rounded-xl bg-muted/50 p-3 text-[11px] text-muted-foreground">
+                Ex.: corrida de 10 km com 3 passageiros → preço base + (2 extras × R$ {(t.passenger_extra || 3).toFixed(2)} × 10 km) = + R$ {((t.passenger_extra || 3) * 2 * 10).toFixed(2)}
               </div>
             </div>
           ))}
