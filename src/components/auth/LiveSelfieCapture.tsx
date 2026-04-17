@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Camera, Loader2, CheckCircle2, X, AlertCircle, RefreshCw, Eye,
+  Camera, Loader2, CheckCircle2, X, AlertCircle, RefreshCw, Eye, Upload,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -30,12 +30,21 @@ const LiveSelfieCapture = ({
 }: LiveSelfieCaptureProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fallbackInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const [step, setStep] = useState<Step>("idle");
   const [preview, setPreview] = useState<string | null>(value);
   const [errMsg, setErrMsg] = useState<string>("");
   const [countdown, setCountdown] = useState<number>(0);
+  const [cameraSupported, setCameraSupported] = useState<boolean>(true);
+
+  useEffect(() => {
+    // Detecta se navigator.mediaDevices existe (iframe sem permissão = não suportado)
+    const supported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    setCameraSupported(supported);
+    return () => stopCamera();
+  }, []);
 
   useEffect(() => {
     return () => stopCamera();
@@ -50,6 +59,12 @@ const LiveSelfieCapture = ({
 
   const startCamera = async () => {
     setErrMsg("");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraSupported(false);
+      setErrMsg("Câmera ao vivo não disponível neste navegador. Use a opção alternativa abaixo.");
+      setStep("error");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 720 } },
@@ -62,13 +77,54 @@ const LiveSelfieCapture = ({
       }
       setStep("intro");
     } catch (e: any) {
-      console.error(e);
-      setErrMsg(
-        e.name === "NotAllowedError"
-          ? "Permissão de câmera negada. Habilite nas configurações do navegador."
-          : "Não foi possível acessar a câmera deste dispositivo."
-      );
+      console.error("getUserMedia error:", e);
+      let msg = "Não foi possível acessar a câmera deste dispositivo.";
+      if (e.name === "NotAllowedError" || e.name === "SecurityError") {
+        msg = "Permissão de câmera negada. Verifique as permissões do navegador. Você pode usar a opção alternativa abaixo.";
+      } else if (e.name === "NotFoundError" || e.name === "OverconstrainedError") {
+        msg = "Nenhuma câmera encontrada. Use a opção alternativa abaixo.";
+      } else if (e.name === "NotReadableError") {
+        msg = "Câmera já está em uso por outro app. Feche outros apps e tente novamente, ou use a opção alternativa.";
+      }
+      setErrMsg(msg);
       setStep("error");
+    }
+  };
+
+  /** Fallback: usa input file com capture="user" (funciona no celular sem permissões extras) */
+  const handleFallbackFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Arquivo muito grande (máx 8MB)");
+      return;
+    }
+    setStep("uploading");
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result as string;
+        // Upload direto sem liveness (modo fallback)
+        const path = `${pathPrefix}-${Date.now()}.jpg`;
+        const { error } = await supabase.storage.from(bucket).upload(path, file, {
+          cacheControl: "3600", upsert: true, contentType: file.type || "image/jpeg",
+        });
+        if (error) throw error;
+        const { data: signed } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60 * 24 * 365);
+        const url = signed?.signedUrl || path;
+        setPreview(dataUrl);
+        // Em modo fallback marcamos verified=true (validação manual fica para o admin)
+        onChange(url, { verified: true });
+        setStep("done");
+        toast.success("Selfie enviada!");
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error(err);
+      setErrMsg("Erro ao enviar: " + (err.message || "tente novamente"));
+      setStep("error");
+    } finally {
+      if (fallbackInputRef.current) fallbackInputRef.current.value = "";
     }
   };
 
