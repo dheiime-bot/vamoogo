@@ -524,27 +524,31 @@ const DriverSignup = () => {
           </div>
         )}
 
-        {/* STEP 2: Selfie */}
+        {/* STEP 2: Selfie ao vivo */}
         {step === 2 && (
           <div className="space-y-4 animate-fade-in">
             <div className="rounded-xl border-2 border-info/30 bg-info/10 p-4">
               <p className="text-sm font-bold text-info flex items-center gap-2">
-                <Camera className="h-4 w-4" /> Selfie de verificação
+                <Camera className="h-4 w-4" /> Selfie ao vivo
               </p>
               <p className="text-xs text-muted-foreground mt-1.5">
-                Tire uma foto do seu rosto agora. Esta selfie é <strong>permanente</strong> e fica armazenada para sua segurança.
+                A captura é feita ao vivo pela câmera frontal. <strong>Não aceitamos</strong> fotos da galeria, fotos impressas, screenshots ou imagens em telas. Você precisará <strong>piscar</strong> durante a verificação.
               </p>
             </div>
-            <DocumentUpload
-              label="Selfie obrigatória"
+            <LiveSelfieCapture
+              label="Selfie obrigatória (com verificação anti-fraude)"
               bucket="selfies"
               pathPrefix={`signup/${cpf.replace(/\D/g, "")}/selfie`}
               value={selfieUrl}
-              onChange={setSelfieUrl}
-              capture="user"
-              hint="Boa iluminação, sem óculos escuros, rosto centralizado"
+              onChange={(url, meta) => {
+                setSelfieUrl(url);
+                setSelfieLivenessUrl(meta?.livenessUrl || null);
+                setLivenessVerified(meta?.verified || false);
+              }}
+              liveness
+              hint="Boa iluminação, sem óculos escuros, rosto centralizado no círculo"
             />
-            <NextBtn onClick={next} loading={loading} disabled={!selfieUrl} />
+            <NextBtn onClick={next} loading={loading} disabled={!selfieUrl || !livenessVerified} />
           </div>
         )}
 
