@@ -582,62 +582,8 @@ const PassengerHome = () => {
         <div className="p-4 pb-3 space-y-4">
 
 
-          {/* Completed: Show summary */}
-          {rideState === "completed" && activeRide && (
-            <div className="space-y-3">
-              <RideSummary ride={activeRide} onRate={() => setRideState("rating")} />
-              {activeRide.payment_method === "pix" && (
-                <button
-                  onClick={() => setShowPixModal(true)}
-                  className="w-full rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-bold text-primary flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors"
-                >
-                  <QrCode className="h-4 w-4" /> Mostrar QR Code Pix
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Rating screen */}
-          {rideState === "rating" && activeRide && (
-            <div className="space-y-4 text-center py-4 animate-fade-in">
-              <div className="flex items-center justify-center gap-2">
-                <div className="h-12 w-12 rounded-xl bg-gradient-primary flex items-center justify-center">
-                  <Car className="h-6 w-6 text-primary-foreground" />
-                </div>
-              </div>
-              <h2 className="text-lg font-bold font-display">Como foi sua viagem?</h2>
-              {driverInfo && (
-                <p className="text-sm text-muted-foreground">Motorista: {driverInfo.profile?.full_name}</p>
-              )}
-              <div className="flex justify-center gap-2">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <button key={s} onClick={() => setRating(s)} className="transition-transform hover:scale-110 active:scale-95">
-                    <Star className={`h-10 w-10 ${s <= rating ? "text-warning fill-warning" : "text-muted-foreground"}`} />
-                  </button>
-                ))}
-              </div>
-              <textarea
-                placeholder="Conte como foi a viagem (opcional)..."
-                value={ratingComment}
-                onChange={(e) => setRatingComment(e.target.value)}
-                className="w-full rounded-xl border bg-muted p-3 text-sm outline-none resize-none h-20"
-              />
-              <div className="flex flex-wrap justify-center gap-2">
-                {["Educação", "Limpeza", "Direção segura", "Pontualidade"].map((tag) => (
-                  <button key={tag} className="rounded-full border px-3 py-1.5 text-xs font-medium hover:bg-primary/10 hover:border-primary transition-colors">
-                    {tag}
-                  </button>
-                ))}
-              </div>
-              <button onClick={handleSubmitRating} disabled={rating === 0}
-                className="w-full rounded-xl bg-gradient-primary py-4 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50">
-                Enviar avaliação ⭐
-              </button>
-              <button onClick={resetRide} className="text-xs text-muted-foreground">
-                Pular avaliação
-              </button>
-            </div>
-          )}
+          {/* Estado "completed" e "rating" agora usam Dialog (renderizado fora deste sheet)
+              para que o app volte direto à tela inicial após a corrida finalizar. */}
 
           {/* Active ride overlays */}
           {isRideActive && activeRide && (
