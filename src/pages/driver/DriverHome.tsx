@@ -563,7 +563,7 @@ const DriverHome = () => {
 
       {/* Arrived */}
       {rideState === "arrived" && activeRide && (
-        <div className="mx-4 mt-4 rounded-2xl border bg-card p-4 space-y-3">
+        <div className="rounded-2xl border bg-card p-4 space-y-3 shadow-glow">
           {activeRide.ride_code && (
             <div className="flex justify-center">
               <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{activeRide.ride_code}</span>
