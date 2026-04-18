@@ -19,6 +19,7 @@ import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocat
 import type { PixKeyType } from "@/lib/pix";
 import { calcPlatformFee } from "@/lib/platformFee";
 import { toast } from "sonner";
+import { playPhaseSound, unlockAudioOnce } from "@/lib/offerSound";
 
 const categories = [
   { id: "moto", label: "Moto", icon: Bike, desc: "Rápido e barato" },
@@ -105,6 +106,9 @@ const PassengerHome = () => {
     loadActiveRide();
   }, [user]);
 
+  // Destrava o áudio na 1ª interação (necessário para autoplay no Chrome/Safari)
+  useEffect(() => { unlockAudioOnce(); }, []);
+
   // Realtime: updates da corrida + posição do motorista
   useEffect(() => {
     if (!user) return;
@@ -123,24 +127,27 @@ const PassengerHome = () => {
           if (ride.arrived_at) {
             setRideState("arrived");
             toast.success("Seu motorista chegou! 📍");
+            playPhaseSound("arrived");
           } else {
             setRideState("driver_arriving");
             toast.success("Motorista a caminho! 🚗");
+            playPhaseSound("accepted");
           }
         } else if (ride.status === "accepted" && ride.arrived_at && !prev?.arrived_at) {
           // Motorista marcou chegada
           setRideState("arrived");
           toast.success("Seu motorista chegou! 📍", { duration: 6000 });
-          if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+          playPhaseSound("arrived");
         } else if (ride.status === "in_progress") {
           setRideState("in_progress");
           toast.success("Corrida iniciada!");
+          playPhaseSound("started");
         } else if (ride.status === "completed") {
           // Volta o app para a tela inicial e abre o rating como modal sobreposto.
-          // O passageiro pode avaliar ou pular sem ficar preso na tela de resumo.
           setRideState("rating");
           setDriverLocation(null);
           toast.success("Corrida finalizada!");
+          playPhaseSound("completed");
         } else if (ride.status === "cancelled") {
           setRideState("idle");
           setActiveRide(null);
@@ -148,6 +155,7 @@ const PassengerHome = () => {
           setPaymentMethod(null);
           setDriverLocation(null);
           toast.error("Não encontramos motorista disponível");
+          playPhaseSound("cancelled");
         }
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -543,23 +551,36 @@ const PassengerHome = () => {
     <div className="min-h-screen bg-background">
       {/* Map */}
       <div className="relative">
-        <GoogleMap
-          className={`${
-            showFullMap
-              ? "h-screen"
-              : isRideActive
-                ? "h-[68vh]"
-                : "h-[45vh]"
-          } rounded-none transition-all duration-300`}
-          origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
-          destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
-          stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
-          driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
-          nearbyDrivers={nearbyDrivers}
-          trackUserLocation={!selectedOrigin}
-          showRoute={!!selectedOrigin && !!effectiveDestination}
-          bottomInset={showFullMap ? 96 : 0}
-        />
+        {(() => {
+          // Define origem/destino da rota conforme a fase:
+          //  - driver_arriving: rota motorista → embarque (mostra deslocamento dele em tempo real)
+          //  - in_progress:    rota embarque → destino (acompanha trajeto da corrida)
+          //  - demais (idle/searching/arrived/rating): comportamento padrão (origem/destino selecionados)
+          let mapOrigin = selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null;
+          let mapDestination = effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null;
+          if (rideState === "driver_arriving" && driverLocation && activeRide?.origin_lat && activeRide?.origin_lng) {
+            mapOrigin = { lat: driverLocation.lat, lng: driverLocation.lng, label: "Motorista" };
+            mapDestination = { lat: Number(activeRide.origin_lat), lng: Number(activeRide.origin_lng), label: "Embarque" };
+          } else if (rideState === "in_progress" && activeRide?.origin_lat && activeRide?.destination_lat) {
+            mapOrigin = { lat: Number(activeRide.origin_lat), lng: Number(activeRide.origin_lng), label: "Embarque" };
+            mapDestination = { lat: Number(activeRide.destination_lat), lng: Number(activeRide.destination_lng), label: "Destino" };
+          }
+          return (
+            <GoogleMap
+              className={`${
+                showFullMap ? "h-screen" : isRideActive ? "h-[68vh]" : "h-[45vh]"
+              } rounded-none transition-all duration-300`}
+              origin={mapOrigin}
+              destination={mapDestination}
+              stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
+              driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
+              nearbyDrivers={nearbyDrivers}
+              trackUserLocation={!selectedOrigin && !activeRide}
+              showRoute={!!mapOrigin && !!mapDestination}
+              bottomInset={showFullMap ? 96 : 0}
+            />
+          );
+        })()}
       </div>
 
       {/* Bottom sheet — só aparece quando NÃO está em "tela cheia do mapa" */}
