@@ -174,15 +174,13 @@ const OriginPicker = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <p className="text-[10px] font-semibold text-success uppercase tracking-wide">Sua localização</p>
-              {gpsAddress && !loadingGps && (
-                <button
-                  type="button"
-                  onClick={() => setManualMode(true)}
-                  className="text-[10px] font-medium text-primary hover:underline"
-                >
-                  (clique para inserir o endereço manualmente)
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setManualMode(true)}
+                className="text-[10px] font-medium text-primary hover:underline"
+              >
+                (clique para inserir o endereço manualmente)
+              </button>
             </div>
             {loadingGps ? (
               <p className="text-sm text-muted-foreground flex items-center gap-1.5">
