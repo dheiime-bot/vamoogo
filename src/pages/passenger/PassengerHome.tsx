@@ -19,6 +19,7 @@ import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocat
 import type { PixKeyType } from "@/lib/pix";
 import { calcPlatformFee } from "@/lib/platformFee";
 import { toast } from "sonner";
+import { playPhaseSound, unlockAudioOnce } from "@/lib/offerSound";
 
 const categories = [
   { id: "moto", label: "Moto", icon: Bike, desc: "Rápido e barato" },
@@ -105,6 +106,9 @@ const PassengerHome = () => {
     loadActiveRide();
   }, [user]);
 
+  // Destrava o áudio na 1ª interação (necessário para autoplay no Chrome/Safari)
+  useEffect(() => { unlockAudioOnce(); }, []);
+
   // Realtime: updates da corrida + posição do motorista
   useEffect(() => {
     if (!user) return;
@@ -123,24 +127,27 @@ const PassengerHome = () => {
           if (ride.arrived_at) {
             setRideState("arrived");
             toast.success("Seu motorista chegou! 📍");
+            playPhaseSound("arrived");
           } else {
             setRideState("driver_arriving");
             toast.success("Motorista a caminho! 🚗");
+            playPhaseSound("accepted");
           }
         } else if (ride.status === "accepted" && ride.arrived_at && !prev?.arrived_at) {
           // Motorista marcou chegada
           setRideState("arrived");
           toast.success("Seu motorista chegou! 📍", { duration: 6000 });
-          if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+          playPhaseSound("arrived");
         } else if (ride.status === "in_progress") {
           setRideState("in_progress");
           toast.success("Corrida iniciada!");
+          playPhaseSound("started");
         } else if (ride.status === "completed") {
           // Volta o app para a tela inicial e abre o rating como modal sobreposto.
-          // O passageiro pode avaliar ou pular sem ficar preso na tela de resumo.
           setRideState("rating");
           setDriverLocation(null);
           toast.success("Corrida finalizada!");
+          playPhaseSound("completed");
         } else if (ride.status === "cancelled") {
           setRideState("idle");
           setActiveRide(null);
@@ -148,6 +155,7 @@ const PassengerHome = () => {
           setPaymentMethod(null);
           setDriverLocation(null);
           toast.error("Não encontramos motorista disponível");
+          playPhaseSound("cancelled");
         }
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
