@@ -19,6 +19,7 @@ import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in_ride" | "rating";
