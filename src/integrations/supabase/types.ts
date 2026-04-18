@@ -843,6 +843,7 @@ export type Database = {
       }
       rides: {
         Row: {
+          admin_notes: string | null
           arrived_at: string | null
           cancelled_at: string | null
           cancelled_by: string | null
@@ -860,19 +861,29 @@ export type Database = {
           duration_minutes: number | null
           for_other_person: boolean
           id: string
+          issue_flag: string | null
+          issue_flagged_at: string | null
+          issue_flagged_by: string | null
+          issue_reason: string | null
           legs: Json | null
           origin_address: string
           origin_lat: number | null
           origin_lng: number | null
           origin_type: string
+          original_price: number | null
           other_person_name: string | null
           other_person_phone: string | null
           passenger_count: number
           passenger_id: string
           payment_method: Database["public"]["Enums"]["payment_method"] | null
+          payment_resolved_at: string | null
+          payment_resolved_by: string | null
+          payment_status: string
           pix_paid_at: string | null
           platform_fee: number | null
           price: number | null
+          price_adjusted_at: string | null
+          price_adjusted_by: string | null
           rating: number | null
           rating_comment: string | null
           ride_code: string
@@ -882,6 +893,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_notes?: string | null
           arrived_at?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -899,19 +911,29 @@ export type Database = {
           duration_minutes?: number | null
           for_other_person?: boolean
           id?: string
+          issue_flag?: string | null
+          issue_flagged_at?: string | null
+          issue_flagged_by?: string | null
+          issue_reason?: string | null
           legs?: Json | null
           origin_address: string
           origin_lat?: number | null
           origin_lng?: number | null
           origin_type?: string
+          original_price?: number | null
           other_person_name?: string | null
           other_person_phone?: string | null
           passenger_count?: number
           passenger_id: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_resolved_at?: string | null
+          payment_resolved_by?: string | null
+          payment_status?: string
           pix_paid_at?: string | null
           platform_fee?: number | null
           price?: number | null
+          price_adjusted_at?: string | null
+          price_adjusted_by?: string | null
           rating?: number | null
           rating_comment?: string | null
           ride_code: string
@@ -921,6 +943,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_notes?: string | null
           arrived_at?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -938,19 +961,29 @@ export type Database = {
           duration_minutes?: number | null
           for_other_person?: boolean
           id?: string
+          issue_flag?: string | null
+          issue_flagged_at?: string | null
+          issue_flagged_by?: string | null
+          issue_reason?: string | null
           legs?: Json | null
           origin_address?: string
           origin_lat?: number | null
           origin_lng?: number | null
           origin_type?: string
+          original_price?: number | null
           other_person_name?: string | null
           other_person_phone?: string | null
           passenger_count?: number
           passenger_id?: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_resolved_at?: string | null
+          payment_resolved_by?: string | null
+          payment_status?: string
           pix_paid_at?: string | null
           platform_fee?: number | null
           price?: number | null
+          price_adjusted_at?: string | null
+          price_adjusted_by?: string | null
           rating?: number | null
           rating_comment?: string | null
           ride_code?: string
@@ -1207,6 +1240,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _require_admin: { Args: never; Returns: undefined }
+      admin_add_ride_note: {
+        Args: { _note: string; _ride_id: string }
+        Returns: undefined
+      }
       admin_adjust_balance: {
         Args: {
           _amount: number
@@ -1216,7 +1254,28 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_adjust_ride_price: {
+        Args: { _new_price: number; _reason: string; _ride_id: string }
+        Returns: Json
+      }
+      admin_cancel_ride: {
+        Args: { _reason: string; _ride_id: string }
+        Returns: undefined
+      }
       admin_delete_user: { Args: { _user_id: string }; Returns: undefined }
+      admin_mark_ride_issue: {
+        Args: {
+          _flag: string
+          _note?: string
+          _reason: string
+          _ride_id: string
+        }
+        Returns: undefined
+      }
+      admin_resolve_ride_payment: {
+        Args: { _new_status: string; _note?: string; _ride_id: string }
+        Returns: undefined
+      }
       admin_send_message: {
         Args: { _message: string; _title: string; _user_id: string }
         Returns: string
