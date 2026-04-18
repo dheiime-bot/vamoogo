@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  MapPin, Clock, Route, DollarSign, CreditCard, Star, Phone, MessageCircle,
+  Route, CreditCard, Star, Phone, MessageCircle,
   AlertTriangle, FileText, User, Car, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
