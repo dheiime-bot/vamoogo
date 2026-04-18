@@ -618,12 +618,14 @@ const RecenterButton = ({ target, bottomInset = 0 }: { target: MapPoint | null; 
     }
   };
 
+  // Sobe o botão acima do logo "Google" (que ocupa ~28px) e de qualquer CTA fixo (bottomInset).
   return (
     <button
       type="button"
       onClick={handleClick}
       aria-label="Recentralizar mapa"
-      className="absolute bottom-4 right-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-lg ring-1 ring-border hover:bg-muted transition-colors active:scale-95"
+      style={{ bottom: `${bottomInset + 36}px` }}
+      className="absolute right-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-lg ring-1 ring-border hover:bg-muted transition-colors active:scale-95"
     >
       <LocateFixed className="h-5 w-5 text-primary" />
     </button>
