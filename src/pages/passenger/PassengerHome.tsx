@@ -579,10 +579,10 @@ const PassengerHome = () => {
             dynamicInset = 80;
           } else if (isRideActive) {
             // Bottom-sheet com infos da corrida ativa varia por estado
-            if (rideState === "searching") dynamicInset = 180;
-            else if (rideState === "driver_arriving") dynamicInset = 240;
-            else if (rideState === "driver_arrived") dynamicInset = 220;
+            if (rideState === "accepted") dynamicInset = 240;
+            else if (rideState === "arrived") dynamicInset = 220;
             else if (rideState === "in_progress") dynamicInset = 200;
+            else if (rideState === "payment") dynamicInset = 220;
             else dynamicInset = 180;
           }
           return (
