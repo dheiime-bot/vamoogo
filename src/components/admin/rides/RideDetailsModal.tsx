@@ -109,7 +109,7 @@ const RideDetailsModal = ({ rideId, onClose }: Props) => {
                   </div>
                   {(ride.stops || []).map((s: any, i: number) => (
                     <div key={i} className="flex items-start gap-2">
-                      <div className="h-2.5 w-2.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                      <div className="h-2.5 w-2.5 rounded-full bg-warning mt-1.5 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] text-muted-foreground uppercase font-semibold">Parada {i + 1}</p>
                         <p className="text-sm">{s.address || s.name}</p>
