@@ -92,72 +92,107 @@ const CarMarker = ({
   variant?: "economico" | "conforto";
 }) => {
   const v = CAR_VARIANTS[variant];
-  // IDs únicos por variante para evitar conflito de gradientes no DOM
   const bodyId = `carBody-${variant}`;
+  const roofId = `carRoof-${variant}`;
+  const glassId = `carGlass-${variant}`;
   const shadowId = `carShadow-${variant}`;
+  const glossId = `carGloss-${variant}`;
   return (
     <div
-      className="relative drop-shadow-xl"
+      className="relative drop-shadow-2xl"
       style={{
         transform: `rotate(${heading}deg)`,
         transition: "transform 600ms ease-out",
-        width: 44,
-        height: 44,
+        width: 52,
+        height: 52,
       }}
       title={variant === "conforto" ? "Motorista (Conforto)" : "Motorista"}
     >
-      {/* Wrapper que faz o "balanço" contínuo simulando movimento */}
-      <div className="anim-vehicle-bob" style={{ width: 44, height: 44 }}>
-        <svg viewBox="0 0 64 64" width="44" height="44" style={{ overflow: "visible" }}>
+      <div className="anim-vehicle-bob" style={{ width: 52, height: 52 }}>
+        <svg viewBox="0 0 80 80" width="52" height="52" style={{ overflow: "visible" }}>
           <defs>
             <radialGradient id={shadowId} cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(0,0,0,0.35)" />
+              <stop offset="0%" stopColor="rgba(0,0,0,0.45)" />
               <stop offset="100%" stopColor="rgba(0,0,0,0)" />
             </radialGradient>
             <linearGradient id={bodyId} x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor={v.bodyTop} />
+              <stop offset="55%" stopColor={v.bodyTop} />
               <stop offset="100%" stopColor={v.bodyBottom} />
             </linearGradient>
+            <linearGradient id={roofId} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={v.roof} />
+              <stop offset="100%" stopColor={v.roofStroke} />
+            </linearGradient>
+            <linearGradient id={glassId} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#bae6fd" />
+              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.85" />
+            </linearGradient>
+            <linearGradient id={glossId} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
           </defs>
-          {/* sombra */}
-          <ellipse cx="32" cy="56" rx="18" ry="4" fill={`url(#${shadowId})`} />
-          {/* corpo */}
-          <g>
-            <rect x="14" y="22" width="36" height="26" rx="9" fill={`url(#${bodyId})`} />
-            {/* teto */}
-            <path
-              d={`M20 22 L26 12 H38 L44 22 Z`}
-              fill={v.roof}
-              stroke={v.roofStroke}
-              strokeWidth="1"
-            />
-            {/* parabrisa */}
-            <path d="M22 22 L27 14 H37 L42 22 Z" fill="#7dd3fc" opacity="0.85" />
-            {/* faróis */}
-            <circle cx="18" cy="20" r="2.2" fill="#fde68a" />
-            <circle cx="46" cy="20" r="2.2" fill="#fde68a" />
-            {/* rodas — animadas (girando) */}
-            <g
-              className="anim-wheel-spin"
-              style={{ transformOrigin: "20px 48px", transformBox: "fill-box" as any }}
-            >
-              <circle cx="20" cy="48" r="4.5" fill="#0b1220" stroke={v.wheelRim} strokeWidth="1.2" />
-              <line x1="20" y1="44" x2="20" y2="52" stroke={v.wheelRim} strokeWidth="0.8" />
-              <line x1="16" y1="48" x2="24" y2="48" stroke={v.wheelRim} strokeWidth="0.8" />
-            </g>
-            <g
-              className="anim-wheel-spin"
-              style={{ transformOrigin: "44px 48px", transformBox: "fill-box" as any }}
-            >
-              <circle cx="44" cy="48" r="4.5" fill="#0b1220" stroke={v.wheelRim} strokeWidth="1.2" />
-              <line x1="44" y1="44" x2="44" y2="52" stroke={v.wheelRim} strokeWidth="0.8" />
-              <line x1="40" y1="48" x2="48" y2="48" stroke={v.wheelRim} strokeWidth="0.8" />
-            </g>
-            {/* logo */}
-            <circle cx="32" cy="35" r="3" fill={v.logo} />
+
+          {/* Sombra */}
+          <ellipse cx="40" cy="70" rx="24" ry="5" fill={`url(#${shadowId})`} />
+
+          {/* Rodas (giram) */}
+          <g
+            className="anim-wheel-spin"
+            style={{ transformOrigin: "22px 60px", transformBox: "fill-box" as any }}
+          >
+            <circle cx="22" cy="60" r="6" fill="#0b1220" />
+            <circle cx="22" cy="60" r="3.2" fill={v.wheelRim} />
+            <circle cx="22" cy="60" r="1.4" fill="#e5e7eb" />
           </g>
-          {/* baforada de escapamento (sutil) */}
-          <circle className="anim-exhaust" cx="14" cy="44" r="2" fill="#cbd5e1" />
+          <g
+            className="anim-wheel-spin"
+            style={{ transformOrigin: "58px 60px", transformBox: "fill-box" as any }}
+          >
+            <circle cx="58" cy="60" r="6" fill="#0b1220" />
+            <circle cx="58" cy="60" r="3.2" fill={v.wheelRim} />
+            <circle cx="58" cy="60" r="1.4" fill="#e5e7eb" />
+          </g>
+
+          {/* Carroceria cápsula */}
+          <path
+            d="M14 56 C14 38 22 28 40 28 C58 28 66 38 66 56 L66 60 C66 63 63 66 60 66 L20 66 C17 66 14 63 14 60 Z"
+            fill={`url(#${bodyId})`}
+            stroke="#0b1220"
+            strokeOpacity="0.35"
+            strokeWidth="0.8"
+          />
+
+          {/* Cabine */}
+          <path
+            d="M26 38 C28 30 34 26 40 26 C46 26 52 30 54 38 L54 46 L26 46 Z"
+            fill={`url(#${roofId})`}
+          />
+
+          {/* Vidros */}
+          <path d="M28 40 C30 33 35 30 40 30 C45 30 50 33 52 40 L52 44 L28 44 Z" fill={`url(#${glassId})`} />
+          <rect x="17" y="48" width="10" height="8" rx="2" fill={`url(#${glassId})`} />
+          <rect x="53" y="48" width="10" height="8" rx="2" fill={`url(#${glassId})`} />
+
+          {/* Brilho */}
+          <path
+            d="M16 50 C28 46 52 46 64 50 L64 54 C52 50 28 50 16 54 Z"
+            fill={`url(#${glossId})`}
+          />
+
+          {/* Faróis */}
+          <ellipse cx="20" cy="34" rx="3" ry="2" fill="#fef3c7" />
+          <ellipse cx="60" cy="34" rx="3" ry="2" fill="#fef3c7" />
+          {/* Lanternas */}
+          <rect x="18" y="62" width="5" height="2.5" rx="1" fill="#ef4444" opacity="0.85" />
+          <rect x="57" y="62" width="5" height="2.5" rx="1" fill="#ef4444" opacity="0.85" />
+
+          {/* Logo */}
+          <circle cx="40" cy="56" r="3.2" fill={v.logo} stroke="#fff" strokeWidth="0.8" />
+
+          {/* Escapamento */}
+          <circle className="anim-exhaust" cx="14" cy="56" r="2" fill="#cbd5e1" />
         </svg>
       </div>
     </div>
@@ -187,9 +222,7 @@ const MotoMarker = ({ heading = 0 }: { heading?: number }) => (
             <stop offset="100%" stopColor="#991b1b" />
           </linearGradient>
         </defs>
-        {/* sombra */}
         <ellipse cx="32" cy="56" rx="16" ry="3.5" fill="url(#motoShadow)" />
-        {/* rodas (giram) */}
         <g
           className="anim-wheel-spin"
           style={{ transformOrigin: "16px 48px", transformBox: "fill-box" as any }}
@@ -206,7 +239,6 @@ const MotoMarker = ({ heading = 0 }: { heading?: number }) => (
           <line x1="48" y1="42" x2="48" y2="54" stroke="#9ca3af" strokeWidth="0.8" />
           <line x1="42" y1="48" x2="54" y2="48" stroke="#9ca3af" strokeWidth="0.8" />
         </g>
-        {/* corpo */}
         <path
           d="M16 48 L26 30 H40 L48 48"
           stroke="url(#motoBody)"
@@ -214,16 +246,11 @@ const MotoMarker = ({ heading = 0 }: { heading?: number }) => (
           fill="none"
           strokeLinecap="round"
         />
-        {/* tanque */}
         <rect x="28" y="26" width="12" height="8" rx="2" fill="url(#motoBody)" />
-        {/* guidão */}
         <path d="M44 26 L52 22" stroke="#0b1220" strokeWidth="2.5" strokeLinecap="round" />
-        {/* piloto (capacete) */}
         <circle cx="34" cy="20" r="5" fill="#0b1220" />
         <rect x="30" y="18" width="8" height="3" rx="1" fill="#7dd3fc" opacity="0.85" />
-        {/* farol */}
         <circle cx="50" cy="30" r="1.6" fill="#fde68a" />
-        {/* baforada */}
         <circle className="anim-exhaust" cx="14" cy="42" r="1.6" fill="#cbd5e1" />
       </svg>
     </div>
@@ -231,29 +258,86 @@ const MotoMarker = ({ heading = 0 }: { heading?: number }) => (
 );
 
 const PassengerMarker = () => (
-  <div className="relative" title="Passageiro">
+  <div className="relative" title="Passageiro" style={{ width: 52, height: 56 }}>
+    {/* Halo pulsante */}
     <div
-      className="absolute inset-0 rounded-full bg-primary/30 animate-ping"
-      style={{ width: 44, height: 44, top: -2, left: -2 }}
+      className="absolute rounded-full bg-primary/25 animate-ping"
+      style={{ width: 52, height: 52, top: 2, left: 0 }}
     />
-    <svg viewBox="0 0 48 48" width="40" height="40" className="relative drop-shadow-lg">
-      <defs>
-        <linearGradient id="pBg" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#3b82f6" />
-          <stop offset="100%" stopColor="#1d4ed8" />
-        </linearGradient>
-      </defs>
-      <circle cx="24" cy="22" r="18" fill="url(#pBg)" stroke="#fff" strokeWidth="3" />
-      {/* cabeça */}
-      <circle cx="24" cy="17" r="4.5" fill="#fff" />
-      {/* corpo */}
-      <path
-        d="M14 30 c0-5 4.5-8 10-8 s10 3 10 8 v2 H14 z"
-        fill="#fff"
-      />
-      {/* ponta inferior do pin */}
-      <path d="M24 44 L18 36 H30 Z" fill="#1d4ed8" />
-    </svg>
+    {/* Bonequinho com aceno */}
+    <div className="anim-passenger-bounce relative" style={{ width: 52, height: 56 }}>
+      <svg viewBox="0 0 64 72" width="52" height="58" className="drop-shadow-xl" style={{ overflow: "visible" }}>
+        <defs>
+          <linearGradient id="pBg" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="100%" stopColor="#1d4ed8" />
+          </linearGradient>
+          <linearGradient id="pShirt" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#f59e0b" />
+          </linearGradient>
+          <radialGradient id="pSkin" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#fde6d3" />
+            <stop offset="100%" stopColor="#f5c79a" />
+          </radialGradient>
+          <radialGradient id="pShadow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(0,0,0,0.45)" />
+            <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+          </radialGradient>
+        </defs>
+
+        {/* Sombra no chão */}
+        <ellipse cx="32" cy="68" rx="14" ry="3" fill="url(#pShadow)" />
+
+        {/* Pino azul (gota) */}
+        <path
+          d="M32 4 C18 4 8 14 8 28 C8 42 26 60 32 64 C38 60 56 42 56 28 C56 14 46 4 32 4 Z"
+          fill="url(#pBg)"
+          stroke="#fff"
+          strokeWidth="2.5"
+        />
+
+        {/* Camiseta */}
+        <path
+          d="M20 40 C20 33 25 28 32 28 C39 28 44 33 44 40 L44 46 L20 46 Z"
+          fill="url(#pShirt)"
+        />
+
+        {/* Cabeça */}
+        <circle cx="32" cy="22" r="7.5" fill="url(#pSkin)" stroke="#0b1220" strokeOpacity="0.15" strokeWidth="0.6" />
+        {/* Cabelo */}
+        <path d="M25 19 C26 14 30 13 32 13 C34 13 38 14 39 19 C36 17 28 17 25 19 Z" fill="#3b2a1f" />
+        {/* Olhos */}
+        <circle cx="29.5" cy="22.5" r="0.9" fill="#0b1220" />
+        <circle cx="34.5" cy="22.5" r="0.9" fill="#0b1220" />
+        {/* Sorriso */}
+        <path d="M29 25.5 Q32 28 35 25.5" stroke="#0b1220" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+        {/* Bochechas */}
+        <circle cx="27" cy="25" r="1" fill="#fca5a5" opacity="0.7" />
+        <circle cx="37" cy="25" r="1" fill="#fca5a5" opacity="0.7" />
+
+        {/* Braço esquerdo parado */}
+        <path d="M22 36 L19 44" stroke="url(#pSkin)" strokeWidth="3.2" strokeLinecap="round" />
+
+        {/* Braço direito ACENANDO */}
+        <g
+          className="anim-wave-arm"
+          style={{ transformOrigin: "42px 34px", transformBox: "fill-box" as any }}
+        >
+          <path
+            d="M42 34 L48 22"
+            stroke="url(#pSkin)"
+            strokeWidth="3.4"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <circle cx="48" cy="20" r="2.4" fill="url(#pSkin)" stroke="#0b1220" strokeOpacity="0.15" strokeWidth="0.5" />
+          {/* Linhas de movimento */}
+          <path d="M51 17 L53 15" stroke="#fde68a" strokeWidth="1.1" strokeLinecap="round" />
+          <path d="M52 21 L55 21" stroke="#fde68a" strokeWidth="1.1" strokeLinecap="round" />
+        </g>
+      </svg>
+    </div>
   </div>
 );
 
