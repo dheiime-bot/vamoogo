@@ -389,8 +389,8 @@ const DriverHome = () => {
 
       {/* === Botão Ficar Online — SEMPRE visível, fica fixo acima da bottom nav, transparente para deixar o mapa aparecer === */}
       <div
-        className="fixed inset-x-0 bottom-[68px] z-30 px-4 pt-2 pb-2"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 68px + 0.5rem)" }}
+        className="fixed inset-x-0 bottom-[68px] z-30 px-4 py-2"
+        style={{ marginBottom: "env(safe-area-inset-bottom)" }}
       >
         {lowBalance && !isOnline && (
           <div className="mb-3 flex items-center gap-2 rounded-xl bg-warning/10 border border-warning/30 p-2.5">
