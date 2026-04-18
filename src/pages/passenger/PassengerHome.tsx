@@ -568,6 +568,23 @@ const PassengerHome = () => {
             mapOrigin = { lat: Number(activeRide.origin_lat), lng: Number(activeRide.origin_lng), label: "Embarque" };
             mapDestination = { lat: Number(activeRide.destination_lat), lng: Number(activeRide.destination_lng), label: "Destino" };
           }
+          // Calcula a altura aproximada (em px) do que está sobreposto ao mapa,
+          // para que o logo "Google" e o botão de recentralizar subam JUNTO com qualquer CTA/sheet.
+          let dynamicInset = 24; // respiro mínimo
+          if (showFullMap) {
+            // CTA "Para onde Vamoo?" + bottom nav
+            dynamicInset = 110;
+          } else if (showFormSheet) {
+            // Sheet do formulário ocupa parte de cima; logo Google fica próximo da bottom nav
+            dynamicInset = 80;
+          } else if (isRideActive) {
+            // Bottom-sheet com infos da corrida ativa varia por estado
+            if (rideState === "accepted") dynamicInset = 240;
+            else if (rideState === "arrived") dynamicInset = 220;
+            else if (rideState === "in_progress") dynamicInset = 200;
+            else if (rideState === "payment") dynamicInset = 220;
+            else dynamicInset = 180;
+          }
           return (
             <GoogleMap
               className={`${
@@ -580,7 +597,7 @@ const PassengerHome = () => {
               nearbyDrivers={nearbyDrivers}
               trackUserLocation={!selectedOrigin && !activeRide}
               showRoute={!!mapOrigin && !!mapDestination}
-              bottomInset={showFullMap ? 110 : 24}
+              bottomInset={dynamicInset}
             />
           );
         })()}

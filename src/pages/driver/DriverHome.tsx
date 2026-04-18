@@ -416,7 +416,19 @@ const DriverHome = () => {
                 ? "car-conforto"
                 : "car-economico"
           }
-          bottomInset={rideState === "idle" ? 210 : 360}
+          bottomInset={
+            rideState === "idle"
+              ? 210                      // botão "Ficar Online" + bottom nav
+              : rideState === "offer"
+                ? 360                    // pop-up de oferta com countdown
+                : rideState === "going_to_passenger"
+                  ? 280                  // card "indo até o passageiro"
+                  : rideState === "arrived"
+                    ? 260                // card "passageiro está aqui"
+                    : rideState === "in_ride"
+                      ? 280              // card "em corrida"
+                      : 210
+          }
         />
       </div>
 
