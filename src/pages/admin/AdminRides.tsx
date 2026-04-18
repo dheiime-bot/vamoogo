@@ -1,15 +1,29 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, XCircle, Play, Flag, ArrowRightLeft, X } from "lucide-react";
+import { Search, X, AlertTriangle } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import RideActionsMenu from "@/components/admin/rides/RideActionsMenu";
+import RideDetailsModal from "@/components/admin/rides/RideDetailsModal";
+import RideCancelDialog from "@/components/admin/rides/RideCancelDialog";
+import RideAdjustPriceDialog from "@/components/admin/rides/RideAdjustPriceDialog";
+import RideIssueDialog from "@/components/admin/rides/RideIssueDialog";
+import RidePaymentDialog from "@/components/admin/rides/RidePaymentDialog";
+import RideAddNoteDialog from "@/components/admin/rides/RideAddNoteDialog";
 
 const AdminRides = () => {
   const [rides, setRides] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  // Dialog state
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [cancelRide, setCancelRide] = useState<any | null>(null);
+  const [adjustRide, setAdjustRide] = useState<any | null>(null);
+  const [issueRide, setIssueRide] = useState<any | null>(null);
+  const [paymentRide, setPaymentRide] = useState<any | null>(null);
+  const [noteRide, setNoteRide] = useState<any | null>(null);
 
   const fetchRides = async () => {
     const { data } = await supabase
@@ -30,18 +44,6 @@ const AdminRides = () => {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
-
-  const updateRide = async (id: string, update: any, msg: string) => {
-    // Se for cancelamento, registra quem cancelou (admin atual) para auditoria
-    let payload = update;
-    if (update?.status === "cancelled") {
-      const { data: { user } } = await supabase.auth.getUser();
-      payload = { ...update, cancelled_by: user?.id ?? null };
-    }
-    await supabase.from("rides").update(payload).eq("id", id);
-    toast.success(msg);
-    fetchRides();
-  };
 
   // Normaliza: "vamoo 1000" / "VAMOO1000" / "1000" → "VAMOO1000"
   const normalizeCode = (s: string) => {
@@ -97,8 +99,8 @@ const AdminRides = () => {
         {filtered.length === 0 && <EmptyState title="Nenhuma corrida encontrada" description="Ajuste os filtros ou aguarde novas corridas serem solicitadas." />}
         {filtered.map((ride, i) => (
           <div key={ride.id} className="rounded-2xl border bg-card p-4 shadow-sm animate-slide-up" style={{ animationDelay: `${i * 30}ms`, animationFillMode: "both" }}>
-            <div className="flex items-start justify-between mb-3">
-              <div>
+            <div className="flex items-start justify-between mb-3 gap-2">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   {ride.ride_code && (
                     <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{ride.ride_code}</span>
@@ -106,10 +108,36 @@ const AdminRides = () => {
                   <span className="text-xs font-mono text-muted-foreground">{ride.id.slice(0, 8)}</span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-muted font-medium">{ride.category}</span>
                   <span className="text-xs text-muted-foreground">{ride.passenger_count} pass.</span>
+                  {ride.issue_flag && (
+                    <span className="text-[10px] font-bold uppercase rounded-full bg-warning/15 text-warning px-2 py-0.5 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" /> {ride.issue_flag}
+                    </span>
+                  )}
+                  {ride.payment_status && ride.payment_status !== "pending" && (
+                    <span className={`text-[10px] font-bold uppercase rounded-full px-2 py-0.5 ${
+                      ride.payment_status === "paid" ? "bg-success/15 text-success" : "bg-primary/15 text-primary"
+                    }`}>
+                      {ride.payment_status}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">{new Date(ride.created_at).toLocaleString("pt-BR")}</p>
               </div>
-              <StatusBadge status={rideStatusMap[ride.status] || "pending"} />
+              <div className="flex items-center gap-1 shrink-0">
+                <StatusBadge status={rideStatusMap[ride.status] || "pending"} />
+                <RideActionsMenu
+                  ride={ride}
+                  onView={() => setDetailsId(ride.id)}
+                  onMap={() => setDetailsId(ride.id)}
+                  onContact={() => setDetailsId(ride.id)}
+                  onRatings={() => setDetailsId(ride.id)}
+                  onPayment={() => setPaymentRide(ride)}
+                  onAdjustPrice={() => setAdjustRide(ride)}
+                  onIssue={() => setIssueRide(ride)}
+                  onCancel={() => setCancelRide(ride)}
+                  onAddNote={() => setNoteRide(ride)}
+                />
+              </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-3 mb-3">
               <div className="space-y-1">
@@ -123,30 +151,39 @@ const AdminRides = () => {
             </div>
             <div className="flex items-center justify-between border-t pt-3">
               <div className="flex items-center gap-4">
-                <div><p className="text-xs text-muted-foreground">Valor</p><p className="text-base font-bold">R$ {ride.price?.toFixed(2) || "—"}</p></div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Valor</p>
+                  <p className="text-base font-bold">R$ {ride.price?.toFixed(2) || "—"}</p>
+                  {ride.original_price && Number(ride.original_price) !== Number(ride.price) && (
+                    <p className="text-[10px] text-muted-foreground line-through">R$ {Number(ride.original_price).toFixed(2)}</p>
+                  )}
+                </div>
                 <div><p className="text-xs text-muted-foreground">Taxa</p><p className="text-sm font-semibold text-primary">R$ {ride.platform_fee?.toFixed(2) || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Líquido</p><p className="text-sm font-semibold text-success">R$ {ride.driver_net?.toFixed(2) || "—"}</p></div>
               </div>
-              <div className="flex gap-1">
-                {ride.status === "requested" && (
-                  <button onClick={() => updateRide(ride.id, { status: "cancelled", cancelled_at: new Date().toISOString() }, "Corrida cancelada")} className="rounded-lg p-1.5 hover:bg-destructive/10" title="Cancelar">
-                    <XCircle className="h-4 w-4 text-destructive" />
-                  </button>
-                )}
-                {ride.status === "accepted" && (
-                  <button onClick={() => updateRide(ride.id, { status: "in_progress", started_at: new Date().toISOString() }, "Corrida iniciada")} className="rounded-lg p-1.5 hover:bg-success/10" title="Iniciar">
-                    <Play className="h-4 w-4 text-success" />
-                  </button>
-                )}
-                {ride.status === "in_progress" && (
-                  <button onClick={() => updateRide(ride.id, { status: "completed", completed_at: new Date().toISOString() }, "Corrida finalizada")} className="rounded-lg p-1.5 hover:bg-primary/10" title="Finalizar">
-                    <Flag className="h-4 w-4 text-primary" />
-                  </button>
-                )}
-              </div>
+              <button
+                onClick={() => setDetailsId(ride.id)}
+                className="text-xs font-semibold text-primary hover:underline"
+              >
+                Ver tudo →
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Modais */}
+      <RideDetailsModal rideId={detailsId} onClose={() => setDetailsId(null)} />
+      <RideCancelDialog
+        rideId={cancelRide?.id ?? null}
+        rideCode={cancelRide?.ride_code}
+        onClose={() => setCancelRide(null)}
+        onDone={fetchRides}
+      />
+      <RideAdjustPriceDialog ride={adjustRide} onClose={() => setAdjustRide(null)} onDone={fetchRides} />
+      <RideIssueDialog ride={issueRide} onClose={() => setIssueRide(null)} onDone={fetchRides} />
+      <RidePaymentDialog ride={paymentRide} onClose={() => setPaymentRide(null)} onDone={fetchRides} />
+      <RideAddNoteDialog ride={noteRide} onClose={() => setNoteRide(null)} onDone={fetchRides} />
     </AdminLayout>
   );
 };
