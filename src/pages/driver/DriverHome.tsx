@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
 
 
-type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in_ride";
+type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in_ride" | "rating";
 
 const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", debit: "Débito", credit: "Crédito" };
 
@@ -44,6 +44,9 @@ const DriverHome = () => {
   const [showChat, setShowChat] = useState(false);
   const [passengerName, setPassengerName] = useState<string>("");
   const [showPixModal, setShowPixModal] = useState(false);
+  const [passengerRating, setPassengerRating] = useState(0);
+  const [passengerRatingComment, setPassengerRatingComment] = useState("");
+  const [ratedRide, setRatedRide] = useState<any>(null);
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
@@ -180,8 +183,10 @@ const DriverHome = () => {
             setShowChat(false);
             toast.error("O passageiro cancelou a corrida");
           } else if (ride.status === "completed") {
+            // Mantém ride para avaliação; só limpa activeRide quando avaliar/pular
+            setRatedRide((prev: any) => prev ?? ride);
             setActiveRide(null);
-            setRideState("idle");
+            setRideState("rating");
             setShowChat(false);
           } else if (["accepted", "in_progress"].includes(ride.status)) {
             setActiveRide((prev: any) => (prev?.id === ride.id ? { ...prev, ...ride } : ride));
@@ -305,9 +310,32 @@ const DriverHome = () => {
     } else {
       toast.success(`Corrida finalizada! Taxa: R$ ${platformFee.toFixed(2)}`);
     }
+    // Guarda a corrida para avaliação e abre modal — mantém o motorista online.
+    setRatedRide(activeRide);
     setActiveRide(null);
-    setRideState("idle");
+    setRideState("rating");
     playPhaseSound("completed");
+  };
+
+  const handleSubmitDriverRating = async () => {
+    if (!ratedRide || passengerRating === 0) return;
+    await supabase
+      .from("rides")
+      .update({
+        driver_rating: passengerRating,
+        driver_rating_comment: passengerRatingComment?.trim() || null,
+      } as any)
+      .eq("id", ratedRide.id);
+    toast.success("Avaliação enviada! ⭐");
+    closeDriverRating();
+  };
+
+  const closeDriverRating = () => {
+    setRatedRide(null);
+    setPassengerRating(0);
+    setPassengerRatingComment("");
+    setRideState("idle");
+    // Motorista permanece online — pronto para receber novas corridas
   };
 
   const handleToggleOnline = () => {
