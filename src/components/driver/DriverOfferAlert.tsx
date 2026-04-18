@@ -71,7 +71,7 @@ const DriverOfferAlert = () => {
 
   // Realtime: novas ofertas (entrega instantânea, mas pode falhar — não confiamos só nele)
   useEffect(() => {
-    if (!isPossiblyDriver || !user) return;
+    if (!isDriver || !user) return;
     console.log("[offer-alert] subscribe for", user.id);
 
     const channel = supabase
@@ -86,11 +86,11 @@ const DriverOfferAlert = () => {
       )
       .subscribe((s) => console.log("[offer-alert] channel status:", s));
     return () => { supabase.removeChannel(channel); };
-  }, [isPossiblyDriver, user, handleNewOffer]);
+  }, [isDriver, user, handleNewOffer]);
 
   // Polling AGRESSIVO a cada 1.5s (fonte primária — funciona mesmo sem WebSocket)
   useEffect(() => {
-    if (!isPossiblyDriver || !user) return;
+    if (!isDriver || !user) return;
     let cancelled = false;
     const tick = async () => {
       if (offerRef.current) return;
@@ -110,7 +110,7 @@ const DriverOfferAlert = () => {
     tick();
     const i = setInterval(tick, 1500);
     return () => { cancelled = true; clearInterval(i); };
-  }, [isPossiblyDriver, user, handleNewOffer]);
+  }, [isDriver, user, handleNewOffer]);
 
   // Countdown
   useEffect(() => {
