@@ -551,23 +551,36 @@ const PassengerHome = () => {
     <div className="min-h-screen bg-background">
       {/* Map */}
       <div className="relative">
-        <GoogleMap
-          className={`${
-            showFullMap
-              ? "h-screen"
-              : isRideActive
-                ? "h-[68vh]"
-                : "h-[45vh]"
-          } rounded-none transition-all duration-300`}
-          origin={selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null}
-          destination={effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null}
-          stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
-          driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
-          nearbyDrivers={nearbyDrivers}
-          trackUserLocation={!selectedOrigin}
-          showRoute={!!selectedOrigin && !!effectiveDestination}
-          bottomInset={showFullMap ? 96 : 0}
-        />
+        {(() => {
+          // Define origem/destino da rota conforme a fase:
+          //  - driver_arriving: rota motorista → embarque (mostra deslocamento dele em tempo real)
+          //  - in_progress:    rota embarque → destino (acompanha trajeto da corrida)
+          //  - demais (idle/searching/arrived/rating): comportamento padrão (origem/destino selecionados)
+          let mapOrigin = selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null;
+          let mapDestination = effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null;
+          if (rideState === "driver_arriving" && driverLocation && activeRide?.origin_lat && activeRide?.origin_lng) {
+            mapOrigin = { lat: driverLocation.lat, lng: driverLocation.lng, label: "Motorista" };
+            mapDestination = { lat: Number(activeRide.origin_lat), lng: Number(activeRide.origin_lng), label: "Embarque" };
+          } else if (rideState === "in_progress" && activeRide?.origin_lat && activeRide?.destination_lat) {
+            mapOrigin = { lat: Number(activeRide.origin_lat), lng: Number(activeRide.origin_lng), label: "Embarque" };
+            mapDestination = { lat: Number(activeRide.destination_lat), lng: Number(activeRide.destination_lng), label: "Destino" };
+          }
+          return (
+            <GoogleMap
+              className={`${
+                showFullMap ? "h-screen" : isRideActive ? "h-[68vh]" : "h-[45vh]"
+              } rounded-none transition-all duration-300`}
+              origin={mapOrigin}
+              destination={mapDestination}
+              stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
+              driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
+              nearbyDrivers={nearbyDrivers}
+              trackUserLocation={!selectedOrigin && !activeRide}
+              showRoute={!!mapOrigin && !!mapDestination}
+              bottomInset={showFullMap ? 96 : 0}
+            />
+          );
+        })()}
       </div>
 
       {/* Bottom sheet — só aparece quando NÃO está em "tela cheia do mapa" */}
