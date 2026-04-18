@@ -1,4 +1,4 @@
-import { MoreHorizontal, Eye, Map, Phone, AlertTriangle, XCircle, DollarSign, CreditCard, Star, MessageCircle, FileText } from "lucide-react";
+import { MoreHorizontal, Eye, Map, Phone, AlertTriangle, XCircle, DollarSign, CreditCard, Star, FileText } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel,
