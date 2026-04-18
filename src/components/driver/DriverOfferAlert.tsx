@@ -28,8 +28,10 @@ const DriverOfferAlert = () => {
   const seenOfferIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => { offerRef.current = offer; }, [offer]);
 
-  // Aceita também usuários sem `roles` populado AINDA — o handler verifica via `drivers`
-  const isPossiblyDriver = !!user && (roles.length === 0 || roles.includes("driver"));
+  // Só dispara para usuários com o papel "driver" carregado.
+  // Antes aceitávamos roles.length === 0 (ainda carregando), o que causava
+  // o popup de oferta aparecer para passageiros (mesmo user.id em ambos os papéis em testes).
+  const isDriver = !!user && roles.includes("driver");
 
   const handleNewOffer = useCallback(async (offerRow: any) => {
     if (!user) return;
