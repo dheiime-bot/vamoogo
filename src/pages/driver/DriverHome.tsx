@@ -18,7 +18,7 @@ import RideChat from "@/components/passenger/RideChat";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
-import { playOfferAlert, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
+import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
 
 
 type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in_ride";
@@ -237,6 +237,7 @@ const DriverHome = () => {
     setPendingRide(null);
     setRideState("going_to_passenger");
     toast.success("Corrida aceita! 🚗");
+    playPhaseSound("accepted");
   };
 
   const handleReject = async () => {
@@ -260,6 +261,7 @@ const DriverHome = () => {
     setActiveRide({ ...activeRide, arrived_at: arrivedAt });
     setRideState("arrived");
     toast.success("Passageiro avisado: você chegou! 📍");
+    playPhaseSound("arrived");
   };
 
   const handleStartRide = async () => {
@@ -275,6 +277,7 @@ const DriverHome = () => {
     setActiveRide({ ...activeRide, status: "in_progress", started_at: startedAt });
     setRideState("in_ride");
     toast.success("Corrida iniciada!");
+    playPhaseSound("started");
   };
 
   const handleFinishRide = async () => {
@@ -304,6 +307,7 @@ const DriverHome = () => {
     }
     setActiveRide(null);
     setRideState("idle");
+    playPhaseSound("completed");
   };
 
   const handleToggleOnline = () => {
