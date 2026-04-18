@@ -513,7 +513,10 @@ const PassengerHome = () => {
 
   const handleSubmitRating = async () => {
     if (!activeRide || rating === 0) return;
-    await supabase.from("rides").update({ rating }).eq("id", activeRide.id);
+    await supabase
+      .from("rides")
+      .update({ rating, rating_comment: ratingComment?.trim() || null } as any)
+      .eq("id", activeRide.id);
     toast.success("Avaliação enviada! Obrigado ⭐");
     resetRide();
   };

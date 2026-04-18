@@ -855,6 +855,8 @@ export type Database = {
           distance_km: number | null
           driver_id: string | null
           driver_net: number | null
+          driver_rating: number | null
+          driver_rating_comment: string | null
           duration_minutes: number | null
           for_other_person: boolean
           id: string
@@ -872,6 +874,7 @@ export type Database = {
           platform_fee: number | null
           price: number | null
           rating: number | null
+          rating_comment: string | null
           ride_code: string
           started_at: string | null
           status: Database["public"]["Enums"]["ride_status"]
@@ -891,6 +894,8 @@ export type Database = {
           distance_km?: number | null
           driver_id?: string | null
           driver_net?: number | null
+          driver_rating?: number | null
+          driver_rating_comment?: string | null
           duration_minutes?: number | null
           for_other_person?: boolean
           id?: string
@@ -908,6 +913,7 @@ export type Database = {
           platform_fee?: number | null
           price?: number | null
           rating?: number | null
+          rating_comment?: string | null
           ride_code: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
@@ -927,6 +933,8 @@ export type Database = {
           distance_km?: number | null
           driver_id?: string | null
           driver_net?: number | null
+          driver_rating?: number | null
+          driver_rating_comment?: string | null
           duration_minutes?: number | null
           for_other_person?: boolean
           id?: string
@@ -944,6 +952,7 @@ export type Database = {
           platform_fee?: number | null
           price?: number | null
           rating?: number | null
+          rating_comment?: string | null
           ride_code?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["ride_status"]

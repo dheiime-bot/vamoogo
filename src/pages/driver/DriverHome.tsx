@@ -19,9 +19,10 @@ import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
-type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in_ride";
+type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in_ride" | "rating";
 
 const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", debit: "Débito", credit: "Crédito" };
 
@@ -44,6 +45,9 @@ const DriverHome = () => {
   const [showChat, setShowChat] = useState(false);
   const [passengerName, setPassengerName] = useState<string>("");
   const [showPixModal, setShowPixModal] = useState(false);
+  const [passengerRating, setPassengerRating] = useState(0);
+  const [passengerRatingComment, setPassengerRatingComment] = useState("");
+  const [ratedRide, setRatedRide] = useState<any>(null);
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
@@ -180,8 +184,10 @@ const DriverHome = () => {
             setShowChat(false);
             toast.error("O passageiro cancelou a corrida");
           } else if (ride.status === "completed") {
+            // Mantém ride para avaliação; só limpa activeRide quando avaliar/pular
+            setRatedRide((prev: any) => prev ?? ride);
             setActiveRide(null);
-            setRideState("idle");
+            setRideState("rating");
             setShowChat(false);
           } else if (["accepted", "in_progress"].includes(ride.status)) {
             setActiveRide((prev: any) => (prev?.id === ride.id ? { ...prev, ...ride } : ride));
@@ -305,9 +311,32 @@ const DriverHome = () => {
     } else {
       toast.success(`Corrida finalizada! Taxa: R$ ${platformFee.toFixed(2)}`);
     }
+    // Guarda a corrida para avaliação e abre modal — mantém o motorista online.
+    setRatedRide(activeRide);
     setActiveRide(null);
-    setRideState("idle");
+    setRideState("rating");
     playPhaseSound("completed");
+  };
+
+  const handleSubmitDriverRating = async () => {
+    if (!ratedRide || passengerRating === 0) return;
+    await supabase
+      .from("rides")
+      .update({
+        driver_rating: passengerRating,
+        driver_rating_comment: passengerRatingComment?.trim() || null,
+      } as any)
+      .eq("id", ratedRide.id);
+    toast.success("Avaliação enviada! ⭐");
+    closeDriverRating();
+  };
+
+  const closeDriverRating = () => {
+    setRatedRide(null);
+    setPassengerRating(0);
+    setPassengerRatingComment("");
+    setRideState("idle");
+    // Motorista permanece online — pronto para receber novas corridas
   };
 
   const handleToggleOnline = () => {
@@ -644,6 +673,52 @@ const DriverHome = () => {
         rideId={activeRide?.id || ""}
         merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
       />
+
+      {/* Modal de avaliação do passageiro pelo motorista — sobreposto sobre a tela inicial.
+          O motorista permanece online; ao enviar/pular, volta a receber novas corridas. */}
+      <Dialog
+        open={rideState === "rating" && !!ratedRide}
+        onOpenChange={(o) => { if (!o) closeDriverRating(); }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display">Como foi o passageiro?</DialogTitle>
+          </DialogHeader>
+          {ratedRide && (
+            <div className="space-y-4 text-center pt-2">
+              <p className="text-sm text-muted-foreground">
+                {passengerName || "Passageiro"} • {ratedRide.ride_code}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Você ganhou <span className="font-bold text-success">R$ {Number(ratedRide.driver_net || 0).toFixed(2)}</span> nesta corrida
+              </p>
+              <div className="flex justify-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <button key={s} onClick={() => setPassengerRating(s)} className="transition-transform active:scale-95">
+                    <Star className={`h-9 w-9 ${s <= passengerRating ? "text-warning fill-warning" : "text-muted-foreground"}`} />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                placeholder="Algum comentário sobre o passageiro? (opcional)"
+                value={passengerRatingComment}
+                onChange={(e) => setPassengerRatingComment(e.target.value)}
+                className="w-full rounded-xl border bg-muted p-3 text-sm outline-none resize-none h-16"
+              />
+              <button
+                onClick={handleSubmitDriverRating}
+                disabled={passengerRating === 0}
+                className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50"
+              >
+                Enviar avaliação ⭐
+              </button>
+              <button onClick={closeDriverRating} className="text-xs text-muted-foreground">
+                Pular avaliação
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
