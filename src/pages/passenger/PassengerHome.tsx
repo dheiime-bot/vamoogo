@@ -580,7 +580,7 @@ const PassengerHome = () => {
               nearbyDrivers={nearbyDrivers}
               trackUserLocation={!selectedOrigin && !activeRide}
               showRoute={!!mapOrigin && !!mapDestination}
-              bottomInset={showFullMap ? 96 : 0}
+              bottomInset={showFullMap ? 110 : 24}
             />
           );
         })()}
