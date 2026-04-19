@@ -77,9 +77,11 @@ interface Props {
   floating?: boolean;
   /** Status de conexão GPS — colore o sino: verde=conectado, vermelho=desconectado, neutro=idle */
   connectionStatus?: "connected" | "disconnected" | "idle";
+  /** Offset vertical extra (px) — usado para empilhar o sino abaixo de outro elemento. */
+  topOffsetPx?: number;
 }
 
-const NotificationBell = ({ floating = true, connectionStatus = "idle" }: Props) => {
+const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffsetPx = 0 }: Props) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -182,7 +184,7 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle" }: Props)
   return (
     <div
       className={cn(floating && "fixed right-3 z-50")}
-      style={floating ? { top: "calc(env(safe-area-inset-top) + 0.75rem)" } : undefined}
+      style={floating ? { top: `calc(env(safe-area-inset-top) + 0.75rem + ${topOffsetPx}px)` } : undefined}
     >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
