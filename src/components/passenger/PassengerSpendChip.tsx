@@ -1,7 +1,6 @@
 /**
- * PassengerSpendChip — chip flutuante no canto superior DIREITO do app do passageiro,
- * na mesma posição do DriverEarningsChip do app do motorista.
- * Mostra o TOTAL GASTO no dia (corridas concluídas hoje). Clicar leva ao histórico.
+ * PassengerSpendChip — chip flutuante no canto superior DIREITO do app do passageiro.
+ * Mostra o TOTAL GASTO GERAL (todas as corridas concluídas). Clicar leva ao histórico.
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,13 +15,11 @@ const PassengerSpendChip = () => {
 
   const reload = async () => {
     if (!user) return;
-    const today = new Date().toISOString().split("T")[0];
     const { data } = await supabase
       .from("rides")
       .select("price")
       .eq("passenger_id", user.id)
-      .eq("status", "completed")
-      .gte("completed_at", today);
+      .eq("status", "completed");
     if (data) {
       setSpent(data.reduce((s, r: any) => s + Number(r.price || 0), 0));
     }
