@@ -96,16 +96,17 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
     <Sidebar collapsible="icon" className="border-r">
       {/* Header / Brand — Logo Vamoo */}
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className={`flex items-center px-2 py-2 ${collapsed ? "justify-center" : "gap-2"}`}>
+        <NavLink
+          to="/admin"
+          className={`flex items-center px-2 py-3 ${collapsed ? "justify-center" : "justify-center"}`}
+          aria-label="Vamoo Admin"
+        >
           {collapsed ? (
-            <VamooLogo height={28} card={false} className="shrink-0" />
+            <VamooLogo height={32} card={false} className="shrink-0" />
           ) : (
-            <>
-              <VamooLogo height={36} card={false} className="shrink-0" />
-              <ChevronDown className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
-            </>
+            <VamooLogo height={52} card={false} className="shrink-0" />
           )}
-        </div>
+        </NavLink>
 
         {/* Search */}
         {!collapsed ? (
