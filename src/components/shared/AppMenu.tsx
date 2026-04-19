@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Menu, Home, Clock, User, Wallet, MessageCircle, LogOut, Car, ArrowLeftRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import vamooLogo from "@/assets/vamoo-logo.png";
 import {
   Sheet,
   SheetContent,
@@ -95,12 +96,16 @@ const AppMenu = ({ role, floating = true }: Props) => {
         <SheetTrigger asChild>
           <button
             aria-label="Abrir menu"
-            className="flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted"
+            style={{ backgroundColor: "#f4fafa" }}
+            className="flex h-11 items-center gap-2 rounded-full backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:opacity-90"
           >
             <Menu className="h-5 w-5 text-foreground" />
-            <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">
-              Vamoo!
-            </span>
+            <img
+              src={vamooLogo}
+              alt="Vamoo"
+              className="h-6 w-auto select-none object-contain"
+              draggable={false}
+            />
           </button>
         </SheetTrigger>
       </div>
