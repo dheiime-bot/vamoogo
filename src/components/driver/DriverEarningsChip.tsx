@@ -43,16 +43,23 @@ const DriverEarningsChip = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // O wrapper ocupa toda a largura entre o menu (esquerda, ~130px) e o sino (direita, ~56px),
+  // e centraliza o chip nesse espaço — assim ele fica visualmente no meio dos dois,
+  // mesmo o menu sendo mais largo (mostra "Vamoo!") e o sino sendo só ícone.
   return (
-    <button
-      onClick={() => navigate("/driver/wallet")}
-      className="fixed left-1/2 -translate-x-1/2 z-40 flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted"
+    <div
+      className="fixed left-[130px] right-[56px] z-40 flex justify-center pointer-events-none"
       style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
-      aria-label="Ver carteira"
     >
-      <span className="font-display text-[11px] font-bold uppercase tracking-wide text-muted-foreground leading-none">Hoje</span>
-      <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">{formatBRL(earnings)}</span>
-    </button>
+      <button
+        onClick={() => navigate("/driver/wallet")}
+        className="pointer-events-auto flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted"
+        aria-label="Ver carteira"
+      >
+        <span className="font-display text-[11px] font-bold uppercase tracking-wide text-muted-foreground leading-none">Hoje</span>
+        <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">{formatBRL(earnings)}</span>
+      </button>
+    </div>
   );
 };
 
