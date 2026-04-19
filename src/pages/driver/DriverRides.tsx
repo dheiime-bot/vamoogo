@@ -70,40 +70,11 @@ const DriverRides = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Resumos por período (hoje / 7 dias / mês corrente) — apenas corridas completadas
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const startOfWeek = startOfToday - 6 * 86400000; // últimos 7 dias
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-
-  const completed = rides.filter((r) => r.status === "completed");
-  const sumNet = (since: number) =>
-    completed
-      .filter((r) => new Date(r.created_at).getTime() >= since)
-      .reduce((s, r) => s + Number(r.driver_net || 0), 0);
-
-  const summaries = [
-    { label: "Hoje", net: sumNet(startOfToday), count: completed.filter((r) => new Date(r.created_at).getTime() >= startOfToday).length },
-    { label: "Semana", net: sumNet(startOfWeek), count: completed.filter((r) => new Date(r.created_at).getTime() >= startOfWeek).length },
-    { label: "Mês", net: sumNet(startOfMonth), count: completed.filter((r) => new Date(r.created_at).getTime() >= startOfMonth).length },
-  ];
-
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="bg-card border-b p-4 pt-20">
         <h1 className="text-lg font-bold">Minhas Corridas</h1>
-        <p className="text-xs text-muted-foreground">Histórico completo de corridas</p>
-      </div>
-
-      {/* Resumo */}
-      <div className="flex gap-3 overflow-x-auto p-4 pb-0">
-        {summaries.map((s) => (
-          <div key={s.label} className="flex-1 min-w-[100px] rounded-xl border bg-card p-3 text-center">
-            <p className="text-xs text-muted-foreground">{s.label}</p>
-            <p className="text-base font-bold">{formatBRL(s.net)}</p>
-            <p className="text-[10px] text-muted-foreground">{s.count} corrida{s.count === 1 ? "" : "s"}</p>
-          </div>
-        ))}
+        <p className="text-xs text-muted-foreground">Histórico completo de corridas — veja seus ganhos por período na Carteira</p>
       </div>
 
       <div className="p-4 space-y-3">

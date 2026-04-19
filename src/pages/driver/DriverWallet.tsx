@@ -1,48 +1,116 @@
-import { useEffect, useState } from "react";
-import { Wallet, CreditCard, QrCode, ArrowDownLeft, ArrowUpRight, Gift, Home, User, Loader2, Banknote, History, BarChart3 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, Banknote, History } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
-import { BarChart, Bar, XAxis, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+type PeriodId = "today" | "week" | "month" | "3m" | "6m" | "year" | "all";
+const PERIODS: { id: PeriodId; label: string; days: number | null }[] = [
+  { id: "today", label: "Hoje", days: 1 },
+  { id: "week", label: "7 dias", days: 7 },
+  { id: "month", label: "Mês", days: 30 },
+  { id: "3m", label: "3 meses", days: 90 },
+  { id: "6m", label: "6 meses", days: 180 },
+  { id: "year", label: "12 meses", days: 365 },
+  { id: "all", label: "Tudo", days: null },
+];
 
 const DriverWallet = () => {
   const { user, driverData } = useAuth();
   const [recharges, setRecharges] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [completedRides, setCompletedRides] = useState<{ driver_net: number | null; completed_at: string | null; created_at: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"recharge" | "withdraw" | "history">("recharge");
+  const [period, setPeriod] = useState<PeriodId>("week");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [pixKey, setPixKey] = useState("");
   const balance = driverData?.balance ?? 0;
 
-  const weekData = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(d => ({ name: d, value: Math.floor(Math.random() * 100 + 20) }));
-
   const reload = async () => {
     if (!user) return;
-    const [rech, with_] = await Promise.all([
+    const [rech, with_, ridesRes] = await Promise.all([
       supabase.from("recharges").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("withdrawals").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10),
+      supabase.from("rides").select("driver_net, completed_at, created_at").eq("driver_id", user.id).eq("status", "completed").order("completed_at", { ascending: false }).limit(1000),
     ]);
     if (rech.data) setRecharges(rech.data);
     if (with_.data) setWithdrawals(with_.data);
+    if (ridesRes.data) setCompletedRides(ridesRes.data as any);
   };
 
   useEffect(() => {
     if (!user) return;
     reload();
-    // 🔄 Realtime: atualiza recargas/saques sem precisar recarregar a página
+    // 🔄 Realtime: atualiza recargas/saques/ganhos sem precisar recarregar a página
     const channel = supabase
       .channel(`wallet-rt-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "recharges", filter: `driver_id=eq.${user.id}` }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "withdrawals", filter: `driver_id=eq.${user.id}` }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` }, reload)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // ── Resumo + gráfico do período selecionado ─────────────────────────────
+  const { totalNet, totalCount, chartData, bucketLabel } = useMemo(() => {
+    const now = new Date();
+    const cfg = PERIODS.find((p) => p.id === period)!;
+    const sinceMs = cfg.days == null ? 0 : (cfg.id === "today"
+      ? new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+      : now.getTime() - cfg.days * 86400000);
+
+    const inRange = cfg.days == null
+      ? completedRides
+      : completedRides.filter((r) => new Date(r.completed_at || r.created_at).getTime() >= sinceMs);
+    const total = inRange.reduce((s, r) => s + Number(r.driver_net || 0), 0);
+
+    let buckets: { name: string; value: number; key?: string }[] = [];
+    let label = "";
+    if (cfg.id === "today") {
+      label = "por hora";
+      buckets = Array.from({ length: 24 }, (_, h) => ({ name: `${h}h`, value: 0 }));
+      inRange.forEach((r) => {
+        const h = new Date(r.completed_at || r.created_at).getHours();
+        buckets[h].value += Number(r.driver_net || 0);
+      });
+    } else if (cfg.days && cfg.days <= 31) {
+      const days = cfg.days;
+      label = "por dia";
+      buckets = Array.from({ length: days }, (_, i) => {
+        const d = new Date(now.getTime() - (days - 1 - i) * 86400000);
+        return { name: `${d.getDate()}/${d.getMonth() + 1}`, value: 0, key: `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}` };
+      });
+      const idx = new Map(buckets.map((b, i) => [b.key!, i]));
+      inRange.forEach((r) => {
+        const d = new Date(r.completed_at || r.created_at);
+        const i = idx.get(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+        if (i != null) buckets[i].value += Number(r.driver_net || 0);
+      });
+    } else {
+      const months = cfg.days ? Math.max(3, Math.round(cfg.days / 30)) : 12;
+      label = "por mês";
+      buckets = Array.from({ length: months }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i), 1);
+        return { name: d.toLocaleDateString("pt-BR", { month: "short" }), value: 0, key: `${d.getFullYear()}-${d.getMonth()}` };
+      });
+      const idx = new Map(buckets.map((b, i) => [b.key!, i]));
+      inRange.forEach((r) => {
+        const d = new Date(r.completed_at || r.created_at);
+        const i = idx.get(`${d.getFullYear()}-${d.getMonth()}`);
+        if (i != null) buckets[i].value += Number(r.driver_net || 0);
+      });
+    }
+
+    return { totalNet: total, totalCount: inRange.length, chartData: buckets, bucketLabel: label };
+  }, [completedRides, period]);
+
+  const avgPerRide = totalCount > 0 ? totalNet / totalCount : 0;
 
   const handleRecharge = async (amount: number) => {
     if (!user) return;
@@ -77,23 +145,70 @@ const DriverWallet = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Balance header */}
-      <div className="bg-gradient-dark p-6 pt-20 pb-10">
+      <div className="bg-gradient-dark p-6 pt-20 pb-6">
         <h1 className="text-lg font-bold font-display text-primary-foreground mb-1">Carteira</h1>
         <p className="text-3xl font-extrabold text-primary-foreground">R$ {balance.toFixed(2)}</p>
         <p className="text-sm text-primary-foreground/60">Saldo disponível</p>
-        
-        {/* Mini earnings chart */}
-        <div className="mt-4 bg-primary-foreground/5 rounded-xl p-3">
-          <ResponsiveContainer width="100%" height={60}>
-            <BarChart data={weekData}>
-              <XAxis dataKey="name" tick={{ fontSize: 8, fill: "hsl(220,10%,55%)" }} axisLine={false} tickLine={false} />
-              <Bar dataKey="value" fill="hsl(210,100%,56%)" radius={[2,2,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      </div>
+
+      {/* Ganhos por período */}
+      <div className="px-4 -mt-4">
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Ganhos no período</p>
+              <p className="text-2xl font-extrabold text-success">R$ {totalNet.toFixed(2)}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {totalCount} corrida{totalCount === 1 ? "" : "s"} • média R$ {avgPerRide.toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+            {PERIODS.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPeriod(p.id)}
+                className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${
+                  period === p.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-3">
+            <p className="text-[10px] text-muted-foreground mb-1">Distribuição {bucketLabel}</p>
+            <ResponsiveContainer width="100%" height={90}>
+              <BarChart data={chartData}>
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <Tooltip
+                  cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 11,
+                  }}
+                  formatter={(v: any) => [`R$ ${Number(v).toFixed(2)}`, "Ganho"]}
+                />
+                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
-      <div className="relative -mt-4 px-4">
+      <div className="relative mt-4 px-4">
         <div className="flex gap-1 bg-muted rounded-xl p-1 mb-4">
           {[
             { id: "recharge" as const, label: "Recarregar", icon: QrCode },
