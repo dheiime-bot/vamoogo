@@ -673,9 +673,10 @@ const GoogleMapInner = ({
       rotateControl={false}
       scaleControl={false}
       clickableIcons={false}
-      style={{ width: "100%", height: "100%", paddingBottom: bottomInset }}
+      style={{ width: "100%", height: "100%" }}
     >
       <MapStyler />
+      <MapPaddingController bottomInset={bottomInset} />
 
       {origin && (
         <AdvancedMarker position={{ lat: origin.lat, lng: origin.lng }}>
