@@ -105,11 +105,11 @@ const DriverHome = () => {
       });
   }, [user]);
 
-  // 🔄 Hidrata isOnline a partir do banco ao montar (se motorista estava online
-  // em outra aba/rota, mantém online ao voltar para Home — só fica offline quando
-  // o usuário clica explicitamente no botão Offline ou heartbeat expira > 2min).
-  // Além disso: ao fazer login (1ª vez nesta sessão), fica online AUTOMATICAMENTE
-  // se não estiver bloqueado e tiver saldo suficiente.
+  // 🔄 Auto-online ao carregar/recarregar a Home:
+  // - Se já estava online no banco (heartbeat < 2min), mantém online.
+  // - Caso contrário, fica online automaticamente, EXCETO se o motorista tiver
+  //   escolhido manualmente ficar offline neste dispositivo (flag em localStorage).
+  // - Não força online se estiver bloqueado, sem saldo ou sem GPS.
   useEffect(() => {
     if (!user) return;
     supabase.from("driver_locations")
@@ -123,10 +123,9 @@ const DriverHome = () => {
           setIsOnline(true);
           return;
         }
-        // Caso 2: 1º carregamento desta sessão de login → ativa online automaticamente
-        const autoKey = `driver-auto-online-${user.id}`;
-        if (sessionStorage.getItem(autoKey)) return;
-        sessionStorage.setItem(autoKey, "1");
+        // Caso 2: respeita escolha manual de offline (até o motorista clicar Online de novo)
+        const manualOfflineKey = `driver-manual-offline-${user.id}`;
+        if (localStorage.getItem(manualOfflineKey)) return;
         const blocked = (driverData as any)?.online_blocked;
         if (blocked || lowBalance) return;
         if (!navigator.geolocation) return;
@@ -407,6 +406,7 @@ const DriverHome = () => {
       navigator.geolocation.getCurrentPosition(
         () => {
           setIsOnline(true);
+          if (user) localStorage.removeItem(`driver-manual-offline-${user.id}`);
           toast.success("Você está Online! Aguardando corridas...");
         },
         (err) => {
@@ -421,6 +421,7 @@ const DriverHome = () => {
       return;
     }
     setIsOnline(false);
+    if (user) localStorage.setItem(`driver-manual-offline-${user.id}`, "1");
     toast("Você está Offline");
   };
 
