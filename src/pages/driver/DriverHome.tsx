@@ -702,42 +702,46 @@ const DriverHome = () => {
         open={rideState === "rating" && !!ratedRide}
         onOpenChange={(o) => { if (!o) closeDriverRating(); }}
       >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
+        <DialogContent className="max-w-sm w-[calc(100vw-2rem)] max-h-[90dvh] p-0 gap-0 flex flex-col overflow-hidden">
+          <DialogHeader className="px-5 pt-5 pb-2 shrink-0">
             <DialogTitle className="text-center font-display">Como foi o passageiro?</DialogTitle>
           </DialogHeader>
           {ratedRide && (
-            <div className="space-y-4 text-center pt-2">
-              <p className="text-sm text-muted-foreground">
-                {passengerName || "Passageiro"} • {ratedRide.ride_code}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Você ganhou <span className="font-bold text-success">R$ {Number(ratedRide.driver_net || 0).toFixed(2)}</span> nesta corrida
-              </p>
-              <div className="flex justify-center gap-1.5">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <button key={s} onClick={() => setPassengerRating(s)} className="transition-transform active:scale-95">
-                    <Star className={`h-9 w-9 ${s <= passengerRating ? "text-warning fill-warning" : "text-muted-foreground"}`} />
-                  </button>
-                ))}
+            <>
+              <div className="flex-1 overflow-y-auto px-5 py-2 space-y-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {passengerName || "Passageiro"} • {ratedRide.ride_code}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Você ganhou <span className="font-bold text-success">R$ {Number(ratedRide.driver_net || 0).toFixed(2)}</span> nesta corrida
+                </p>
+                <div className="flex justify-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button key={s} onClick={() => setPassengerRating(s)} className="transition-transform active:scale-95">
+                      <Star className={`h-9 w-9 ${s <= passengerRating ? "text-warning fill-warning" : "text-muted-foreground"}`} />
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  placeholder="Algum comentário sobre o passageiro? (opcional)"
+                  value={passengerRatingComment}
+                  onChange={(e) => setPassengerRatingComment(e.target.value)}
+                  className="w-full rounded-xl border bg-muted p-3 text-sm outline-none resize-none h-16"
+                />
               </div>
-              <textarea
-                placeholder="Algum comentário sobre o passageiro? (opcional)"
-                value={passengerRatingComment}
-                onChange={(e) => setPassengerRatingComment(e.target.value)}
-                className="w-full rounded-xl border bg-muted p-3 text-sm outline-none resize-none h-16"
-              />
-              <button
-                onClick={handleSubmitDriverRating}
-                disabled={passengerRating === 0}
-                className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50"
-              >
-                Enviar avaliação ⭐
-              </button>
-              <button onClick={closeDriverRating} className="text-xs text-muted-foreground">
-                Pular avaliação
-              </button>
-            </div>
+              <div className="px-5 pt-3 pb-5 border-t bg-background space-y-2 shrink-0">
+                <button
+                  onClick={handleSubmitDriverRating}
+                  disabled={passengerRating === 0}
+                  className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50"
+                >
+                  Enviar avaliação ⭐
+                </button>
+                <button onClick={closeDriverRating} className="w-full text-xs text-muted-foreground">
+                  Pular avaliação
+                </button>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
