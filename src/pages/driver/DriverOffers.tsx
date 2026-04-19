@@ -168,7 +168,12 @@ const DriverOffers = () => {
       .single();
 
     if (error || !updated) {
-      toast.error("Outro motorista já aceitou esta corrida");
+      const { isGuardError, guardErrorMessage } = await import("@/lib/guardErrors");
+      if (error && isGuardError(error)) {
+        toast.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
+      } else {
+        toast.error("Outro motorista já aceitou esta corrida");
+      }
       setAccepting(null);
       reload();
       return;

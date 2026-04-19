@@ -60,7 +60,15 @@ const DriverHome = () => {
   const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
 
   // Faz broadcast da posição GPS quando online
-  const { lastSyncAt } = useDriverLocation({ driverId: user?.id, isOnline, category: driverData?.category });
+  const { lastSyncAt } = useDriverLocation({
+    driverId: user?.id,
+    isOnline,
+    category: driverData?.category,
+    onBlocked: (msg) => {
+      toast.error(msg);
+      setIsOnline(false);
+    },
+  });
 
   // Bootstrap: destrava áudio + pede permissão de notificação na 1ª interação
   useEffect(() => {
@@ -275,7 +283,12 @@ const DriverHome = () => {
       .select().single();
 
     if (error || !updated) {
-      toast.error("Outro motorista já aceitou");
+      const { isGuardError, guardErrorMessage } = await import("@/lib/guardErrors");
+      if (error && isGuardError(error)) {
+        toast.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
+      } else {
+        toast.error("Outro motorista já aceitou");
+      }
       setPendingOffer(null); setPendingRide(null); setRideState("idle");
       return;
     }
@@ -336,13 +349,18 @@ const DriverHome = () => {
     const platformFee = Number(activeRide.platform_fee || 0);
     const isPix = activeRide.payment_method === "pix";
 
-    await supabase.from("rides")
+    const { error: finishErr } = await supabase.from("rides")
       .update({
         status: "completed",
         completed_at: new Date().toISOString(),
         ...(isPix ? { pix_paid_at: new Date().toISOString() } : {}),
       })
       .eq("id", activeRide.id);
+    if (finishErr) {
+      const { guardErrorMessage } = await import("@/lib/guardErrors");
+      toast.error(guardErrorMessage(finishErr, "Não foi possível finalizar a corrida"));
+      return;
+    }
     if (driverData) {
       await supabase.from("drivers")
         .update({

@@ -14,6 +14,7 @@ interface Options {
   driverId: string | undefined;
   isOnline: boolean;
   category: "moto" | "economico" | "conforto" | undefined;
+  onBlocked?: (message: string) => void;
 }
 
 const MIN_INTERVAL_MS = 8000;
@@ -31,7 +32,7 @@ function distanceMeters(a: GeolocationCoordinates, b: { lat: number; lng: number
   return r * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-export function useDriverLocation({ driverId, isOnline, category }: Options) {
+export function useDriverLocation({ driverId, isOnline, category, onBlocked }: Options) {
   const watchIdRef = useRef<number | null>(null);
   const lastSentRef = useRef<{ lat: number; lng: number; ts: number } | null>(null);
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
@@ -124,7 +125,7 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
         }
       }
       if (lat && lng && lat !== 0 && lng !== 0) {
-        await supabase.from("driver_locations").upsert(
+        const { error } = await supabase.from("driver_locations").upsert(
           {
             driver_id: driverId,
             lat,
@@ -134,6 +135,12 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
           },
           { onConflict: "driver_id" }
         );
+        if (error) {
+          const { isGuardError } = await import("@/lib/guardErrors");
+          if (isGuardError(error)) onBlocked?.(error.message!);
+          else console.warn("driver_locations upsert error:", error.message);
+          return;
+        }
         setLastSyncAt(Date.now());
       }
     })();
@@ -151,7 +158,7 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
         if (dist < MIN_DISTANCE_M && now - last.ts < MIN_INTERVAL_MS) return;
       }
       lastSentRef.current = { lat: coords.latitude, lng: coords.longitude, ts: now };
-      await supabase.from("driver_locations").upsert(
+      const { error } = await supabase.from("driver_locations").upsert(
         {
           driver_id: driverId,
           lat: coords.latitude,
@@ -162,6 +169,11 @@ export function useDriverLocation({ driverId, isOnline, category }: Options) {
         },
         { onConflict: "driver_id" }
       );
+      if (error) {
+        const { isGuardError } = await import("@/lib/guardErrors");
+        if (isGuardError(error)) onBlocked?.(error.message!);
+        return;
+      }
       setLastSyncAt(Date.now());
     };
 
