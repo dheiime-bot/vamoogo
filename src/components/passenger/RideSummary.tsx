@@ -7,6 +7,8 @@ interface RideSummaryProps {
   onRate: () => void;
   /** Esconde o botão "Avaliar motorista" — usado quando o resumo aparece dentro do modal de avaliação. */
   hideRateButton?: boolean;
+  /** Versão compacta — usada dentro do modal de avaliação para caber em telas pequenas sem scroll. */
+  compact?: boolean;
 }
 
 const paymentLabels: Record<string, { label: string; icon: typeof Banknote }> = {
@@ -16,7 +18,7 @@ const paymentLabels: Record<string, { label: string; icon: typeof Banknote }> = 
   credit: { label: "Cartão Crédito", icon: CreditCard },
 };
 
-const RideSummary = ({ ride, onRate, hideRateButton = false }: RideSummaryProps) => {
+const RideSummary = ({ ride, onRate, hideRateButton = false, compact = false }: RideSummaryProps) => {
   const pm = paymentLabels[ride.payment_method || "cash"];
 
   const copyCode = async () => {
