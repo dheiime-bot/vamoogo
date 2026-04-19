@@ -341,12 +341,72 @@ const AdminLayout = ({ title, children, actions }: AdminLayoutProps) => {
               <button className="rounded-xl p-2 hover:bg-muted transition-colors">
                 <RefreshCw className="h-4 w-4 text-muted-foreground" />
               </button>
-              <div className="hidden sm:flex items-center gap-2 rounded-xl border px-3 py-1.5 ml-1">
-                <div className="h-7 w-7 rounded-full bg-gradient-primary flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <span className="text-sm font-medium">{displayName}</span>
-                <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              <div className="hidden sm:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 rounded-xl border px-3 py-1.5 ml-1 hover:bg-muted transition-colors">
+                      <div className="h-7 w-7 rounded-full bg-gradient-primary flex items-center justify-center">
+                        <User className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                      <span className="text-sm font-medium">{displayName}</span>
+                      <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64 z-50 bg-popover">
+                    <DropdownMenuLabel className="flex flex-col gap-0.5">
+                      <span className="text-sm font-semibold">{displayName}</span>
+                      {user?.email && (
+                        <span className="text-xs font-normal text-muted-foreground truncate">
+                          {user.email}
+                        </span>
+                      )}
+                      <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        <ShieldCheck className="h-3 w-3" />
+                        {isMaster ? "Master Admin" : "Admin"}
+                      </span>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/admin")}>
+                      <UserCog className="mr-2 h-4 w-4" />
+                      <span>Minha conta</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/admin/tariffs")}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Configurações</span>
+                    </DropdownMenuItem>
+                    {isMaster && (
+                      <DropdownMenuItem onClick={() => navigate("/admin/staff")}>
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        <span>Funcionários</span>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={() => navigate("/auth/reset-password")}>
+                      <KeyRound className="mr-2 h-4 w-4" />
+                      <span>Alterar senha</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setDarkMode(!darkMode)}>
+                      {darkMode ? (
+                        <Sun className="mr-2 h-4 w-4" />
+                      ) : (
+                        <Moon className="mr-2 h-4 w-4" />
+                      )}
+                      <span>{darkMode ? "Tema claro" : "Tema escuro"}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/admin/support")}>
+                      <LifeBuoy className="mr-2 h-4 w-4" />
+                      <span>Suporte</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sair</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </header>
