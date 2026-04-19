@@ -87,7 +87,9 @@ const DriverChats = () => {
   return (
     <div className="min-h-screen bg-background">
       <AppMenu role="driver" />
-      <NotificationBell />
+      <DriverEarningsChip />
+      <NotificationBell topOffsetPx={72} />
+      <RefreshAppButton topOffsetPx={144} />
       
       <header className="border-b bg-card px-4 py-4 pt-20">
         <h1 className="text-lg font-bold">Chats</h1>

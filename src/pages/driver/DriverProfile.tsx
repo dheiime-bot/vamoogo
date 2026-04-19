@@ -216,7 +216,9 @@ const DriverProfile = () => {
       </div>
 
       <AppMenu role="driver" />
-      <NotificationBell />
+      <DriverEarningsChip />
+      <NotificationBell topOffsetPx={72} />
+      <RefreshAppButton topOffsetPx={144} />
       
       <EditProfileModal open={editOpen} onOpenChange={setEditOpen} />
     </div>

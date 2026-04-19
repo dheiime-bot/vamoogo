@@ -186,7 +186,9 @@ const DriverWallet = () => {
         )}
       </div>
       <AppMenu role="driver" />
-      <NotificationBell />
+      <DriverEarningsChip />
+      <NotificationBell topOffsetPx={72} />
+      <RefreshAppButton topOffsetPx={144} />
       
     </div>
   );
