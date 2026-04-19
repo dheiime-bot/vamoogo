@@ -115,27 +115,21 @@ const DriverOfferAlert = () => {
       if (error) { console.warn("[offer-alert] poll error:", error); return; }
       if (!data || data.length === 0) return;
 
-      // Alta demanda: 2+ ofertas → manda pra lista
-      if (data.length >= 2) {
-        if (window.location.pathname !== "/driver/offers") {
-          console.log(`[offer-alert] 🔥 high demand (${data.length} offers) — redirecting to /driver/offers`);
-          // Marca todas como "vistas" para o popup não disparar depois
-          data.forEach((o: any) => seenOfferIdsRef.current.add(o.id));
-          // Fecha popup atual se houver
-          if (offerRef.current) { setOffer(null); setRide(null); }
-          playOfferAlert({
-            title: `${data.length} corridas disponíveis! 🔥`,
-            body: "Alta demanda — escolha qual aceitar.",
-          });
-          toast.success(`${data.length} corridas disponíveis! 🔥`);
-          navigate("/driver/offers");
+      // Se já existe popup ativo, marca o restante como visto (vão pra lista silenciosamente)
+      if (offerRef.current) {
+        const extras = data.filter((o: any) => o.id !== offerRef.current.id && !seenOfferIdsRef.current.has(o.id));
+        if (extras.length > 0) {
+          extras.forEach((o: any) => seenOfferIdsRef.current.add(o.id));
+          toast.info(`+${extras.length} corrida(s) na lista`, { duration: 2000 });
         }
         return;
       }
 
-      // Caso normal: 1 oferta → popup
-      if (offerRef.current) return;
+      // Sem popup ativo: mostra a PRIMEIRA (mais recente) e marca as demais como vistas
       handleNewOffer(data[0]);
+      if (data.length > 1) {
+        data.slice(1).forEach((o: any) => seenOfferIdsRef.current.add(o.id));
+      }
     };
     tick();
     const i = setInterval(tick, 1500);
