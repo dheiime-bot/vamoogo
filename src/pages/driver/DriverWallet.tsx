@@ -208,7 +208,7 @@ const DriverWallet = () => {
         </div>
       </div>
 
-      <div className="relative -mt-4 px-4">
+      <div className="relative mt-4 px-4">
         <div className="flex gap-1 bg-muted rounded-xl p-1 mb-4">
           {[
             { id: "recharge" as const, label: "Recarregar", icon: QrCode },
