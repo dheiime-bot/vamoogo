@@ -457,8 +457,36 @@ const DriverHome = () => {
       .then(({ data }) => setPassengerName(data?.full_name ?? "Passageiro"));
   }, [activeRide?.passenger_id]);
 
-  // 🚨 Bloqueia acesso se não estiver aprovado (após todos os hooks)
+  // 🚨 Reage instantaneamente a mudanças de status feitas pelo admin (realtime).
+  // Se o admin reprova/bloqueia/pede docs, força o motorista offline na hora,
+  // mostra toast e o redirect abaixo o leva para /driver/status sem precisar deslogar.
   const statusInfo = getDriverStatusInfo(driverData?.status);
+  const lastStatusRef = useRef<string | null>(null);
+  useEffect(() => {
+    const current = driverData?.status ?? null;
+    const previous = lastStatusRef.current;
+    if (current && previous && current !== previous) {
+      const info = getDriverStatusInfo(current);
+      if (!info.canDrive) {
+        // Força offline no banco para parar de receber ofertas imediatamente
+        if (user) {
+          supabase.from("driver_locations")
+            .update({ is_online: false })
+            .eq("driver_id", user.id)
+            .then(() => {});
+        }
+        setIsOnline(false);
+        toast.error(`Status alterado: ${info.label}`, {
+          description: info.description,
+          duration: 6000,
+        });
+      } else if (info.canDrive && !getDriverStatusInfo(previous).canDrive) {
+        toast.success(`Cadastro ${info.label.toLowerCase()}! Você já pode ficar online.`);
+      }
+    }
+    lastStatusRef.current = current;
+  }, [driverData?.status, user]);
+
   if (driverData && !statusInfo.canDrive) {
     return <Navigate to="/driver/status" replace />;
   }
