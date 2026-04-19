@@ -135,6 +135,17 @@ const AppMenu = ({ role, floating = true }: Props) => {
                 <p className="text-xs text-muted-foreground truncate font-normal">
                   {user?.email}
                 </p>
+                {ratingToShow != null && (
+                  <div className="mt-1 flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 text-warning fill-warning" />
+                    <span className="text-xs font-bold text-foreground">
+                      {ratingToShow.toFixed(2)}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-normal">
+                      / 5,00
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </SheetTitle>
