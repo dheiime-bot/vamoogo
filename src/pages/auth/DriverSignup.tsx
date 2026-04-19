@@ -498,7 +498,7 @@ const DriverSignup = () => {
           <ArrowLeft className="h-4 w-4" /> Voltar
         </button>
         <div className="flex flex-col items-center text-center">
-          <VamooLogo height={44} className="mb-3" />
+          <VamooLogo height={66} className="mb-3" />
           <h1 className="text-base font-bold font-display">Cadastro de motorista</h1>
           <p className="text-xs text-primary-foreground/80">
             Etapa {step + 1} de {STEPS.length} · {STEPS[step].label}
