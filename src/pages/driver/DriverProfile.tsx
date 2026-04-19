@@ -70,8 +70,17 @@ const DriverProfile = () => {
 
   const displayName = profile?.full_name || "Motorista";
   const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
+  // Mapeia TODOS os status do enum driver_status (novos e legados) para o StatusBadge
   const statusMap: Record<string, "pending" | "approved" | "rejected" | "blocked"> = {
-    pending: "pending", approved: "approved", rejected: "rejected", blocked: "blocked",
+    pending: "pending",
+    approved: "approved",
+    rejected: "rejected",
+    blocked: "blocked",
+    cadastro_enviado: "pending",
+    em_analise: "pending",
+    pendente_documentos: "pending",
+    aprovado: "approved",
+    reprovado: "rejected",
   };
   const driverStatus = statusMap[driverData?.status] || "pending";
 
