@@ -1,25 +1,35 @@
-import { useEffect, useState } from "react";
-import { Wallet, CreditCard, QrCode, ArrowDownLeft, ArrowUpRight, Gift, Home, User, Loader2, Banknote, History, BarChart3 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, Banknote, History } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
-import { BarChart, Bar, XAxis, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+type PeriodId = "today" | "week" | "month" | "3m" | "6m" | "year" | "all";
+const PERIODS: { id: PeriodId; label: string; days: number | null }[] = [
+  { id: "today", label: "Hoje", days: 1 },
+  { id: "week", label: "7 dias", days: 7 },
+  { id: "month", label: "Mês", days: 30 },
+  { id: "3m", label: "3 meses", days: 90 },
+  { id: "6m", label: "6 meses", days: 180 },
+  { id: "year", label: "12 meses", days: 365 },
+  { id: "all", label: "Tudo", days: null },
+];
 
 const DriverWallet = () => {
   const { user, driverData } = useAuth();
   const [recharges, setRecharges] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [completedRides, setCompletedRides] = useState<{ driver_net: number | null; completed_at: string | null; created_at: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"recharge" | "withdraw" | "history">("recharge");
+  const [period, setPeriod] = useState<PeriodId>("week");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [pixKey, setPixKey] = useState("");
   const balance = driverData?.balance ?? 0;
-
-  const weekData = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(d => ({ name: d, value: Math.floor(Math.random() * 100 + 20) }));
 
   const reload = async () => {
     if (!user) return;
