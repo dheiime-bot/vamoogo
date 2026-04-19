@@ -97,13 +97,13 @@ Deno.serve(async (req) => {
       console.warn(`[seed-test-rides] pool=${pool.length} < count=${count} — limitado a ${effectiveCount}`);
     }
 
-    console.log(`[seed-test-rides] creating ${count} rides around ${centerLat},${centerLng} cat=${category} pool=${pool.length}`);
+    console.log(`[seed-test-rides] creating ${effectiveCount} rides around ${centerLat},${centerLng} cat=${category} pool=${pool.length}`);
 
     const created: string[] = [];
     const errors: any[] = [];
 
-    for (let i = 0; i < count; i++) {
-      const pax = pool[i % pool.length];
+    for (let i = 0; i < effectiveCount; i++) {
+      const pax = pool[i];
 
       // Garante telefone preenchido (trigger exige)
       const { data: paxProfile } = await supabase
