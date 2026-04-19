@@ -759,6 +759,7 @@ const DriverHome = () => {
       <AppMenu role="driver" />
       <DriverEarningsChip />
       <NotificationBell
+        topOffsetPx={72}
         connectionStatus={
           !isOnline
             ? "idle"
@@ -767,7 +768,7 @@ const DriverHome = () => {
               : "connected"
         }
       />
-      <RefreshAppButton />
+      <RefreshAppButton topOffsetPx={144} />
       <DriverBottomNav
         centerSlot={
           <button

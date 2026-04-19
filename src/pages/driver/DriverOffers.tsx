@@ -207,7 +207,8 @@ const DriverOffers = () => {
     <div className="min-h-screen bg-background pb-24">
       <AppMenu role="driver" />
       <DriverEarningsChip />
-      <NotificationBell />
+      <NotificationBell topOffsetPx={72} />
+      <RefreshAppButton topOffsetPx={144} />
 
       <div className="px-4 pt-20 pb-4">
         <div className="flex items-center justify-between mb-4">
