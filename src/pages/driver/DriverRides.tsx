@@ -170,10 +170,27 @@ const DriverRides = () => {
                   </div>
                 </div>
               )}
+              <div className="mt-3 flex justify-end border-t pt-2">
+                <button
+                  onClick={() => setReportRide({ id: ride.id, code: ride.ride_code })}
+                  className="flex items-center gap-1 rounded-lg border border-warning/40 px-2.5 py-1.5 text-[11px] font-bold text-warning hover:bg-warning/10"
+                >
+                  <AlertCircle className="h-3.5 w-3.5" /> Reportar problema
+                </button>
+              </div>
             </div>
           ))
         )}
       </div>
+
+      {reportRide && (
+        <ReportRideIssueModal
+          open={!!reportRide}
+          onClose={() => setReportRide(null)}
+          rideId={reportRide.id}
+          rideCode={reportRide.code}
+        />
+      )}
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
