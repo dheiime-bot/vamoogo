@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,25 @@ const DriverStatusPage = () => {
   const navigate = useNavigate();
   const info = getDriverStatusInfo(driverData?.status);
   const Icon = info.icon;
+
+  // 🔄 Realtime: detecta mudança de status feita pelo admin e reage na hora
+  // (o AuthContext já mantém driverData reativo via canal realtime na tabela drivers)
+  const lastStatusRef = useRef<string | undefined>(driverData?.status);
+  useEffect(() => {
+    const prev = lastStatusRef.current;
+    const now = driverData?.status;
+    if (prev && now && prev !== now) {
+      const newInfo = getDriverStatusInfo(now);
+      toast.success(`Status atualizado: ${newInfo.label}`, {
+        description: driverData?.analysis_message || undefined,
+      });
+      if (newInfo.canDrive) {
+        // aprovado → vai pra Home automaticamente
+        setTimeout(() => navigate("/driver"), 1200);
+      }
+    }
+    lastStatusRef.current = now;
+  }, [driverData?.status, driverData?.analysis_message, navigate]);
 
   // Reenvio de documentos (quando pendente_documentos ou reprovado)
   const [reuploading, setReuploading] = useState(false);
