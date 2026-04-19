@@ -516,7 +516,7 @@ const DriverSignup = () => {
         </div>
       </div>
 
-      <div className="relative -mt-6 flex-1 rounded-t-3xl bg-white p-6 pb-10">
+      <div className="relative -mt-6 flex-1 rounded-t-3xl p-6 pb-10" style={{ backgroundColor: "#f5fbfb" }}>
         {/* STEP 0: Dados */}
         {step === 0 && (
           <div className="space-y-4 animate-fade-in">
