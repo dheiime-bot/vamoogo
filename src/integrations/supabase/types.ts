@@ -683,6 +683,7 @@ export type Database = {
           is_suspect: boolean
           phone: string | null
           phone_verified: boolean | null
+          rating: number
           selfie_signup_url: string | null
           selfie_url: string | null
           status: Database["public"]["Enums"]["passenger_status"]
@@ -705,6 +706,7 @@ export type Database = {
           is_suspect?: boolean
           phone?: string | null
           phone_verified?: boolean | null
+          rating?: number
           selfie_signup_url?: string | null
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["passenger_status"]
@@ -727,6 +729,7 @@ export type Database = {
           is_suspect?: boolean
           phone?: string | null
           phone_verified?: boolean | null
+          rating?: number
           selfie_signup_url?: string | null
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["passenger_status"]
@@ -769,6 +772,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      rating_appeals: {
+        Row: {
+          admin_response: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          original_rating: number
+          passenger_id: string
+          reason: string
+          resolved_at: string | null
+          resolved_by: string | null
+          ride_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          original_rating: number
+          passenger_id: string
+          reason: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          ride_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          original_rating?: number
+          passenger_id?: string
+          reason?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          ride_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rating_appeals_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recharges: {
         Row: {
@@ -1281,6 +1337,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_resolve_appeal: {
+        Args: { _accept: boolean; _appeal_id: string; _response?: string }
+        Returns: undefined
+      }
       admin_resolve_ride_payment: {
         Args: { _new_status: string; _note?: string; _ride_id: string }
         Returns: undefined
@@ -1329,6 +1389,10 @@ export type Database = {
       admin_update_ticket_priority: {
         Args: { _priority: string; _ticket_id: string }
         Returns: undefined
+      }
+      appeal_rating: {
+        Args: { _reason: string; _ride_id: string }
+        Returns: string
       }
       become_driver: {
         Args: {
@@ -1397,6 +1461,11 @@ export type Database = {
         Returns: number
       }
       is_master: { Args: { _user_id: string }; Returns: boolean }
+      recalc_driver_rating: { Args: { _driver_id: string }; Returns: number }
+      recalc_passenger_rating: {
+        Args: { _passenger_id: string }
+        Returns: number
+      }
       search_places: {
         Args: {
           _lat?: number
