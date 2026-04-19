@@ -28,6 +28,8 @@ type Ride = {
   duration_minutes: number | null;
   passenger_count: number;
   rating: number | null;
+  rating_comment: string | null;
+  completed_at: string | null;
   status: "completed" | "cancelled" | "requested" | "accepted" | "in_progress";
   created_at: string;
 };
