@@ -163,12 +163,14 @@ Deno.serve(async (req) => {
         .catch((e) => console.warn(`[seed-test-rides] dispatch invoke ${ride.id} failed`, e));
     }
 
-    console.log(`[seed-test-rides] done: ${created.length}/${count} created`);
+    console.log(`[seed-test-rides] done: ${created.length}/${effectiveCount} created (requested ${count}, pool ${pool.length})`);
 
     return new Response(JSON.stringify({
       ok: true,
       created: created.length,
-      total: count,
+      requested: count,
+      effective: effectiveCount,
+      pool_size: pool.length,
       ride_ids: created,
       errors: errors.length ? errors : undefined,
     }), {
