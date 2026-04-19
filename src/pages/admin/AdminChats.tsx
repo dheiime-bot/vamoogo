@@ -64,7 +64,7 @@ const AdminChats = () => {
         .order("created_at", { ascending: false })
         .limit(120);
 
-      if (!rides?.length) { setRows([]); setLoading(false); return; }
+      if (!rides?.length) { setRows([]); if (showSpinner) setLoading(false); return; }
 
       const userIds = [...new Set([
         ...rides.map((r) => r.passenger_id),
