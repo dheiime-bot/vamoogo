@@ -55,9 +55,8 @@ const AdminChats = () => {
   const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
+  const load = async (showSpinner = true) => {
+      if (showSpinner) setLoading(true);
       const { data: rides } = await supabase
         .from("rides")
         .select("id, ride_code, passenger_id, driver_id, origin_address, destination_address, status, created_at, price")
@@ -65,7 +64,7 @@ const AdminChats = () => {
         .order("created_at", { ascending: false })
         .limit(120);
 
-      if (!rides?.length) { setRows([]); setLoading(false); return; }
+      if (!rides?.length) { setRows([]); if (showSpinner) setLoading(false); return; }
 
       const userIds = [...new Set([
         ...rides.map((r) => r.passenger_id),
@@ -114,9 +113,19 @@ const AdminChats = () => {
         .filter((r) => r.message_count > 0);
 
       setRows(result);
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     };
+
+  useEffect(() => {
     load();
+    // 🔄 Realtime: lista atualiza quando chegam novas mensagens ou corridas mudam
+    const channel = supabase
+      .channel("admin-chats-list")
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages" }, () => load(false))
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, () => load(false))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = useMemo(() => {
