@@ -97,7 +97,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
           <button
             aria-label="Abrir menu"
             style={{ backgroundColor: "#f4fafa" }}
-            className="flex h-11 items-center gap-2 rounded-full backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:opacity-90"
+            className="flex h-16 items-center gap-2 rounded-full backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:opacity-90"
           >
             <Menu className="h-5 w-5 text-foreground" />
             <img
