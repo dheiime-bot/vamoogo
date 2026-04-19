@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Menu, Home, Clock, User, Wallet, MessageCircle, LogOut, Car, ArrowLeftRight, Star, ShieldAlert } from "lucide-react";
+import { Menu, Home, Clock, User, MessageCircle, LogOut, Car, ArrowLeftRight, Star, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import vamooLogo from "@/assets/vamoo-logo-menu.png";
