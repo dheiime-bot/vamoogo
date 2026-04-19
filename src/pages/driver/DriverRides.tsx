@@ -44,17 +44,23 @@ const DriverRides = () => {
   const { user } = useAuth();
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
+  const [appealedRideIds, setAppealedRideIds] = useState<Set<string>>(new Set());
+  const [appealRide, setAppealRide] = useState<Ride | null>(null);
 
   const reload = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("rides")
-      .select("id, ride_code, origin_address, destination_address, price, platform_fee, driver_net, distance_km, duration_minutes, passenger_count, rating, status, created_at, completed_at")
-      .eq("driver_id", user.id)
-      .in("status", ["completed", "cancelled"])
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (data) setRides(data as any);
+    const [ridesRes, appealsRes] = await Promise.all([
+      supabase
+        .from("rides")
+        .select("id, ride_code, origin_address, destination_address, price, platform_fee, driver_net, distance_km, duration_minutes, passenger_count, rating, rating_comment, status, created_at, completed_at")
+        .eq("driver_id", user.id)
+        .in("status", ["completed", "cancelled"])
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase.from("rating_appeals" as any).select("ride_id").eq("driver_id", user.id),
+    ]);
+    if (ridesRes.data) setRides(ridesRes.data as any);
+    if (appealsRes.data) setAppealedRideIds(new Set((appealsRes.data as any[]).map((a) => a.ride_id)));
     setLoading(false);
   };
 
