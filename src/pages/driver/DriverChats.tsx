@@ -29,6 +29,32 @@ const DriverChats = () => {
   const [loading, setLoading] = useState(true);
   const [openRide, setOpenRide] = useState<{ id: string; name: string } | null>(null);
   const [openCentral, setOpenCentral] = useState(false);
+  const [centralUnread, setCentralUnread] = useState(0);
+
+  const loadCentralUnread = async () => {
+    if (!user) return;
+    const { data: tickets } = await supabase.from("support_tickets").select("id").eq("user_id", user.id);
+    const ids = (tickets || []).map((t: any) => t.id);
+    if (!ids.length) { setCentralUnread(0); return; }
+    const { count } = await supabase
+      .from("support_messages")
+      .select("id", { count: "exact", head: true })
+      .in("ticket_id", ids)
+      .eq("sender_role", "admin")
+      .eq("is_read_by_user", false);
+    setCentralUnread(count || 0);
+  };
+
+  useEffect(() => {
+    loadCentralUnread();
+    if (!user) return;
+    const ch = supabase
+      .channel(`dchat-central-unread-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_messages" }, loadCentralUnread)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -89,7 +115,7 @@ const DriverChats = () => {
     return <RideChat rideId={openRide.id} driverName={openRide.name} onBack={() => setOpenRide(null)} />;
   }
   if (openCentral) {
-    return <CentralChat onBack={() => setOpenCentral(false)} />;
+    return <CentralChat onBack={() => { setOpenCentral(false); loadCentralUnread(); }} />;
   }
 
   return (
@@ -117,6 +143,11 @@ const DriverChats = () => {
             <p className="text-sm font-bold">Chat com a Central</p>
             <p className="text-xs text-muted-foreground truncate">Suporte e atendimento Vamoo</p>
           </div>
+          {centralUnread > 0 && (
+            <span className="h-6 min-w-6 px-2 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center shrink-0">
+              {centralUnread}
+            </span>
+          )}
         </button>
 
         {loading ? (
