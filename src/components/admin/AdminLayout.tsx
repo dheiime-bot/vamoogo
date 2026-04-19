@@ -279,11 +279,12 @@ const AdminLayout = ({ title, children, actions }: AdminLayoutProps) => {
   }, [darkMode]);
 
   const displayName = profile?.full_name || "Admin";
+  const { openCount: supportOpen, urgentCount: supportUrgent } = useUrgentTicketsAlert();
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar />
+        <AppSidebar supportOpen={supportOpen} supportUrgent={supportUrgent} />
 
         <main className="flex-1 overflow-auto">
           {/* Top bar */}
