@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Clock, ChevronRight, AlertCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import NotificationBell from "@/components/shared/NotificationBell";
-import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -119,8 +117,6 @@ const PassengerHistory = () => {
       )}
 
       <AppMenu role="passenger" />
-      <NotificationBell />
-      <RefreshAppButton topOffsetPx={72} />
       
     </div>
   );

@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { User, Camera, FileText, Phone, Mail, Shield, ArrowLeft, Car, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import NotificationBell from "@/components/shared/NotificationBell";
-import RefreshAppButton from "@/components/shared/RefreshAppButton";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import EditProfileModal from "@/components/shared/EditProfileModal";
@@ -112,8 +110,6 @@ const PassengerProfile = () => {
       </div>
 
       <AppMenu role="passenger" />
-      <NotificationBell />
-      <RefreshAppButton topOffsetPx={72} />
       
       <EditProfileModal open={editOpen} onOpenChange={setEditOpen} />
     </div>

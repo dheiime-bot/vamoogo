@@ -7,8 +7,6 @@
 import { useEffect, useState } from "react";
 import { Clock, Navigation, AlertCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import NotificationBell from "@/components/shared/NotificationBell";
-import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 
@@ -194,8 +192,6 @@ const DriverRides = () => {
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
-      <NotificationBell topOffsetPx={72} />
-      <RefreshAppButton topOffsetPx={144} />
 
     </div>
   );

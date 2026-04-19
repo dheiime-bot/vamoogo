@@ -11,8 +11,6 @@
 import { useEffect, useState } from "react";
 import { Star, ShieldAlert, Clock, CheckCircle2, XCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import NotificationBell from "@/components/shared/NotificationBell";
-import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import AppealRatingDialog from "@/components/driver/AppealRatingDialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -219,8 +217,6 @@ const DriverRatings = () => {
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
-      <NotificationBell topOffsetPx={72} />
-      <RefreshAppButton topOffsetPx={144} />
     </div>
   );
 };
