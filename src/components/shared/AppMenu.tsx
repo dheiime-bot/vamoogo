@@ -103,7 +103,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
             <img
               src={vamooLogo}
               alt="Vamoo"
-              className="h-6 w-auto select-none object-contain"
+              className="h-12 w-auto select-none object-contain"
               draggable={false}
             />
           </button>
