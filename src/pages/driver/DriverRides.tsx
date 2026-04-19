@@ -5,11 +5,12 @@
  *  - Lista de corridas com origem, destino, valores, taxa e líquido
  */
 import { useEffect, useState } from "react";
-import { Clock, Navigation } from "lucide-react";
+import { Clock, Navigation, AlertCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +44,7 @@ const DriverRides = () => {
   const { user } = useAuth();
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reportRide, setReportRide] = useState<{ id: string; code: string | null } | null>(null);
 
   const reload = async () => {
     if (!user) return;
