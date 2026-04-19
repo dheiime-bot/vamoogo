@@ -5,6 +5,7 @@ import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
+import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
 import DriverHeartbeat from "@/components/driver/DriverHeartbeat";
@@ -765,6 +766,7 @@ const DriverHome = () => {
               : "connected"
         }
       />
+      <RefreshAppButton />
       <DriverBottomNav
         centerSlot={
           <button
