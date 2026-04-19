@@ -288,7 +288,7 @@ const PassengerSignup = () => {
       </div>
 
       {/* Content */}
-      <div className="relative -mt-6 flex-1 rounded-t-3xl bg-card p-6 pb-10">
+      <div className="relative -mt-6 flex-1 rounded-t-3xl bg-white p-6 pb-10">
         {/* STEP 0: Dados */}
         {step === 0 && (
           <div className="space-y-4 animate-fade-in">

@@ -18,7 +18,7 @@ const AuthPage = () => {
         </div>
       </div>
 
-      <div className="relative -mt-6 flex-1 rounded-t-3xl bg-card p-6">
+      <div className="relative -mt-6 flex-1 rounded-t-3xl bg-white p-6">
         <p className="mb-6 text-center text-xs text-muted-foreground">
           Escolha o app que você usa. Cada perfil tem seu próprio acesso.
         </p>

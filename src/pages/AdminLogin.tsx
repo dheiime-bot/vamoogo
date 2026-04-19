@@ -108,7 +108,7 @@ const AdminLogin = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="bg-card border border-border rounded-3xl shadow-xl p-8 sm:p-10">
+        <div className="bg-white border border-border rounded-3xl shadow-xl p-8 sm:p-10">
           {/* Header */}
           <div className="flex flex-col items-center mb-8">
             <VamooLogo height={56} card={false} className="mb-3" />

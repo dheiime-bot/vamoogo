@@ -73,7 +73,7 @@ const PassengerLogin = () => {
         </div>
       </div>
 
-      <div className="relative -mt-4 flex-1 rounded-t-3xl bg-card p-6">
+      <div className="relative -mt-4 flex-1 rounded-t-3xl bg-white p-6">
         <button
           onClick={() => navigate("/auth/passenger")}
           className="mb-5 w-full rounded-xl border border-primary/30 bg-primary/5 py-2.5 text-xs font-semibold text-primary hover:bg-primary/10"

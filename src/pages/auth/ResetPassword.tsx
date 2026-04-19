@@ -66,7 +66,7 @@ const ResetPassword = () => {
         </div>
       </div>
 
-      <div className="relative -mt-4 flex-1 rounded-t-3xl bg-card p-6">
+      <div className="relative -mt-4 flex-1 rounded-t-3xl bg-white p-6">
         {done ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <CheckCircle2 className="h-12 w-12 text-success" />
