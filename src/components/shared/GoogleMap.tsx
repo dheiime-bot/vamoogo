@@ -201,12 +201,14 @@ const CarMarker = ({
   );
 };
 
-const MotoMarker = ({ heading = 0 }: { heading?: number }) => (
+const MotoMarker = ({ heading = 0 }: { heading?: number }) => {
+  const smoothHeading = useSmoothHeading(heading);
+  return (
   <div
     className="relative drop-shadow-xl"
     style={{
-      transform: `rotate(${heading}deg)`,
-      transition: "transform 600ms ease-out",
+      transform: `rotate(${smoothHeading}deg)`,
+      transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
       width: 40,
       height: 40,
     }}
