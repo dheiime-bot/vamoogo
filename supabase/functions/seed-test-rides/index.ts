@@ -1,12 +1,7 @@
 // Edge function: seed-test-rides
 // Cria N corridas fictícias (status=requested) próximas a um ponto e dispara dispatch.
-// Uso: chamado pelo admin via botão "Simular N corridas" em /admin/live.
-//
-// Body: { count?: number (default 5), centerLat?: number, centerLng?: number,
-//          category?: 'moto'|'economico'|'conforto', passengerId?: string }
-//
-// Se passengerId não for informado, usa o admin que chamou (apenas para seed/testes).
-// Cada ride é criada com origin/destination randomizados ~1-3 km do center.
+// Usa N passageiros distintos (o trigger do banco impede 1 passageiro com 2 rides ativas).
+// Cancela rides SEED anteriores antes de criar novas.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -15,12 +10,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Centro de São Paulo como fallback
 const DEFAULT_LAT = -23.5505;
 const DEFAULT_LNG = -46.6333;
 
 const jitter = (base: number, kmRange: number) => {
-  // ~1 grau lat ≈ 111 km
   const offset = (Math.random() - 0.5) * 2 * (kmRange / 111);
   return base + offset;
 };
@@ -34,7 +27,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Auth: precisa ser admin/master
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
     const { data: userRes } = await supabase.auth.getUser(token);
@@ -58,51 +50,72 @@ Deno.serve(async (req) => {
     const centerLat = Number(body.centerLat) || DEFAULT_LAT;
     const centerLng = Number(body.centerLng) || DEFAULT_LNG;
     const category = body.category || "economico";
-    let passengerId = body.passengerId as string | undefined;
+    const explicitPax = body.passengerId as string | undefined;
 
-    // Se não passou passenger, prefere um com telefone cadastrado
-    if (!passengerId) {
+    // Cancela rides SEED anteriores ainda ativas (libera passageiros)
+    const { data: oldSeed } = await supabase
+      .from("rides")
+      .select("id")
+      .like("admin_notes", "[SEED%")
+      .in("status", ["requested", "accepted"]);
+    if (oldSeed && oldSeed.length > 0) {
+      await supabase
+        .from("rides")
+        .update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: callerId })
+        .in("id", oldSeed.map((r: any) => r.id));
+      console.log(`[seed-test-rides] cancelled ${oldSeed.length} previous SEED rides`);
+    }
+
+    // Monta pool de passageiros distintos (trigger impede 2 rides ativas/passageiro)
+    let pool: string[] = [];
+    if (explicitPax) {
+      pool = [explicitPax];
+    } else {
       const { data: withPhone } = await supabase
         .from("profiles")
-        .select("user_id, phone")
+        .select("user_id")
         .eq("status", "ativo")
+        .eq("user_type", "passenger")
         .not("phone", "is", null)
         .neq("phone", "")
-        .limit(1)
-        .maybeSingle();
-      if (withPhone?.user_id) {
-        passengerId = withPhone.user_id;
-      } else {
+        .limit(count + 5);
+      pool = (withPhone || []).map((p: any) => p.user_id);
+
+      if (pool.length < count) {
         const { data: anyPax } = await supabase
           .from("profiles")
           .select("user_id")
           .eq("status", "ativo")
-          .limit(1)
-          .maybeSingle();
-        passengerId = anyPax?.user_id || callerId;
+          .eq("user_type", "passenger")
+          .limit(count + 5);
+        for (const p of anyPax || []) {
+          if (!pool.includes(p.user_id)) pool.push(p.user_id);
+        }
       }
+      if (pool.length === 0) pool = [callerId];
     }
 
-    // Garante telefone no perfil do passageiro (trigger exige)
-    const { data: paxProfile } = await supabase
-      .from("profiles")
-      .select("phone")
-      .eq("user_id", passengerId)
-      .maybeSingle();
-    if (!paxProfile?.phone) {
-      await supabase
-        .from("profiles")
-        .update({ phone: "11999990000" })
-        .eq("user_id", passengerId);
-      console.log(`[seed-test-rides] preencheu telefone fake no passageiro ${passengerId}`);
-    }
-
-    console.log(`[seed-test-rides] creating ${count} rides around ${centerLat},${centerLng} cat=${category} pax=${passengerId}`);
+    console.log(`[seed-test-rides] creating ${count} rides around ${centerLat},${centerLng} cat=${category} pool=${pool.length}`);
 
     const created: string[] = [];
     const errors: any[] = [];
 
     for (let i = 0; i < count; i++) {
+      const pax = pool[i % pool.length];
+
+      // Garante telefone preenchido (trigger exige)
+      const { data: paxProfile } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("user_id", pax)
+        .maybeSingle();
+      if (!paxProfile?.phone) {
+        await supabase
+          .from("profiles")
+          .update({ phone: "1199999" + String(1000 + i).padStart(4, "0") })
+          .eq("user_id", pax);
+      }
+
       const oLat = jitter(centerLat, 2);
       const oLng = jitter(centerLng, 2);
       const dLat = jitter(centerLat, 5);
@@ -114,7 +127,7 @@ Deno.serve(async (req) => {
       const { data: ride, error } = await supabase
         .from("rides")
         .insert({
-          passenger_id: passengerId,
+          passenger_id: pax,
           origin_address: `🧪 TESTE ${i + 1} — Origem simulada`,
           destination_address: `🧪 TESTE ${i + 1} — Destino simulado`,
           origin_lat: oLat,
@@ -129,9 +142,9 @@ Deno.serve(async (req) => {
           category,
           payment_method: "pix",
           passenger_count: 1,
-          ride_code: "", // trigger preenche
+          ride_code: "",
           status: "requested",
-          admin_notes: `[SEED ${new Date().toISOString()}] Criado por ${callerId}`,
+          admin_notes: `[SEED ${new Date().toISOString()}] Criado por ${callerId} (pax ${i + 1}/${count})`,
         })
         .select("id")
         .single();
@@ -144,7 +157,6 @@ Deno.serve(async (req) => {
 
       created.push(ride.id);
 
-      // Dispara dispatch em background (não espera)
       supabase.functions.invoke("dispatch-ride", { body: { rideId: ride.id } })
         .catch((e) => console.warn(`[seed-test-rides] dispatch invoke ${ride.id} failed`, e));
     }
