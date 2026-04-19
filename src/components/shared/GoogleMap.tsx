@@ -602,13 +602,13 @@ const RecenterButton = ({ target, bottomInset = 0 }: { target: MapPoint | null; 
   };
 
   // Mesmo tamanho dos botões superiores (sino, atualizar, saldo): h-16 w-16.
-  // +16px = ~3mm acima do CTA inferior, garantindo conforto de toque.
+  // +28px ≈ 6mm acima do CTA inferior (3mm + mais 3mm), conforto de toque.
   return (
     <button
       type="button"
       onClick={handleClick}
       aria-label="Recentralizar mapa"
-      style={{ bottom: `${bottomInset + 16}px` }}
+      style={{ bottom: `${bottomInset + 28}px` }}
       className="absolute right-3 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
     >
       <LocateFixed className="h-6 w-6 text-primary" />
