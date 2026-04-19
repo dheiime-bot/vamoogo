@@ -735,7 +735,33 @@ const DriverHome = () => {
               : "connected"
         }
       />
-      <DriverBottomNav />
+      <DriverBottomNav
+        centerSlot={
+          <button
+            onClick={handleToggleOnline}
+            disabled={(lowBalance && !isOnline) || !!activeRide || rideState === "offer"}
+            className={`pointer-events-auto flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-extrabold shadow-glow transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
+              isOnline || activeRide
+                ? "bg-success text-success-foreground"
+                : "bg-gradient-primary text-primary-foreground"
+            }`}
+          >
+            {isOnline || activeRide ? (
+              <>
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-success-foreground opacity-60 animate-ping" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success-foreground" />
+                </span>
+                {activeRide ? "Em corrida" : "Online"}
+              </>
+            ) : (
+              <>
+                <Power className="h-4 w-4" /> Ficar Online
+              </>
+            )}
+          </button>
+        }
+      />
     </div>
   );
 };
