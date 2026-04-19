@@ -601,19 +601,17 @@ const RecenterButton = ({ target, bottomInset = 0 }: { target: MapPoint | null; 
     }
   };
 
-  // Alinha horizontalmente com o logo "Google" (ambos ficam na linha bottomInset).
-  // O logo é empurrado pelo MapPaddingController via mapPadding.bottom = bottomInset.
-  // +16px = ~3mm acima do CTA inferior, garantindo que o botão fique visível e
-  // confortável de tocar mesmo quando há um sheet ou CTA logo abaixo.
+  // Mesmo tamanho dos botões superiores (sino, atualizar, saldo): h-16 w-16.
+  // +16px = ~3mm acima do CTA inferior, garantindo conforto de toque.
   return (
     <button
       type="button"
       onClick={handleClick}
       aria-label="Recentralizar mapa"
       style={{ bottom: `${bottomInset + 16}px` }}
-      className="absolute right-3 z-[60] flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-lg ring-1 ring-border hover:bg-muted transition-colors active:scale-95"
+      className="absolute right-3 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
     >
-      <LocateFixed className="h-5 w-5 text-primary" />
+      <LocateFixed className="h-6 w-6 text-primary" />
     </button>
   );
 };
