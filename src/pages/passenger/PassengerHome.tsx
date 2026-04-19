@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
@@ -42,6 +42,9 @@ const PassengerHome = () => {
   const [isRequesting, setIsRequesting] = useState(false);
   const [rideState, setRideState] = useState<RideState>("idle");
   const [activeRide, setActiveRide] = useState<any>(null);
+  // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
+  // (incluindo o nosso próprio update do rating) reabram o modal de avaliação.
+  const finalizedRideIdsRef = useRef<Set<string>>(new Set());
   const [showRideForm, setShowRideForm] = useState(false);
   const [driverLocation, setDriverLocation] = useState<{
     lat: number;
@@ -117,6 +120,9 @@ const PassengerHome = () => {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "rides", filter: `passenger_id=eq.${user.id}` }, async (payload) => {
         const ride = payload.new as any;
         const prev = payload.old as any;
+        // Se o passageiro já enviou/pulou avaliação desta corrida, ignora UPDATEs subsequentes
+        // (caso contrário o próprio UPDATE do rating reabriria o modal).
+        if (finalizedRideIdsRef.current.has(ride.id)) return;
         setActiveRide(ride);
 
         if (ride.status === "accepted" && ride.driver_id) {
@@ -511,6 +517,8 @@ const PassengerHome = () => {
 
   const handleSubmitRating = async () => {
     if (!activeRide || rating === 0) return;
+    // Marca antes do update para que o eco do realtime não reabra o modal.
+    finalizedRideIdsRef.current.add(activeRide.id);
     await supabase
       .from("rides")
       .update({ rating, rating_comment: ratingComment?.trim() || null } as any)
