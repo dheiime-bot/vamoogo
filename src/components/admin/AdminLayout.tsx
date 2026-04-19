@@ -276,7 +276,14 @@ const AdminLayout = ({ title, children, actions }: AdminLayoutProps) => {
     document.documentElement.classList.contains("dark")
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const { profile } = useAuth();
+  const { profile, user, signOut } = useAuth();
+  const isMaster = useIsMaster();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   useEffect(() => {
     if (darkMode) {
