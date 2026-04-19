@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History } from "lucide-react";
+import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
@@ -41,7 +41,6 @@ const DriverWallet = () => {
   useEffect(() => {
     if (!user) return;
     reload();
-    // 🔄 Realtime: atualiza recargas/ganhos sem precisar recarregar a página
     const channel = supabase
       .channel(`wallet-rt-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "recharges", filter: `driver_id=eq.${user.id}` }, reload)
@@ -51,7 +50,6 @@ const DriverWallet = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // ── Resumo + gráfico do período selecionado ─────────────────────────────
   const { totalNet, totalCount, chartData, bucketLabel } = useMemo(() => {
     const now = new Date();
     const cfg = PERIODS.find((p) => p.id === period)!;
@@ -120,36 +118,79 @@ const DriverWallet = () => {
     setLoading(false);
   };
 
+  const lowBalance = balance < 20;
+
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Balance header */}
-      <div className="bg-gradient-dark p-6 pt-20 pb-6">
-        <h1 className="text-lg font-bold font-display text-primary-foreground mb-1">Carteira</h1>
-        <p className="text-3xl font-extrabold text-primary-foreground">R$ {balance.toFixed(2)}</p>
-        <p className="text-sm text-primary-foreground/60">Saldo disponível</p>
+    <div className="min-h-screen bg-background pb-24">
+      {/* === Hero Card: Cartão estilo bank === */}
+      <div className="relative overflow-hidden bg-gradient-dark px-4 pt-16 pb-12">
+        {/* Decorative blobs */}
+        <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute -bottom-32 -left-10 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-base font-bold font-display text-primary-foreground/90 flex items-center gap-2">
+              <Wallet className="h-4 w-4" /> Minha Carteira
+            </h1>
+            {lowBalance && (
+              <span className="rounded-full bg-warning/20 border border-warning/30 px-2.5 py-0.5 text-[10px] font-bold text-warning">
+                Saldo baixo
+              </span>
+            )}
+          </div>
+
+          {/* Card visual */}
+          <div className="rounded-2xl bg-gradient-to-br from-primary/30 via-primary/10 to-transparent backdrop-blur-sm border border-primary-foreground/10 p-5 shadow-2xl">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-primary-foreground/60 font-semibold mb-1">Saldo disponível</p>
+                <p className="text-4xl font-extrabold text-primary-foreground tracking-tight">
+                  R$ {balance.toFixed(2).replace(".", ",")}
+                </p>
+              </div>
+              <div className="rounded-xl bg-primary-foreground/10 backdrop-blur-sm p-2.5">
+                <Sparkles className="h-5 w-5 text-primary-foreground" />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[10px] text-primary-foreground/70">
+              <span className="font-mono tracking-widest">VAMOO • DRIVER</span>
+              <span className="font-semibold">{driverData?.full_name?.split(" ")[0]?.toUpperCase() || "MOTORISTA"}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Ganhos por período */}
-      <div className="px-4 -mt-4">
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+      {/* === Card de ganhos no período === */}
+      <div className="px-4 -mt-6 relative z-10">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-xl">
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs text-muted-foreground">Ganhos no período</p>
-              <p className="text-2xl font-extrabold text-success">R$ {totalNet.toFixed(2)}</p>
-              <p className="text-[11px] text-muted-foreground">
-                {totalCount} corrida{totalCount === 1 ? "" : "s"} • média R$ {avgPerRide.toFixed(2)}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-success/10 p-2.5">
+                <TrendingUp className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground font-medium">Ganhos no período</p>
+                <p className="text-2xl font-extrabold text-foreground">R$ {totalNet.toFixed(2).replace(".", ",")}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-muted-foreground">Média/corrida</p>
+              <p className="text-sm font-bold text-foreground">R$ {avgPerRide.toFixed(2).replace(".", ",")}</p>
+              <p className="text-[10px] text-muted-foreground">{totalCount} {totalCount === 1 ? "corrida" : "corridas"}</p>
             </div>
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+          {/* Period chips */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 mb-3 scrollbar-none">
             {PERIODS.map((p) => (
               <button
                 key={p.id}
                 onClick={() => setPeriod(p.id)}
-                className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all ${
                   period === p.id
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-md scale-105"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
@@ -158,10 +199,18 @@ const DriverWallet = () => {
             ))}
           </div>
 
-          <div className="mt-3">
-            <p className="text-[10px] text-muted-foreground mb-1">Distribuição {bucketLabel}</p>
-            <ResponsiveContainer width="100%" height={90}>
-              <BarChart data={chartData}>
+          <div className="rounded-xl bg-muted/30 p-2 pt-3">
+            <p className="text-[10px] text-muted-foreground mb-1 px-2 flex items-center gap-1">
+              <Calendar className="h-3 w-3" /> Distribuição {bucketLabel}
+            </p>
+            <ResponsiveContainer width="100%" height={100}>
+              <BarChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                  </linearGradient>
+                </defs>
                 <XAxis
                   dataKey="name"
                   tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
@@ -170,31 +219,33 @@ const DriverWallet = () => {
                   interval="preserveStartEnd"
                 />
                 <Tooltip
-                  cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
+                  cursor={{ fill: "hsl(var(--primary) / 0.1)" }}
                   contentStyle={{
                     background: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: 8,
+                    borderRadius: 10,
                     fontSize: 11,
+                    boxShadow: "0 4px 12px hsl(var(--foreground) / 0.1)",
                   }}
                   formatter={(v: any) => [`R$ ${Number(v).toFixed(2)}`, "Ganho"]}
                 />
-                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="value" fill="url(#barFill)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      <div className="relative mt-4 px-4">
-        <div className="flex gap-1 bg-muted rounded-xl p-1 mb-4">
+      {/* === Tabs === */}
+      <div className="mt-5 px-4">
+        <div className="flex gap-1 bg-muted rounded-2xl p-1 mb-4">
           {[
             { id: "recharge" as const, label: "Recarregar", icon: QrCode },
             { id: "history" as const, label: "Histórico", icon: History },
           ].map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold transition-all ${
-                activeTab === tab.id ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-semibold transition-all ${
+                activeTab === tab.id ? "bg-card shadow-md text-foreground" : "text-muted-foreground"
               }`}>
               <tab.icon className="h-3.5 w-3.5" /> {tab.label}
             </button>
@@ -202,42 +253,101 @@ const DriverWallet = () => {
         </div>
 
         {activeTab === "recharge" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-4 gap-2">
-              {[20, 50, 100, 200].map((val) => (
-                <button key={val} onClick={() => handleRecharge(val)} disabled={loading}
-                  className="rounded-xl border bg-card py-3 text-sm font-bold hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50">
-                  R$ {val}
-                </button>
-              ))}
+          <div className="space-y-4 animate-slide-up">
+            {/* Quick amounts */}
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground mb-2 px-1">Escolha um valor</p>
+              <div className="grid grid-cols-4 gap-2">
+                {[20, 50, 100, 200].map((val) => {
+                  const bonusPct = val >= 100 ? 10 : val >= 50 ? 5 : 0;
+                  return (
+                    <button
+                      key={val}
+                      onClick={() => handleRecharge(val)}
+                      disabled={loading}
+                      className="relative rounded-2xl border-2 border-border bg-card py-4 text-sm font-bold hover:border-primary hover:bg-primary/5 hover:scale-[1.03] active:scale-95 transition-all disabled:opacity-50"
+                    >
+                      {bonusPct > 0 && (
+                        <span className="absolute -top-2 -right-1 rounded-full bg-success px-1.5 py-0.5 text-[9px] font-extrabold text-success-foreground shadow-md">
+                          +{bonusPct}%
+                        </span>
+                      )}
+                      <p className="text-[10px] text-muted-foreground font-normal">R$</p>
+                      <p className="text-base">{val}</p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">Bônus: 5% para R$ 50+ • 10% para R$ 100+</p>
-            <div className="flex gap-3">
-              <button onClick={() => handleRecharge(50)} disabled={loading} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-card border py-3 shadow-sm text-sm font-semibold disabled:opacity-50">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4 text-primary" />} Pix
-              </button>
-              <button onClick={() => handleRecharge(100)} disabled={loading} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-card border py-3 shadow-sm text-sm font-semibold disabled:opacity-50">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4 text-primary" />} Cartão
-              </button>
+
+            {/* Bonus banner */}
+            <div className="rounded-2xl bg-gradient-to-r from-success/10 to-primary/5 border border-success/20 p-3 flex items-center gap-3">
+              <div className="rounded-full bg-success/20 p-2 shrink-0">
+                <Gift className="h-4 w-4 text-success" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-bold text-foreground">Ganhe bônus em recargas!</p>
+                <p className="text-[10px] text-muted-foreground">5% para R$ 50+ • 10% para R$ 100+</p>
+              </div>
+            </div>
+
+            {/* Payment methods */}
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground mb-2 px-1">Forma de pagamento</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleRecharge(50)}
+                  disabled={loading}
+                  className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-card border-2 border-border py-4 hover:border-primary hover:shadow-md transition-all disabled:opacity-50"
+                >
+                  <div className="rounded-xl bg-primary/10 p-2.5 group-hover:bg-primary/20 transition-colors">
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <QrCode className="h-5 w-5 text-primary" />}
+                  </div>
+                  <span className="text-xs font-semibold">Pix</span>
+                </button>
+                <button
+                  onClick={() => handleRecharge(100)}
+                  disabled={loading}
+                  className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-card border-2 border-border py-4 hover:border-primary hover:shadow-md transition-all disabled:opacity-50"
+                >
+                  <div className="rounded-xl bg-primary/10 p-2.5 group-hover:bg-primary/20 transition-colors">
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <CreditCard className="h-5 w-5 text-primary" />}
+                  </div>
+                  <span className="text-xs font-semibold">Cartão</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {activeTab === "history" && (
-          <div className="space-y-2">
-            {recharges.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">Nenhuma transação</p>}
+          <div className="space-y-2 animate-slide-up">
+            {recharges.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-border bg-card/50 py-10 text-center">
+                <History className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground">Nenhuma transação ainda</p>
+              </div>
+            )}
             {recharges.map((tx, i) => (
-              <div key={tx.id} className="flex items-center gap-3 rounded-xl border bg-card p-3 animate-slide-up" style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}>
-                <div className="rounded-lg p-2 bg-success/10">
+              <div
+                key={tx.id}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 hover:shadow-md transition-shadow animate-slide-up"
+                style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
+              >
+                <div className="rounded-xl p-2.5 bg-success/10">
                   {tx.bonus > 0 ? <Gift className="h-4 w-4 text-success" /> : <ArrowDownLeft className="h-4 w-4 text-success" />}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Recarga {tx.method === "pix" ? "Pix" : "Cartão"}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString("pt-BR")}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">Recarga {tx.method === "pix" ? "Pix" : "Cartão"}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {new Date(tx.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-success">+R$ {(tx.amount + (tx.bonus || 0)).toFixed(2)}</p>
-                  {tx.bonus > 0 && <p className="text-[10px] text-success">bônus +R$ {tx.bonus.toFixed(2)}</p>}
+                  <p className="text-sm font-extrabold text-success">+R$ {(tx.amount + (tx.bonus || 0)).toFixed(2).replace(".", ",")}</p>
+                  {tx.bonus > 0 && (
+                    <p className="text-[10px] text-success/80 font-medium">bônus +R$ {tx.bonus.toFixed(2).replace(".", ",")}</p>
+                  )}
                 </div>
               </div>
             ))}
@@ -246,7 +356,6 @@ const DriverWallet = () => {
       </div>
       <AppMenu role="driver" />
       <DriverEarningsChip />
-      
     </div>
   );
 };
