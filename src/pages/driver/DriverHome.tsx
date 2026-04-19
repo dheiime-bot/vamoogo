@@ -60,7 +60,15 @@ const DriverHome = () => {
   const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
 
   // Faz broadcast da posição GPS quando online
-  const { lastSyncAt } = useDriverLocation({ driverId: user?.id, isOnline, category: driverData?.category });
+  const { lastSyncAt } = useDriverLocation({
+    driverId: user?.id,
+    isOnline,
+    category: driverData?.category,
+    onBlocked: (msg) => {
+      toast.error(msg);
+      setIsOnline(false);
+    },
+  });
 
   // Bootstrap: destrava áudio + pede permissão de notificação na 1ª interação
   useEffect(() => {
