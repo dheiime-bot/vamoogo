@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import NotificationBell from "@/components/shared/NotificationBell";
-import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -219,8 +217,6 @@ const DriverProfile = () => {
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
-      <NotificationBell topOffsetPx={72} />
-      <RefreshAppButton topOffsetPx={144} />
       
       <EditProfileModal open={editOpen} onOpenChange={setEditOpen} />
     </div>

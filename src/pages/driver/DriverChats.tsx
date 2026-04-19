@@ -3,8 +3,6 @@ import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppMenu from "@/components/shared/AppMenu";
-import NotificationBell from "@/components/shared/NotificationBell";
-import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
 import RideChat from "@/components/passenger/RideChat";
@@ -122,8 +120,6 @@ const DriverChats = () => {
     <div className="min-h-screen bg-background">
       <AppMenu role="driver" />
       <DriverEarningsChip />
-      <NotificationBell topOffsetPx={72} />
-      <RefreshAppButton topOffsetPx={144} />
       
       <header className="border-b bg-card px-4 py-4 pt-20">
         <h1 className="text-lg font-bold">Chats</h1>

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Wallet, CreditCard, QrCode, ArrowDownLeft, ArrowUpRight, Gift, Home, User, Loader2, Banknote, History, BarChart3 } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import NotificationBell from "@/components/shared/NotificationBell";
-import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
 import { BarChart, Bar, XAxis, ResponsiveContainer } from "recharts";
@@ -189,8 +187,6 @@ const DriverWallet = () => {
       </div>
       <AppMenu role="driver" />
       <DriverEarningsChip />
-      <NotificationBell topOffsetPx={72} />
-      <RefreshAppButton topOffsetPx={144} />
       
     </div>
   );
