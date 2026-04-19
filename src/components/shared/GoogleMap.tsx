@@ -316,26 +316,9 @@ const PassengerMarker = () => (
         <circle cx="27" cy="25" r="1" fill="#fca5a5" opacity="0.7" />
         <circle cx="37" cy="25" r="1" fill="#fca5a5" opacity="0.7" />
 
-        {/* Braço esquerdo parado */}
+        {/* Braços ao longo do corpo (sem aceno) */}
         <path d="M22 36 L19 44" stroke="url(#pSkin)" strokeWidth="3.2" strokeLinecap="round" />
-
-        {/* Braço direito ACENANDO */}
-        <g
-          className="anim-wave-arm"
-          style={{ transformOrigin: "42px 34px", transformBox: "fill-box" as any }}
-        >
-          <path
-            d="M42 34 L48 22"
-            stroke="url(#pSkin)"
-            strokeWidth="3.4"
-            strokeLinecap="round"
-            fill="none"
-          />
-          <circle cx="48" cy="20" r="2.4" fill="url(#pSkin)" stroke="#0b1220" strokeOpacity="0.15" strokeWidth="0.5" />
-          {/* Linhas de movimento */}
-          <path d="M51 17 L53 15" stroke="#fde68a" strokeWidth="1.1" strokeLinecap="round" />
-          <path d="M52 21 L55 21" stroke="#fde68a" strokeWidth="1.1" strokeLinecap="round" />
-        </g>
+        <path d="M42 36 L45 44" stroke="url(#pSkin)" strokeWidth="3.2" strokeLinecap="round" />
       </svg>
     </div>
   </div>
