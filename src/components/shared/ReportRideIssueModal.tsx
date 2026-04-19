@@ -36,7 +36,7 @@ const ISSUE_TYPES = [
   { value: "ride_other", label: "Outro problema", priority: "medium" as const },
 ];
 
-const ReportRideIssueModal = ({ open, onClose, rideId, rideCode }: Props) => {
+const ReportRideIssueModal = ({ open, onClose, rideId, rideCode, rideEndedAt }: Props) => {
   const { user } = useAuth();
   const [type, setType] = useState<string>("");
   const [description, setDescription] = useState("");
@@ -46,6 +46,9 @@ const ReportRideIssueModal = ({ open, onClose, rideId, rideCode }: Props) => {
 
   const submit = async () => {
     if (!user) return;
+    if (!isWithinReportWindow(rideEndedAt)) {
+      return toast.error("Prazo de 3 horas para reportar expirou. Use o Chat com a Central.");
+    }
     if (!type) return toast.error("Selecione o tipo de problema");
     if (description.trim().length < 10) return toast.error("Descreva com pelo menos 10 caracteres");
 
