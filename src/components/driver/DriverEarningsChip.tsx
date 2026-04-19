@@ -48,15 +48,15 @@ const DriverEarningsChip = () => {
   // mesmo o menu sendo mais largo (mostra "Vamoo!") e o sino sendo só ícone.
   return (
     <div
-      className="fixed left-[130px] right-[56px] z-40 flex justify-center pointer-events-none"
+      className="fixed left-[180px] right-[80px] z-40 flex justify-center pointer-events-none"
       style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
     >
       <button
         onClick={() => navigate("/driver/wallet")}
-        className="pointer-events-auto flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted"
+        className="pointer-events-auto flex h-16 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-5 transition-transform active:scale-95 hover:bg-muted"
         aria-label="Ver carteira"
       >
-        <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">{formatBRL(earnings)}</span>
+        <span className="font-display text-lg font-extrabold text-gradient-primary leading-none select-none">{formatBRL(earnings)}</span>
       </button>
     </div>
   );

@@ -188,7 +188,7 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle" }: Props)
         <PopoverTrigger asChild>
           <button
             aria-label="Notificações"
-            className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
+            className="relative flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
             title={
               connectionStatus === "connected"
                 ? "GPS conectado"
@@ -200,17 +200,17 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle" }: Props)
             <span className="relative flex">
               <Bell
                 className={cn(
-                  "h-5 w-5 transition-colors",
+                  "h-7 w-7 transition-colors",
                   connectionStatus === "connected" && "text-success",
                   connectionStatus === "disconnected" && "text-destructive",
                   connectionStatus === "idle" && "text-foreground"
                 )}
               />
               {connectionStatus === "connected" && (
-                <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-success ring-2 ring-card animate-pulse" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success ring-2 ring-card animate-pulse" />
               )}
               {connectionStatus === "disconnected" && (
-                <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-card" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-card" />
               )}
             </span>
             {unreadCount > 0 && (
