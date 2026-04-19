@@ -1,3 +1,4 @@
+import VamooLogo from "@/components/shared/VamooLogo";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -496,16 +497,12 @@ const DriverSignup = () => {
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </button>
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/20">
-            <Car className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold font-display">Cadastro de motorista</h1>
-            <p className="text-xs text-primary-foreground/80">
-              Etapa {step + 1} de {STEPS.length} · {STEPS[step].label}
-            </p>
-          </div>
+        <div className="flex flex-col items-center text-center">
+          <VamooLogo height={44} className="mb-3" />
+          <h1 className="text-base font-bold font-display">Cadastro de motorista</h1>
+          <p className="text-xs text-primary-foreground/80">
+            Etapa {step + 1} de {STEPS.length} · {STEPS[step].label}
+          </p>
         </div>
         <div className="mt-5 flex gap-1.5">
           {STEPS.map((_, i) => (
