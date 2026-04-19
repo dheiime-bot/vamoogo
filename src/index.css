@@ -254,13 +254,21 @@
 /* Limpeza visual do Google Maps:
    - Esconde "Atalhos do teclado", "Dados cartográficos", "Termos", "Reportar erro"
    - PRESERVA o logo "Google" no canto inferior esquerdo (exigência dos Termos da API)
+   - O logo Google fica em um <a> que contém uma <img>; só escondemos os .gm-style-cc
+     que NÃO contêm imagem (ou seja, só os links de texto/atribuição).
 */
-.gmap-clean .gm-style-cc {
+.gmap-clean .gm-style-cc:not(:has(img)) {
   display: none !important;
 }
 .gmap-clean button[title*="Atalhos"],
 .gmap-clean button[aria-label*="Atalhos"],
 .gmap-clean button[aria-label*="keyboard"] {
   display: none !important;
+}
+/* Garante que o logo Google fique acima de qualquer sheet/CTA sobreposto ao mapa. */
+.gmap-clean a[href*="maps.google.com/maps"],
+.gmap-clean a[title="Open this area in Google Maps (opens a new window)"] {
+  z-index: 60 !important;
+  position: relative;
 }
 
