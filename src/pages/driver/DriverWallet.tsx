@@ -145,19 +145,66 @@ const DriverWallet = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Balance header */}
-      <div className="bg-gradient-dark p-6 pt-20 pb-10">
+      <div className="bg-gradient-dark p-6 pt-20 pb-6">
         <h1 className="text-lg font-bold font-display text-primary-foreground mb-1">Carteira</h1>
         <p className="text-3xl font-extrabold text-primary-foreground">R$ {balance.toFixed(2)}</p>
         <p className="text-sm text-primary-foreground/60">Saldo disponível</p>
-        
-        {/* Mini earnings chart */}
-        <div className="mt-4 bg-primary-foreground/5 rounded-xl p-3">
-          <ResponsiveContainer width="100%" height={60}>
-            <BarChart data={weekData}>
-              <XAxis dataKey="name" tick={{ fontSize: 8, fill: "hsl(220,10%,55%)" }} axisLine={false} tickLine={false} />
-              <Bar dataKey="value" fill="hsl(210,100%,56%)" radius={[2,2,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      </div>
+
+      {/* Ganhos por período */}
+      <div className="px-4 -mt-4">
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Ganhos no período</p>
+              <p className="text-2xl font-extrabold text-success">R$ {totalNet.toFixed(2)}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {totalCount} corrida{totalCount === 1 ? "" : "s"} • média R$ {avgPerRide.toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+            {PERIODS.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPeriod(p.id)}
+                className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${
+                  period === p.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-3">
+            <p className="text-[10px] text-muted-foreground mb-1">Distribuição {bucketLabel}</p>
+            <ResponsiveContainer width="100%" height={90}>
+              <BarChart data={chartData}>
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <Tooltip
+                  cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 11,
+                  }}
+                  formatter={(v: any) => [`R$ ${Number(v).toFixed(2)}`, "Ganho"]}
+                />
+                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
