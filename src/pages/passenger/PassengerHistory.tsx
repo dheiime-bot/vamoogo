@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Clock, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight, AlertCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
+import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +13,7 @@ const PassengerHistory = () => {
   const { user } = useAuth();
   const [rides, setRides] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "completed" | "cancelled">("all");
+  const [reportRide, setReportRide] = useState<{ id: string; code: string | null } | null>(null);
 
   const reload = async () => {
     if (!user) return;
