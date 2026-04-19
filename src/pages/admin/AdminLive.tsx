@@ -1,13 +1,33 @@
 import { useEffect, useState } from "react";
-import { Activity, MapPin, RefreshCw } from "lucide-react";
+import { Activity, MapPin, RefreshCw, Zap, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import GoogleMap from "@/components/shared/GoogleMap";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const AdminLive = () => {
   const [activeRides, setActiveRides] = useState<any[]>([]);
   const [stats, setStats] = useState({ active: 0, waiting: 0 });
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeedTestRides = async () => {
+    if (seeding) return;
+    if (!confirm("Disparar 5 corridas de teste agora? Elas serão criadas como 🧪 TESTE e enviadas aos motoristas online.")) return;
+    setSeeding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-test-rides", {
+        body: { count: 5, category: "economico" },
+      });
+      if (error) throw error;
+      toast.success(`✅ ${data?.created ?? 0} corridas de teste criadas e despachadas!`);
+      fetchLive();
+    } catch (e: any) {
+      toast.error("Falha ao criar corridas de teste: " + (e?.message || e));
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const fetchLive = async () => {
     const { data: rides } = await supabase
