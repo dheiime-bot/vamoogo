@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { MapPin, Shield, Zap, Users, Car, Bike, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import vamooLogo from "@/assets/vamoo-logo.png";
 import vamooIcon from "@/assets/vamoo-icon.png";
-import MotoPreview from "@/components/shared/MotoPreview";
 
 const features = [
   { icon: Shield, title: "Segurança total", desc: "Verificação de identidade, selfie facial e validação de documentos para todos os usuários." },
