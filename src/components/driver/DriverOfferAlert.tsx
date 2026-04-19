@@ -25,6 +25,7 @@ const DriverOfferAlert = () => {
   const [countdown, setCountdown] = useState(15);
   const [accepting, setAccepting] = useState(false);
   const offerRef = useRef<any>(null);
+  const claimingRef = useRef<boolean>(false); // trava síncrona contra race condition
   const seenOfferIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => { offerRef.current = offer; }, [offer]);
 
