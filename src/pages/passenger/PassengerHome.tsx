@@ -1097,48 +1097,52 @@ const PassengerHome = () => {
         open={rideState === "rating" && !!activeRide}
         onOpenChange={(o) => { if (!o) resetRide(); }}
       >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
+        <DialogContent className="max-w-sm w-[calc(100vw-2rem)] max-h-[90dvh] p-0 gap-0 flex flex-col overflow-hidden">
+          <DialogHeader className="px-5 pt-5 pb-2 shrink-0">
             <DialogTitle className="text-center font-display">Como foi sua viagem?</DialogTitle>
           </DialogHeader>
           {activeRide && (
-            <div className="space-y-4 text-center pt-2">
-              {driverInfo && (
-                <p className="text-sm text-muted-foreground">Motorista: {driverInfo.profile?.full_name}</p>
-              )}
-              <RideSummary ride={activeRide} onRate={() => {}} hideRateButton />
-              {activeRide.payment_method === "pix" && (
-                <button
-                  onClick={() => setShowPixModal(true)}
-                  className="w-full rounded-xl border-2 border-primary bg-primary/5 py-2.5 text-sm font-bold text-primary flex items-center justify-center gap-2"
-                >
-                  <QrCode className="h-4 w-4" /> Mostrar QR Code Pix
-                </button>
-              )}
-              <div className="flex justify-center gap-1.5">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <button key={s} onClick={() => setRating(s)} className="transition-transform active:scale-95">
-                    <Star className={`h-9 w-9 ${s <= rating ? "text-warning fill-warning" : "text-muted-foreground"}`} />
+            <>
+              <div className="flex-1 overflow-y-auto px-5 py-2 space-y-4 text-center">
+                {driverInfo && (
+                  <p className="text-sm text-muted-foreground">Motorista: {driverInfo.profile?.full_name}</p>
+                )}
+                <RideSummary ride={activeRide} onRate={() => {}} hideRateButton />
+                {activeRide.payment_method === "pix" && (
+                  <button
+                    onClick={() => setShowPixModal(true)}
+                    className="w-full rounded-xl border-2 border-primary bg-primary/5 py-2.5 text-sm font-bold text-primary flex items-center justify-center gap-2"
+                  >
+                    <QrCode className="h-4 w-4" /> Mostrar QR Code Pix
                   </button>
-                ))}
+                )}
+                <div className="flex justify-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button key={s} onClick={() => setRating(s)} className="transition-transform active:scale-95">
+                      <Star className={`h-9 w-9 ${s <= rating ? "text-warning fill-warning" : "text-muted-foreground"}`} />
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  placeholder="Conte como foi a viagem (opcional)..."
+                  value={ratingComment}
+                  onChange={(e) => setRatingComment(e.target.value)}
+                  className="w-full rounded-xl border bg-muted p-3 text-sm outline-none resize-none h-16"
+                />
               </div>
-              <textarea
-                placeholder="Conte como foi a viagem (opcional)..."
-                value={ratingComment}
-                onChange={(e) => setRatingComment(e.target.value)}
-                className="w-full rounded-xl border bg-muted p-3 text-sm outline-none resize-none h-16"
-              />
-              <button
-                onClick={handleSubmitRating}
-                disabled={rating === 0}
-                className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50"
-              >
-                Enviar avaliação ⭐
-              </button>
-              <button onClick={resetRide} className="text-xs text-muted-foreground">
-                Pular avaliação
-              </button>
-            </div>
+              <div className="px-5 pt-3 pb-5 border-t bg-background space-y-2 shrink-0">
+                <button
+                  onClick={handleSubmitRating}
+                  disabled={rating === 0}
+                  className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50"
+                >
+                  Enviar avaliação ⭐
+                </button>
+                <button onClick={resetRide} className="w-full text-xs text-muted-foreground">
+                  Pular avaliação
+                </button>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
