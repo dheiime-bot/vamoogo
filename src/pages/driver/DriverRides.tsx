@@ -5,10 +5,11 @@
  *  - Lista de corridas com origem, destino, valores, taxa e líquido
  */
 import { useEffect, useState } from "react";
-import { Clock, Navigation, AlertCircle } from "lucide-react";
+import { Clock, Navigation } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
+import ReportIssueButton from "@/components/shared/ReportIssueButton";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +29,7 @@ type Ride = {
   rating: number | null;
   rating_comment: string | null;
   completed_at: string | null;
+  cancelled_at: string | null;
   status: "completed" | "cancelled" | "requested" | "accepted" | "in_progress";
   created_at: string;
 };
@@ -42,13 +44,13 @@ const DriverRides = () => {
   const { user } = useAuth();
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
-  const [reportRide, setReportRide] = useState<{ id: string; code: string | null } | null>(null);
+  const [reportRide, setReportRide] = useState<{ id: string; code: string | null; endedAt: string | null } | null>(null);
 
   const reload = async () => {
     if (!user) return;
     const ridesRes = await supabase
       .from("rides")
-      .select("id, ride_code, origin_address, destination_address, price, platform_fee, driver_net, distance_km, duration_minutes, passenger_count, rating, rating_comment, status, created_at, completed_at")
+      .select("id, ride_code, origin_address, destination_address, price, platform_fee, driver_net, distance_km, duration_minutes, passenger_count, rating, rating_comment, status, created_at, completed_at, cancelled_at")
       .eq("driver_id", user.id)
       .in("status", ["completed", "cancelled"])
       .order("created_at", { ascending: false })
@@ -140,12 +142,10 @@ const DriverRides = () => {
                 </div>
               )}
               <div className="mt-3 flex justify-end border-t pt-2">
-                <button
-                  onClick={() => setReportRide({ id: ride.id, code: ride.ride_code })}
-                  className="flex items-center gap-1 rounded-lg border border-warning/40 px-2.5 py-1.5 text-[11px] font-bold text-warning hover:bg-warning/10"
-                >
-                  <AlertCircle className="h-3.5 w-3.5" /> Reportar problema
-                </button>
+                <ReportIssueButton
+                  endedAt={ride.completed_at || ride.cancelled_at}
+                  onClick={() => setReportRide({ id: ride.id, code: ride.ride_code, endedAt: ride.completed_at || ride.cancelled_at })}
+                />
               </div>
             </div>
           ))
@@ -158,6 +158,7 @@ const DriverRides = () => {
           onClose={() => setReportRide(null)}
           rideId={reportRide.id}
           rideCode={reportRide.code}
+          rideEndedAt={reportRide.endedAt}
         />
       )}
 
