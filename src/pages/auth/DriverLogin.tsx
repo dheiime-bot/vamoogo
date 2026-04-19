@@ -67,7 +67,7 @@ const DriverLogin = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex flex-col items-center text-center">
-          <VamooLogo height={72} className="mb-3" />
+          <VamooLogo height={94} className="mb-3" />
           <p className="text-sm font-semibold text-primary-foreground">Motorista</p>
           <p className="text-xs text-primary-foreground/70">Entre na sua conta</p>
         </div>
