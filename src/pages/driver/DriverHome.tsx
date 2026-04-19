@@ -412,9 +412,12 @@ const DriverHome = () => {
   // === TELA ÚNICA: mapa fullscreen + botão Online sempre visíveis. Etapas viram mini pop-ups ===
   return (
     <div className="min-h-screen bg-background">
-      <div className="relative">
+      {/* Mapa em tela cheia em TODAS as fases — todos os botões e cards
+          (menu, sino, chip de saldo, bottom nav, pop-ups de etapa) ficam fixos
+          sobrepostos ao mapa, sem empurrar/encolher ele. */}
+      <div className="fixed inset-0 z-0">
         <GoogleMap
-          className="h-screen rounded-none transition-all duration-300"
+          className="h-full w-full rounded-none"
           origin={(rideState === "going_to_passenger" || rideState === "arrived" || rideState === "in_ride") ? originPoint : null}
           destination={rideState === "in_ride" ? destPoint : null}
           trackUserLocation={!activeRide}
@@ -426,19 +429,7 @@ const DriverHome = () => {
                 ? "car-conforto"
                 : "car-economico"
           }
-          bottomInset={
-            rideState === "idle"
-              ? 150                      // botão "Ficar Online" + bottom nav transparente
-              : rideState === "offer"
-                ? 360                    // pop-up de oferta com countdown
-                : rideState === "going_to_passenger"
-                  ? 280                  // card "indo até o passageiro"
-                  : rideState === "arrived"
-                    ? 260                // card "passageiro está aqui"
-                    : rideState === "in_ride"
-                      ? 280              // card "em corrida"
-                      : 150
-          }
+          bottomInset={0}
         />
       </div>
 
