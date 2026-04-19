@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { Car, MapPin, Clock, Loader2, CheckCircle2, XCircle, RefreshCw, Power } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
+import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -207,7 +208,8 @@ const DriverOffers = () => {
     <div className="min-h-screen bg-background pb-24">
       <AppMenu role="driver" />
       <DriverEarningsChip />
-      <NotificationBell />
+      <NotificationBell topOffsetPx={72} />
+      <RefreshAppButton topOffsetPx={144} />
 
       <div className="px-4 pt-20 pb-4">
         <div className="flex items-center justify-between mb-4">

@@ -1,7 +1,7 @@
 /**
- * DriverEarningsChip — chip flutuante no topo do app do motorista
+ * DriverEarningsChip — chip flutuante no canto superior DIREITO do app do motorista
  * mostrando o saldo de ganhos do dia. Clicando, leva para a Carteira.
- * Posicionado entre o menu (esquerda) e o sino (direita).
+ * Fica acima do sino de notificações e do botão de atualizar.
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -43,22 +43,17 @@ const DriverEarningsChip = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // O wrapper ocupa toda a largura entre o menu (esquerda, ~130px) e o sino (direita, ~56px),
-  // e centraliza o chip nesse espaço — assim ele fica visualmente no meio dos dois,
-  // mesmo o menu sendo mais largo (mostra "Vamoo!") e o sino sendo só ícone.
   return (
-    <div
-      className="fixed left-[180px] right-[80px] z-40 flex justify-center pointer-events-none"
+    <button
+      onClick={() => navigate("/driver/wallet")}
+      className="fixed right-3 z-50 flex h-16 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-5 transition-transform active:scale-95 hover:bg-muted"
       style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
+      aria-label="Ver carteira"
     >
-      <button
-        onClick={() => navigate("/driver/wallet")}
-        className="pointer-events-auto flex h-16 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-5 transition-transform active:scale-95 hover:bg-muted"
-        aria-label="Ver carteira"
-      >
-        <span className="font-display text-lg font-extrabold text-gradient-primary leading-none select-none">{formatBRL(earnings)}</span>
-      </button>
-    </div>
+      <span className="font-display text-lg font-extrabold text-gradient-primary leading-none select-none">
+        {formatBRL(earnings)}
+      </span>
+    </button>
   );
 };
 

@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { Clock, Navigation, Star } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
+import RefreshAppButton from "@/components/shared/RefreshAppButton";
+import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -176,7 +178,9 @@ const DriverRides = () => {
       </div>
 
       <AppMenu role="driver" />
-      <NotificationBell />
+      <DriverEarningsChip />
+      <NotificationBell topOffsetPx={72} />
+      <RefreshAppButton topOffsetPx={144} />
       
     </div>
   );
