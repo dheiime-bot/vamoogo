@@ -14,6 +14,7 @@ interface Options {
   driverId: string | undefined;
   isOnline: boolean;
   category: "moto" | "economico" | "conforto" | undefined;
+  onBlocked?: (message: string) => void;
 }
 
 const MIN_INTERVAL_MS = 8000;
