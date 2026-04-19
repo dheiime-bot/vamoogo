@@ -73,7 +73,7 @@ const DriverLogin = () => {
         </div>
       </div>
 
-      <div className="relative -mt-4 flex-1 rounded-t-3xl bg-white p-6">
+      <div className="relative -mt-4 flex-1 rounded-t-3xl p-6" style={{ backgroundColor: "#f5fbfb" }}>
         <button
           onClick={() => navigate("/auth/driver")}
           className="mb-5 w-full rounded-xl border border-primary/30 bg-primary/5 py-2.5 text-xs font-semibold text-primary hover:bg-primary/10"
