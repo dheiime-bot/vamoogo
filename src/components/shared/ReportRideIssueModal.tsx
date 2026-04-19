@@ -14,7 +14,18 @@ interface Props {
   onClose: () => void;
   rideId: string;
   rideCode: string | null;
+  /** completed_at ou cancelled_at — usado para validar janela de 3h */
+  rideEndedAt?: string | null;
 }
+
+/** Janela de 3 horas após o término da corrida para abrir um chamado vinculado */
+export const REPORT_WINDOW_HOURS = 3;
+export const isWithinReportWindow = (endedAtIso?: string | null) => {
+  if (!endedAtIso) return true; // se ainda não terminou, libera
+  const ended = new Date(endedAtIso).getTime();
+  if (Number.isNaN(ended)) return true;
+  return Date.now() - ended < REPORT_WINDOW_HOURS * 60 * 60 * 1000;
+};
 
 const ISSUE_TYPES = [
   { value: "lost_item", label: "Objeto perdido", priority: "high" as const },
@@ -25,7 +36,7 @@ const ISSUE_TYPES = [
   { value: "ride_other", label: "Outro problema", priority: "medium" as const },
 ];
 
-const ReportRideIssueModal = ({ open, onClose, rideId, rideCode }: Props) => {
+const ReportRideIssueModal = ({ open, onClose, rideId, rideCode, rideEndedAt }: Props) => {
   const { user } = useAuth();
   const [type, setType] = useState<string>("");
   const [description, setDescription] = useState("");
@@ -35,6 +46,9 @@ const ReportRideIssueModal = ({ open, onClose, rideId, rideCode }: Props) => {
 
   const submit = async () => {
     if (!user) return;
+    if (!isWithinReportWindow(rideEndedAt)) {
+      return toast.error("Prazo de 3 horas para reportar expirou. Use o Chat com a Central.");
+    }
     if (!type) return toast.error("Selecione o tipo de problema");
     if (description.trim().length < 10) return toast.error("Descreva com pelo menos 10 caracteres");
 
