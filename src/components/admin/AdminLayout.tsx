@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMaster } from "@/hooks/usePermission";
+import { useUrgentTicketsAlert } from "@/hooks/useUrgentTicketsAlert";
 import {
   Sidebar,
   SidebarContent,
@@ -72,7 +73,7 @@ interface AdminLayoutProps {
   actions?: React.ReactNode;
 }
 
-const AppSidebar = () => {
+const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; supportUrgent: number }) => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
