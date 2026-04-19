@@ -56,7 +56,6 @@ const DriverEarningsChip = () => {
         className="pointer-events-auto flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted"
         aria-label="Ver carteira"
       >
-        <span className="font-display text-[11px] font-bold uppercase tracking-wide text-muted-foreground leading-none">Hoje</span>
         <span className="font-display text-base font-extrabold text-gradient-primary leading-none select-none">{formatBRL(earnings)}</span>
       </button>
     </div>
