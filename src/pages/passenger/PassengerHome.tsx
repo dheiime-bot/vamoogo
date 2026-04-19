@@ -1093,11 +1093,19 @@ const PassengerHome = () => {
           Fechar (X / overlay / Esc) chama resetRide para limpar o estado. */}
       <Dialog
         open={rideState === "rating" && !!activeRide}
-        onOpenChange={(o) => { if (!o) resetRide(); }}
+        onOpenChange={() => { /* avaliação obrigatória — não permite fechar */ }}
       >
-        <DialogContent className="max-w-sm w-[calc(100vw-1.5rem)] max-h-[95dvh] p-0 gap-0 flex flex-col overflow-hidden">
+        <DialogContent
+          className="max-w-sm w-[calc(100vw-1.5rem)] max-h-[95dvh] p-0 gap-0 flex flex-col overflow-hidden [&>button]:hidden"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader className="px-4 pt-3 pb-1 shrink-0">
-            <DialogTitle className="text-center text-base font-display">Como foi sua viagem?</DialogTitle>
+            <DialogTitle className="text-center text-base font-display">Avalie sua viagem</DialogTitle>
+            <p className="text-center text-[11px] text-muted-foreground mt-0.5">
+              A avaliação é obrigatória para continuar
+            </p>
           </DialogHeader>
           {activeRide && (
             <>
@@ -1128,16 +1136,13 @@ const PassengerHome = () => {
                   className="w-full rounded-xl border bg-muted p-2 text-xs outline-none resize-none h-12"
                 />
               </div>
-              <div className="px-4 pt-2 pb-3 border-t bg-background space-y-1.5 shrink-0">
+              <div className="px-4 pt-2 pb-3 border-t bg-background shrink-0">
                 <button
                   onClick={handleSubmitRating}
                   disabled={rating === 0}
                   className="w-full rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-50"
                 >
-                  Enviar avaliação ⭐
-                </button>
-                <button onClick={resetRide} className="w-full text-xs text-muted-foreground">
-                  Pular avaliação
+                  {rating === 0 ? "Selecione de 1 a 5 estrelas" : "Enviar avaliação ⭐"}
                 </button>
               </div>
             </>
