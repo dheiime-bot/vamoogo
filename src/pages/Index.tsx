@@ -62,14 +62,6 @@ const Index = () => {
               Sou motorista <Car className="w-4 h-4" />
             </button>
           </div>
-
-          {/* Pré-visualização da motinha do mapa */}
-          <div className="mt-6 flex flex-col items-center gap-2 animate-fade-in" style={{ animationDelay: "200ms" }}>
-            <div className="rounded-2xl bg-card border border-border px-8 py-6 shadow-md">
-              <MotoPreview size={96} heading={-30} />
-            </div>
-            <p className="text-xs text-muted-foreground">A motinha que aparece no mapa em tempo real 🏍️</p>
-          </div>
         </div>
 
         {/* Scroll indicator */}
