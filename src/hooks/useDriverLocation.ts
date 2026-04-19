@@ -32,7 +32,7 @@ function distanceMeters(a: GeolocationCoordinates, b: { lat: number; lng: number
   return r * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-export function useDriverLocation({ driverId, isOnline, category }: Options) {
+export function useDriverLocation({ driverId, isOnline, category, onBlocked }: Options) {
   const watchIdRef = useRef<number | null>(null);
   const lastSentRef = useRef<{ lat: number; lng: number; ts: number } | null>(null);
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
