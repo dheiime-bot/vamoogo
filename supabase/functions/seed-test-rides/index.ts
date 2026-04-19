@@ -46,7 +46,8 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const count = Math.min(20, Math.max(1, Number(body.count) || 5));
+    // Sem teto: pode disparar quantas o pool de passageiros suportar
+    const count = Math.max(1, Number(body.count) || 5);
     const centerLat = Number(body.centerLat) || DEFAULT_LAT;
     const centerLng = Number(body.centerLng) || DEFAULT_LNG;
     const category = body.category || "economico";
