@@ -111,7 +111,7 @@ const AdminLogin = () => {
         <div className="border border-border rounded-3xl shadow-xl p-8 sm:p-10" style={{ backgroundColor: "#f5fbfb" }}>
           {/* Header */}
           <div className="flex flex-col items-center mb-8">
-            <VamooLogo height={84} card={false} className="mb-3" />
+            <VamooLogo height={109} card={false} className="mb-3" />
             <h1 className="text-2xl font-display font-extrabold text-foreground">Painel Admin</h1>
             <p className="text-sm text-muted-foreground mt-1 text-center">
               Acesso restrito. Use suas credenciais de administrador.
