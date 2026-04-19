@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Menu, Home, Clock, User, Wallet, MessageCircle, LogOut, Car, ArrowLeftRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import vamooLogo from "@/assets/vamoo-logo.png";
+import vamooLogo from "@/assets/vamoo-logo-menu.png";
 import {
   Sheet,
   SheetContent,
