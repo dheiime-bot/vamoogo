@@ -1118,13 +1118,58 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read_by_admin: boolean
+          is_read_by_user: boolean
+          message: string
+          sender_id: string
+          sender_role: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read_by_admin?: boolean
+          is_read_by_user?: boolean
+          message: string
+          sender_id: string
+          sender_role: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read_by_admin?: boolean
+          is_read_by_user?: boolean
+          message?: string
+          sender_id?: string
+          sender_role?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           admin_response: string | null
+          category: string
           created_at: string
           id: string
+          last_message_at: string | null
+          last_read_by_user_at: string | null
           message: string
           priority: string
+          ride_id: string | null
           status: string
           subject: string
           updated_at: string
@@ -1132,10 +1177,14 @@ export type Database = {
         }
         Insert: {
           admin_response?: string | null
+          category?: string
           created_at?: string
           id?: string
+          last_message_at?: string | null
+          last_read_by_user_at?: string | null
           message: string
           priority?: string
+          ride_id?: string | null
           status?: string
           subject: string
           updated_at?: string
@@ -1143,16 +1192,28 @@ export type Database = {
         }
         Update: {
           admin_response?: string | null
+          category?: string
           created_at?: string
           id?: string
+          last_message_at?: string | null
+          last_read_by_user_at?: string | null
           message?: string
           priority?: string
+          ride_id?: string | null
           status?: string
           subject?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tariffs: {
         Row: {
@@ -1300,6 +1361,10 @@ export type Database = {
       admin_add_ride_note: {
         Args: { _note: string; _ride_id: string }
         Returns: undefined
+      }
+      admin_add_ticket_message: {
+        Args: { _close?: boolean; _message: string; _ticket_id: string }
+        Returns: string
       }
       admin_adjust_balance: {
         Args: {
@@ -1485,6 +1550,14 @@ export type Database = {
           name: string
           similarity: number
         }[]
+      }
+      user_add_ticket_message: {
+        Args: { _message: string; _ticket_id: string }
+        Returns: string
+      }
+      user_mark_ticket_read: {
+        Args: { _ticket_id: string }
+        Returns: undefined
       }
     }
     Enums: {
