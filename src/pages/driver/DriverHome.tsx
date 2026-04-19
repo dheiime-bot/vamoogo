@@ -107,6 +107,8 @@ const DriverHome = () => {
   // 🔄 Hidrata isOnline a partir do banco ao montar (se motorista estava online
   // em outra aba/rota, mantém online ao voltar para Home — só fica offline quando
   // o usuário clica explicitamente no botão Offline ou heartbeat expira > 2min).
+  // Além disso: ao fazer login (1ª vez nesta sessão), fica online AUTOMATICAMENTE
+  // se não estiver bloqueado e tiver saldo suficiente.
   useEffect(() => {
     if (!user) return;
     supabase.from("driver_locations")
@@ -114,11 +116,32 @@ const DriverHome = () => {
       .eq("driver_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (!data) return;
-        const fresh = data.updated_at && (Date.now() - new Date(data.updated_at).getTime()) < 2 * 60 * 1000;
-        if (data.is_online && fresh) setIsOnline(true);
+        const fresh = data?.updated_at && (Date.now() - new Date(data.updated_at).getTime()) < 2 * 60 * 1000;
+        // Caso 1: já estava online recentemente em outra aba/rota → mantém online
+        if (data?.is_online && fresh) {
+          setIsOnline(true);
+          return;
+        }
+        // Caso 2: 1º carregamento desta sessão de login → ativa online automaticamente
+        const autoKey = `driver-auto-online-${user.id}`;
+        if (sessionStorage.getItem(autoKey)) return;
+        sessionStorage.setItem(autoKey, "1");
+        const blocked = (driverData as any)?.online_blocked;
+        if (blocked || lowBalance) return;
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            setIsOnline(true);
+            toast.success("Você está Online! Aguardando corridas...");
+          },
+          () => {
+            // GPS negado — mantém offline silenciosamente; usuário pode ativar manualmente
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
       });
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, driverData?.online_blocked, lowBalance]);
 
   // Refs para o handler de realtime ler estado mais recente sem reinscrever o canal
   const pendingOfferRef = useRef<any>(null);
