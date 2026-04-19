@@ -8,6 +8,8 @@ import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
 import RideChat from "@/components/passenger/RideChat";
+import CentralChat from "@/components/shared/CentralChat";
+import { Headset } from "lucide-react";
 
 interface ChatRow {
   ride_id: string;
@@ -26,6 +28,7 @@ const DriverChats = () => {
   const [rows, setRows] = useState<ChatRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [openRide, setOpenRide] = useState<{ id: string; name: string } | null>(null);
+  const [openCentral, setOpenCentral] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -85,6 +88,9 @@ const DriverChats = () => {
   if (openRide) {
     return <RideChat rideId={openRide.id} driverName={openRide.name} onBack={() => setOpenRide(null)} />;
   }
+  if (openCentral) {
+    return <CentralChat onBack={() => setOpenCentral(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,13 +104,27 @@ const DriverChats = () => {
         <p className="text-xs text-muted-foreground">Suas conversas com passageiros</p>
       </header>
 
-      <div className="p-4">
+      <div className="p-4 space-y-2">
+        {/* Chat com a Central — sempre no topo */}
+        <button
+          onClick={() => setOpenCentral(true)}
+          className="w-full flex items-center gap-3 rounded-2xl bg-card border-2 border-primary/30 p-3 hover:bg-primary/5 transition-colors text-left"
+        >
+          <div className="h-11 w-11 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+            <Headset className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold">Chat com a Central</p>
+            <p className="text-xs text-muted-foreground truncate">Suporte e atendimento Vamoo</p>
+          </div>
+        </button>
+
         {loading ? (
           <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>
         ) : rows.length === 0 ? (
-          <div className="text-center py-16">
-            <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">Nenhuma conversa ainda</p>
+          <div className="text-center py-12">
+            <MessageCircle className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground">Nenhuma conversa de corrida ativa</p>
           </div>
         ) : (
           <div className="space-y-2">
