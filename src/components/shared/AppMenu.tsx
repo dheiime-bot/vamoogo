@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Menu, Home, Clock, User, Wallet, MessageCircle, LogOut, Car, ArrowLeftRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, Home, Clock, User, Wallet, MessageCircle, LogOut, Car, ArrowLeftRight, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import vamooLogo from "@/assets/vamoo-logo-menu.png";
 import {
@@ -47,9 +48,19 @@ const AppMenu = ({ role, floating = true }: Props) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut, roles, switchRole, profile } = useAuth();
+  const [driverRating, setDriverRating] = useState<number | null>(null);
 
   const items = role === "driver" ? DRIVER_ITEMS : PASSENGER_ITEMS;
   const hasBoth = roles.includes("driver") && roles.includes("passenger");
+
+  // Busca a nota do motorista quando estiver no modo motorista
+  useEffect(() => {
+    if (role !== "driver" || !user?.id) return;
+    supabase.from("drivers").select("rating").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => { if (data?.rating != null) setDriverRating(Number(data.rating)); });
+  }, [role, user?.id]);
+
+  const ratingToShow = role === "driver" ? driverRating : (profile?.rating ?? null);
 
   const calcAge = (iso?: string | null) => {
     if (!iso) return null;
@@ -124,6 +135,17 @@ const AppMenu = ({ role, floating = true }: Props) => {
                 <p className="text-xs text-muted-foreground truncate font-normal">
                   {user?.email}
                 </p>
+                {ratingToShow != null && (
+                  <div className="mt-1 flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 text-warning fill-warning" />
+                    <span className="text-xs font-bold text-foreground">
+                      {ratingToShow.toFixed(2)}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-normal">
+                      / 5,00
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </SheetTitle>
