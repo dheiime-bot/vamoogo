@@ -48,6 +48,9 @@ const DriverHome = () => {
   const [passengerRating, setPassengerRating] = useState(0);
   const [passengerRatingComment, setPassengerRatingComment] = useState("");
   const [ratedRide, setRatedRide] = useState<any>(null);
+  // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
+  // (incluindo o nosso próprio update do driver_rating) reabram o modal.
+  const finalizedRideIdsRef = useRef<Set<string>>(new Set());
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
@@ -178,6 +181,9 @@ const DriverHome = () => {
         { event: "UPDATE", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` },
         (payload) => {
           const ride = payload.new as any;
+          // Se já avaliamos/pulamos esta corrida, ignora UPDATEs subsequentes
+          // (caso contrário o próprio UPDATE do driver_rating reabriria o modal).
+          if (finalizedRideIdsRef.current.has(ride.id)) return;
           if (ride.status === "cancelled") {
             setActiveRide(null);
             setRideState("idle");
@@ -320,6 +326,8 @@ const DriverHome = () => {
 
   const handleSubmitDriverRating = async () => {
     if (!ratedRide || passengerRating === 0) return;
+    // Marca antes do update para que o eco do realtime não reabra o modal.
+    finalizedRideIdsRef.current.add(ratedRide.id);
     await supabase
       .from("rides")
       .update({
@@ -332,6 +340,8 @@ const DriverHome = () => {
   };
 
   const closeDriverRating = () => {
+    // Marca como finalizada para que UPDATEs em atraso não reabram o modal de rating
+    if (ratedRide?.id) finalizedRideIdsRef.current.add(ratedRide.id);
     setRatedRide(null);
     setPassengerRating(0);
     setPassengerRatingComment("");
