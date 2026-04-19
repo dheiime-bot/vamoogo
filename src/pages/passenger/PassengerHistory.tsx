@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Clock, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight, AlertCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
+import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +13,7 @@ const PassengerHistory = () => {
   const { user } = useAuth();
   const [rides, setRides] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "completed" | "cancelled">("all");
+  const [reportRide, setReportRide] = useState<{ id: string; code: string | null } | null>(null);
 
   const reload = async () => {
     if (!user) return;
@@ -96,11 +98,25 @@ const PassengerHistory = () => {
             </div>
             <div className="mt-3 flex items-center justify-between border-t pt-3">
               <p className="text-lg font-bold">R$ {ride.price?.toFixed(2) || "—"}</p>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <button
+                onClick={() => setReportRide({ id: ride.id, code: ride.ride_code })}
+                className="flex items-center gap-1 rounded-lg border border-warning/40 px-2.5 py-1.5 text-[11px] font-bold text-warning hover:bg-warning/10"
+              >
+                <AlertCircle className="h-3.5 w-3.5" /> Reportar problema
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {reportRide && (
+        <ReportRideIssueModal
+          open={!!reportRide}
+          onClose={() => setReportRide(null)}
+          rideId={reportRide.id}
+          rideCode={reportRide.code}
+        />
+      )}
 
       <AppMenu role="passenger" />
       <NotificationBell />

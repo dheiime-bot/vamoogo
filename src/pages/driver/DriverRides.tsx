@@ -5,11 +5,12 @@
  *  - Lista de corridas com origem, destino, valores, taxa e líquido
  */
 import { useEffect, useState } from "react";
-import { Clock, Navigation } from "lucide-react";
+import { Clock, Navigation, AlertCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +44,7 @@ const DriverRides = () => {
   const { user } = useAuth();
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reportRide, setReportRide] = useState<{ id: string; code: string | null } | null>(null);
 
   const reload = async () => {
     if (!user) return;
@@ -168,10 +170,27 @@ const DriverRides = () => {
                   </div>
                 </div>
               )}
+              <div className="mt-3 flex justify-end border-t pt-2">
+                <button
+                  onClick={() => setReportRide({ id: ride.id, code: ride.ride_code })}
+                  className="flex items-center gap-1 rounded-lg border border-warning/40 px-2.5 py-1.5 text-[11px] font-bold text-warning hover:bg-warning/10"
+                >
+                  <AlertCircle className="h-3.5 w-3.5" /> Reportar problema
+                </button>
+              </div>
             </div>
           ))
         )}
       </div>
+
+      {reportRide && (
+        <ReportRideIssueModal
+          open={!!reportRide}
+          onClose={() => setReportRide(null)}
+          rideId={reportRide.id}
+          rideCode={reportRide.code}
+        />
+      )}
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
