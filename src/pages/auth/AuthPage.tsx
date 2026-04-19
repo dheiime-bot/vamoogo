@@ -12,8 +12,7 @@ const AuthPage = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex flex-col items-center text-center">
-          <img src={vamooIcon} alt="Vamoo" className="mb-3 h-14 w-14 drop-shadow-lg" />
-          <h1 className="text-2xl font-bold font-display text-primary-foreground">Vamoo</h1>
+          <VamooLogo height={56} className="mb-3" />
           <p className="mt-1 text-sm text-primary-foreground/80">Como você quer entrar?</p>
         </div>
       </div>

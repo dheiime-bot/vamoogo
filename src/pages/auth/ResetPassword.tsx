@@ -59,14 +59,9 @@ const ResetPassword = () => {
         <button onClick={() => navigate("/auth")} className="mb-4 text-primary-foreground/80">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-foreground/20">
-            <Car className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold font-display text-primary-foreground">Vamoo</h1>
-            <p className="text-xs text-primary-foreground/70">Redefinir senha</p>
-          </div>
+        <div className="flex flex-col items-center text-center">
+          <VamooLogo height={48} className="mb-3" />
+          <p className="text-xs text-primary-foreground/70">Redefinir senha</p>
         </div>
       </div>
 
