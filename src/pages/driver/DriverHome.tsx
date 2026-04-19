@@ -445,7 +445,7 @@ const DriverHome = () => {
                 ? "car-conforto"
                 : "car-economico"
           }
-          bottomInset={0}
+          bottomInset={96}
         />
       </div>
 
