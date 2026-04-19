@@ -125,7 +125,7 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
         }
       }
       if (lat && lng && lat !== 0 && lng !== 0) {
-        await supabase.from("driver_locations").upsert(
+        const { error } = await supabase.from("driver_locations").upsert(
           {
             driver_id: driverId,
             lat,
@@ -135,6 +135,12 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
           },
           { onConflict: "driver_id" }
         );
+        if (error) {
+          const { isGuardError } = await import("@/lib/guardErrors");
+          if (isGuardError(error)) onBlocked?.(error.message!);
+          else console.warn("driver_locations upsert error:", error.message);
+          return;
+        }
         setLastSyncAt(Date.now());
       }
     })();
