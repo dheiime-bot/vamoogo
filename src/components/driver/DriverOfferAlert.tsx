@@ -50,19 +50,12 @@ const DriverOfferAlert = () => {
       return;
     }
 
-    // Se já existe oferta no popup, isso é a 2ª chegando → alta demanda → redireciona
+    // Se já existe oferta no popup, ofertas adicionais vão silenciosamente para a lista
+    // (popup só para a PRIMEIRA — demais ficam disponíveis em /driver/offers)
     if (offerRef.current && offerRef.current.id !== offerRow.id) {
-      console.log("[offer-alert] 🔥 second offer arrived — redirecting to /driver/offers");
+      console.log("[offer-alert] additional offer arrived — keeping popup, sending to list silently");
       seenOfferIdsRef.current.add(offerRow.id);
-      seenOfferIdsRef.current.add(offerRef.current.id);
-      setOffer(null);
-      setRide(null);
-      playOfferAlert({
-        title: "Várias corridas disponíveis! 🔥",
-        body: "Alta demanda — escolha qual aceitar.",
-      });
-      toast.success("Várias corridas disponíveis! 🔥");
-      if (window.location.pathname !== "/driver/offers") navigate("/driver/offers");
+      toast.info("Mais uma corrida disponível na lista", { duration: 2000 });
       return;
     }
 
