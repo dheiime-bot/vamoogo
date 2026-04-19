@@ -358,7 +358,11 @@ const PassengerHome = () => {
     } as any).select().single();
 
     setIsRequesting(false);
-    if (error) { toast.error("Erro: " + error.message); return; }
+    if (error) {
+      const { guardErrorMessage } = await import("@/lib/guardErrors");
+      toast.error(guardErrorMessage(error, "Não foi possível solicitar a corrida"));
+      return;
+    }
 
     // Increment coupon usage (best-effort, non-blocking)
     if (coupon) {
