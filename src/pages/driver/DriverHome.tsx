@@ -104,6 +104,22 @@ const DriverHome = () => {
       });
   }, [user]);
 
+  // 🔄 Hidrata isOnline a partir do banco ao montar (se motorista estava online
+  // em outra aba/rota, mantém online ao voltar para Home — só fica offline quando
+  // o usuário clica explicitamente no botão Offline ou heartbeat expira > 2min).
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("driver_locations")
+      .select("is_online, updated_at")
+      .eq("driver_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        const fresh = data.updated_at && (Date.now() - new Date(data.updated_at).getTime()) < 2 * 60 * 1000;
+        if (data.is_online && fresh) setIsOnline(true);
+      });
+  }, [user]);
+
   // Refs para o handler de realtime ler estado mais recente sem reinscrever o canal
   const pendingOfferRef = useRef<any>(null);
   const activeRideRef = useRef<any>(null);
