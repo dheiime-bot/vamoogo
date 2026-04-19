@@ -356,6 +356,35 @@ const StopMarker = ({ index }: { index: number }) => (
   </div>
 );
 
+/* ---------- Helpers de heading ---------- */
+
+/** Calcula bearing (0-360°) entre dois pontos geográficos. */
+const computeBearing = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const toDeg = (r: number) => (r * 180) / Math.PI;
+  const φ1 = toRad(a.lat);
+  const φ2 = toRad(b.lat);
+  const Δλ = toRad(b.lng - a.lng);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+};
+
+/** Hook: mantém um heading "contínuo" para que rotações ultrapassem 360° sem voltar pelo caminho longo. */
+const useSmoothHeading = (target: number) => {
+  const [smooth, setSmooth] = useState<number>(target);
+  const lastRef = useRef<number>(target);
+  useEffect(() => {
+    const last = lastRef.current;
+    // Diferença mínima entre -180° e +180°
+    let diff = ((target - last + 540) % 360) - 180;
+    const next = last + diff;
+    lastRef.current = next;
+    setSmooth(next);
+  }, [target]);
+  return smooth;
+};
+
 /* ---------- Interpolação de posição (movimento suave) ---------- */
 
 const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
@@ -363,6 +392,7 @@ const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
   const fromRef = useRef<MapPoint | null>(target ?? null);
   const startTsRef = useRef<number>(0);
   const rafRef = useRef<number | null>(null);
+  const lastHeadingRef = useRef<number>(target?.heading ?? 0);
 
   useEffect(() => {
     if (!target) {
@@ -372,11 +402,24 @@ const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
     }
     if (!fromRef.current) {
       fromRef.current = target;
+      lastHeadingRef.current = target.heading ?? 0;
       setPos(target);
       return;
     }
     const from = pos || fromRef.current;
     const to = target;
+
+    // Calcula heading automaticamente quando GPS não envia, baseado no vetor de movimento.
+    // Distância mínima ~5m para evitar ruído de GPS parado.
+    const distDeg = Math.hypot(to.lat - from.lat, to.lng - from.lng);
+    const movedEnough = distDeg > 0.00005;
+    let resolvedHeading = to.heading;
+    if (resolvedHeading == null && movedEnough) {
+      resolvedHeading = computeBearing(from, to);
+    }
+    if (resolvedHeading == null) resolvedHeading = lastHeadingRef.current;
+    lastHeadingRef.current = resolvedHeading;
+
     const duration = 900; // ms
     startTsRef.current = performance.now();
 
@@ -386,11 +429,12 @@ const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
       setPos({
         lat: from.lat + (to.lat - from.lat) * ease,
         lng: from.lng + (to.lng - from.lng) * ease,
-        heading: to.heading,
+        heading: resolvedHeading,
         label: to.label,
+        category: to.category,
       });
       if (t < 1) rafRef.current = requestAnimationFrame(tick);
-      else fromRef.current = to;
+      else fromRef.current = { ...to, heading: resolvedHeading };
     };
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(tick);
