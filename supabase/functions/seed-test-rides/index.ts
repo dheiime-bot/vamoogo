@@ -67,33 +67,34 @@ Deno.serve(async (req) => {
       console.log(`[seed-test-rides] cancelled ${oldSeed.length} previous SEED rides`);
     }
 
-    // Monta pool de passageiros distintos (trigger impede 2 rides ativas/passageiro)
+    // Monta pool de passageiros DISTINTOS sem rides ativas (trigger impede 2/pax)
     let pool: string[] = [];
     if (explicitPax) {
       pool = [explicitPax];
     } else {
-      const { data: withPhone } = await supabase
+      // 1) Busca passageiros ativos (sem teto — pega todos disponíveis)
+      const { data: allPax } = await supabase
         .from("profiles")
         .select("user_id")
         .eq("status", "ativo")
-        .eq("user_type", "passenger")
-        .not("phone", "is", null)
-        .neq("phone", "")
-        .limit(count + 5);
-      pool = (withPhone || []).map((p: any) => p.user_id);
+        .eq("user_type", "passenger");
+      const allIds = (allPax || []).map((p: any) => p.user_id);
 
-      if (pool.length < count) {
-        const { data: anyPax } = await supabase
-          .from("profiles")
-          .select("user_id")
-          .eq("status", "ativo")
-          .eq("user_type", "passenger")
-          .limit(count + 5);
-        for (const p of anyPax || []) {
-          if (!pool.includes(p.user_id)) pool.push(p.user_id);
-        }
-      }
+      // 2) Remove os que já têm ride ativa (requested/accepted/in_progress)
+      const { data: busy } = await supabase
+        .from("rides")
+        .select("passenger_id")
+        .in("status", ["requested", "accepted", "in_progress"]);
+      const busySet = new Set((busy || []).map((b: any) => b.passenger_id));
+      pool = allIds.filter((id) => !busySet.has(id));
+
       if (pool.length === 0) pool = [callerId];
+    }
+
+    // Limita count ao tamanho do pool (não pode ter 2 rides do mesmo pax)
+    const effectiveCount = Math.min(count, pool.length);
+    if (effectiveCount < count) {
+      console.warn(`[seed-test-rides] pool=${pool.length} < count=${count} — limitado a ${effectiveCount}`);
     }
 
     console.log(`[seed-test-rides] creating ${count} rides around ${centerLat},${centerLng} cat=${category} pool=${pool.length}`);
