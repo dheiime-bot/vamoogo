@@ -60,15 +60,41 @@ Deno.serve(async (req) => {
     const category = body.category || "economico";
     let passengerId = body.passengerId as string | undefined;
 
-    // Se não passou passenger, usa o primeiro passageiro ativo (não admin)
+    // Se não passou passenger, prefere um com telefone cadastrado
     if (!passengerId) {
-      const { data: somePassenger } = await supabase
+      const { data: withPhone } = await supabase
         .from("profiles")
-        .select("user_id")
+        .select("user_id, phone")
         .eq("status", "ativo")
+        .not("phone", "is", null)
+        .neq("phone", "")
         .limit(1)
         .maybeSingle();
-      passengerId = somePassenger?.user_id || callerId;
+      if (withPhone?.user_id) {
+        passengerId = withPhone.user_id;
+      } else {
+        const { data: anyPax } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("status", "ativo")
+          .limit(1)
+          .maybeSingle();
+        passengerId = anyPax?.user_id || callerId;
+      }
+    }
+
+    // Garante telefone no perfil do passageiro (trigger exige)
+    const { data: paxProfile } = await supabase
+      .from("profiles")
+      .select("phone")
+      .eq("user_id", passengerId)
+      .maybeSingle();
+    if (!paxProfile?.phone) {
+      await supabase
+        .from("profiles")
+        .update({ phone: "11999990000" })
+        .eq("user_id", passengerId);
+      console.log(`[seed-test-rides] preencheu telefone fake no passageiro ${passengerId}`);
     }
 
     console.log(`[seed-test-rides] creating ${count} rides around ${centerLat},${centerLng} cat=${category} pax=${passengerId}`);
