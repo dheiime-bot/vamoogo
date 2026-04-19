@@ -113,9 +113,19 @@ const AdminChats = () => {
         .filter((r) => r.message_count > 0);
 
       setRows(result);
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     };
+
+  useEffect(() => {
     load();
+    // 🔄 Realtime: lista atualiza quando chegam novas mensagens ou corridas mudam
+    const channel = supabase
+      .channel("admin-chats-list")
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages" }, () => load(false))
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, () => load(false))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = useMemo(() => {
