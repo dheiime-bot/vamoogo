@@ -10,6 +10,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      // Posicionado no canto superior esquerdo, logo abaixo do menu sanduíche.
+      // O offset considera safe-area do iOS + altura do botão (~64px) + respiro.
+      position="top-left"
+      offset="calc(env(safe-area-inset-top) + 88px)"
       toastOptions={{
         classNames: {
           toast:
