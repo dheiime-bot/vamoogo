@@ -561,8 +561,9 @@ const PassengerHome = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Map */}
-      <div className="relative">
+      {/* Mapa em tela cheia em TODAS as fases (idle, form aberto, corrida ativa, rating).
+          O bottom-sheet flutua sobre o mapa em vez de empurrá-lo. */}
+      <div className="fixed inset-0 z-0">
         {(() => {
           // Define origem/destino da rota conforme a fase:
           //  - driver_arriving: rota motorista → embarque (mostra deslocamento dele em tempo real)
@@ -582,13 +583,11 @@ const PassengerHome = () => {
           let dynamicInset = 24; // respiro mínimo
           if (showFullMap) {
             // CTA "Para onde Vamoo?" + bottom nav
-            dynamicInset = 110;
+            dynamicInset = 122;
           } else if (showFormSheet) {
-            // O sheet do formulário JÁ cobre a parte inferior do mapa, então o logo
-            // Google só precisa de respiro mínimo (não some atrás do sheet, fica logo acima)
+            // Sheet do formulário cobre boa parte da tela; logo Google logo acima
             dynamicInset = 8;
           } else if (isRideActive) {
-            // Bottom-sheet com infos da corrida ativa varia por estado
             if (rideState === "accepted") dynamicInset = 240;
             else if (rideState === "arrived") dynamicInset = 220;
             else if (rideState === "in_progress") dynamicInset = 200;
@@ -597,9 +596,7 @@ const PassengerHome = () => {
           }
           return (
             <GoogleMap
-              className={`${
-                showFullMap ? "h-screen" : isRideActive ? "h-[68vh]" : "h-[45vh]"
-              } rounded-none transition-all duration-300`}
+              className="h-screen w-screen rounded-none"
               origin={mapOrigin}
               destination={mapDestination}
               stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
@@ -613,9 +610,9 @@ const PassengerHome = () => {
         })()}
       </div>
 
-      {/* Bottom sheet — só aparece quando NÃO está em "tela cheia do mapa" */}
+      {/* Bottom sheet — flutua sobre o mapa em vez de ficar abaixo dele */}
       {!showFullMap && (
-      <div className="relative rounded-t-3xl bg-card shadow-lg animate-slide-up -mt-3 pb-24">
+      <div className="fixed inset-x-0 bottom-0 z-30 rounded-t-3xl bg-card shadow-2xl animate-slide-up pb-24 max-h-[80vh] overflow-y-auto">
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted" />
         {/* Header com botão fechar quando o form de pedido estiver aberto */}
         {showFormSheet && (
