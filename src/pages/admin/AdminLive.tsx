@@ -1,13 +1,33 @@
 import { useEffect, useState } from "react";
-import { Activity, MapPin, RefreshCw } from "lucide-react";
+import { Activity, MapPin, RefreshCw, Zap, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import GoogleMap from "@/components/shared/GoogleMap";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const AdminLive = () => {
   const [activeRides, setActiveRides] = useState<any[]>([]);
   const [stats, setStats] = useState({ active: 0, waiting: 0 });
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeedTestRides = async () => {
+    if (seeding) return;
+    if (!confirm("Disparar 5 corridas de teste agora? Elas serão criadas como 🧪 TESTE e enviadas aos motoristas online.")) return;
+    setSeeding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-test-rides", {
+        body: { count: 5, category: "economico" },
+      });
+      if (error) throw error;
+      toast.success(`✅ ${data?.created ?? 0} corridas de teste criadas e despachadas!`);
+      fetchLive();
+    } catch (e: any) {
+      toast.error("Falha ao criar corridas de teste: " + (e?.message || e));
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const fetchLive = async () => {
     const { data: rides } = await supabase
@@ -44,6 +64,15 @@ const AdminLive = () => {
   return (
     <AdminLayout title="Mapa ao Vivo" actions={
       <div className="flex items-center gap-3">
+        <button
+          onClick={handleSeedTestRides}
+          disabled={seeding}
+          className="flex items-center gap-1.5 rounded-lg bg-warning/10 hover:bg-warning/20 text-warning px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50"
+          title="Cria 5 corridas fictícias e dispara para os motoristas online"
+        >
+          {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+          Simular 5 corridas
+        </button>
         <div className="flex items-center gap-1.5">
           <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
           <span className="text-xs font-medium text-success">Tempo real</span>
