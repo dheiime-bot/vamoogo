@@ -25,6 +25,7 @@ import DriverHome from "./pages/driver/DriverHome.tsx";
 import DriverStatusPage from "./pages/driver/DriverStatusPage.tsx";
 import DriverWallet from "./pages/driver/DriverWallet.tsx";
 import DriverRides from "./pages/driver/DriverRides.tsx";
+import DriverRatings from "./pages/driver/DriverRatings.tsx";
 import DriverOffers from "./pages/driver/DriverOffers.tsx";
 import DriverProfile from "./pages/driver/DriverProfile.tsx";
 import DriverChats from "./pages/driver/DriverChats.tsx";
@@ -118,6 +119,7 @@ const App = () => (
             <Route path="/driver/status" element={<ProtectedDriverRoute><DriverStatusPage /></ProtectedDriverRoute>} />
             <Route path="/driver/wallet" element={<ProtectedDriverRoute><DriverWallet /></ProtectedDriverRoute>} />
             <Route path="/driver/rides" element={<ProtectedDriverRoute><DriverRides /></ProtectedDriverRoute>} />
+            <Route path="/driver/ratings" element={<ProtectedDriverRoute><DriverRatings /></ProtectedDriverRoute>} />
             <Route path="/driver/offers" element={<ProtectedDriverRoute><DriverOffers /></ProtectedDriverRoute>} />
             <Route path="/driver/profile" element={<ProtectedDriverRoute><DriverProfile /></ProtectedDriverRoute>} />
             <Route path="/driver/chats" element={<ProtectedDriverRoute><DriverChats /></ProtectedDriverRoute>} />

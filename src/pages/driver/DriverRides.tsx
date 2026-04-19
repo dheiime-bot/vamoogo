@@ -5,12 +5,11 @@
  *  - Lista de corridas com origem, destino, valores, taxa e líquido
  */
 import { useEffect, useState } from "react";
-import { Clock, Navigation, Star, ShieldAlert } from "lucide-react";
+import { Clock, Navigation } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
-import AppealRatingDialog from "@/components/driver/AppealRatingDialog";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,23 +43,17 @@ const DriverRides = () => {
   const { user } = useAuth();
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
-  const [appealedRideIds, setAppealedRideIds] = useState<Set<string>>(new Set());
-  const [appealRide, setAppealRide] = useState<Ride | null>(null);
 
   const reload = async () => {
     if (!user) return;
-    const [ridesRes, appealsRes] = await Promise.all([
-      supabase
-        .from("rides")
-        .select("id, ride_code, origin_address, destination_address, price, platform_fee, driver_net, distance_km, duration_minutes, passenger_count, rating, rating_comment, status, created_at, completed_at")
-        .eq("driver_id", user.id)
-        .in("status", ["completed", "cancelled"])
-        .order("created_at", { ascending: false })
-        .limit(50),
-      supabase.from("rating_appeals" as any).select("ride_id").eq("driver_id", user.id),
-    ]);
+    const ridesRes = await supabase
+      .from("rides")
+      .select("id, ride_code, origin_address, destination_address, price, platform_fee, driver_net, distance_km, duration_minutes, passenger_count, rating, rating_comment, status, created_at, completed_at")
+      .eq("driver_id", user.id)
+      .in("status", ["completed", "cancelled"])
+      .order("created_at", { ascending: false })
+      .limit(50);
     if (ridesRes.data) setRides(ridesRes.data as any);
-    if (appealsRes.data) setAppealedRideIds(new Set((appealsRes.data as any[]).map((a) => a.ride_id)));
     setLoading(false);
   };
 
@@ -156,12 +149,6 @@ const DriverRides = () => {
                   {ride.duration_minutes ? `${ride.duration_minutes} min` : "—"}
                 </span>
                 <span>{ride.passenger_count} pass.</span>
-                {ride.rating && ride.rating > 0 && (
-                  <span className="flex items-center gap-0.5">
-                    <Star className="h-3 w-3 text-warning" />
-                    {ride.rating}
-                  </span>
-                )}
               </div>
               {ride.status === "completed" && (
                 <div className="flex items-center justify-between border-t pt-2">
@@ -181,40 +168,10 @@ const DriverRides = () => {
                   </div>
                 </div>
               )}
-              {/* Botão de contestar — apenas para corridas com nota 1 ou 2, dentro de 7 dias e sem recurso */}
-              {ride.status === "completed" && ride.rating != null && ride.rating <= 2 && (() => {
-                const completedAt = ride.completed_at ? new Date(ride.completed_at).getTime() : 0;
-                const within7d = completedAt > Date.now() - 7 * 86400000;
-                const alreadyAppealed = appealedRideIds.has(ride.id);
-                if (!within7d && !alreadyAppealed) return null;
-                return (
-                  <div className="mt-2 pt-2 border-t border-dashed">
-                    {alreadyAppealed ? (
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <ShieldAlert className="h-3 w-3" /> Recurso enviado — aguardando análise do admin
-                      </p>
-                    ) : (
-                      <button
-                        onClick={() => setAppealRide(ride)}
-                        className="w-full rounded-lg border border-warning/40 bg-warning/5 py-2 text-xs font-semibold text-warning flex items-center justify-center gap-1.5"
-                      >
-                        <ShieldAlert className="h-3.5 w-3.5" /> Contestar avaliação ({ride.rating}★)
-                      </button>
-                    )}
-                  </div>
-                );
-              })()}
             </div>
           ))
         )}
       </div>
-
-      <AppealRatingDialog
-        open={!!appealRide}
-        onClose={() => setAppealRide(null)}
-        ride={appealRide}
-        onSuccess={reload}
-      />
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
