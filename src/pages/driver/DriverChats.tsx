@@ -35,7 +35,7 @@ const DriverChats = () => {
         .from("rides")
         .select("id, passenger_id, origin_address, destination_address, status, created_at")
         .eq("driver_id", user.id)
-        .in("status", ["accepted", "in_progress", "completed"])
+        .in("status", ["accepted", "in_progress"])
         .order("created_at", { ascending: false })
         .limit(40);
 
