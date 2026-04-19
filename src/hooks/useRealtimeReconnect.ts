@@ -22,10 +22,9 @@ export const useRealtimeReconnect = () => {
     const reconnect = () => {
       try {
         // Reconecta o socket — canais existentes se re-inscrevem sozinhos.
-        // @ts-expect-error métodos internos expostos pelo client
-        supabase.realtime?.disconnect?.();
-        // @ts-expect-error métodos internos expostos pelo client
-        supabase.realtime?.connect?.();
+        const rt = (supabase as any).realtime;
+        rt?.disconnect?.();
+        rt?.connect?.();
       } catch (err) {
         console.warn("[realtime] reconnect failed", err);
       }

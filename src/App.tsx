@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
+import { useRealtimeReconnect } from "@/hooks/useRealtimeReconnect";
 import DriverOfferAlert from "@/components/driver/DriverOfferAlert";
 import Index from "./pages/Index.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
@@ -92,6 +93,16 @@ const KeyboardAwareScroll = () => {
   return null;
 };
 
+/**
+ * Garante que o realtime se reconecte automaticamente quando a aba volta a ficar
+ * visível, ganha foco ou a internet retorna — assim nenhuma ação do admin/banco
+ * fica "presa" no servidor sem chegar ao app.
+ */
+const RealtimeReconnect = () => {
+  useRealtimeReconnect();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -100,6 +111,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <KeyboardAwareScroll />
+          <RealtimeReconnect />
           <DriverOfferAlert />
           <Routes>
             <Route path="/" element={<AdminLogin />} />
