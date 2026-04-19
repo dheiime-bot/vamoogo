@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, Banknote, History } from "lucide-react";
+import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
@@ -22,35 +22,29 @@ const PERIODS: { id: PeriodId; label: string; days: number | null }[] = [
 const DriverWallet = () => {
   const { user, driverData } = useAuth();
   const [recharges, setRecharges] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [completedRides, setCompletedRides] = useState<{ driver_net: number | null; completed_at: string | null; created_at: string }[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"recharge" | "withdraw" | "history">("recharge");
+  const [activeTab, setActiveTab] = useState<"recharge" | "history">("recharge");
   const [period, setPeriod] = useState<PeriodId>("week");
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [pixKey, setPixKey] = useState("");
   const balance = driverData?.balance ?? 0;
 
   const reload = async () => {
     if (!user) return;
-    const [rech, with_, ridesRes] = await Promise.all([
+    const [rech, ridesRes] = await Promise.all([
       supabase.from("recharges").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10),
-      supabase.from("withdrawals").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("rides").select("driver_net, completed_at, created_at").eq("driver_id", user.id).eq("status", "completed").order("completed_at", { ascending: false }).limit(1000),
     ]);
     if (rech.data) setRecharges(rech.data);
-    if (with_.data) setWithdrawals(with_.data);
     if (ridesRes.data) setCompletedRides(ridesRes.data as any);
   };
 
   useEffect(() => {
     if (!user) return;
     reload();
-    // 🔄 Realtime: atualiza recargas/saques/ganhos sem precisar recarregar a página
+    // 🔄 Realtime: atualiza recargas/ganhos sem precisar recarregar a página
     const channel = supabase
       .channel(`wallet-rt-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "recharges", filter: `driver_id=eq.${user.id}` }, reload)
-      .on("postgres_changes", { event: "*", schema: "public", table: "withdrawals", filter: `driver_id=eq.${user.id}` }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` }, reload)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -126,22 +120,6 @@ const DriverWallet = () => {
     setLoading(false);
   };
 
-  const handleWithdraw = async () => {
-    if (!user || !withdrawAmount || !pixKey) { toast.error("Informe o valor e a chave Pix"); return; }
-    const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount < 10) { toast.error("Valor mínimo: R$ 10"); return; }
-    if (amount > balance) { toast.error("Saldo insuficiente"); return; }
-    setLoading(true);
-    const { error } = await supabase.from("withdrawals").insert({ driver_id: user.id, amount, pix_key: pixKey });
-    if (!error) {
-      toast.success("Saque solicitado!");
-      setWithdrawAmount(""); setPixKey("");
-      const { data } = await supabase.from("withdrawals").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10);
-      if (data) setWithdrawals(data);
-    } else toast.error("Erro ao solicitar saque");
-    setLoading(false);
-  };
-
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Balance header */}
@@ -212,7 +190,6 @@ const DriverWallet = () => {
         <div className="flex gap-1 bg-muted rounded-xl p-1 mb-4">
           {[
             { id: "recharge" as const, label: "Recarregar", icon: QrCode },
-            { id: "withdraw" as const, label: "Sacar", icon: Banknote },
             { id: "history" as const, label: "Histórico", icon: History },
           ].map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -243,39 +220,6 @@ const DriverWallet = () => {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4 text-primary" />} Cartão
               </button>
             </div>
-          </div>
-        )}
-
-        {activeTab === "withdraw" && (
-          <div className="space-y-4">
-            <div className="rounded-xl border bg-card p-4 space-y-3">
-              <h3 className="text-sm font-semibold">Solicitar saque via Pix</h3>
-              <input type="number" placeholder="Valor (mín. R$ 10)" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="w-full rounded-lg bg-muted p-3 text-sm outline-none" />
-              <input type="text" placeholder="Chave Pix" value={pixKey} onChange={(e) => setPixKey(e.target.value)} className="w-full rounded-lg bg-muted p-3 text-sm outline-none" />
-              <button onClick={handleWithdraw} disabled={loading || !withdrawAmount || !pixKey}
-                className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-50 flex items-center justify-center gap-2">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />} Solicitar saque
-              </button>
-            </div>
-            {withdrawals.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-muted-foreground">Saques recentes</h3>
-                {withdrawals.map((w) => (
-                  <div key={w.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
-                    <Banknote className="h-4 w-4 text-primary" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">R$ {w.amount?.toFixed(2)}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleDateString("pt-BR")}</p>
-                    </div>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      w.status === "paid" ? "bg-success/10 text-success" : w.status === "approved" ? "bg-primary/10 text-primary" : w.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"
-                    }`}>
-                      {w.status === "pending" ? "Pendente" : w.status === "approved" ? "Aprovado" : w.status === "paid" ? "Pago" : "Rejeitado"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 

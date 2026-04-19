@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DollarSign, TrendingUp, ArrowDownLeft, Wallet, Download, CheckCircle, XCircle, Banknote } from "lucide-react";
+import { DollarSign, TrendingUp, ArrowDownLeft, Wallet, Download } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import StatCard from "@/components/shared/StatCard";
@@ -9,19 +9,17 @@ import { toast } from "sonner";
 
 const AdminFinance = () => {
   const [stats, setStats] = useState({ revenueToday: 0, revenueMonth: 0, rechargesToday: 0, totalBalance: 0 });
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [recharges, setRecharges] = useState<any[]>([]);
 
   const fetchData = async () => {
     const today = new Date().toISOString().split("T")[0];
     const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-    const [ridesToday, ridesMonth, rechToday, driversBalance, withdrawalsData, rechargesData] = await Promise.all([
+    const [ridesToday, ridesMonth, rechToday, driversBalance, rechargesData] = await Promise.all([
       supabase.from("rides").select("platform_fee").eq("status", "completed").gte("completed_at", today),
       supabase.from("rides").select("platform_fee").eq("status", "completed").gte("completed_at", monthStart),
       supabase.from("recharges").select("amount").gte("created_at", today),
       supabase.from("drivers").select("balance"),
-      supabase.from("withdrawals").select("*").order("created_at", { ascending: false }).limit(20),
       supabase.from("recharges").select("*").order("created_at", { ascending: false }).limit(20),
     ]);
 
@@ -31,23 +29,15 @@ const AdminFinance = () => {
       rechargesToday: (rechToday.data || []).reduce((s, r) => s + (r.amount || 0), 0),
       totalBalance: (driversBalance.data || []).reduce((s, d) => s + (d.balance || 0), 0),
     });
-    setWithdrawals(withdrawalsData.data || []);
     setRecharges(rechargesData.data || []);
   };
 
   useEffect(() => { fetchData(); }, []);
-  useRealtimeRefresh(["withdrawals", "recharges", "rides", "drivers"], fetchData, "admin-finance");
-
-  const handleWithdrawal = async (id: string, status: "approved" | "paid" | "rejected") => {
-    await supabase.from("withdrawals").update({ status, processed_at: new Date().toISOString() }).eq("id", id);
-    toast.success(`Saque ${status === "approved" ? "aprovado" : status === "paid" ? "pago" : "rejeitado"}`);
-    fetchData();
-  };
+  useRealtimeRefresh(["recharges", "rides", "drivers"], fetchData, "admin-finance");
 
   const exportCSV = () => {
     const rows = [["Tipo", "Valor", "Data", "Status"]];
     recharges.forEach((r) => rows.push(["Recarga", r.amount, new Date(r.created_at).toLocaleDateString("pt-BR"), r.status]));
-    withdrawals.forEach((w) => rows.push(["Saque", w.amount, new Date(w.created_at).toLocaleDateString("pt-BR"), w.status]));
     const csv = rows.map((r) => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -69,51 +59,24 @@ const AdminFinance = () => {
         <StatCard title="Saldo motoristas" value={`R$ ${stats.totalBalance.toFixed(2)}`} icon={Wallet} />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Withdrawals */}
-        <div className="rounded-2xl border bg-card shadow-sm">
-          <div className="p-4 border-b"><h3 className="text-sm font-bold">Saques pendentes</h3></div>
-          <div className="divide-y">
-            {withdrawals.filter((w) => w.status === "pending").length === 0 && (
-              <EmptyState icon={ArrowDownLeft} title="Nenhum saque pendente" description="Solicitações de saque dos motoristas aparecerão aqui." />
-            )}
-            {withdrawals.filter((w) => w.status === "pending").map((w) => (
-              <div key={w.id} className="flex items-center gap-3 p-4">
-                <Banknote className="h-5 w-5 text-warning" />
-                <div className="flex-1">
-                  <p className="text-sm font-bold">R$ {w.amount?.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">PIX: {w.pix_key} • {new Date(w.created_at).toLocaleDateString("pt-BR")}</p>
-                </div>
-                <div className="flex gap-1">
-                  <button onClick={() => handleWithdrawal(w.id, "approved")} className="rounded-lg p-1.5 hover:bg-success/10"><CheckCircle className="h-4 w-4 text-success" /></button>
-                  <button onClick={() => handleWithdrawal(w.id, "paid")} className="rounded-lg p-1.5 hover:bg-primary/10"><Banknote className="h-4 w-4 text-primary" /></button>
-                  <button onClick={() => handleWithdrawal(w.id, "rejected")} className="rounded-lg p-1.5 hover:bg-destructive/10"><XCircle className="h-4 w-4 text-destructive" /></button>
-                </div>
+      <div className="rounded-2xl border bg-card shadow-sm">
+        <div className="p-4 border-b"><h3 className="text-sm font-bold">Recargas recentes</h3></div>
+        <div className="divide-y">
+          {recharges.length === 0 && (
+            <EmptyState icon={Wallet} title="Nenhuma recarga" description="As recargas feitas pelos motoristas serão listadas aqui." />
+          )}
+          {recharges.slice(0, 10).map((r) => (
+            <div key={r.id} className="flex items-center gap-3 p-4">
+              <ArrowDownLeft className="h-4 w-4 text-success" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">R$ {r.amount?.toFixed(2)}{r.bonus > 0 ? ` (+R$ ${r.bonus.toFixed(2)} bônus)` : ""}</p>
+                <p className="text-xs text-muted-foreground">{r.method === "pix" ? "PIX" : "Cartão"} • {new Date(r.created_at).toLocaleDateString("pt-BR")}</p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent recharges */}
-        <div className="rounded-2xl border bg-card shadow-sm">
-          <div className="p-4 border-b"><h3 className="text-sm font-bold">Recargas recentes</h3></div>
-          <div className="divide-y">
-            {recharges.length === 0 && (
-              <EmptyState icon={Wallet} title="Nenhuma recarga" description="As recargas feitas pelos motoristas serão listadas aqui." />
-            )}
-            {recharges.slice(0, 10).map((r) => (
-              <div key={r.id} className="flex items-center gap-3 p-4">
-                <ArrowDownLeft className="h-4 w-4 text-success" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">R$ {r.amount?.toFixed(2)}{r.bonus > 0 ? ` (+R$ ${r.bonus.toFixed(2)} bônus)` : ""}</p>
-                  <p className="text-xs text-muted-foreground">{r.method === "pix" ? "PIX" : "Cartão"} • {new Date(r.created_at).toLocaleDateString("pt-BR")}</p>
-                </div>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${r.status === "completed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
-                  {r.status === "completed" ? "OK" : "Pendente"}
-                </span>
-              </div>
-            ))}
-          </div>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${r.status === "completed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
+                {r.status === "completed" ? "OK" : "Pendente"}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </AdminLayout>
