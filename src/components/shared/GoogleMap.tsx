@@ -97,12 +97,14 @@ const CarMarker = ({
   const glassId = `carGlass-${variant}`;
   const shadowId = `carShadow-${variant}`;
   const glossId = `carGloss-${variant}`;
+  // Rotação contínua (evita salto 350°→10°)
+  const smoothHeading = useSmoothHeading(heading);
   return (
     <div
       className="relative drop-shadow-2xl"
       style={{
-        transform: `rotate(${heading}deg)`,
-        transition: "transform 600ms ease-out",
+        transform: `rotate(${smoothHeading}deg)`,
+        transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
         width: 52,
         height: 52,
       }}
