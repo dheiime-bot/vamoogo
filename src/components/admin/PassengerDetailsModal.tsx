@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { X, User as UserIcon, Phone, Mail, FileText, Calendar, ShieldCheck, Hash, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { X, User as UserIcon, Phone, Mail, FileText, Calendar, ShieldCheck, Hash, AlertCircle, ScrollText } from "lucide-react";
 import { formatDateBR } from "@/lib/brFormat";
 import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 
@@ -60,7 +61,7 @@ const PassengerDetailsModal = ({ passenger, onClose }: Props) => {
         <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-card shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between p-4 border-b shrink-0">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg font-bold font-display">{passenger.full_name || "Passageiro"}</h2>
                 {passenger.status && (
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold capitalize ${
@@ -75,7 +76,16 @@ const PassengerDetailsModal = ({ passenger, onClose }: Props) => {
                   </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">ID {passenger.user_id?.slice(0, 8)}…</p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <p className="text-xs text-muted-foreground">ID {passenger.user_id?.slice(0, 8)}…</p>
+                <Link
+                  to={`/admin/audit?entity_type=passenger&entity=${passenger.user_id}`}
+                  onClick={onClose}
+                  className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  <ScrollText className="h-3 w-3" /> Ver na auditoria
+                </Link>
+              </div>
             </div>
             <button onClick={onClose} className="rounded-full p-1.5 hover:bg-muted"><X className="h-5 w-5" /></button>
           </div>

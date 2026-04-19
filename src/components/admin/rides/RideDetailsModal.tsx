@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Route, CreditCard, Star, Phone, MessageCircle,
-  AlertTriangle, FileText, User, Car, Copy,
+  AlertTriangle, FileText, User, Car, Copy, ScrollText,
 } from "lucide-react";
 import { toast } from "sonner";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -83,8 +84,15 @@ const RideDetailsModal = ({ rideId, onClose }: Props) => {
                   </span>
                 )}
               </SheetTitle>
-              <SheetDescription className="text-xs">
-                {new Date(ride.created_at).toLocaleString("pt-BR")} · {ride.category}
+              <SheetDescription className="text-xs flex items-center justify-between gap-2">
+                <span>{new Date(ride.created_at).toLocaleString("pt-BR")} · {ride.category}</span>
+                <Link
+                  to={`/admin/audit?entity_type=ride&entity=${ride.id}`}
+                  onClick={onClose}
+                  className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[10px] font-semibold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  <ScrollText className="h-3 w-3" /> Ver na auditoria
+                </Link>
               </SheetDescription>
             </SheetHeader>
 
