@@ -35,11 +35,9 @@ const DriverOfferAlert = () => {
 
   const handleNewOffer = useCallback(async (offerRow: any) => {
     if (!user) return;
-    if (offerRef.current) return; // já tem uma sendo mostrada
     if (offerRow.status !== "pending") return;
     if (offerRow.expires_at && new Date(offerRow.expires_at).getTime() < Date.now()) return;
     if (seenOfferIdsRef.current.has(offerRow.id)) return;
-    seenOfferIdsRef.current.add(offerRow.id);
 
     // Confirma motorista NÃO está em corrida ativa
     const { data: active } = await supabase
@@ -51,6 +49,24 @@ const DriverOfferAlert = () => {
       console.log("[offer-alert] driver busy with active ride, skipping");
       return;
     }
+
+    // Se já existe oferta no popup, isso é a 2ª chegando → alta demanda → redireciona
+    if (offerRef.current && offerRef.current.id !== offerRow.id) {
+      console.log("[offer-alert] 🔥 second offer arrived — redirecting to /driver/offers");
+      seenOfferIdsRef.current.add(offerRow.id);
+      seenOfferIdsRef.current.add(offerRef.current.id);
+      setOffer(null);
+      setRide(null);
+      playOfferAlert({
+        title: "Várias corridas disponíveis! 🔥",
+        body: "Alta demanda — escolha qual aceitar.",
+      });
+      toast.success("Várias corridas disponíveis! 🔥");
+      if (window.location.pathname !== "/driver/offers") navigate("/driver/offers");
+      return;
+    }
+
+    seenOfferIdsRef.current.add(offerRow.id);
 
     const { data: r } = await supabase
       .from("rides").select("*").eq("id", offerRow.ride_id).maybeSingle();
@@ -67,7 +83,7 @@ const DriverOfferAlert = () => {
       body: `${r.origin_address?.slice(0, 60) ?? "Embarque"} → ${r.destination_address?.slice(0, 60) ?? "Destino"}`,
     });
     toast.success("Nova corrida! 🚗");
-  }, [user]);
+  }, [user, navigate]);
 
   // Realtime: novas ofertas (entrega instantânea, mas pode falhar — não confiamos só nele)
   useEffect(() => {
