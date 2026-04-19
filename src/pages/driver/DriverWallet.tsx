@@ -45,6 +45,7 @@ const DriverWallet = () => {
       .channel(`wallet-rt-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "recharges", filter: `driver_id=eq.${user.id}` }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "balance_adjustments", filter: `driver_id=eq.${user.id}` }, reload)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
