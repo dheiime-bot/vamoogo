@@ -126,11 +126,9 @@ const PassengerHome = () => {
           // Se já tem arrived_at quando chegou o accepted (race condition), pula direto
           if (ride.arrived_at) {
             setRideState("arrived");
-            toast.success("Seu motorista chegou! 📍");
             playPhaseSound("arrived");
           } else {
             setRideState("driver_arriving");
-            toast.success("Motorista a caminho! 🚗");
             playPhaseSound("accepted");
           }
         } else if (ride.status === "accepted" && ride.arrived_at && !prev?.arrived_at) {
