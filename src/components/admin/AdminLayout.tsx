@@ -102,9 +102,9 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
           aria-label="Vamoo Admin"
         >
           {collapsed ? (
-            <VamooLogo height={32} card={false} className="shrink-0" />
+            <VamooLogo height={64} card={false} className="shrink-0" />
           ) : (
-            <VamooLogo height={52} card={false} className="shrink-0" />
+            <VamooLogo height={104} card={false} className="shrink-0" />
           )}
         </NavLink>
 
