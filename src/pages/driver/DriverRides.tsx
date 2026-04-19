@@ -181,16 +181,46 @@ const DriverRides = () => {
                   </div>
                 </div>
               )}
+              {/* Botão de contestar — apenas para corridas com nota 1 ou 2, dentro de 7 dias e sem recurso */}
+              {ride.status === "completed" && ride.rating != null && ride.rating <= 2 && (() => {
+                const completedAt = ride.completed_at ? new Date(ride.completed_at).getTime() : 0;
+                const within7d = completedAt > Date.now() - 7 * 86400000;
+                const alreadyAppealed = appealedRideIds.has(ride.id);
+                if (!within7d && !alreadyAppealed) return null;
+                return (
+                  <div className="mt-2 pt-2 border-t border-dashed">
+                    {alreadyAppealed ? (
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <ShieldAlert className="h-3 w-3" /> Recurso enviado — aguardando análise do admin
+                      </p>
+                    ) : (
+                      <button
+                        onClick={() => setAppealRide(ride)}
+                        className="w-full rounded-lg border border-warning/40 bg-warning/5 py-2 text-xs font-semibold text-warning flex items-center justify-center gap-1.5"
+                      >
+                        <ShieldAlert className="h-3.5 w-3.5" /> Contestar avaliação ({ride.rating}★)
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           ))
         )}
       </div>
 
+      <AppealRatingDialog
+        open={!!appealRide}
+        onClose={() => setAppealRide(null)}
+        ride={appealRide}
+        onSuccess={reload}
+      />
+
       <AppMenu role="driver" />
       <DriverEarningsChip />
       <NotificationBell topOffsetPx={72} />
       <RefreshAppButton topOffsetPx={144} />
-      
+
     </div>
   );
 };
