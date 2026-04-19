@@ -766,6 +766,7 @@ const DriverHome = () => {
               : "connected"
         }
       />
+      <RefreshAppButton />
       <DriverBottomNav
         centerSlot={
           <button
