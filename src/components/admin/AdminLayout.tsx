@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Car, DollarSign, Settings, AlertTriangle, MapPin,
   Headphones, ScrollText, Megaphone, Ticket, BarChart3, LogOut,
   Search, Bell, Moon, Sun, RefreshCw, ChevronDown, ChevronRight, User,
-  Briefcase, Headset, MessageCircle, ShieldCheck,
+  Briefcase, Headset, MessageCircle, ShieldCheck, UserCog, KeyRound, LifeBuoy, Mail,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMaster } from "@/hooks/usePermission";
