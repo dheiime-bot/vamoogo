@@ -1,3 +1,4 @@
+import VamooLogo from "@/components/shared/VamooLogo";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2, Lock, Mail, User } from "lucide-react";

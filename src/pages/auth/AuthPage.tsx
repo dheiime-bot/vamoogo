@@ -1,3 +1,4 @@
+import VamooLogo from "@/components/shared/VamooLogo";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Car, User } from "lucide-react";
 import vamooIcon from "@/assets/vamoo-icon.png";
