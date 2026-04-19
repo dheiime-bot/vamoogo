@@ -740,10 +740,10 @@ const DriverHome = () => {
           <button
             onClick={handleToggleOnline}
             disabled={(lowBalance && !isOnline) || !!activeRide || rideState === "offer"}
-            className={`pointer-events-auto flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-extrabold shadow-glow transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
+            className={`pointer-events-auto flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-extrabold shadow-glow transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap uppercase ${
               isOnline || activeRide
                 ? "bg-success text-success-foreground"
-                : "bg-gradient-primary text-primary-foreground"
+                : "bg-destructive text-destructive-foreground"
             }`}
           >
             {isOnline || activeRide ? (
@@ -756,7 +756,7 @@ const DriverHome = () => {
               </>
             ) : (
               <>
-                <Power className="h-4 w-4" /> Ficar Online
+                <Power className="h-4 w-4" /> Offline
               </>
             )}
           </button>
