@@ -271,6 +271,8 @@ export type Database = {
           analyzed_at: string | null
           analyzed_by: string | null
           balance: number
+          cancellation_block_count: number
+          cancellation_block_until: string | null
           category: Database["public"]["Enums"]["vehicle_category"]
           cnh_back_url: string | null
           cnh_ear: boolean | null
@@ -311,6 +313,8 @@ export type Database = {
           analyzed_at?: string | null
           analyzed_by?: string | null
           balance?: number
+          cancellation_block_count?: number
+          cancellation_block_until?: string | null
           category?: Database["public"]["Enums"]["vehicle_category"]
           cnh_back_url?: string | null
           cnh_ear?: boolean | null
@@ -351,6 +355,8 @@ export type Database = {
           analyzed_at?: string | null
           analyzed_by?: string | null
           balance?: number
+          cancellation_block_count?: number
+          cancellation_block_until?: string | null
           category?: Database["public"]["Enums"]["vehicle_category"]
           cnh_back_url?: string | null
           cnh_ear?: boolean | null
@@ -1357,6 +1363,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _driver_cancel_block_hours: { Args: { _count: number }; Returns: number }
       _require_admin: { Args: never; Returns: undefined }
       admin_add_ride_note: {
         Args: { _note: string; _ride_id: string }

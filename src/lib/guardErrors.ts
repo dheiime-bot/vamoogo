@@ -21,6 +21,8 @@ const TRIGGER_MARKERS = [
   "Você já está em outra corrida",
   "Não é possível finalizar uma corrida que não foi iniciada",
   "Corrida já finalizada",
+  "bloqueado por excesso de cancelamentos",
+  "Você cancelou",
 ];
 
 export function isGuardError(err: AnyErr): boolean {
