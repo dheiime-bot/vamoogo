@@ -82,40 +82,26 @@ const DriverActionsMenu = ({ driver, onView, onChanged }: Props) => {
   const updateDriverStatus = async (status: string, message?: string) => {
     if (!user) return;
     setBusy(true);
-    const { error } = await supabase.from("drivers").update({
-      status: status as any,
-      analysis_message: message ?? null,
-      analyzed_at: new Date().toISOString(),
-      analyzed_by: user.id,
-    }).eq("user_id", driver.user_id);
+    const { error } = await supabase.rpc("admin_update_driver_status" as any, {
+      _user_id: driver.user_id, _new_status: status, _message: message ?? null,
+    });
     setBusy(false);
     if (error) return toast.error("Erro: " + error.message);
-
-    const titles: Record<string, string> = {
-      aprovado: "Cadastro aprovado! 🎉",
-      reprovado: "Cadastro reprovado",
-      pendente_documentos: "Documentos pendentes",
-      blocked: "Conta bloqueada",
-      em_analise: "Cadastro em análise",
-    };
-    await sendNotification(titles[status] || "Status atualizado", message || "");
     toast.success("Status atualizado");
     close(); onChanged();
   };
 
   const handleEdit = async () => {
     setBusy(true);
-    const profPromise = supabase.from("profiles")
-      .update({ full_name: fullName, email, phone })
-      .eq("user_id", driver.user_id);
-    const drvPromise = supabase.from("drivers").update({
-      vehicle_brand: vehicleBrand, vehicle_model: vehicleModel, vehicle_color: vehicleColor,
-      vehicle_plate: vehiclePlate, category: category as any,
-      pix_key: pixKey, pix_key_type: pixKeyType,
-    }).eq("user_id", driver.user_id);
-    const [{ error: e1 }, { error: e2 }] = await Promise.all([profPromise, drvPromise]);
+    const { error } = await supabase.rpc("admin_update_driver_data" as any, {
+      _user_id: driver.user_id,
+      _full_name: fullName, _email: email, _phone: phone,
+      _vehicle_brand: vehicleBrand, _vehicle_model: vehicleModel,
+      _vehicle_color: vehicleColor, _vehicle_plate: vehiclePlate,
+      _category: category, _pix_key: pixKey, _pix_key_type: pixKeyType,
+    });
     setBusy(false);
-    if (e1 || e2) return toast.error("Erro ao salvar: " + (e1?.message || e2?.message));
+    if (error) return toast.error("Erro ao salvar: " + error.message);
     toast.success("Dados atualizados");
     close(); onChanged();
   };
@@ -124,18 +110,11 @@ const DriverActionsMenu = ({ driver, onView, onChanged }: Props) => {
 
   const handleOnlineBlock = async (block: boolean) => {
     setBusy(true);
-    const { error } = await supabase.from("drivers")
-      .update({ online_blocked: block, online_blocked_reason: block ? (reason || null) : null })
-      .eq("user_id", driver.user_id);
+    const { error } = await supabase.rpc("admin_block_driver_online" as any, {
+      _user_id: driver.user_id, _block: block, _reason: reason || null,
+    });
     setBusy(false);
     if (error) return toast.error("Erro: " + error.message);
-    if (block) {
-      // Força ficar offline já
-      await supabase.from("driver_locations").update({ is_online: false }).eq("driver_id", driver.user_id);
-      await sendNotification("Você foi impedido de ficar online", reason || "Entre em contato com o suporte.");
-    } else {
-      await sendNotification("Bloqueio operacional removido", "Você já pode ficar online novamente.");
-    }
     toast.success(block ? "Motorista impedido de ficar online" : "Bloqueio operacional removido");
     close(); onChanged();
   };

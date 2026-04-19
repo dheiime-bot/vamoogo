@@ -57,10 +57,9 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
 
   const handleEdit = async () => {
     setBusy(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ full_name: fullName, email, phone })
-      .eq("user_id", passenger.user_id);
+    const { error } = await supabase.rpc("admin_update_passenger_data" as any, {
+      _user_id: passenger.user_id, _full_name: fullName, _email: email, _phone: phone,
+    });
     setBusy(false);
     if (error) return toast.error("Erro ao salvar: " + error.message);
     toast.success("Dados atualizados");
@@ -69,10 +68,9 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
 
   const handleBlock = async () => {
     setBusy(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ status: "bloqueado", blocked_reason: reason || null, blocked_at: new Date().toISOString() })
-      .eq("user_id", passenger.user_id);
+    const { error } = await supabase.rpc("admin_update_passenger_status" as any, {
+      _user_id: passenger.user_id, _new_status: "bloqueado", _reason: reason || null,
+    });
     setBusy(false);
     if (error) return toast.error("Erro: " + error.message);
     toast.success("Passageiro bloqueado");
@@ -81,10 +79,9 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
 
   const handleUnblock = async () => {
     setBusy(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ status: "ativo", blocked_reason: null, blocked_at: null })
-      .eq("user_id", passenger.user_id);
+    const { error } = await supabase.rpc("admin_update_passenger_status" as any, {
+      _user_id: passenger.user_id, _new_status: "ativo", _reason: null,
+    });
     setBusy(false);
     if (error) return toast.error("Erro: " + error.message);
     toast.success("Passageiro desbloqueado");
@@ -94,10 +91,9 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
   const handleSuspect = async () => {
     setBusy(true);
     const next = !passenger.is_suspect;
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_suspect: next, suspect_reason: next ? (reason || null) : null })
-      .eq("user_id", passenger.user_id);
+    const { error } = await supabase.rpc("admin_mark_passenger_suspect" as any, {
+      _user_id: passenger.user_id, _suspect: next, _reason: next ? (reason || null) : null,
+    });
     setBusy(false);
     if (error) return toast.error("Erro: " + error.message);
     toast.success(next ? "Marcado como suspeito" : "Suspeita removida");
