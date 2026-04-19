@@ -7,6 +7,8 @@ import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 
 import RideChat from "@/components/passenger/RideChat";
+import CentralChat from "@/components/shared/CentralChat";
+import { Headset } from "lucide-react";
 
 interface ChatRow {
   ride_id: string;
