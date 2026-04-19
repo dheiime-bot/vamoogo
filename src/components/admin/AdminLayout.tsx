@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMaster } from "@/hooks/usePermission";
+import { useUrgentTicketsAlert } from "@/hooks/useUrgentTicketsAlert";
 import {
   Sidebar,
   SidebarContent,
@@ -72,7 +73,7 @@ interface AdminLayoutProps {
   actions?: React.ReactNode;
 }
 
-const AppSidebar = () => {
+const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; supportUrgent: number }) => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -173,6 +174,9 @@ const AppSidebar = () => {
                   );
                 }
 
+                const isSupport = item.path === "/admin/support";
+                const badgeNum = isSupport ? supportOpen : item.badge;
+                const isUrgent = isSupport && supportUrgent > 0;
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
@@ -181,13 +185,17 @@ const AppSidebar = () => {
                       isActive={isActive(item.path!)}
                     >
                       <NavLink to={item.path!} end>
-                        <item.icon className="h-4 w-4" />
+                        <item.icon className={`h-4 w-4 ${isUrgent ? "text-destructive" : ""}`} />
                         <span>{item.label}</span>
-                        {item.badge && (
-                          <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1 text-[10px] font-semibold text-muted-foreground">
-                            {item.badge}
+                        {badgeNum ? (
+                          <span className={`ml-auto flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${
+                            isUrgent
+                              ? "bg-destructive text-destructive-foreground animate-pulse"
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            {badgeNum}
                           </span>
-                        )}
+                        ) : null}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -271,11 +279,12 @@ const AdminLayout = ({ title, children, actions }: AdminLayoutProps) => {
   }, [darkMode]);
 
   const displayName = profile?.full_name || "Admin";
+  const { openCount: supportOpen, urgentCount: supportUrgent } = useUrgentTicketsAlert();
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar />
+        <AppSidebar supportOpen={supportOpen} supportUrgent={supportUrgent} />
 
         <main className="flex-1 overflow-auto">
           {/* Top bar */}

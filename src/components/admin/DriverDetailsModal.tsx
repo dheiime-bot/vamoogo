@@ -1,5 +1,6 @@
-import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserIcon, AlertCircle, FileWarning, MessageSquare, ShieldCheck, Calendar, KeyRound, Hash } from "lucide-react";
+import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserIcon, AlertCircle, FileWarning, MessageSquare, ShieldCheck, Calendar, KeyRound, Hash, ScrollText } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
@@ -92,9 +93,18 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
           <div className="flex items-center justify-between p-4 border-b shrink-0">
             <div>
               <h2 className="text-lg font-bold font-display">{profile?.full_name || "Motorista"}</h2>
-              <span className={`inline-block mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.bg} ${status.color}`}>
-                {status.label}
-              </span>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.bg} ${status.color}`}>
+                  {status.label}
+                </span>
+                <Link
+                  to={`/admin/audit?entity_type=driver&entity=${driver.user_id}`}
+                  onClick={onClose}
+                  className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  <ScrollText className="h-3 w-3" /> Ver na auditoria
+                </Link>
+              </div>
             </div>
             <button onClick={onClose} className="rounded-full p-1.5 hover:bg-muted transition-colors">
               <X className="h-5 w-5 text-muted-foreground" />
