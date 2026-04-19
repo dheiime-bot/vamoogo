@@ -573,8 +573,9 @@ const PassengerHome = () => {
             // CTA "Para onde Vamoo?" + bottom nav
             dynamicInset = 110;
           } else if (showFormSheet) {
-            // Sheet do formulário ocupa parte de cima; logo Google fica próximo da bottom nav
-            dynamicInset = 80;
+            // O sheet do formulário JÁ cobre a parte inferior do mapa, então o logo
+            // Google só precisa de respiro mínimo (não some atrás do sheet, fica logo acima)
+            dynamicInset = 8;
           } else if (isRideActive) {
             // Bottom-sheet com infos da corrida ativa varia por estado
             if (rideState === "accepted") dynamicInset = 240;

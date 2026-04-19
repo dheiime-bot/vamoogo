@@ -418,7 +418,7 @@ const DriverHome = () => {
           }
           bottomInset={
             rideState === "idle"
-              ? 210                      // botão "Ficar Online" + bottom nav
+              ? 150                      // botão "Ficar Online" + bottom nav transparente
               : rideState === "offer"
                 ? 360                    // pop-up de oferta com countdown
                 : rideState === "going_to_passenger"
@@ -427,7 +427,7 @@ const DriverHome = () => {
                     ? 260                // card "passageiro está aqui"
                     : rideState === "in_ride"
                       ? 280              // card "em corrida"
-                      : 210
+                      : 150
           }
         />
       </div>
