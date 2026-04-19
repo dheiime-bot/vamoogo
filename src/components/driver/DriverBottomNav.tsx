@@ -26,7 +26,8 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
       <button
         onClick={() => navigate(path)}
         className={cn(
-          "pointer-events-auto flex h-11 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-4 transition-transform active:scale-95 hover:bg-muted",
+          // Mesma proporção dos botões superiores: h-16 (64px). Mantém formato de pílula com label.
+          "pointer-events-auto flex h-16 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-5 transition-transform active:scale-95 hover:bg-muted",
           active ? "text-primary" : "text-foreground"
         )}
       >
@@ -38,15 +39,16 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
 
   // Se não veio um centerSlot customizado e o usuário NÃO está na Home,
   // mostra um botão circular de casinha para voltar para a tela inicial.
+  // Mesmo tamanho dos botões superiores: h-16 w-16.
   const resolvedCenter =
     centerSlot ??
     (!isHome ? (
       <button
         onClick={() => navigate(HOME_PATH)}
         aria-label="Voltar para a tela inicial"
-        className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-background transition-transform active:scale-95 hover:opacity-90"
+        className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-background transition-transform active:scale-95 hover:opacity-90"
       >
-        <Home className="h-5 w-5" />
+        <Home className="h-6 w-6" />
       </button>
     ) : null);
 
