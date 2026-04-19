@@ -1093,11 +1093,19 @@ const PassengerHome = () => {
           Fechar (X / overlay / Esc) chama resetRide para limpar o estado. */}
       <Dialog
         open={rideState === "rating" && !!activeRide}
-        onOpenChange={(o) => { if (!o) resetRide(); }}
+        onOpenChange={() => { /* avaliação obrigatória — não permite fechar */ }}
       >
-        <DialogContent className="max-w-sm w-[calc(100vw-1.5rem)] max-h-[95dvh] p-0 gap-0 flex flex-col overflow-hidden">
+        <DialogContent
+          className="max-w-sm w-[calc(100vw-1.5rem)] max-h-[95dvh] p-0 gap-0 flex flex-col overflow-hidden [&>button]:hidden"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader className="px-4 pt-3 pb-1 shrink-0">
-            <DialogTitle className="text-center text-base font-display">Como foi sua viagem?</DialogTitle>
+            <DialogTitle className="text-center text-base font-display">Avalie sua viagem</DialogTitle>
+            <p className="text-center text-[11px] text-muted-foreground mt-0.5">
+              A avaliação é obrigatória para continuar
+            </p>
           </DialogHeader>
           {activeRide && (
             <>
