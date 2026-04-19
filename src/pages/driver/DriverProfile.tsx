@@ -5,6 +5,7 @@ import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import EditProfileModal from "@/components/shared/EditProfileModal";
+import DriverRatingsSection from "@/components/driver/DriverRatingsSection";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -199,6 +200,8 @@ const DriverProfile = () => {
             </div>
           ))}
         </div>
+
+        <DriverRatingsSection />
 
         {driverData && (
           <div className="mt-4 rounded-2xl border bg-card p-4">

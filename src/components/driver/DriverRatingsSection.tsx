@@ -1,17 +1,14 @@
 /**
- * DriverRatings — Página "Minhas avaliações" do motorista.
+ * DriverRatingsSection — Bloco "Minhas avaliações" embutido no perfil do motorista.
  *
- * Privacidade: nenhuma informação do passageiro é exibida.
- * - Mostra apenas a NOTA GERAL do motorista.
- * - Lista somente avaliações baixas (≤ 2★) das corridas dos últimos 7 dias,
- *   de forma totalmente anônima (sem nome/foto/ID do passageiro).
- * - Permite ao motorista enviar recurso (defesa) para essas avaliações.
- * - Mostra também recursos já enviados e seus status (pendente/aceito/rejeitado).
+ * Mostra:
+ *  - Card de nota geral (gradient destaque)
+ *  - Lista de avaliações baixas (≤2★) dos últimos 7 dias, totalmente anônimas
+ *  - Recursos enviados (pendente/aceito/rejeitado) com a resposta do admin
+ *  - Botão "Contestar avaliação" abrindo o AppealRatingDialog
  */
 import { useEffect, useState } from "react";
 import { Star, ShieldAlert, Clock, CheckCircle2, XCircle } from "lucide-react";
-import AppMenu from "@/components/shared/AppMenu";
-import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import AppealRatingDialog from "@/components/driver/AppealRatingDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,7 +37,7 @@ const formatDate = (iso: string | null) =>
     ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
     : "—";
 
-const DriverRatings = () => {
+const DriverRatingsSection = () => {
   const { user } = useAuth();
   const [overallRating, setOverallRating] = useState<number | null>(null);
   const [totalRated, setTotalRated] = useState(0);
@@ -85,7 +82,7 @@ const DriverRatings = () => {
     setLoading(true);
     reload();
     const channel = supabase
-      .channel(`driver-ratings-${user.id}`)
+      .channel(`driver-ratings-section-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "rating_appeals", filter: `driver_id=eq.${user.id}` }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "drivers", filter: `user_id=eq.${user.id}` }, reload)
@@ -97,54 +94,49 @@ const DriverRatings = () => {
   const appealByRide = new Map(appeals.map((a) => [a.ride_id, a]));
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="bg-card border-b p-4 pt-20">
-        <h1 className="text-lg font-bold">Minhas avaliações</h1>
-        <p className="text-xs text-muted-foreground">As avaliações são anônimas — você não sabe quem avaliou</p>
-      </div>
+    <div className="mt-4 space-y-3">
+      <h3 className="text-sm font-semibold text-muted-foreground">Minhas avaliações</h3>
 
       {/* Nota geral */}
-      <div className="p-4">
-        <div className="rounded-2xl border bg-gradient-primary p-6 text-center shadow-glow">
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary-foreground/80">Sua nota geral</p>
-          <div className="mt-2 flex items-center justify-center gap-2">
-            <Star className="h-8 w-8 text-warning fill-warning" />
-            <span className="text-4xl font-extrabold text-primary-foreground">
-              {loading ? "…" : (overallRating ?? 5).toFixed(2)}
-            </span>
-            <span className="text-sm font-medium text-primary-foreground/70">/ 5,00</span>
-          </div>
-          <p className="mt-2 text-[11px] text-primary-foreground/80">
-            {totalRated} avaliaç{totalRated === 1 ? "ão recebida" : "ões recebidas"} · piso mínimo de 4,00
-          </p>
+      <div className="rounded-2xl border bg-gradient-primary p-5 text-center shadow-glow">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-primary-foreground/80">Nota geral</p>
+        <div className="mt-1 flex items-center justify-center gap-2">
+          <Star className="h-7 w-7 text-warning fill-warning" />
+          <span className="text-3xl font-extrabold text-primary-foreground">
+            {loading ? "…" : (overallRating ?? 5).toFixed(2)}
+          </span>
+          <span className="text-sm font-medium text-primary-foreground/70">/ 5,00</span>
         </div>
+        <p className="mt-1 text-[11px] text-primary-foreground/80">
+          {totalRated} avaliaç{totalRated === 1 ? "ão" : "ões"} · piso mínimo de 4,00
+        </p>
       </div>
 
-      {/* Avaliações baixas com defesa disponível */}
-      <div className="px-4">
-        <h2 className="text-sm font-bold mb-2 flex items-center gap-2">
+      {/* Avaliações baixas */}
+      <div className="rounded-2xl border bg-card p-4">
+        <h4 className="text-sm font-bold flex items-center gap-2">
           <ShieldAlert className="h-4 w-4 text-warning" />
           Avaliações baixas (últimos 7 dias)
-        </h2>
-        <p className="text-[11px] text-muted-foreground mb-3">
-          Apenas avaliações de 1 ou 2 estrelas aparecem aqui — você pode contestar dentro de 7 dias.
+        </h4>
+        <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">
+          Apenas 1★ ou 2★ — você pode contestar dentro de 7 dias. As avaliações são anônimas.
         </p>
 
         {loading ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Carregando...</p>
+          <p className="py-4 text-center text-xs text-muted-foreground">Carregando...</p>
         ) : lowRides.length === 0 ? (
-          <div className="py-8 text-center rounded-2xl border bg-card">
-            <CheckCircle2 className="mx-auto h-8 w-8 text-success mb-2" />
+          <div className="py-4 text-center">
+            <CheckCircle2 className="mx-auto h-7 w-7 text-success mb-1" />
             <p className="text-sm font-semibold">Sem avaliações baixas 🎉</p>
-            <p className="text-xs text-muted-foreground">Continue assim!</p>
+            <p className="text-[11px] text-muted-foreground">Continue assim!</p>
           </div>
         ) : (
           <div className="space-y-3">
             {lowRides.map((ride) => {
               const appeal = appealByRide.get(ride.id);
               return (
-                <div key={ride.id} className="rounded-2xl border bg-card p-4 shadow-sm">
-                  <div className="flex items-start justify-between mb-2">
+                <div key={ride.id} className="rounded-xl border bg-muted/30 p-3">
+                  <div className="flex items-start justify-between mb-1.5">
                     <div>
                       <span className="text-xs font-mono text-primary">{ride.ride_code || `#${ride.id.slice(0, 8)}`}</span>
                       <p className="text-[11px] text-muted-foreground">{formatDate(ride.completed_at)}</p>
@@ -153,7 +145,7 @@ const DriverRatings = () => {
                       {[1, 2, 3, 4, 5].map((s) => (
                         <Star
                           key={s}
-                          className={`h-4 w-4 ${s <= (ride.rating || 0) ? "text-warning fill-warning" : "text-muted-foreground/30"}`}
+                          className={`h-3.5 w-3.5 ${s <= (ride.rating || 0) ? "text-warning fill-warning" : "text-muted-foreground/30"}`}
                         />
                       ))}
                     </div>
@@ -196,7 +188,7 @@ const DriverRatings = () => {
                   ) : (
                     <button
                       onClick={() => setAppealRide(ride)}
-                      className="mt-2 w-full rounded-lg border border-warning/40 bg-warning/5 py-2 text-xs font-semibold text-warning flex items-center justify-center gap-1.5"
+                      className="mt-2 w-full rounded-lg border border-warning/40 bg-warning/5 py-1.5 text-xs font-semibold text-warning flex items-center justify-center gap-1.5"
                     >
                       <ShieldAlert className="h-3.5 w-3.5" /> Contestar avaliação
                     </button>
@@ -214,11 +206,8 @@ const DriverRatings = () => {
         ride={appealRide}
         onSuccess={reload}
       />
-
-      <AppMenu role="driver" />
-      <DriverEarningsChip />
     </div>
   );
 };
 
-export default DriverRatings;
+export default DriverRatingsSection;
