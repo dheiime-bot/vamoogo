@@ -89,11 +89,11 @@ const DriverOfferAlert = () => {
   }, [isDriver, user, handleNewOffer]);
 
   // Polling AGRESSIVO a cada 1.5s (fonte primária — funciona mesmo sem WebSocket)
+  // Se houver 2+ ofertas pendentes simultâneas (alta demanda), redireciona para /driver/offers
   useEffect(() => {
     if (!isDriver || !user) return;
     let cancelled = false;
     const tick = async () => {
-      if (offerRef.current) return;
       const { data, error } = await supabase
         .from("ride_offers")
         .select("*")
@@ -101,16 +101,37 @@ const DriverOfferAlert = () => {
         .eq("status", "pending")
         .gte("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
-        .limit(1);
+        .limit(5);
       if (cancelled) return;
       if (error) { console.warn("[offer-alert] poll error:", error); return; }
       if (!data || data.length === 0) return;
+
+      // Alta demanda: 2+ ofertas → manda pra lista
+      if (data.length >= 2) {
+        if (window.location.pathname !== "/driver/offers") {
+          console.log(`[offer-alert] 🔥 high demand (${data.length} offers) — redirecting to /driver/offers`);
+          // Marca todas como "vistas" para o popup não disparar depois
+          data.forEach((o: any) => seenOfferIdsRef.current.add(o.id));
+          // Fecha popup atual se houver
+          if (offerRef.current) { setOffer(null); setRide(null); }
+          playOfferAlert({
+            title: `${data.length} corridas disponíveis! 🔥`,
+            body: "Alta demanda — escolha qual aceitar.",
+          });
+          toast.success(`${data.length} corridas disponíveis! 🔥`);
+          navigate("/driver/offers");
+        }
+        return;
+      }
+
+      // Caso normal: 1 oferta → popup
+      if (offerRef.current) return;
       handleNewOffer(data[0]);
     };
     tick();
     const i = setInterval(tick, 1500);
     return () => { cancelled = true; clearInterval(i); };
-  }, [isDriver, user, handleNewOffer]);
+  }, [isDriver, user, handleNewOffer, navigate]);
 
   // Countdown
   useEffect(() => {
