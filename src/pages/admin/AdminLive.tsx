@@ -64,6 +64,15 @@ const AdminLive = () => {
   return (
     <AdminLayout title="Mapa ao Vivo" actions={
       <div className="flex items-center gap-3">
+        <button
+          onClick={handleSeedTestRides}
+          disabled={seeding}
+          className="flex items-center gap-1.5 rounded-lg bg-warning/10 hover:bg-warning/20 text-warning px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50"
+          title="Cria 5 corridas fictícias e dispara para os motoristas online"
+        >
+          {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+          Simular 5 corridas
+        </button>
         <div className="flex items-center gap-1.5">
           <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
           <span className="text-xs font-medium text-success">Tempo real</span>
