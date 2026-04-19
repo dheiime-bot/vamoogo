@@ -11,13 +11,33 @@ const AdminLive = () => {
   const [stats, setStats] = useState({ active: 0, waiting: 0 });
   const [seeding, setSeeding] = useState(false);
 
+  const getDeviceLocation = (): Promise<{ lat: number; lng: number } | null> =>
+    new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+      );
+    });
+
   const handleSeedTestRides = async () => {
     if (seeding) return;
-    if (!confirm("Disparar 5 corridas de teste agora? Elas serão criadas como 🧪 TESTE e enviadas aos motoristas online.")) return;
+    if (!confirm("Disparar 5 corridas de teste agora? Elas serão criadas como 🧪 TESTE em volta da sua localização atual e enviadas aos motoristas online.")) return;
     setSeeding(true);
     try {
+      const loc = await getDeviceLocation();
+      if (loc) {
+        toast.info(`📍 Usando sua localização: ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`);
+      } else {
+        toast.warning("Localização indisponível — usando São Paulo como centro");
+      }
       const { data, error } = await supabase.functions.invoke("seed-test-rides", {
-        body: { count: 5, category: "economico" },
+        body: {
+          count: 5,
+          category: "economico",
+          ...(loc ? { centerLat: loc.lat, centerLng: loc.lng } : {}),
+        },
       });
       if (error) throw error;
       toast.success(`✅ ${data?.created ?? 0} corridas de teste criadas e despachadas!`);
