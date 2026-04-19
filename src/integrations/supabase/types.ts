@@ -1258,11 +1258,20 @@ export type Database = {
         Args: { _new_price: number; _reason: string; _ride_id: string }
         Returns: Json
       }
+      admin_block_driver_online: {
+        Args: { _block: boolean; _reason?: string; _user_id: string }
+        Returns: undefined
+      }
       admin_cancel_ride: {
         Args: { _reason: string; _ride_id: string }
         Returns: undefined
       }
+      admin_close_ticket: { Args: { _ticket_id: string }; Returns: undefined }
       admin_delete_user: { Args: { _user_id: string }; Returns: undefined }
+      admin_mark_passenger_suspect: {
+        Args: { _reason?: string; _suspect: boolean; _user_id: string }
+        Returns: undefined
+      }
       admin_mark_ride_issue: {
         Args: {
           _flag: string
@@ -1276,9 +1285,50 @@ export type Database = {
         Args: { _new_status: string; _note?: string; _ride_id: string }
         Returns: undefined
       }
+      admin_respond_ticket: {
+        Args: { _close?: boolean; _response: string; _ticket_id: string }
+        Returns: undefined
+      }
       admin_send_message: {
         Args: { _message: string; _title: string; _user_id: string }
         Returns: string
+      }
+      admin_update_driver_data: {
+        Args: {
+          _category: string
+          _email: string
+          _full_name: string
+          _phone: string
+          _pix_key: string
+          _pix_key_type: string
+          _user_id: string
+          _vehicle_brand: string
+          _vehicle_color: string
+          _vehicle_model: string
+          _vehicle_plate: string
+        }
+        Returns: undefined
+      }
+      admin_update_driver_status: {
+        Args: { _message?: string; _new_status: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_update_passenger_data: {
+        Args: {
+          _email: string
+          _full_name: string
+          _phone: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      admin_update_passenger_status: {
+        Args: { _new_status: string; _reason?: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_update_ticket_priority: {
+        Args: { _priority: string; _ticket_id: string }
+        Returns: undefined
       }
       become_driver: {
         Args: {
