@@ -259,7 +259,8 @@ const MotoMarker = ({ heading = 0 }: { heading?: number }) => {
       </svg>
     </div>
   </div>
-);
+  );
+};
 
 const PassengerMarker = () => (
   <div className="relative" title="Passageiro" style={{ width: 52, height: 56 }}>
