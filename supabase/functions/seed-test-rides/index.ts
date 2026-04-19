@@ -46,7 +46,8 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const count = Math.min(20, Math.max(1, Number(body.count) || 5));
+    // Sem teto: pode disparar quantas o pool de passageiros suportar
+    const count = Math.max(1, Number(body.count) || 5);
     const centerLat = Number(body.centerLat) || DEFAULT_LAT;
     const centerLng = Number(body.centerLng) || DEFAULT_LNG;
     const category = body.category || "economico";
@@ -66,42 +67,43 @@ Deno.serve(async (req) => {
       console.log(`[seed-test-rides] cancelled ${oldSeed.length} previous SEED rides`);
     }
 
-    // Monta pool de passageiros distintos (trigger impede 2 rides ativas/passageiro)
+    // Monta pool de passageiros DISTINTOS sem rides ativas (trigger impede 2/pax)
     let pool: string[] = [];
     if (explicitPax) {
       pool = [explicitPax];
     } else {
-      const { data: withPhone } = await supabase
+      // 1) Busca passageiros ativos (sem teto — pega todos disponíveis)
+      const { data: allPax } = await supabase
         .from("profiles")
         .select("user_id")
         .eq("status", "ativo")
-        .eq("user_type", "passenger")
-        .not("phone", "is", null)
-        .neq("phone", "")
-        .limit(count + 5);
-      pool = (withPhone || []).map((p: any) => p.user_id);
+        .eq("user_type", "passenger");
+      const allIds = (allPax || []).map((p: any) => p.user_id);
 
-      if (pool.length < count) {
-        const { data: anyPax } = await supabase
-          .from("profiles")
-          .select("user_id")
-          .eq("status", "ativo")
-          .eq("user_type", "passenger")
-          .limit(count + 5);
-        for (const p of anyPax || []) {
-          if (!pool.includes(p.user_id)) pool.push(p.user_id);
-        }
-      }
+      // 2) Remove os que já têm ride ativa (requested/accepted/in_progress)
+      const { data: busy } = await supabase
+        .from("rides")
+        .select("passenger_id")
+        .in("status", ["requested", "accepted", "in_progress"]);
+      const busySet = new Set((busy || []).map((b: any) => b.passenger_id));
+      pool = allIds.filter((id) => !busySet.has(id));
+
       if (pool.length === 0) pool = [callerId];
     }
 
-    console.log(`[seed-test-rides] creating ${count} rides around ${centerLat},${centerLng} cat=${category} pool=${pool.length}`);
+    // Limita count ao tamanho do pool (não pode ter 2 rides do mesmo pax)
+    const effectiveCount = Math.min(count, pool.length);
+    if (effectiveCount < count) {
+      console.warn(`[seed-test-rides] pool=${pool.length} < count=${count} — limitado a ${effectiveCount}`);
+    }
+
+    console.log(`[seed-test-rides] creating ${effectiveCount} rides around ${centerLat},${centerLng} cat=${category} pool=${pool.length}`);
 
     const created: string[] = [];
     const errors: any[] = [];
 
-    for (let i = 0; i < count; i++) {
-      const pax = pool[i % pool.length];
+    for (let i = 0; i < effectiveCount; i++) {
+      const pax = pool[i];
 
       // Garante telefone preenchido (trigger exige)
       const { data: paxProfile } = await supabase
@@ -161,12 +163,14 @@ Deno.serve(async (req) => {
         .catch((e) => console.warn(`[seed-test-rides] dispatch invoke ${ride.id} failed`, e));
     }
 
-    console.log(`[seed-test-rides] done: ${created.length}/${count} created`);
+    console.log(`[seed-test-rides] done: ${created.length}/${effectiveCount} created (requested ${count}, pool ${pool.length})`);
 
     return new Response(JSON.stringify({
       ok: true,
       created: created.length,
-      total: count,
+      requested: count,
+      effective: effectiveCount,
+      pool_size: pool.length,
       ride_ids: created,
       errors: errors.length ? errors : undefined,
     }), {

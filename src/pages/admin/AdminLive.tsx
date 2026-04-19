@@ -23,7 +23,10 @@ const AdminLive = () => {
 
   const handleSeedTestRides = async () => {
     if (seeding) return;
-    if (!confirm("Disparar 5 corridas de teste agora? Elas serão criadas como 🧪 TESTE em volta da sua localização atual e enviadas aos motoristas online.")) return;
+    const input = prompt("Quantas corridas de teste disparar? (sem limite)", "10");
+    if (!input) return;
+    const count = Math.max(1, parseInt(input, 10) || 5);
+    if (!confirm(`Disparar ${count} corrida(s) de teste agora? Serão criadas como 🧪 TESTE em volta da sua localização atual.\n\nObs: requer um passageiro distinto por corrida (limite do banco).`)) return;
     setSeeding(true);
     try {
       const loc = await getDeviceLocation();
@@ -34,13 +37,20 @@ const AdminLive = () => {
       }
       const { data, error } = await supabase.functions.invoke("seed-test-rides", {
         body: {
-          count: 5,
+          count,
           category: "economico",
           ...(loc ? { centerLat: loc.lat, centerLng: loc.lng } : {}),
         },
       });
       if (error) throw error;
-      toast.success(`✅ ${data?.created ?? 0} corridas de teste criadas e despachadas!`);
+      const created = data?.created ?? 0;
+      const requested = data?.requested ?? count;
+      const pool = data?.pool_size ?? 0;
+      if (created < requested) {
+        toast.warning(`⚠️ ${created}/${requested} criadas — apenas ${pool} passageiro(s) sem corrida ativa disponíveis. Cadastre mais passageiros de teste.`);
+      } else {
+        toast.success(`✅ ${created} corridas de teste criadas e despachadas!`);
+      }
       fetchLive();
     } catch (e: any) {
       toast.error("Falha ao criar corridas de teste: " + (e?.message || e));
