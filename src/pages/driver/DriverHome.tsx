@@ -774,25 +774,14 @@ const DriverHome = () => {
           <button
             onClick={handleToggleOnline}
             disabled={(lowBalance && !isOnline) || !!activeRide || rideState === "offer"}
-            className={`pointer-events-auto flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-extrabold shadow-glow transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap uppercase ${
+            aria-label={isOnline || activeRide ? "Ficar offline" : "Ficar online"}
+            className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full text-base font-extrabold tracking-wider shadow-glow ring-2 ring-background transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
               isOnline || activeRide
                 ? "bg-success text-success-foreground"
                 : "bg-destructive text-destructive-foreground"
             }`}
           >
-            {isOnline || activeRide ? (
-              <>
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-success-foreground opacity-60 animate-ping" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success-foreground" />
-                </span>
-                {activeRide ? "Em corrida" : "Online"}
-              </>
-            ) : (
-              <>
-                <Power className="h-4 w-4" /> Offline
-              </>
-            )}
+            {isOnline || activeRide ? "ON" : "OFF"}
           </button>
         }
       />
