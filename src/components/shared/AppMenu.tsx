@@ -48,9 +48,19 @@ const AppMenu = ({ role, floating = true }: Props) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut, roles, switchRole, profile } = useAuth();
+  const [driverRating, setDriverRating] = useState<number | null>(null);
 
   const items = role === "driver" ? DRIVER_ITEMS : PASSENGER_ITEMS;
   const hasBoth = roles.includes("driver") && roles.includes("passenger");
+
+  // Busca a nota do motorista quando estiver no modo motorista
+  useEffect(() => {
+    if (role !== "driver" || !user?.id) return;
+    supabase.from("drivers").select("rating").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => { if (data?.rating != null) setDriverRating(Number(data.rating)); });
+  }, [role, user?.id]);
+
+  const ratingToShow = role === "driver" ? driverRating : (profile?.rating ?? null);
 
   const calcAge = (iso?: string | null) => {
     if (!iso) return null;
