@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { Car, MapPin, Clock, Loader2, CheckCircle2, XCircle, RefreshCw, Power } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
+import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
 import { useAuth } from "@/contexts/AuthContext";
