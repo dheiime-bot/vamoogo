@@ -174,6 +174,9 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
                   );
                 }
 
+                const isSupport = item.path === "/admin/support";
+                const badgeNum = isSupport ? supportOpen : item.badge;
+                const isUrgent = isSupport && supportUrgent > 0;
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
@@ -182,13 +185,17 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
                       isActive={isActive(item.path!)}
                     >
                       <NavLink to={item.path!} end>
-                        <item.icon className="h-4 w-4" />
+                        <item.icon className={`h-4 w-4 ${isUrgent ? "text-destructive" : ""}`} />
                         <span>{item.label}</span>
-                        {item.badge && (
-                          <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1 text-[10px] font-semibold text-muted-foreground">
-                            {item.badge}
+                        {badgeNum ? (
+                          <span className={`ml-auto flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${
+                            isUrgent
+                              ? "bg-destructive text-destructive-foreground animate-pulse"
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            {badgeNum}
                           </span>
-                        )}
+                        ) : null}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
