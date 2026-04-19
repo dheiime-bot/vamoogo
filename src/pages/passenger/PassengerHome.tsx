@@ -1032,7 +1032,7 @@ const PassengerHome = () => {
       {rideState === "idle" && (
         <div
           className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-6"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem + 12px)" }}
         >
           {!showRideForm ? (
             // Estado inicial: 1 botão único, mapa ocupando a tela toda
