@@ -55,9 +55,8 @@ const AdminChats = () => {
   const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
+  const load = async (showSpinner = true) => {
+      if (showSpinner) setLoading(true);
       const { data: rides } = await supabase
         .from("rides")
         .select("id, ride_code, passenger_id, driver_id, origin_address, destination_address, status, created_at, price")
