@@ -7,6 +7,8 @@ interface RideSummaryProps {
   onRate: () => void;
   /** Esconde o botão "Avaliar motorista" — usado quando o resumo aparece dentro do modal de avaliação. */
   hideRateButton?: boolean;
+  /** Versão compacta — usada dentro do modal de avaliação para caber em telas pequenas sem scroll. */
+  compact?: boolean;
 }
 
 const paymentLabels: Record<string, { label: string; icon: typeof Banknote }> = {
@@ -16,7 +18,7 @@ const paymentLabels: Record<string, { label: string; icon: typeof Banknote }> = 
   credit: { label: "Cartão Crédito", icon: CreditCard },
 };
 
-const RideSummary = ({ ride, onRate, hideRateButton = false }: RideSummaryProps) => {
+const RideSummary = ({ ride, onRate, hideRateButton = false, compact = false }: RideSummaryProps) => {
   const pm = paymentLabels[ride.payment_method || "cash"];
 
   const copyCode = async () => {
@@ -30,18 +32,24 @@ const RideSummary = ({ ride, onRate, hideRateButton = false }: RideSummaryProps)
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className={compact ? "space-y-2 animate-fade-in" : "space-y-4 animate-fade-in"}>
       {/* Success header */}
-      <div className="text-center py-2">
-        <div className="mx-auto h-14 w-14 rounded-full bg-success/10 flex items-center justify-center mb-3">
-          <Check className="h-7 w-7 text-success" />
-        </div>
-        <h2 className="text-lg font-bold font-display">Corrida finalizada!</h2>
-        <p className="text-sm text-muted-foreground">Obrigado por viajar com a Vamoo</p>
+      <div className={compact ? "text-center" : "text-center py-2"}>
+        {!compact && (
+          <div className="mx-auto h-14 w-14 rounded-full bg-success/10 flex items-center justify-center mb-3">
+            <Check className="h-7 w-7 text-success" />
+          </div>
+        )}
+        {!compact && (
+          <h2 className="text-lg font-bold font-display">Corrida finalizada!</h2>
+        )}
+        {!compact && (
+          <p className="text-sm text-muted-foreground">Obrigado por viajar com a Vamoo</p>
+        )}
         {ride.ride_code && (
           <button
             onClick={copyCode}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-mono font-semibold text-primary hover:bg-primary/10"
+            className={`${compact ? "" : "mt-2"} inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-mono font-semibold text-primary hover:bg-primary/10`}
             title="Copiar código da corrida"
           >
             {ride.ride_code}
@@ -51,55 +59,57 @@ const RideSummary = ({ ride, onRate, hideRateButton = false }: RideSummaryProps)
       </div>
 
       {/* Route */}
-      <div className="rounded-2xl border p-4 space-y-3">
+      <div className={`rounded-2xl border ${compact ? "p-2.5 space-y-1.5" : "p-4 space-y-3"}`}>
         <div className="flex items-start gap-3">
           <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-success shrink-0" />
-          <p className="text-sm">{ride.origin_address?.split(" - ")[0]}</p>
+          <p className={compact ? "text-xs" : "text-sm"}>{ride.origin_address?.split(" - ")[0]}</p>
         </div>
-        <div className="ml-1 h-3 border-l-2 border-dashed border-muted-foreground/30" />
+        {!compact && <div className="ml-1 h-3 border-l-2 border-dashed border-muted-foreground/30" />}
         <div className="flex items-start gap-3">
           <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-destructive shrink-0" />
-          <p className="text-sm">{ride.destination_address?.split(" - ")[0]}</p>
+          <p className={compact ? "text-xs" : "text-sm"}>{ride.destination_address?.split(" - ")[0]}</p>
         </div>
       </div>
 
       {/* Details grid */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-xl border p-3 text-center">
-          <Navigation className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-          <p className="text-xs text-muted-foreground">Distância</p>
-          <p className="text-sm font-bold">{ride.distance_km} km</p>
+        <div className={`rounded-xl border text-center ${compact ? "p-1.5" : "p-3"}`}>
+          <Navigation className={`text-muted-foreground mx-auto ${compact ? "h-3 w-3 mb-0.5" : "h-4 w-4 mb-1"}`} />
+          <p className={`text-muted-foreground ${compact ? "text-[10px] leading-tight" : "text-xs"}`}>Distância</p>
+          <p className={compact ? "text-xs font-bold" : "text-sm font-bold"}>{ride.distance_km} km</p>
         </div>
-        <div className="rounded-xl border p-3 text-center">
-          <Clock className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-          <p className="text-xs text-muted-foreground">Tempo</p>
-          <p className="text-sm font-bold">{ride.duration_minutes} min</p>
+        <div className={`rounded-xl border text-center ${compact ? "p-1.5" : "p-3"}`}>
+          <Clock className={`text-muted-foreground mx-auto ${compact ? "h-3 w-3 mb-0.5" : "h-4 w-4 mb-1"}`} />
+          <p className={`text-muted-foreground ${compact ? "text-[10px] leading-tight" : "text-xs"}`}>Tempo</p>
+          <p className={compact ? "text-xs font-bold" : "text-sm font-bold"}>{ride.duration_minutes} min</p>
         </div>
-        <div className="rounded-xl border p-3 text-center">
-          <pm.icon className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-          <p className="text-xs text-muted-foreground">Pagamento</p>
-          <p className="text-sm font-bold">{pm.label}</p>
+        <div className={`rounded-xl border text-center ${compact ? "p-1.5" : "p-3"}`}>
+          <pm.icon className={`text-muted-foreground mx-auto ${compact ? "h-3 w-3 mb-0.5" : "h-4 w-4 mb-1"}`} />
+          <p className={`text-muted-foreground ${compact ? "text-[10px] leading-tight" : "text-xs"}`}>Pagamento</p>
+          <p className={compact ? "text-xs font-bold" : "text-sm font-bold"}>{pm.label}</p>
         </div>
       </div>
 
       {/* Total */}
-      <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 flex items-center justify-between">
-        <span className="text-sm font-medium">Valor total</span>
-        <span className="text-2xl font-extrabold text-primary">R$ {ride.price?.toFixed(2)}</span>
+      <div className={`rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-between ${compact ? "px-3 py-2" : "p-4"}`}>
+        <span className={compact ? "text-xs font-medium" : "text-sm font-medium"}>Valor total</span>
+        <span className={compact ? "text-lg font-extrabold text-primary" : "text-2xl font-extrabold text-primary"}>R$ {ride.price?.toFixed(2)}</span>
       </div>
 
-      {/* Payment instruction */}
-      <div className="rounded-xl bg-warning/10 border border-warning/30 p-3 text-center">
-        {ride.payment_method === "cash" && (
-          <p className="text-sm font-medium text-warning">💵 Pague em dinheiro ao motorista</p>
-        )}
-        {ride.payment_method === "pix" && (
-          <p className="text-sm font-medium text-warning">⚡ Pague via Pix ao motorista</p>
-        )}
-        {(ride.payment_method === "debit" || ride.payment_method === "credit") && (
-          <p className="text-sm font-medium text-warning">💳 Pague na maquininha do motorista</p>
-        )}
-      </div>
+      {/* Payment instruction — escondida no modo compacto p/ economizar espaço */}
+      {!compact && (
+        <div className="rounded-xl bg-warning/10 border border-warning/30 p-3 text-center">
+          {ride.payment_method === "cash" && (
+            <p className="text-sm font-medium text-warning">💵 Pague em dinheiro ao motorista</p>
+          )}
+          {ride.payment_method === "pix" && (
+            <p className="text-sm font-medium text-warning">⚡ Pague via Pix ao motorista</p>
+          )}
+          {(ride.payment_method === "debit" || ride.payment_method === "credit") && (
+            <p className="text-sm font-medium text-warning">💳 Pague na maquininha do motorista</p>
+          )}
+        </div>
+      )}
 
       {/* Rate button — escondido quando o resumo aparece dentro do modal de avaliação */}
       {!hideRateButton && (
