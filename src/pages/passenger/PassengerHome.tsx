@@ -73,6 +73,7 @@ const PassengerHome = () => {
   const [showPixModal, setShowPixModal] = useState(false);
   const [showChangeDest, setShowChangeDest] = useState(false);
   const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Status do GPS do dispositivo (alimenta o sino: verde=ok, vermelho=negado/erro)
   const [gpsStatus, setGpsStatus] = useState<"connected" | "disconnected" | "idle">("idle");
