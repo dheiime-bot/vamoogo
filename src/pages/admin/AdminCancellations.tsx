@@ -3,7 +3,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  XCircle, Unlock, Ban, Eye, Clock,
+  XCircle, Unlock, Ban, Eye, Clock, Search, X,
   TrendingUp, Users, Car, Loader2, RefreshCw,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -81,6 +81,7 @@ const AdminCancellations = () => {
   const [period, setPeriod] = useState<Period>("7d");
   const [who, setWho] = useState<WhoFilter>("all");
   const [reasonFilter, setReasonFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [rides, setRides] = useState<Cancelled[]>([]);
@@ -183,13 +184,33 @@ const AdminCancellations = () => {
 
   useEffect(() => { fetchData(); /* eslint-disable-next-line */ }, [period]);
 
+  // Normaliza: "vamoo 1000" / "VAMOO1000" / "1000" → "VAMOO1000"
+  const normalizeCode = (s: string) => {
+    const cleaned = (s || "").toUpperCase().replace(/\s+/g, "");
+    if (/^\d+$/.test(cleaned)) return `VAMOO${cleaned}`;
+    return cleaned;
+  };
+
   const filteredRides = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    const codeQuery = normalizeCode(search);
     return rides.filter((r) => {
       if (who !== "all" && r.who !== who) return false;
       if (reasonFilter !== "all" && classifyReason(r.admin_notes) !== reasonFilter) return false;
+      if (q) {
+        const matchSearch =
+          (codeQuery && r.ride_code?.toUpperCase().includes(codeQuery)) ||
+          r.passenger_name?.toLowerCase().includes(q) ||
+          r.driver_name?.toLowerCase().includes(q) ||
+          r.origin_address?.toLowerCase().includes(q) ||
+          r.destination_address?.toLowerCase().includes(q) ||
+          r.id?.toLowerCase().startsWith(q) ||
+          r.admin_notes?.toLowerCase().includes(q);
+        if (!matchSearch) return false;
+      }
       return true;
     });
-  }, [rides, who, reasonFilter]);
+  }, [rides, who, reasonFilter, search]);
 
   const kpis = useMemo(() => {
     const total = rides.length;
@@ -387,6 +408,20 @@ const AdminCancellations = () => {
             <XCircle className="h-4 w-4 text-destructive" /> Corridas canceladas ({filteredRides.length})
           </h3>
           <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-1 min-w-[220px] items-center gap-2 rounded-lg border bg-card px-2 py-1">
+              <Search className="h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                placeholder="Buscar por nome, código, endereço..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 bg-transparent text-xs outline-none min-w-[160px]"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="rounded-full p-0.5 hover:bg-muted" title="Limpar">
+                  <X className="h-3 w-3 text-muted-foreground" />
+                </button>
+              )}
+            </div>
             <select
               value={who}
               onChange={(e) => setWho(e.target.value as WhoFilter)}
