@@ -180,9 +180,12 @@ const PassengerFavoriteDrivers = () => {
           items.map((f) => (
             <article
               key={f.id}
-              onClick={() => f.driver && setSelected(f.driver)}
-              className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors"
+              className="rounded-2xl border border-border bg-card p-4 space-y-3"
             >
+              <div
+                onClick={() => f.driver && setSelected(f.driver)}
+                className="flex items-center gap-3 cursor-pointer"
+              >
               {f.driver?.selfie_url ? (
                 <img
                   src={f.driver.selfie_url}
@@ -195,9 +198,17 @@ const PassengerFavoriteDrivers = () => {
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate">
-                  {f.driver?.full_name}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold truncate">
+                    {f.driver?.full_name}
+                  </p>
+                  <span
+                    className={`h-2 w-2 rounded-full shrink-0 ${
+                      f.driver?.is_online ? "bg-success animate-pulse" : "bg-muted-foreground/40"
+                    }`}
+                    aria-label={f.driver?.is_online ? "online" : "offline"}
+                  />
+                </div>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
                   {f.driver?.rating != null && (
                     <span className="flex items-center gap-1">
@@ -207,6 +218,9 @@ const PassengerFavoriteDrivers = () => {
                   )}
                   {f.driver?.total_rides != null && (
                     <span>{f.driver.total_rides} corridas</span>
+                  )}
+                  {f.driver?.is_online && f.driver?.distance_km != null && (
+                    <span>{f.driver.distance_km.toFixed(1)} km</span>
                   )}
                 </div>
                 {f.driver?.vehicle && (
@@ -225,6 +239,28 @@ const PassengerFavoriteDrivers = () => {
                 aria-label="Remover dos favoritos"
               >
                 <Heart className="h-5 w-5 fill-current" />
+              </button>
+              </div>
+
+              <button
+                disabled={!canCall(f.driver) || calling === f.driver_id}
+                onClick={() =>
+                  callDriver(f.driver_id, f.driver?.full_name || "Motorista")
+                }
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none disabled:cursor-not-allowed transition-all"
+              >
+                {calling === f.driver_id ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Phone className="h-4 w-4" />
+                )}
+                {!f.driver?.is_online
+                  ? "Offline"
+                  : f.driver?.distance_km == null
+                  ? "Sem localização"
+                  : f.driver.distance_km > maxKm
+                  ? `Longe (${f.driver.distance_km.toFixed(1)} km > ${maxKm} km)`
+                  : `Chamar (${f.driver.distance_km.toFixed(1)} km)`}
               </button>
             </article>
           ))
