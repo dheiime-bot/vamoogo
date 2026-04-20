@@ -872,6 +872,25 @@ const DriverHome = () => {
         open={requireVehiclePick}
         onOpenChange={setRequireVehiclePick}
         required
+        onSelected={() => {
+          // Após escolher o veículo, tenta entrar online automaticamente
+          // (respeitando bloqueio, saldo, escolha manual e GPS).
+          setRequireVehiclePick(false);
+          if (!user) return;
+          const manualOfflineKey = `driver-manual-offline-${user.id}`;
+          if (localStorage.getItem(manualOfflineKey)) return;
+          const blocked = (driverData as any)?.online_blocked;
+          if (blocked || lowBalance) return;
+          if (!navigator.geolocation) return;
+          navigator.geolocation.getCurrentPosition(
+            () => {
+              setIsOnline(true);
+              toast.success("Você está Online! Aguardando corridas...");
+            },
+            () => {},
+            { enableHighAccuracy: true, timeout: 10000 }
+          );
+        }}
       />
       <DriverBottomNav
         centerSlot={
