@@ -5,6 +5,7 @@ import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
+import UserAvatar from "@/components/shared/UserAvatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,7 +48,7 @@ const AdminCoupons = () => {
   const fetchPassengers = async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("user_id, full_name, email, phone")
+      .select("user_id, full_name, email, phone, selfie_url")
       .eq("user_type", "passenger")
       .order("full_name", { ascending: true })
       .limit(500);
@@ -62,13 +63,13 @@ const AdminCoupons = () => {
       .limit(500);
     if (!rows) { setSent([]); return; }
     const ids = Array.from(new Set(rows.map((r: any) => r.passenger_id)));
-    let nameMap = new Map<string, { full_name: string; email: string | null }>();
+    let nameMap = new Map<string, { full_name: string; email: string | null; selfie_url: string | null }>();
     if (ids.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("user_id, full_name, email")
+        .select("user_id, full_name, email, selfie_url")
         .in("user_id", ids);
-      (profs || []).forEach((p: any) => nameMap.set(p.user_id, { full_name: p.full_name, email: p.email }));
+      (profs || []).forEach((p: any) => nameMap.set(p.user_id, p));
     }
     setSent(rows.map((r: any) => ({ ...r, _profile: nameMap.get(r.passenger_id) || null })));
   };
@@ -365,6 +366,7 @@ const AdminCoupons = () => {
                   return (
                     <label key={p.user_id} className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/40">
                       <input type="checkbox" checked={checked} onChange={() => toggleSelect(p.user_id)} className="h-4 w-4 accent-primary" />
+                      <UserAvatar src={p.selfie_url} name={p.full_name} role="passenger" size="xs" />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{p.full_name}</p>
                         <p className="text-[10px] text-muted-foreground truncate">{p.email || p.phone || "—"}</p>
@@ -395,8 +397,13 @@ const AdminCoupons = () => {
                       {r.used_at ? "Usado" : "Disponível"}
                     </span>
                   </div>
-                  <p className="text-sm font-medium truncate">{r._profile?.full_name || "Passageiro"}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{r._profile?.email || "—"}</p>
+                  <div className="flex items-center gap-2">
+                    <UserAvatar src={r._profile?.selfie_url} name={r._profile?.full_name} role="passenger" size="xs" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{r._profile?.full_name || "Passageiro"}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{r._profile?.email || "—"}</p>
+                    </div>
+                  </div>
                   <p className="text-[10px] text-muted-foreground">
                     {r.discount_type === "percentage" ? `${r.discount_value}%` : `R$ ${r.discount_value}`} • mín R$ {r.min_fare}
                     {r.expires_at && ` • até ${new Date(r.expires_at).toLocaleDateString("pt-BR")}`}
