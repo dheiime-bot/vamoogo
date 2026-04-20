@@ -1157,8 +1157,12 @@ const PassengerHome = () => {
 
       <AppMenu role="passenger" />
       <PassengerSpendChip />
-      <NotificationBell topOffsetPx={72} />
-      <RefreshAppButton topOffsetPx={144} />
+      {!showFormSheet && (
+        <>
+          <NotificationBell topOffsetPx={72} />
+          <RefreshAppButton topOffsetPx={144} />
+        </>
+      )}
     </div>
   );
 };
