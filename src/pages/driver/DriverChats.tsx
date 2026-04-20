@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 
 import RideChat from "@/components/passenger/RideChat";
 import CentralChat from "@/components/shared/CentralChat";
