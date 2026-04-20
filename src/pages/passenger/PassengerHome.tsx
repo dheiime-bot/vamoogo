@@ -561,6 +561,37 @@ const PassengerHome = () => {
     resetRide();
   };
 
+  // Quando o modal de rating abre, verifica se o motorista já é favorito
+  useEffect(() => {
+    if (rideState !== "rating" || !activeRide?.driver_id || !user?.id) {
+      setFavoriteDriver(false);
+      return;
+    }
+    supabase
+      .from("favorite_drivers")
+      .select("id")
+      .eq("passenger_id", user.id)
+      .eq("driver_id", activeRide.driver_id)
+      .maybeSingle()
+      .then(({ data }) => setFavoriteDriver(!!data));
+  }, [rideState, activeRide?.driver_id, user?.id]);
+
+  const toggleFavoriteDriver = async () => {
+    if (!activeRide?.driver_id || favoritingDriver) return;
+    setFavoritingDriver(true);
+    const { data, error } = await supabase.rpc("passenger_toggle_favorite_driver", {
+      _driver_id: activeRide.driver_id,
+    });
+    setFavoritingDriver(false);
+    if (error) {
+      toast.error("Não foi possível atualizar favoritos");
+      return;
+    }
+    const isFav = !!data;
+    setFavoriteDriver(isFav);
+    toast.success(isFav ? "Adicionado aos favoritos ❤️" : "Removido dos favoritos");
+  };
+
   const resetRide = () => {
     // Marca como finalizada para que UPDATEs em atraso não reabram o modal de rating
     if (activeRide?.id) finalizedRideIdsRef.current.add(activeRide.id);
