@@ -1972,9 +1972,15 @@ export type Database = {
         }[]
       }
       get_favorite_driver_details: {
-        Args: { _driver_ids: string[] }
+        Args: {
+          _driver_ids: string[]
+          _passenger_lat?: number
+          _passenger_lng?: number
+        }
         Returns: {
+          distance_km: number
           full_name: string
+          is_online: boolean
           rating: number
           selfie_url: string
           total_rides: number
@@ -2035,6 +2041,14 @@ export type Database = {
         Returns: number
       }
       is_master: { Args: { _user_id: string }; Returns: boolean }
+      passenger_call_favorite_driver: {
+        Args: {
+          _driver_id: string
+          _passenger_lat: number
+          _passenger_lng: number
+        }
+        Returns: Json
+      }
       passenger_redeem_coupon: {
         Args: { _coupon_id: string; _ride_id: string }
         Returns: undefined
