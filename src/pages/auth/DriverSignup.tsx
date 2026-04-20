@@ -313,6 +313,7 @@ const DriverSignup = () => {
     if (!vehicleColor.trim()) errs.color = "Informe a cor";
     const ey = validateYear(vehicleYear); if (ey) errs.year = ey;
     const ep = validatePlateField(vehiclePlate); if (ep) errs.plate = ep;
+    const er = validateRenavamField(vehicleRenavam); if (er) errs.renavam = er;
     if (!vehiclePhotoFront) errs.photoFront = "Envie a foto da frente do veículo";
     if (!vehiclePhotoBack) errs.photoBack = "Envie a foto da traseira do veículo";
     if (!vehiclePhotoLeft) errs.photoLeft = "Envie a foto da lateral esquerda";
@@ -323,15 +324,26 @@ const DriverSignup = () => {
       return false;
     }
 
-    // Checa duplicidade da placa
+    // Checa duplicidade da placa e do RENAVAM
     setLoading(true);
     try {
       const cleanPlate = vehiclePlate.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-      const { data: dupPlate } = await supabase
-        .from("drivers").select("id").eq("vehicle_plate", cleanPlate).maybeSingle();
-      if (dupPlate) {
+      const cleanRenavam = vehicleRenavam.replace(/\D/g, "");
+      const { data: dupes } = await supabase.rpc("check_signup_dupes", {
+        _cpf: cpf.replace(/\D/g, "") || "00000000000",
+        _phone: phone.replace(/\D/g, "") || "",
+        _plate: cleanPlate,
+        _renavam: cleanRenavam,
+      });
+      const row = Array.isArray(dupes) ? dupes[0] : dupes;
+      if (row?.plate_taken) {
         setErr("plate", "Esta placa já está cadastrada");
         toast.error("Placa já cadastrada");
+        return false;
+      }
+      if (row?.renavam_taken) {
+        setErr("renavam", "Este RENAVAM já está cadastrado");
+        toast.error("RENAVAM já cadastrado em outro veículo");
         return false;
       }
     } finally {
@@ -410,6 +422,7 @@ const DriverSignup = () => {
     const cleanCpf = cpf.replace(/\D/g, "");
     const cleanPhone = phone.replace(/\D/g, "");
     const cleanPlate = vehiclePlate.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    const cleanRenavam = vehicleRenavam.replace(/\D/g, "");
     const isoBirth = parseDateBRtoISO(birthDate);
 
     // Pré-checagem de duplicidade (evita o erro genérico do GoTrue)
@@ -417,6 +430,8 @@ const DriverSignup = () => {
       const { data: dupes } = await supabase.rpc("check_signup_dupes", {
         _cpf: cleanCpf,
         _phone: cleanPhone,
+        _plate: cleanPlate,
+        _renavam: cleanRenavam,
       });
       const row = Array.isArray(dupes) ? dupes[0] : dupes;
       if (row?.cpf_taken) {
@@ -431,6 +446,20 @@ const DriverSignup = () => {
         toast.error("Telefone já cadastrado em outra conta. Use outro número.", { duration: 6000 });
         setErr("phone", "Telefone já cadastrado em outra conta.");
         setStep(0);
+        return;
+      }
+      if (row?.plate_taken) {
+        setLoading(false);
+        toast.error("Esta placa já está cadastrada em outro veículo.", { duration: 6000 });
+        setErr("plate", "Placa já cadastrada");
+        setStep(3);
+        return;
+      }
+      if (row?.renavam_taken) {
+        setLoading(false);
+        toast.error("Este RENAVAM já está cadastrado em outro veículo.", { duration: 6000 });
+        setErr("renavam", "RENAVAM já cadastrado");
+        setStep(3);
         return;
       }
     } catch {/* ignore — segue para o signUp */}
@@ -448,6 +477,7 @@ const DriverSignup = () => {
       vehicle_color: vehicleColor.trim(),
       vehicle_year: vehicleYear,
       vehicle_plate: cleanPlate,
+      vehicle_renavam: cleanRenavam,
       cnh_number: cnhNumber,
       cnh_ear: cnhEar ? "true" : "false",
       cnh_front_url: cnhFrontUrl || "",
@@ -643,6 +673,16 @@ const DriverSignup = () => {
             </div>
 
             <Field label="Placa" icon={<Hash className="h-4 w-4" />} value={vehiclePlate} onChange={handlePlate} placeholder="ABC-1D23" error={errors.plate} maxLength={8} />
+            <Field
+              label="RENAVAM"
+              icon={<FileText className="h-4 w-4" />}
+              value={vehicleRenavam}
+              onChange={handleRenavam}
+              placeholder="11 dígitos do CRLV"
+              error={errors.renavam}
+              maxLength={11}
+              inputMode="numeric"
+            />
 
             <div className="rounded-xl border border-info/30 bg-info/10 p-3 mt-2">
               <p className="text-xs font-bold text-info">📸 Fotos do veículo</p>
@@ -852,6 +892,7 @@ const DriverSignup = () => {
               <Row label="Categoria" value={CATEGORIES.find((c) => c.id === category)?.label || ""} />
               <Row label="Veículo" value={`${vehicleBrand} ${vehicleModel} ${vehicleYear}`} />
               <Row label="Placa" value={vehiclePlate} />
+              <Row label="RENAVAM" value={vehicleRenavam} />
             </div>
 
             <button
