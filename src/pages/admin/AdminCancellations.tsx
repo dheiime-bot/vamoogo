@@ -408,6 +408,20 @@ const AdminCancellations = () => {
             <XCircle className="h-4 w-4 text-destructive" /> Corridas canceladas ({filteredRides.length})
           </h3>
           <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-1 min-w-[220px] items-center gap-2 rounded-lg border bg-card px-2 py-1">
+              <Search className="h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                placeholder="Buscar por nome, código, endereço..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 bg-transparent text-xs outline-none min-w-[160px]"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="rounded-full p-0.5 hover:bg-muted" title="Limpar">
+                  <X className="h-3 w-3 text-muted-foreground" />
+                </button>
+              )}
+            </div>
             <select
               value={who}
               onChange={(e) => setWho(e.target.value as WhoFilter)}
