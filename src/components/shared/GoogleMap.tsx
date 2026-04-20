@@ -253,19 +253,21 @@ const MotoMarker = ({
 }) => {
   const baseColor = color || CATEGORY_DEFAULT_COLOR.moto;
   const light = isLightColor(baseColor);
-  const pinTop = baseColor;
-  const pinBottom = shadeColor(baseColor, -0.25);
-  const motoFill = light ? "#0f172a" : "#ffffff";
+  // Pino escuro neutro pra contrastar com a cor real da moto
+  const pinTop = "#1f2937";
+  const pinBottom = "#0f172a";
+  const bodyStroke = light ? "#0f172a" : "#1e293b";
+  const wheelFill = "#111827";
   const smoothHeading = useSmoothHeading(heading);
   const uid = `moto-${baseColor.replace("#", "")}`;
   return (
     <div
       className="relative drop-shadow-xl"
-      style={{ width: 46, height: 58 }}
+      style={{ width: 56, height: 70 }}
       title="Motorista (Moto)"
     >
-      <div className="anim-moto-bob" style={{ width: 46, height: 58 }}>
-        <svg viewBox="0 0 64 80" width="46" height="58" style={{ overflow: "visible" }}>
+      <div className="anim-moto-bob" style={{ width: 56, height: 70 }}>
+        <svg viewBox="0 0 64 80" width="56" height="70" style={{ overflow: "visible" }}>
           <defs>
             <radialGradient id={`motoShadow-${uid}`} cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="rgba(0,0,0,0.45)" />
@@ -275,6 +277,10 @@ const MotoMarker = ({
               <stop offset="0%" stopColor={pinTop} />
               <stop offset="100%" stopColor={pinBottom} />
             </linearGradient>
+            <linearGradient id={`motoBody-${uid}`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={shadeColor(baseColor, 0.2)} />
+              <stop offset="100%" stopColor={shadeColor(baseColor, -0.15)} />
+            </linearGradient>
           </defs>
           <ellipse cx="32" cy="76" rx="13" ry="3" fill={`url(#motoShadow-${uid})`} />
           {/* gota do pino */}
@@ -282,10 +288,10 @@ const MotoMarker = ({
             d="M32 4 C18 4 8 14 8 28 C8 42 26 64 32 70 C38 64 56 42 56 28 C56 14 46 4 32 4 Z"
             fill={`url(#motoPin-${uid})`}
             stroke="#ffffff"
-            strokeWidth="2.5"
+            strokeWidth="2"
           />
-          <circle cx="32" cy="28" r="16" fill="#ffffff" />
-          {/* moto vista lateral, gira pelo heading */}
+          <circle cx="32" cy="28" r="20" fill="#ffffff" />
+          {/* Moto vista superior — gira pelo heading (frente em cima = norte) */}
           <g
             style={{
               transform: `rotate(${smoothHeading}deg)`,
@@ -294,29 +300,56 @@ const MotoMarker = ({
               transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            {/* rodas */}
-            <circle cx="22" cy="34" r="3.5" fill={motoFill} />
-            <circle cx="22" cy="34" r="1.5" fill="#ffffff" />
-            <circle cx="42" cy="34" r="3.5" fill={motoFill} />
-            <circle cx="42" cy="34" r="1.5" fill="#ffffff" />
-            {/* chassi */}
+            {/* Roda dianteira (em cima) */}
+            <ellipse cx="32" cy="16" rx="4.5" ry="2.5" fill={wheelFill} stroke="#000" strokeWidth="0.4" />
+            <ellipse cx="32" cy="16" rx="2" ry="1" fill="#374151" />
+            {/* Guidão */}
+            <rect x="26" y="19" width="12" height="1.6" rx="0.8" fill={wheelFill} />
+            {/* Carenagem dianteira (cor real) */}
             <path
-              d="M22 34 L28 24 L36 24 L42 34"
-              stroke={motoFill}
-              strokeWidth="2.5"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              d="M27 20 L37 20 L36 24 L28 24 Z"
+              fill={`url(#motoBody-${uid})`}
+              stroke={bodyStroke}
+              strokeWidth="0.6"
             />
-            {/* tanque */}
-            <rect x="28" y="22" width="8" height="5" rx="1.5" fill={motoFill} />
-            {/* guidão */}
-            <path d="M38 22 L43 19" stroke={motoFill} strokeWidth="2" strokeLinecap="round" />
-            {/* farol */}
-            <circle cx="44" cy="20" r="1.2" fill="#fde68a" />
-            {/* piloto (capacete) */}
-            <circle cx="33" cy="19" r="3" fill={motoFill} />
-            <rect x="30.5" y="17.5" width="5" height="1.5" rx="0.6" fill={baseColor} opacity="0.9" />
+            {/* Tanque (cor real) */}
+            <path
+              d="M27.5 24 L36.5 24 L36 30 L28 30 Z"
+              fill={`url(#motoBody-${uid})`}
+              stroke={bodyStroke}
+              strokeWidth="0.6"
+            />
+            {/* Banco */}
+            <path
+              d="M28.5 30 L35.5 30 L35 36 L29 36 Z"
+              fill="#1f2937"
+              stroke={bodyStroke}
+              strokeWidth="0.4"
+            />
+            {/* Rabeta / lanterna traseira (cor real) */}
+            <path
+              d="M29 36 L35 36 L34 39 L30 39 Z"
+              fill={`url(#motoBody-${uid})`}
+              stroke={bodyStroke}
+              strokeWidth="0.5"
+            />
+            <rect x="30.5" y="38.5" width="3" height="1" rx="0.4" fill="#dc2626" />
+            {/* Roda traseira (embaixo) */}
+            <ellipse cx="32" cy="42" rx="4.5" ry="2.5" fill={wheelFill} stroke="#000" strokeWidth="0.4" />
+            <ellipse cx="32" cy="42" rx="2" ry="1" fill="#374151" />
+            {/* Espelhos retrovisores */}
+            <circle cx="25.5" cy="20.5" r="1.1" fill={wheelFill} />
+            <circle cx="38.5" cy="20.5" r="1.1" fill={wheelFill} />
+            {/* Capacete do piloto (cor real, contornado) */}
+            <circle cx="32" cy="27" r="3.4" fill={baseColor} stroke={bodyStroke} strokeWidth="0.7" />
+            {/* Viseira do capacete (frente) */}
+            <path
+              d="M29 26.2 Q32 25 35 26.2 L34.5 24.8 Q32 23.8 29.5 24.8 Z"
+              fill="#0f172a"
+              opacity="0.85"
+            />
+            {/* Farol dianteiro */}
+            <circle cx="32" cy="14.5" r="1" fill="#fde047" />
           </g>
         </svg>
       </div>
