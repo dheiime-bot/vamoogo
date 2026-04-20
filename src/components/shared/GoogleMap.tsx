@@ -64,201 +64,243 @@ const MODERN_MAP_STYLE = [
 
 /* ---------- Markers premium ---------- */
 
-const CAR_VARIANTS = {
-  economico: {
-    bodyTop: "#1f2937",
-    bodyBottom: "#0b1220",
-    roof: "#111827",
-    roofStroke: "#0b1220",
-    logo: "#3b82f6",
-    wheelRim: "#374151",
-  },
-  conforto: {
-    // Dourado premium
-    bodyTop: "#f5d27a",
-    bodyBottom: "#b8860b",
-    roof: "#a06b00",
-    roofStroke: "#7a5200",
-    logo: "#3b82f6",
-    wheelRim: "#5b4200",
-  },
-} as const;
+/** Converte nome de cor (pt-BR) em hex. Retorna null se não reconhecida. */
+export const vehicleColorToHex = (name?: string | null): string | null => {
+  if (!name) return null;
+  const k = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+  const map: Record<string, string> = {
+    branco: "#f8fafc",
+    branca: "#f8fafc",
+    prata: "#c0c4cc",
+    prateado: "#c0c4cc",
+    cinza: "#6b7280",
+    grafite: "#374151",
+    chumbo: "#475569",
+    preto: "#0f172a",
+    preta: "#0f172a",
+    vermelho: "#dc2626",
+    vermelha: "#dc2626",
+    azul: "#2563eb",
+    "azul escuro": "#1e3a8a",
+    "azul claro": "#60a5fa",
+    marinho: "#1e3a8a",
+    verde: "#16a34a",
+    "verde escuro": "#166534",
+    amarelo: "#facc15",
+    amarela: "#facc15",
+    laranja: "#f97316",
+    marrom: "#78350f",
+    bege: "#d6b894",
+    dourado: "#d4af37",
+    rosa: "#ec4899",
+    roxo: "#7c3aed",
+    vinho: "#7f1d1d",
+  };
+  if (map[k]) return map[k];
+  // tenta primeira palavra
+  const first = k.split(/\s+/)[0];
+  return map[first] || null;
+};
+
+/** Determina se uma cor é clara (precisa de outline escuro p/ destaque). */
+const isLightColor = (hex: string) => {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq > 200;
+};
+
+/** Escurece um hex em N% (p/ gradiente). */
+const shadeColor = (hex: string, percent: number) => {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  const f = (c: number) => Math.max(0, Math.min(255, Math.round(c * (1 + percent))));
+  return `#${[f(r), f(g), f(b)].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
+};
+
+/** Cores padrão por categoria quando o veículo do motorista não é conhecido (idle/nearby). */
+const CATEGORY_DEFAULT_COLOR: Record<"economico" | "conforto" | "moto", string> = {
+  economico: "#2563eb", // azul vamoo
+  conforto: "#d4af37",  // dourado
+  moto: "#2563eb",
+};
+
+/* ----- Pino estilo "map-pin" com veículo dentro ----- */
 
 const CarMarker = ({
   heading = 0,
   variant = "economico",
+  color,
 }: {
   heading?: number;
   variant?: "economico" | "conforto";
+  color?: string | null;
 }) => {
-  const v = CAR_VARIANTS[variant];
-  const bodyId = `carBody-${variant}`;
-  const roofId = `carRoof-${variant}`;
-  const glassId = `carGlass-${variant}`;
-  const shadowId = `carShadow-${variant}`;
-  const glossId = `carGloss-${variant}`;
-  // Rotação contínua (evita salto 350°→10°)
+  const baseColor = color || CATEGORY_DEFAULT_COLOR[variant];
+  const light = isLightColor(baseColor);
+  const pinTop = baseColor;
+  const pinBottom = shadeColor(baseColor, -0.25);
+  const carStroke = light ? "#0f172a" : "#ffffff";
+  const carFill = light ? "#0f172a" : "#ffffff";
+  // Rotação só do veículo interno (o pino não gira — fica sempre apontando p/ baixo)
   const smoothHeading = useSmoothHeading(heading);
+  const uid = `${variant}-${baseColor.replace("#", "")}`;
   return (
     <div
-      className="relative drop-shadow-2xl"
-      style={{
-        transform: `rotate(${smoothHeading}deg)`,
-        transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
-        width: 52,
-        height: 52,
-      }}
+      className="relative drop-shadow-xl"
+      style={{ width: 52, height: 64 }}
       title={variant === "conforto" ? "Motorista (Conforto)" : "Motorista"}
     >
-      <div className="anim-vehicle-bob" style={{ width: 52, height: 52 }}>
-        <svg viewBox="0 0 80 80" width="52" height="52" style={{ overflow: "visible" }}>
+      <div className="anim-vehicle-bob" style={{ width: 52, height: 64 }}>
+        <svg viewBox="0 0 64 80" width="52" height="64" style={{ overflow: "visible" }}>
           <defs>
-            <radialGradient id={shadowId} cx="50%" cy="50%" r="50%">
+            <radialGradient id={`carShadow-${uid}`} cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="rgba(0,0,0,0.45)" />
               <stop offset="100%" stopColor="rgba(0,0,0,0)" />
             </radialGradient>
-            <linearGradient id={bodyId} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor={v.bodyTop} />
-              <stop offset="55%" stopColor={v.bodyTop} />
-              <stop offset="100%" stopColor={v.bodyBottom} />
-            </linearGradient>
-            <linearGradient id={roofId} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor={v.roof} />
-              <stop offset="100%" stopColor={v.roofStroke} />
-            </linearGradient>
-            <linearGradient id={glassId} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#bae6fd" />
-              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.85" />
-            </linearGradient>
-            <linearGradient id={glossId} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            <linearGradient id={`pinBg-${uid}`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={pinTop} />
+              <stop offset="100%" stopColor={pinBottom} />
             </linearGradient>
           </defs>
-
-          {/* Sombra */}
-          <ellipse cx="40" cy="70" rx="24" ry="5" fill={`url(#${shadowId})`} />
-
-          {/* Rodas (giram) */}
+          {/* sombra */}
+          <ellipse cx="32" cy="76" rx="14" ry="3" fill={`url(#carShadow-${uid})`} />
+          {/* gota do pino */}
+          <path
+            d="M32 4 C18 4 8 14 8 28 C8 42 26 64 32 70 C38 64 56 42 56 28 C56 14 46 4 32 4 Z"
+            fill={`url(#pinBg-${uid})`}
+            stroke="#ffffff"
+            strokeWidth="2.5"
+          />
+          {/* círculo branco interno */}
+          <circle cx="32" cy="28" r="16" fill="#ffffff" />
+          {/* carro dentro (gira pelo heading) */}
           <g
-            className="anim-wheel-spin"
-            style={{ transformOrigin: "22px 60px", transformBox: "fill-box" as any }}
+            style={{
+              transform: `rotate(${smoothHeading}deg)`,
+              transformOrigin: "32px 28px",
+              transformBox: "fill-box" as any,
+              transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
           >
-            <circle cx="22" cy="60" r="6" fill="#0b1220" />
-            <circle cx="22" cy="60" r="3.2" fill={v.wheelRim} />
-            <circle cx="22" cy="60" r="1.4" fill="#e5e7eb" />
+            {/* Carro vista superior — chassi arredondado */}
+            <path
+              d="M26 18 C24 18 22 20 22 23 L22 33 C22 36 24 38 26 38 L38 38 C40 38 42 36 42 33 L42 23 C42 20 40 18 38 18 Z"
+              fill={carFill}
+              stroke={carStroke}
+              strokeOpacity="0.15"
+              strokeWidth="0.5"
+            />
+            {/* para-brisa frontal */}
+            <path
+              d="M25 22 L27 25 L37 25 L39 22 Z"
+              fill={baseColor}
+              opacity="0.85"
+            />
+            {/* para-brisa traseiro */}
+            <path
+              d="M25 34 L27 31 L37 31 L39 34 Z"
+              fill={baseColor}
+              opacity="0.6"
+            />
+            {/* faróis */}
+            <rect x="25" y="19" width="3" height="1.5" rx="0.5" fill="#fef3c7" />
+            <rect x="36" y="19" width="3" height="1.5" rx="0.5" fill="#fef3c7" />
+            {/* lanternas */}
+            <rect x="25" y="36" width="3" height="1.5" rx="0.5" fill="#ef4444" opacity="0.9" />
+            <rect x="36" y="36" width="3" height="1.5" rx="0.5" fill="#ef4444" opacity="0.9" />
           </g>
-          <g
-            className="anim-wheel-spin"
-            style={{ transformOrigin: "58px 60px", transformBox: "fill-box" as any }}
-          >
-            <circle cx="58" cy="60" r="6" fill="#0b1220" />
-            <circle cx="58" cy="60" r="3.2" fill={v.wheelRim} />
-            <circle cx="58" cy="60" r="1.4" fill="#e5e7eb" />
-          </g>
-
-          {/* Carroceria cápsula */}
-          <path
-            d="M14 56 C14 38 22 28 40 28 C58 28 66 38 66 56 L66 60 C66 63 63 66 60 66 L20 66 C17 66 14 63 14 60 Z"
-            fill={`url(#${bodyId})`}
-            stroke="#0b1220"
-            strokeOpacity="0.35"
-            strokeWidth="0.8"
-          />
-
-          {/* Cabine */}
-          <path
-            d="M26 38 C28 30 34 26 40 26 C46 26 52 30 54 38 L54 46 L26 46 Z"
-            fill={`url(#${roofId})`}
-          />
-
-          {/* Vidros */}
-          <path d="M28 40 C30 33 35 30 40 30 C45 30 50 33 52 40 L52 44 L28 44 Z" fill={`url(#${glassId})`} />
-          <rect x="17" y="48" width="10" height="8" rx="2" fill={`url(#${glassId})`} />
-          <rect x="53" y="48" width="10" height="8" rx="2" fill={`url(#${glassId})`} />
-
-          {/* Brilho */}
-          <path
-            d="M16 50 C28 46 52 46 64 50 L64 54 C52 50 28 50 16 54 Z"
-            fill={`url(#${glossId})`}
-          />
-
-          {/* Faróis */}
-          <ellipse cx="20" cy="34" rx="3" ry="2" fill="#fef3c7" />
-          <ellipse cx="60" cy="34" rx="3" ry="2" fill="#fef3c7" />
-          {/* Lanternas */}
-          <rect x="18" y="62" width="5" height="2.5" rx="1" fill="#ef4444" opacity="0.85" />
-          <rect x="57" y="62" width="5" height="2.5" rx="1" fill="#ef4444" opacity="0.85" />
-
-          {/* Logo */}
-          <circle cx="40" cy="56" r="3.2" fill={v.logo} stroke="#fff" strokeWidth="0.8" />
-
-          {/* Escapamento */}
-          <circle className="anim-exhaust" cx="14" cy="56" r="2" fill="#cbd5e1" />
         </svg>
       </div>
     </div>
   );
 };
 
-const MotoMarker = ({ heading = 0 }: { heading?: number }) => {
+const MotoMarker = ({
+  heading = 0,
+  color,
+}: {
+  heading?: number;
+  color?: string | null;
+}) => {
+  const baseColor = color || CATEGORY_DEFAULT_COLOR.moto;
+  const light = isLightColor(baseColor);
+  const pinTop = baseColor;
+  const pinBottom = shadeColor(baseColor, -0.25);
+  const motoFill = light ? "#0f172a" : "#ffffff";
   const smoothHeading = useSmoothHeading(heading);
+  const uid = `moto-${baseColor.replace("#", "")}`;
   return (
-  <div
-    className="relative drop-shadow-xl"
-    style={{
-      transform: `rotate(${smoothHeading}deg)`,
-      transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
-      width: 40,
-      height: 40,
-    }}
-    title="Motorista (Moto)"
-  >
-    <div className="anim-moto-bob" style={{ width: 40, height: 40 }}>
-      <svg viewBox="0 0 64 64" width="40" height="40" style={{ overflow: "visible" }}>
-        <defs>
-          <radialGradient id="motoShadow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(0,0,0,0.35)" />
-            <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-          </radialGradient>
-          <linearGradient id="motoBody" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#991b1b" />
-          </linearGradient>
-        </defs>
-        <ellipse cx="32" cy="56" rx="16" ry="3.5" fill="url(#motoShadow)" />
-        <g
-          className="anim-wheel-spin"
-          style={{ transformOrigin: "16px 48px", transformBox: "fill-box" as any }}
-        >
-          <circle cx="16" cy="48" r="6" fill="#0b1220" stroke="#374151" strokeWidth="1.2" />
-          <line x1="16" y1="42" x2="16" y2="54" stroke="#9ca3af" strokeWidth="0.8" />
-          <line x1="10" y1="48" x2="22" y2="48" stroke="#9ca3af" strokeWidth="0.8" />
-        </g>
-        <g
-          className="anim-wheel-spin"
-          style={{ transformOrigin: "48px 48px", transformBox: "fill-box" as any }}
-        >
-          <circle cx="48" cy="48" r="6" fill="#0b1220" stroke="#374151" strokeWidth="1.2" />
-          <line x1="48" y1="42" x2="48" y2="54" stroke="#9ca3af" strokeWidth="0.8" />
-          <line x1="42" y1="48" x2="54" y2="48" stroke="#9ca3af" strokeWidth="0.8" />
-        </g>
-        <path
-          d="M16 48 L26 30 H40 L48 48"
-          stroke="url(#motoBody)"
-          strokeWidth="5"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <rect x="28" y="26" width="12" height="8" rx="2" fill="url(#motoBody)" />
-        <path d="M44 26 L52 22" stroke="#0b1220" strokeWidth="2.5" strokeLinecap="round" />
-        <circle cx="34" cy="20" r="5" fill="#0b1220" />
-        <rect x="30" y="18" width="8" height="3" rx="1" fill="#7dd3fc" opacity="0.85" />
-        <circle cx="50" cy="30" r="1.6" fill="#fde68a" />
-        <circle className="anim-exhaust" cx="14" cy="42" r="1.6" fill="#cbd5e1" />
-      </svg>
+    <div
+      className="relative drop-shadow-xl"
+      style={{ width: 46, height: 58 }}
+      title="Motorista (Moto)"
+    >
+      <div className="anim-moto-bob" style={{ width: 46, height: 58 }}>
+        <svg viewBox="0 0 64 80" width="46" height="58" style={{ overflow: "visible" }}>
+          <defs>
+            <radialGradient id={`motoShadow-${uid}`} cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(0,0,0,0.45)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+            </radialGradient>
+            <linearGradient id={`motoPin-${uid}`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={pinTop} />
+              <stop offset="100%" stopColor={pinBottom} />
+            </linearGradient>
+          </defs>
+          <ellipse cx="32" cy="76" rx="13" ry="3" fill={`url(#motoShadow-${uid})`} />
+          {/* gota do pino */}
+          <path
+            d="M32 4 C18 4 8 14 8 28 C8 42 26 64 32 70 C38 64 56 42 56 28 C56 14 46 4 32 4 Z"
+            fill={`url(#motoPin-${uid})`}
+            stroke="#ffffff"
+            strokeWidth="2.5"
+          />
+          <circle cx="32" cy="28" r="16" fill="#ffffff" />
+          {/* moto vista lateral, gira pelo heading */}
+          <g
+            style={{
+              transform: `rotate(${smoothHeading}deg)`,
+              transformOrigin: "32px 28px",
+              transformBox: "fill-box" as any,
+              transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          >
+            {/* rodas */}
+            <circle cx="22" cy="34" r="3.5" fill={motoFill} />
+            <circle cx="22" cy="34" r="1.5" fill="#ffffff" />
+            <circle cx="42" cy="34" r="3.5" fill={motoFill} />
+            <circle cx="42" cy="34" r="1.5" fill="#ffffff" />
+            {/* chassi */}
+            <path
+              d="M22 34 L28 24 L36 24 L42 34"
+              stroke={motoFill}
+              strokeWidth="2.5"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* tanque */}
+            <rect x="28" y="22" width="8" height="5" rx="1.5" fill={motoFill} />
+            {/* guidão */}
+            <path d="M38 22 L43 19" stroke={motoFill} strokeWidth="2" strokeLinecap="round" />
+            {/* farol */}
+            <circle cx="44" cy="20" r="1.2" fill="#fde68a" />
+            {/* piloto (capacete) */}
+            <circle cx="33" cy="19" r="3" fill={motoFill} />
+            <rect x="30.5" y="17.5" width="5" height="1.5" rx="0.6" fill={baseColor} opacity="0.9" />
+          </g>
+        </svg>
+      </div>
     </div>
-  </div>
   );
 };
 
@@ -435,6 +477,7 @@ const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
         heading: resolvedHeading,
         label: to.label,
         category: to.category,
+        color: to.color,
       });
       if (t < 1) rafRef.current = requestAnimationFrame(tick);
       else fromRef.current = { ...to, heading: resolvedHeading };
@@ -745,11 +788,12 @@ const GoogleMapInner = ({
       {animatedDriver && (
         <AdvancedMarker position={{ lat: animatedDriver.lat, lng: animatedDriver.lng }}>
           {animatedDriver.category === "moto" ? (
-            <MotoMarker heading={animatedDriver.heading || 0} />
+            <MotoMarker heading={animatedDriver.heading || 0} color={animatedDriver.color} />
           ) : (
             <CarMarker
               heading={animatedDriver.heading || 0}
               variant={animatedDriver.category === "conforto" ? "conforto" : "economico"}
+              color={animatedDriver.color}
             />
           )}
         </AdvancedMarker>

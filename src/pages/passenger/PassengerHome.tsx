@@ -4,7 +4,7 @@ import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import PassengerSpendChip from "@/components/passenger/PassengerSpendChip";
-import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
+import GoogleMap, { LEG_COLORS, vehicleColorToHex } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import RideChat from "@/components/passenger/RideChat";
@@ -706,7 +706,12 @@ const PassengerHome = () => {
               origin={mapOrigin}
               destination={mapDestination}
               stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
-              driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
+              driverLocation={driverLocation ? {
+                ...driverLocation,
+                label: "Motorista",
+                // Cor real do veículo do motorista aceito (sobrescreve o padrão da categoria)
+                color: vehicleColorToHex(driverInfo?.vehicle_color) || undefined,
+              } : null}
               nearbyDrivers={nearbyDrivers}
               trackUserLocation={!selectedOrigin && !activeRide}
               showRoute={!!mapOrigin && !!mapDestination}
