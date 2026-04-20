@@ -706,7 +706,12 @@ const PassengerHome = () => {
               origin={mapOrigin}
               destination={mapDestination}
               stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
-              driverLocation={driverLocation ? { ...driverLocation, label: "Motorista" } : null}
+              driverLocation={driverLocation ? {
+                ...driverLocation,
+                label: "Motorista",
+                // Cor real do veículo do motorista aceito (sobrescreve o padrão da categoria)
+                color: vehicleColorToHex(driverInfo?.vehicle_color) || undefined,
+              } : null}
               nearbyDrivers={nearbyDrivers}
               trackUserLocation={!selectedOrigin && !activeRide}
               showRoute={!!mapOrigin && !!mapDestination}
