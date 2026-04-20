@@ -601,6 +601,23 @@ const PassengerHome = () => {
       .then(({ data }) => setFavoriteDriver(!!data));
   }, [rideState, activeRide?.driver_id, user?.id]);
 
+  // Fallback: se entrar em "rating" sem driverInfo carregado (ex: refresh durante rating),
+  // busca os dados do motorista para garantir que o botão de favoritar e o nome apareçam.
+  useEffect(() => {
+    if (rideState !== "rating" || !activeRide?.driver_id || driverInfo) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: driver }, { data: driverProfile }] = await Promise.all([
+        supabase.from("drivers").select("*").eq("user_id", activeRide.driver_id).maybeSingle(),
+        supabase.from("profiles").select("*").eq("user_id", activeRide.driver_id).maybeSingle(),
+      ]);
+      if (!cancelled && driver && driverProfile) {
+        setDriverInfo({ ...driver, profile: driverProfile });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [rideState, activeRide?.driver_id, driverInfo]);
+
   const toggleFavoriteDriver = async () => {
     if (!activeRide?.driver_id || favoritingDriver) return;
     setFavoritingDriver(true);
@@ -1219,15 +1236,15 @@ const PassengerHome = () => {
           {activeRide && (
             <>
               <div className="px-4 py-1.5 space-y-2 text-center">
-                {driverInfo && (
+                {activeRide?.driver_id && (
                   <div className="flex flex-col items-center gap-1.5">
                     <p className="text-xs text-muted-foreground truncate">
-                      Motorista: {driverInfo.profile?.full_name}
+                      Motorista: {driverInfo?.profile?.full_name || "Carregando..."}
                     </p>
                     <button
                       type="button"
                       onClick={toggleFavoriteDriver}
-                      disabled={favoritingDriver || !activeRide?.driver_id}
+                      disabled={favoritingDriver}
                       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                         favoriteDriver
                           ? "text-destructive bg-destructive/10"
