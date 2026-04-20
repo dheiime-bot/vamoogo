@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Menu, Home, Clock, User, MessageCircle, LogOut, Car, ArrowLeftRight, Star } from "lucide-react";
+import { Menu, Home, Clock, User, MessageCircle, LogOut, Car, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import vamooLogo from "@/assets/vamoo-logo-menu.png";
@@ -46,11 +46,10 @@ const AppMenu = ({ role, floating = true }: Props) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut, roles, switchRole, profile } = useAuth();
+  const { user, signOut, roles, profile } = useAuth();
   const [driverRating, setDriverRating] = useState<number | null>(null);
 
   const items = role === "driver" ? DRIVER_ITEMS : PASSENGER_ITEMS;
-  const hasBoth = roles.includes("driver") && roles.includes("passenger");
 
   // Busca a nota do motorista quando estiver no modo motorista
   useEffect(() => {
@@ -74,13 +73,6 @@ const AppMenu = ({ role, floating = true }: Props) => {
   const go = (path: string) => {
     setOpen(false);
     navigate(path);
-  };
-
-  const handleSwitch = async (target: "passenger" | "driver") => {
-    setOpen(false);
-    await switchRole(target);
-    navigate(target === "driver" ? "/driver" : "/passenger");
-    toast.success(target === "driver" ? "Modo motorista" : "Modo passageiro");
   };
 
   const handleSignOut = async () => {
