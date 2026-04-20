@@ -7,6 +7,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { validateCPF, formatCPF, formatPhone, formatPlate } from "@/lib/validators";
+import { formatRenavam, validateRenavam } from "@/lib/validators";
 import { validatePlate, isFakePlate } from "@/lib/plateValidator";
 import { formatDateBR, parseDateBRtoISO } from "@/lib/brFormat";
 import DocumentUpload from "@/components/auth/DocumentUpload";
@@ -66,6 +67,7 @@ const BecomeDriver = () => {
   const [vehicleColor, setVehicleColor] = useState("");
   const [vehicleYear, setVehicleYear] = useState("");
   const [vehiclePlate, setVehiclePlate] = useState("");
+  const [vehicleRenavam, setVehicleRenavam] = useState("");
   const [vehiclePhotoFront, setVehiclePhotoFront] = useState<string | null>(null);
   const [vehiclePhotoBack, setVehiclePhotoBack] = useState<string | null>(null);
   const [vehiclePhotoLeft, setVehiclePhotoLeft] = useState<string | null>(null);
@@ -138,6 +140,9 @@ const BecomeDriver = () => {
     if (!vehicleColor.trim()) errs.color = "Informe a cor";
     const ey = validateYear(vehicleYear); if (ey) errs.year = ey;
     const ep = validatePlateField(vehiclePlate); if (ep) errs.plate = ep;
+    const cleanRenavam = vehicleRenavam.replace(/\D/g, "");
+    if (!cleanRenavam) errs.renavam = "Informe o RENAVAM";
+    else if (!validateRenavam(cleanRenavam)) errs.renavam = "RENAVAM inválido (9 a 11 dígitos)";
     if (!vehiclePhotoFront) errs.photoFront = "Envie a foto da frente";
     if (!vehiclePhotoBack) errs.photoBack = "Envie a foto da traseira";
     if (!vehiclePhotoLeft) errs.photoLeft = "Envie a foto da lateral esquerda";
@@ -148,11 +153,19 @@ const BecomeDriver = () => {
     setLoading(true);
     try {
       const cleanPlate = vehiclePlate.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-      const { data: dupPlate } = await supabase
-        .from("drivers").select("id").eq("vehicle_plate", cleanPlate).maybeSingle();
-      if (dupPlate) {
+      const { data: dupes } = await supabase.rpc("driver_check_vehicle_dupes", {
+        _plate: cleanPlate,
+        _renavam: cleanRenavam,
+      });
+      const row = Array.isArray(dupes) ? dupes[0] : dupes;
+      if (row?.plate_taken && !row?.plate_owner_is_self) {
         setErr("plate", "Esta placa já está cadastrada");
         toast.error("Placa já cadastrada");
+        return false;
+      }
+      if (row?.renavam_taken && !row?.renavam_owner_is_self) {
+        setErr("renavam", "Este RENAVAM já está cadastrado");
+        toast.error("RENAVAM já cadastrado em outro veículo");
         return false;
       }
     } finally { setLoading(false); }
@@ -244,6 +257,7 @@ const BecomeDriver = () => {
         _vehicle_color: vehicleColor.trim(),
         _vehicle_year: parseInt(vehicleYear, 10),
         _vehicle_plate: cleanPlate,
+        _vehicle_renavam: vehicleRenavam.replace(/\D/g, ""),
         _cnh_number: cnhNumber.replace(/\D/g, ""),
         _cnh_ear: cnhEar,
         _cnh_front_url: cnhFrontUrl || "",
@@ -397,6 +411,7 @@ const BecomeDriver = () => {
               <Field label="Ano" icon={<Calendar className="h-4 w-4" />} value={vehicleYear} onChange={(v) => { const f = v.replace(/\D/g, "").slice(0, 4); setVehicleYear(f); const e = validateYear(f); e ? setErr("year", e) : clearErr("year"); }} placeholder={String(currentYear)} error={errors.year} maxLength={4} inputMode="numeric" />
             </div>
             <Field label="Placa" icon={<Hash className="h-4 w-4" />} value={vehiclePlate} onChange={(v) => { const f = formatPlate(v); setVehiclePlate(f); const e = validatePlateField(f); e ? setErr("plate", e) : clearErr("plate"); }} placeholder="ABC-1D23" error={errors.plate} maxLength={8} />
+            <Field label="RENAVAM" icon={<FileText className="h-4 w-4" />} value={vehicleRenavam} onChange={(v) => { const f = formatRenavam(v); setVehicleRenavam(f); clearErr("renavam"); }} placeholder="11 dígitos do CRLV" error={errors.renavam} maxLength={11} inputMode="numeric" />
 
             <div className="grid grid-cols-2 gap-3">
               {[
