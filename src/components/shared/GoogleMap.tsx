@@ -477,6 +477,7 @@ const useInterpolatedPosition = (target: MapPoint | null | undefined) => {
         heading: resolvedHeading,
         label: to.label,
         category: to.category,
+        color: to.color,
       });
       if (t < 1) rafRef.current = requestAnimationFrame(tick);
       else fromRef.current = { ...to, heading: resolvedHeading };
