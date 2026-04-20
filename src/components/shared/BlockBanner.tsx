@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AlertTriangle, Headset, Lock, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 /**
- * Banner exibido quando o usuário (passageiro ou motorista) está bloqueado:
- * - Bloqueio MANUAL (admin): profile.status = 'bloqueado' / 'suspenso' OU drivers.online_blocked
- * - Bloqueio AUTOMÁTICO por cancelamentos: cancellation_block_until > now()
- *
- * Mostra motivo + contagem regressiva (quando há prazo) + botão para o chat de suporte.
+ * Overlay FULLSCREEN bloqueante exibido quando o usuário está bloqueado.
+ * - Bloqueia toda a tela: o único clique permitido é "Falar com o suporte".
+ * - Quando o usuário já está na página de chats (suporte), o overlay é liberado
+ *   para que ele consiga conversar.
  */
 const BlockBanner = ({ role }: { role: "passenger" | "driver" }) => {
   const { profile, driverData } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -64,6 +64,12 @@ const BlockBanner = ({ role }: { role: "passenger" | "driver" }) => {
 
   if (items.length === 0) return null;
 
+  // Libera a tela quando o usuário está no chat de suporte
+  const isOnChats =
+    location.pathname.startsWith("/passenger/chats") ||
+    location.pathname.startsWith("/driver/chats");
+  if (isOnChats) return null;
+
   const formatRemaining = (target: number) => {
     let s = Math.max(0, Math.floor((target - now) / 1000));
     const d = Math.floor(s / 86400); s -= d * 86400;
@@ -78,114 +84,73 @@ const BlockBanner = ({ role }: { role: "passenger" | "driver" }) => {
     navigate(role === "passenger" ? "/passenger/chats?central=1" : "/driver/chats?central=1");
   };
 
-  // Motorista: consolida tudo em UM único card
-  if (role === "driver") {
-    const hasManual = items.some((i) => i.kind === "manual");
-    const hasAuto = items.some((i) => i.kind === "auto");
-    const autoItem = items.find((i) => i.kind === "auto");
-    const manualItem = items.find((i) => i.kind === "manual");
-
-    const title = hasManual && hasAuto
+  const hasManual = items.some((i) => i.kind === "manual");
+  const hasAuto = items.some((i) => i.kind === "auto");
+  const autoItem = items.find((i) => i.kind === "auto");
+  const manualItem = items.find((i) => i.kind === "manual");
+  const title =
+    hasManual && hasAuto
       ? "Sua conta possui bloqueios ativos"
       : hasManual
         ? (manualItem?.title ?? "Você está bloqueado")
         : (autoItem?.title ?? "Você está temporariamente bloqueado");
 
-    return (
-      <div className="px-4 pt-3">
-        <div className="rounded-2xl border-2 border-destructive/40 bg-destructive/10 p-3 shadow-sm animate-fade-in">
-          <div className="flex items-start gap-3">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-destructive/20 flex items-center justify-center">
-              <Lock className="h-4 w-4 text-destructive" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-destructive flex items-center gap-1.5">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                {title}
-              </p>
-
-              <div className="mt-2 space-y-2">
-                {items.map((it, idx) => (
-                  <div key={idx} className="rounded-lg bg-card/60 border border-destructive/20 p-2">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-destructive/90 flex items-center gap-1">
-                      {it.kind === "manual" ? <Lock className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
-                      {it.kind === "manual" ? "Bloqueio manual" : "Bloqueio automático"}
-                    </p>
-                    {it.reason && (
-                      <p className="mt-0.5 text-xs text-foreground/80">
-                        <span className="font-semibold">Motivo: </span>{it.reason}
-                      </p>
-                    )}
-                    {it.untilMs && (
-                      <div className="mt-1.5 inline-flex items-center gap-2 rounded-md bg-card px-2 py-0.5 border border-destructive/30">
-                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Tempo restante</span>
-                        <span className="font-mono text-xs font-bold text-destructive tabular-nums">
-                          {formatRemaining(it.untilMs)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={goSupport}
-                className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                <Headset className="h-3.5 w-3.5" />
-                Falar com o suporte
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="px-4 pt-3 space-y-2">
-      {items.map((it, idx) => (
-        <div
-          key={idx}
-          className="rounded-2xl border-2 border-destructive/40 bg-destructive/10 p-3 shadow-sm animate-fade-in"
-        >
-          <div className="flex items-start gap-3">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-destructive/20 flex items-center justify-center">
-              {it.kind === "manual" ? (
-                <Lock className="h-4 w-4 text-destructive" />
-              ) : (
-                <ShieldAlert className="h-4 w-4 text-destructive" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-destructive flex items-center gap-1.5">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                {it.title}
+    <div
+      className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in overflow-y-auto"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="block-title"
+    >
+      <div className="w-full max-w-md rounded-2xl border-2 border-destructive/50 bg-card p-5 shadow-2xl">
+        <div className="flex flex-col items-center text-center mb-4">
+          <div className="h-14 w-14 rounded-full bg-destructive/15 flex items-center justify-center mb-3">
+            <Lock className="h-7 w-7 text-destructive" />
+          </div>
+          <h2 id="block-title" className="text-lg font-bold text-destructive flex items-center gap-1.5">
+            <AlertTriangle className="h-4 w-4" />
+            {title}
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            O acesso ao app está bloqueado. Fale com o suporte para mais informações.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {items.map((it, idx) => (
+            <div key={idx} className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-destructive flex items-center gap-1">
+                {it.kind === "manual" ? <Lock className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
+                {it.kind === "manual" ? "Bloqueio manual" : "Bloqueio automático"}
               </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{it.title}</p>
               {it.reason && (
                 <p className="mt-0.5 text-xs text-foreground/80">
                   <span className="font-semibold">Motivo: </span>{it.reason}
                 </p>
               )}
               {it.untilMs && (
-                <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-card px-2.5 py-1 border border-destructive/30">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Tempo restante</span>
+                <div className="mt-2 inline-flex items-center gap-2 rounded-md bg-card px-2.5 py-1 border border-destructive/30">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                    Tempo restante
+                  </span>
                   <span className="font-mono text-sm font-bold text-destructive tabular-nums">
                     {formatRemaining(it.untilMs)}
                   </span>
                 </div>
               )}
-              <button
-                onClick={goSupport}
-                className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                <Headset className="h-3.5 w-3.5" />
-                Falar com o suporte
-              </button>
             </div>
-          </div>
+          ))}
         </div>
-      ))}
+
+        <button
+          onClick={goSupport}
+          className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg"
+        >
+          <Headset className="h-4 w-4" />
+          Falar com o suporte
+        </button>
+      </div>
     </div>
   );
 };
