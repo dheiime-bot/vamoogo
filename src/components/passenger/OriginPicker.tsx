@@ -70,46 +70,83 @@ const OriginPicker = ({
   // Dispara cache de locais da cidade (1x por cidade) ao detectar GPS
   useCityCache(gpsCoords);
 
-  // Captura GPS ao montar
+  // Captura GPS ao montar — com fallback de baixa precisão e mensagens claras
   useEffect(() => {
     if (autoTried.current) return;
     autoTried.current = true;
+    void tryCaptureGps(/* showSuccessToast */ true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const applyPosition = async (pos: GeolocationPosition, withSuccessToast: boolean) => {
+    const { latitude, longitude } = pos.coords;
+    for (let i = 0; i < 6; i++) {
+      if ((window as any).google?.maps?.Geocoder) break;
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    const address = await reverseGeocode(latitude, longitude);
+    const loc: AppLocation = {
+      id: `gps-${Date.now()}`,
+      name: "Minha localização",
+      address,
+      lat: latitude,
+      lng: longitude,
+    };
+    setGpsLoc(loc);
+    setGpsAddress(address);
+    setGpsCoords({ lat: latitude, lng: longitude });
+    setLoadingGps(false);
+    if (!forOtherPerson) onSelectOrigin(loc, "gps");
+    if (withSuccessToast) toast.success("Localização detectada");
+  };
+
+  const handleGpsError = (err: GeolocationPositionError) => {
+    setLoadingGps(false);
+    if (err.code === err.PERMISSION_DENIED) {
+      toast.error("Permissão de localização negada. Habilite o GPS nas configurações do navegador.", { duration: 6000 });
+    } else if (err.code === err.POSITION_UNAVAILABLE) {
+      toast.error("Localização indisponível. Verifique se o GPS do dispositivo está ligado.");
+    } else if (err.code === err.TIMEOUT) {
+      toast.error("Tempo esgotado ao obter localização. Tente novamente.");
+    } else {
+      toast.error("Não foi possível obter localização");
+    }
+  };
+
+  // Tenta capturar GPS: alta precisão primeiro, baixa precisão como fallback
+  const tryCaptureGps = async (withSuccessToast: boolean) => {
     if (!navigator.geolocation) {
       toast.error("GPS indisponível neste dispositivo");
       return;
     }
+    // Verifica permissão proativamente (quando suportado)
+    try {
+      // @ts-ignore
+      const status = await navigator.permissions?.query({ name: "geolocation" });
+      if (status?.state === "denied") {
+        toast.error("Permissão de localização bloqueada. Habilite nas configurações do navegador.", { duration: 6000 });
+        return;
+      }
+    } catch { /* navegador sem Permissions API — segue normal */ }
+
     setLoadingGps(true);
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        for (let i = 0; i < 6; i++) {
-          if ((window as any).google?.maps?.Geocoder) break;
-          await new Promise((r) => setTimeout(r, 500));
+      (pos) => { void applyPosition(pos, withSuccessToast); },
+      (err) => {
+        // Fallback: tenta sem alta precisão (mais rápido, funciona em desktops sem GPS dedicado)
+        if (err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => { void applyPosition(pos, withSuccessToast); },
+            handleGpsError,
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60 * 1000 }
+          );
+        } else {
+          handleGpsError(err);
         }
-        const address = await reverseGeocode(latitude, longitude);
-        const loc: AppLocation = {
-          id: `gps-${Date.now()}`,
-          name: "Minha localização",
-          address,
-          lat: latitude,
-          lng: longitude,
-        };
-        setGpsLoc(loc);
-        setGpsAddress(address);
-        setGpsCoords({ lat: latitude, lng: longitude });
-        setLoadingGps(false);
-        // Se ainda não está em modo "outra pessoa", aplica GPS como origem
-        if (!forOtherPerson) onSelectOrigin(loc, "gps");
-        toast.success("Localização detectada");
       },
-      () => {
-        setLoadingGps(false);
-        toast.error("Não foi possível obter localização");
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60 * 1000 }
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  };
 
   // Quando alterna o modo, ajusta a origem
   useEffect(() => {
