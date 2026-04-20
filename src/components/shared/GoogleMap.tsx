@@ -148,19 +148,22 @@ const CarMarker = ({
   const light = isLightColor(baseColor);
   const pinTop = baseColor;
   const pinBottom = shadeColor(baseColor, -0.25);
-  const carStroke = light ? "#0f172a" : "#ffffff";
-  const carFill = light ? "#0f172a" : "#ffffff";
-  // Rotação só do veículo interno (o pino não gira — fica sempre apontando p/ baixo)
   const smoothHeading = useSmoothHeading(heading);
   const uid = `${variant}-${baseColor.replace("#", "")}`;
+  // cor do corpo do carro = cor do veículo
+  const bodyTop = baseColor;
+  const bodyBottom = shadeColor(baseColor, -0.35);
+  const bodyEdge = shadeColor(baseColor, -0.55);
+  const glassColor = light ? "#1e293b" : "#0f172a";
+  const roofColor = shadeColor(baseColor, light ? -0.15 : 0.15);
   return (
     <div
       className="relative drop-shadow-xl"
-      style={{ width: 52, height: 64 }}
+      style={{ width: 56, height: 70 }}
       title={variant === "conforto" ? "Motorista (Conforto)" : "Motorista"}
     >
-      <div className="anim-vehicle-bob" style={{ width: 52, height: 64 }}>
-        <svg viewBox="0 0 64 80" width="52" height="64" style={{ overflow: "visible" }}>
+      <div className="anim-vehicle-bob" style={{ width: 56, height: 70 }}>
+        <svg viewBox="0 0 64 80" width="56" height="70" style={{ overflow: "visible" }}>
           <defs>
             <radialGradient id={`carShadow-${uid}`} cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="rgba(0,0,0,0.45)" />
@@ -169,6 +172,11 @@ const CarMarker = ({
             <linearGradient id={`pinBg-${uid}`} x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor={pinTop} />
               <stop offset="100%" stopColor={pinBottom} />
+            </linearGradient>
+            <linearGradient id={`carBody-${uid}`} x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor={bodyBottom} />
+              <stop offset="50%" stopColor={bodyTop} />
+              <stop offset="100%" stopColor={bodyBottom} />
             </linearGradient>
           </defs>
           {/* sombra */}
@@ -181,7 +189,7 @@ const CarMarker = ({
             strokeWidth="2.5"
           />
           {/* círculo branco interno */}
-          <circle cx="32" cy="28" r="16" fill="#ffffff" />
+          <circle cx="32" cy="28" r="20" fill="#ffffff" />
           {/* carro dentro (gira pelo heading) */}
           <g
             style={{
@@ -191,32 +199,89 @@ const CarMarker = ({
               transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            {/* Carro vista superior — chassi arredondado */}
+            {/* sombra interna sob o carro */}
+            <ellipse cx="32" cy="29" rx="11" ry="14" fill="rgba(0,0,0,0.12)" />
+
+            {/* Corpo do carro (vista superior) — cor do veículo */}
             <path
-              d="M26 18 C24 18 22 20 22 23 L22 33 C22 36 24 38 26 38 L38 38 C40 38 42 36 42 33 L42 23 C42 20 40 18 38 18 Z"
-              fill={carFill}
-              stroke={carStroke}
-              strokeOpacity="0.15"
-              strokeWidth="0.5"
+              d="M26 14
+                 C 23 14 21.5 16 21.5 19
+                 L 21.5 38
+                 C 21.5 41 23 43 26 43
+                 L 38 43
+                 C 41 43 42.5 41 42.5 38
+                 L 42.5 19
+                 C 42.5 16 41 14 38 14 Z"
+              fill={`url(#carBody-${uid})`}
+              stroke={bodyEdge}
+              strokeWidth="0.8"
+              strokeLinejoin="round"
             />
-            {/* para-brisa frontal */}
+
+            {/* highlight lateral (brilho) */}
             <path
-              d="M25 22 L27 25 L37 25 L39 22 Z"
-              fill={baseColor}
+              d="M23.5 18 L 23.5 39"
+              stroke="#ffffff"
+              strokeWidth="0.8"
+              opacity="0.35"
+              strokeLinecap="round"
+            />
+            <path
+              d="M40.5 18 L 40.5 39"
+              stroke="#000000"
+              strokeWidth="0.6"
+              opacity="0.18"
+              strokeLinecap="round"
+            />
+
+            {/* para-brisa frontal (escuro/fumê) */}
+            <path
+              d="M24 19.5 L 26 23 L 38 23 L 40 19.5
+                 C 38.5 18 36 17.2 32 17.2
+                 C 28 17.2 25.5 18 24 19.5 Z"
+              fill={glassColor}
               opacity="0.85"
             />
+            {/* reflexo no para-brisa */}
+            <path
+              d="M26 19.5 L 27.5 22.5 L 30 22.5 Z"
+              fill="#ffffff"
+              opacity="0.18"
+            />
+
+            {/* teto / cabine */}
+            <rect
+              x="25"
+              y="24"
+              width="14"
+              height="9"
+              rx="1.5"
+              fill={roofColor}
+              opacity="0.9"
+            />
+            {/* divisão central do teto */}
+            <line x1="32" y1="24.5" x2="32" y2="32.5" stroke={bodyEdge} strokeWidth="0.4" opacity="0.5" />
+
             {/* para-brisa traseiro */}
             <path
-              d="M25 34 L27 31 L37 31 L39 34 Z"
-              fill={baseColor}
-              opacity="0.6"
+              d="M24 37.5 L 26 34 L 38 34 L 40 37.5
+                 C 38.5 39 36 39.8 32 39.8
+                 C 28 39.8 25.5 39 24 37.5 Z"
+              fill={glassColor}
+              opacity="0.7"
             />
-            {/* faróis */}
-            <rect x="25" y="19" width="3" height="1.5" rx="0.5" fill="#fef3c7" />
-            <rect x="36" y="19" width="3" height="1.5" rx="0.5" fill="#fef3c7" />
-            {/* lanternas */}
-            <rect x="25" y="36" width="3" height="1.5" rx="0.5" fill="#ef4444" opacity="0.9" />
-            <rect x="36" y="36" width="3" height="1.5" rx="0.5" fill="#ef4444" opacity="0.9" />
+
+            {/* faróis dianteiros */}
+            <rect x="23" y="14.8" width="3" height="1.6" rx="0.6" fill="#fef3c7" stroke="#f59e0b" strokeWidth="0.3" />
+            <rect x="38" y="14.8" width="3" height="1.6" rx="0.6" fill="#fef3c7" stroke="#f59e0b" strokeWidth="0.3" />
+
+            {/* lanternas traseiras */}
+            <rect x="23" y="40.6" width="3" height="1.6" rx="0.6" fill="#ef4444" />
+            <rect x="38" y="40.6" width="3" height="1.6" rx="0.6" fill="#ef4444" />
+
+            {/* retrovisores */}
+            <ellipse cx="20.8" cy="22" rx="1.2" ry="0.9" fill={bodyBottom} stroke={bodyEdge} strokeWidth="0.3" />
+            <ellipse cx="43.2" cy="22" rx="1.2" ry="0.9" fill={bodyBottom} stroke={bodyEdge} strokeWidth="0.3" />
           </g>
         </svg>
       </div>
