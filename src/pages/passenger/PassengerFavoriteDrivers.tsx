@@ -204,6 +204,11 @@ const PassengerFavoriteDrivers = () => {
       </header>
 
       <div className="px-4 py-4 space-y-3">
+        {geoError && (
+          <div className="rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground">
+            ⚠ {geoError}. Habilite o GPS para ver a distância e poder chamar.
+          </div>
+        )}
         {loading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
