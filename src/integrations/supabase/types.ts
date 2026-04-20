@@ -394,6 +394,27 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_drivers: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          passenger_id: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          passenger_id: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          passenger_id?: string
+        }
+        Relationships: []
+      }
       fraud_alerts: {
         Row: {
           action_taken: string | null
@@ -563,6 +584,54 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      passenger_coupons: {
+        Row: {
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          message: string | null
+          min_fare: number | null
+          passenger_id: string
+          sent_by: string | null
+          source: string
+          used_at: string | null
+          used_ride_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          min_fare?: number | null
+          passenger_id: string
+          sent_by?: string | null
+          source?: string
+          used_at?: string | null
+          used_ride_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          min_fare?: number | null
+          passenger_id?: string
+          sent_by?: string | null
+          source?: string
+          used_at?: string | null
+          used_ride_id?: string | null
         }
         Relationships: []
       }
@@ -1429,6 +1498,18 @@ export type Database = {
         Args: { _close?: boolean; _response: string; _ticket_id: string }
         Returns: undefined
       }
+      admin_send_coupon: {
+        Args: {
+          _code: string
+          _discount_type: string
+          _discount_value: number
+          _expires_at?: string
+          _message?: string
+          _min_fare?: number
+          _passenger_ids: string[]
+        }
+        Returns: number
+      }
       admin_send_message: {
         Args: { _message: string; _title: string; _user_id: string }
         Returns: string
@@ -1541,6 +1622,14 @@ export type Database = {
         Returns: number
       }
       is_master: { Args: { _user_id: string }; Returns: boolean }
+      passenger_redeem_coupon: {
+        Args: { _coupon_id: string; _ride_id: string }
+        Returns: undefined
+      }
+      passenger_toggle_favorite_driver: {
+        Args: { _driver_id: string }
+        Returns: boolean
+      }
       recalc_driver_rating: { Args: { _driver_id: string }; Returns: number }
       recalc_passenger_rating: {
         Args: { _passenger_id: string }
