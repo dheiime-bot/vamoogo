@@ -1206,7 +1206,7 @@ const PassengerHome = () => {
             <>
               <div className="px-4 py-1.5 space-y-2 text-center">
                 {driverInfo && (
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex flex-col items-center gap-1.5">
                     <p className="text-xs text-muted-foreground truncate">
                       Motorista: {driverInfo.profile?.full_name}
                     </p>
@@ -1214,15 +1214,15 @@ const PassengerHome = () => {
                       type="button"
                       onClick={toggleFavoriteDriver}
                       disabled={favoritingDriver || !activeRide?.driver_id}
-                      className={`shrink-0 rounded-full p-1.5 transition-colors ${
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                         favoriteDriver
                           ? "text-destructive bg-destructive/10"
-                          : "text-muted-foreground hover:bg-muted"
+                          : "text-muted-foreground bg-muted hover:bg-muted/70"
                       } disabled:opacity-50`}
                       aria-label={favoriteDriver ? "Remover dos favoritos" : "Favoritar motorista"}
-                      title={favoriteDriver ? "Remover dos favoritos" : "Favoritar motorista"}
                     >
-                      <Heart className={`h-4 w-4 ${favoriteDriver ? "fill-current" : ""}`} />
+                      <Heart className={`h-3.5 w-3.5 ${favoriteDriver ? "fill-current" : ""}`} />
+                      {favoriteDriver ? "Motorista favoritado" : "Favoritar motorista"}
                     </button>
                   </div>
                 )}
