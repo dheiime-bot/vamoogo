@@ -475,8 +475,13 @@ const PassengerHome = () => {
     setRideState("searching");
     setActiveRide(data);
     // Dispara o match em background (não bloqueia a UI)
-    supabase.functions.invoke("dispatch-ride", { body: { rideId: data.id } })
+    supabase.functions.invoke("dispatch-ride", {
+      body: { rideId: data.id, preferredDriverId: preferredDriver?.id || null },
+    })
       .catch((e) => console.warn("dispatch-ride invoke:", e));
+    // Limpa motorista preferido após uso (vale só p/ esta corrida)
+    setPreferredDriver(null);
+    try { sessionStorage.removeItem("preferred_driver"); } catch {}
   };
 
   /** Limpa estado local após o backend confirmar o cancelamento (via RPC). */
