@@ -77,6 +77,14 @@ const navItems: NavItem[] = [
   },
   { icon: MessageCircle, label: "Chats", path: "/admin/chats" },
   { icon: Headphones, label: "Suporte", path: "/admin/support" },
+  {
+    icon: Settings,
+    label: "Configurações",
+    children: [
+      { label: "Tarifas", path: "/admin/tariffs" },
+      { label: "Regras de cancelamento", path: "/admin/settings/cancellations" },
+    ],
+  },
 ];
 
 interface AdminLayoutProps {
@@ -211,15 +219,6 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
                   </SidebarMenuItem>
                 );
               })}
-
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Configurações" asChild>
-                  <NavLink to="/admin/tariffs">
-                    <Settings className="h-4 w-4" />
-                    <span>Configurações</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
 
               {isMaster && (
                 <SidebarMenuItem>
