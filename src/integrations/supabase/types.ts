@@ -1624,6 +1624,15 @@ export type Database = {
         Args: { _new_price: number; _reason: string; _ride_id: string }
         Returns: Json
       }
+      admin_apply_cancellation_block: {
+        Args: {
+          _hours: number
+          _kind: string
+          _reason: string
+          _user_id: string
+        }
+        Returns: string
+      }
       admin_approve_vehicle_change: {
         Args: { _message?: string; _request_id: string }
         Returns: string
@@ -1634,6 +1643,10 @@ export type Database = {
       }
       admin_cancel_ride: {
         Args: { _reason: string; _ride_id: string }
+        Returns: undefined
+      }
+      admin_clear_cancellation_block: {
+        Args: { _kind: string; _user_id: string }
         Returns: undefined
       }
       admin_close_ticket: { Args: { _ticket_id: string }; Returns: undefined }
