@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import RideChat from "@/components/passenger/RideChat";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
+import CancelRideDialog from "@/components/shared/CancelRideDialog";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
