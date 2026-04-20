@@ -63,7 +63,7 @@ const AdminCoupons = () => {
       .limit(500);
     if (!rows) { setSent([]); return; }
     const ids = Array.from(new Set(rows.map((r: any) => r.passenger_id)));
-    let nameMap = new Map<string, { full_name: string; email: string | null }>();
+    let nameMap = new Map<string, { full_name: string; email: string | null; selfie_url: string | null }>();
     if (ids.length) {
       const { data: profs } = await supabase
         .from("profiles")
