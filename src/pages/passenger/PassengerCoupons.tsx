@@ -17,6 +17,7 @@ interface Coupon {
   used_at: string | null;
   message: string | null;
   created_at: string;
+  active: boolean;
 }
 
 const formatDiscount = (c: Coupon) =>
@@ -39,6 +40,7 @@ const PassengerCoupons = () => {
       .from("passenger_coupons")
       .select("*")
       .eq("passenger_id", user.id)
+      .eq("active", true)
       .order("created_at", { ascending: false });
     if (error) toast.error("Erro ao carregar cupons");
     setCoupons((data as Coupon[]) || []);

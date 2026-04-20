@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Copy, Pencil, PowerOff, Power, TicketPercent, Send, Users, Search, MoreVertical, UserPlus, Megaphone, CheckCircle2 } from "lucide-react";
+import { Plus, Loader2, Copy, Pencil, PowerOff, Power, TicketPercent, Send, Users, Search, MoreVertical, UserPlus, Megaphone, CheckCircle2, Trash2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,7 +59,7 @@ const AdminCoupons = () => {
   const fetchSent = async () => {
     const { data: rows } = await supabase
       .from("passenger_coupons")
-      .select("id, code, discount_type, discount_value, min_fare, expires_at, created_at, used_at, passenger_id, message")
+      .select("id, code, discount_type, discount_value, min_fare, expires_at, created_at, used_at, passenger_id, message, active")
       .order("created_at", { ascending: false })
       .limit(500);
     if (!rows) { setSent([]); return; }
@@ -200,6 +200,25 @@ const AdminCoupons = () => {
       clearSelection();
       toast.success(`Cupom ${c.code} pronto. Selecione os passageiros.`);
     }
+  };
+
+  // Ações sobre cupons já enviados (passenger_coupons)
+  const toggleSent = async (id: string, active: boolean) => {
+    const { error } = await supabase
+      .from("passenger_coupons")
+      .update({ active: !active })
+      .eq("id", id);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    toast.success(active ? "Cupom desativado para o passageiro" : "Cupom reativado");
+    fetchSent();
+  };
+
+  const deleteSent = async (id: string) => {
+    if (!confirm("Excluir este cupom enviado? O passageiro deixará de vê-lo.")) return;
+    const { error } = await supabase.from("passenger_coupons").delete().eq("id", id);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    toast.success("Cupom excluído");
+    fetchSent();
   };
 
   return (
@@ -415,12 +434,44 @@ const AdminCoupons = () => {
                 <p className="p-6 text-center text-xs text-muted-foreground">Nenhum cupom enviado ainda</p>
               )}
               {filteredSent.map((r) => (
-                <div key={r.id} className="px-3 py-2.5 space-y-0.5">
+                <div key={r.id} className={`px-3 py-2.5 space-y-0.5 ${r.active === false ? "opacity-60" : ""}`}>
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono text-xs font-bold text-primary">{r.code}</span>
-                    <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${r.used_at ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
-                      {r.used_at ? "Usado" : "Disponível"}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${
+                        r.used_at ? "bg-success/15 text-success"
+                        : r.active === false ? "bg-destructive/15 text-destructive"
+                        : "bg-muted text-muted-foreground"
+                      }`}>
+                        {r.used_at ? "Usado" : r.active === false ? "Inativo" : "Disponível"}
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="rounded-lg p-1 hover:bg-muted" aria-label="Ações">
+                            <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          {!r.used_at && (
+                            <DropdownMenuItem
+                              onClick={() => toggleSent(r.id, r.active !== false)}
+                              className={r.active !== false ? "text-destructive focus:text-destructive" : ""}
+                            >
+                              {r.active !== false
+                                ? <><PowerOff className="h-4 w-4 mr-2" /> Desativar</>
+                                : <><Power className="h-4 w-4 mr-2" /> Reativar</>}
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(r.code); toast.success("Copiado!"); }}>
+                            <Copy className="h-4 w-4 mr-2" /> Copiar código
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => deleteSent(r.id)} className="text-destructive focus:text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <UserAvatar src={r._profile?.selfie_url} name={r._profile?.full_name} role="passenger" size="xs" />

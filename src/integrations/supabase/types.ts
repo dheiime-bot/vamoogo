@@ -700,6 +700,7 @@ export type Database = {
       }
       passenger_coupons: {
         Row: {
+          active: boolean
           code: string
           created_at: string
           discount_type: string
@@ -715,6 +716,7 @@ export type Database = {
           used_ride_id: string | null
         }
         Insert: {
+          active?: boolean
           code: string
           created_at?: string
           discount_type?: string
@@ -730,6 +732,7 @@ export type Database = {
           used_ride_id?: string | null
         }
         Update: {
+          active?: boolean
           code?: string
           created_at?: string
           discount_type?: string
