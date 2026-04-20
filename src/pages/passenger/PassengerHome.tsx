@@ -71,6 +71,32 @@ const PassengerHome = () => {
   const [showChangeDest, setShowChangeDest] = useState(false);
   const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
 
+  // Status do GPS do dispositivo (alimenta o sino: verde=ok, vermelho=negado/erro)
+  const [gpsStatus, setGpsStatus] = useState<"connected" | "disconnected" | "idle">("idle");
+
+  useEffect(() => {
+    if (!navigator.geolocation) { setGpsStatus("disconnected"); return; }
+    let cancelled = false;
+
+    // Permissão proativa
+    (async () => {
+      try {
+        // @ts-ignore
+        const status = await navigator.permissions?.query({ name: "geolocation" });
+        if (cancelled) return;
+        if (status?.state === "denied") { setGpsStatus("disconnected"); return; }
+        if (status?.state === "granted") setGpsStatus("connected");
+      } catch { /* sem Permissions API */ }
+    })();
+
+    const watchId = navigator.geolocation.watchPosition(
+      () => { if (!cancelled) setGpsStatus("connected"); },
+      () => { if (!cancelled) setGpsStatus("disconnected"); },
+      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 }
+    );
+    return () => { cancelled = true; navigator.geolocation.clearWatch(watchId); };
+  }, []);
+
   // (recentRides removido — não estava em uso na UI)
 
   useEffect(() => {
@@ -1159,7 +1185,7 @@ const PassengerHome = () => {
       <PassengerSpendChip />
       {!showFormSheet && (
         <>
-          <NotificationBell topOffsetPx={72} />
+          <NotificationBell topOffsetPx={72} connectionStatus={gpsStatus} />
           <RefreshAppButton topOffsetPx={144} />
         </>
       )}
