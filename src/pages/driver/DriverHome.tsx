@@ -850,6 +850,8 @@ const DriverHome = () => {
         rideId={activeRide?.id ?? null}
         role="driver"
         afterAccept={true}
+        inProgress={activeRide?.status === "in_progress"}
+        acceptedAt={activeRide?.updated_at ?? null}
       />
       <NotificationBell
         topOffsetPx={72}
