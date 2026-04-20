@@ -3,6 +3,7 @@ import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppMenu from "@/components/shared/AppMenu";
+import HomeFab from "@/components/passenger/HomeFab";
 
 import RideChat from "@/components/passenger/RideChat";
 import CentralChat from "@/components/shared/CentralChat";
@@ -188,6 +189,7 @@ const PassengerChats = () => {
           </div>
         )}
       </div>
+      <HomeFab />
     </div>
   );
 };
