@@ -241,7 +241,8 @@ const DriverVehicles = () => {
         )}
       </div>
     </div>
-    <DriverHomeFab />
+      <DriverHomeFab />
+    </>
   );
 };
 
