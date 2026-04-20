@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, X, ImageIcon, User as UserIcon, WifiOff } from "lucide-react";
+import { Search, X, ImageIcon, User as UserIcon, WifiOff, ChevronDown, Check } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
@@ -9,6 +9,16 @@ import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const CAT_LABEL: Record<string, string> = { moto: "Moto", economico: "Econômico", conforto: "Conforto" };
 
 const onlyDigits = (s: string) => (s || "").replace(/\D/g, "");
 const normalizePlate = (s: string) => (s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
