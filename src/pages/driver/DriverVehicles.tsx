@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Car, Bike, Loader2, Plus, CheckCircle2, Clock, XCircle, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Car, Bike, Loader2, Plus, CheckCircle2, Clock, XCircle, ShieldCheck, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
+import { toast } from "sonner";
 
 interface Vehicle {
   id: string;
@@ -43,6 +44,20 @@ const DriverVehicles = () => {
   const [loading, setLoading] = useState(true);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [requests, setRequests] = useState<ChangeRequest[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const deleteRequest = async (id: string) => {
+    if (!confirm("Excluir esta solicitação do histórico?")) return;
+    setDeletingId(id);
+    const { error } = await supabase.from("vehicle_change_requests").delete().eq("id", id);
+    setDeletingId(null);
+    if (error) {
+      toast.error("Não foi possível excluir a solicitação");
+      return;
+    }
+    setRequests((prev) => prev.filter((r) => r.id !== id));
+    toast.success("Solicitação excluída");
+  };
 
   const load = async () => {
     if (!user?.id) return;
