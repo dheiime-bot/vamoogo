@@ -596,6 +596,7 @@ const PassengerHome = () => {
     // Marca como finalizada para que UPDATEs em atraso não reabram o modal de rating
     if (activeRide?.id) finalizedRideIdsRef.current.add(activeRide.id);
     setRideState("idle"); setActiveRide(null); setRating(0); setRatingComment("");
+    setFavoriteDriver(false);
     setSelectedOrigin(null); setSelectedDestination(null); setSelectedStops([]);
     setDriverInfo(null); setPaymentMethod(null);
     setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps"); setReturnToOrigin(false);
