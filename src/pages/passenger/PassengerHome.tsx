@@ -4,7 +4,7 @@ import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import PassengerSpendChip from "@/components/passenger/PassengerSpendChip";
-import GoogleMap, { LEG_COLORS } from "@/components/shared/GoogleMap";
+import GoogleMap, { LEG_COLORS, vehicleColorToHex } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import RideChat from "@/components/passenger/RideChat";
