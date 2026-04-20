@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/brFormat";
 import { toast } from "sonner";
 import { playOfferAlert } from "@/lib/offerSound";
+import { guardErrorMessage } from "@/lib/guardErrors";
 
 const DriverOfferAlert = () => {
   const { user, roles, activeRole } = useAuth();
@@ -174,7 +175,13 @@ const DriverOfferAlert = () => {
       .select()
       .single();
     if (error || !updated) {
-      toast.error("Outro motorista já aceitou esta corrida");
+      // Marca a própria oferta como rejeitada para o polling não re-mostrar
+      await supabase.from("ride_offers")
+        .update({ status: "rejected", responded_at: new Date().toISOString() })
+        .eq("id", offer.id);
+      seenOfferIdsRef.current.add(offer.id);
+      // Mensagem específica vinda das triggers de proteção (saldo, bloqueio, etc.)
+      toast.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
       setOffer(null); setRide(null); setAccepting(false);
       return;
     }
