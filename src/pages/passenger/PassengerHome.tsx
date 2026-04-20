@@ -901,9 +901,19 @@ const PassengerHome = () => {
               )}
 
               {rideState === "searching" && (
-                <button onClick={handleCancelRide}
+                <button onClick={() => setShowCancelDialog(true)}
                   className="w-full rounded-xl border border-destructive/30 py-3.5 text-sm font-bold text-destructive hover:bg-destructive/5 transition-colors">
                   Cancelar busca
+                </button>
+              )}
+
+              {/* Após aceite e antes do início — cancelamento ainda é permitido (passível de punição) */}
+              {(rideState === "accepted" || rideState === "driver_arriving" || rideState === "arrived") && (
+                <button
+                  onClick={() => setShowCancelDialog(true)}
+                  className="w-full rounded-xl border border-destructive/30 py-3 text-xs font-bold text-destructive hover:bg-destructive/5 transition-colors"
+                >
+                  Cancelar corrida
                 </button>
               )}
             </div>
