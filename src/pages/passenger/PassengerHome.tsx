@@ -1175,7 +1175,25 @@ const PassengerHome = () => {
             <>
               <div className="px-4 py-1.5 space-y-2 text-center">
                 {driverInfo && (
-                  <p className="text-xs text-muted-foreground truncate">Motorista: {driverInfo.profile?.full_name}</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-xs text-muted-foreground truncate">
+                      Motorista: {driverInfo.profile?.full_name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={toggleFavoriteDriver}
+                      disabled={favoritingDriver || !activeRide?.driver_id}
+                      className={`shrink-0 rounded-full p-1.5 transition-colors ${
+                        favoriteDriver
+                          ? "text-destructive bg-destructive/10"
+                          : "text-muted-foreground hover:bg-muted"
+                      } disabled:opacity-50`}
+                      aria-label={favoriteDriver ? "Remover dos favoritos" : "Favoritar motorista"}
+                      title={favoriteDriver ? "Remover dos favoritos" : "Favoritar motorista"}
+                    >
+                      <Heart className={`h-4 w-4 ${favoriteDriver ? "fill-current" : ""}`} />
+                    </button>
+                  </div>
                 )}
                 <RideSummary ride={activeRide} onRate={() => {}} hideRateButton compact />
                 {activeRide.payment_method === "pix" && (
