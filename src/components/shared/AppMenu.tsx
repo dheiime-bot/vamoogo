@@ -72,7 +72,8 @@ const AppMenu = ({ role, floating = true }: Props) => {
 
   const go = (path: string) => {
     setOpen(false);
-    navigate(path);
+    // Aguarda o sheet fechar antes de navegar para evitar conflitos de animação/foco
+    setTimeout(() => navigate(path), 0);
   };
 
   const handleSignOut = async () => {
