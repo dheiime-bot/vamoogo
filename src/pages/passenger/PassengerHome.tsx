@@ -601,6 +601,23 @@ const PassengerHome = () => {
       .then(({ data }) => setFavoriteDriver(!!data));
   }, [rideState, activeRide?.driver_id, user?.id]);
 
+  // Fallback: se entrar em "rating" sem driverInfo carregado (ex: refresh durante rating),
+  // busca os dados do motorista para garantir que o botão de favoritar e o nome apareçam.
+  useEffect(() => {
+    if (rideState !== "rating" || !activeRide?.driver_id || driverInfo) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: driver }, { data: driverProfile }] = await Promise.all([
+        supabase.from("drivers").select("*").eq("user_id", activeRide.driver_id).maybeSingle(),
+        supabase.from("profiles").select("*").eq("user_id", activeRide.driver_id).maybeSingle(),
+      ]);
+      if (!cancelled && driver && driverProfile) {
+        setDriverInfo({ ...driver, profile: driverProfile });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [rideState, activeRide?.driver_id, driverInfo]);
+
   const toggleFavoriteDriver = async () => {
     if (!activeRide?.driver_id || favoritingDriver) return;
     setFavoritingDriver(true);
