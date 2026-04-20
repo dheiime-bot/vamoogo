@@ -324,6 +324,7 @@ export type Database = {
           vehicle_photo_left_url: string | null
           vehicle_photo_right_url: string | null
           vehicle_plate: string
+          vehicle_renavam: string | null
           vehicle_year: number | null
         }
         Insert: {
@@ -345,6 +346,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate: string
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Update: {
@@ -366,6 +368,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate?: string
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Relationships: []
@@ -411,6 +414,7 @@ export type Database = {
           vehicle_photo_left_url: string | null
           vehicle_photo_right_url: string | null
           vehicle_plate: string | null
+          vehicle_renavam: string | null
           vehicle_year: number | null
         }
         Insert: {
@@ -453,6 +457,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate?: string | null
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Update: {
@@ -495,6 +500,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate?: string | null
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Relationships: []
@@ -1539,6 +1545,7 @@ export type Database = {
           vehicle_photo_left_url: string | null
           vehicle_photo_right_url: string | null
           vehicle_plate: string
+          vehicle_renavam: string | null
           vehicle_year: number | null
         }
         Insert: {
@@ -1565,6 +1572,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate: string
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Update: {
@@ -1591,6 +1599,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate?: string
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Relationships: []
@@ -1749,6 +1758,10 @@ export type Database = {
         Args: { _vehicle_id: string }
         Returns: undefined
       }
+      admin_transfer_vehicle: {
+        Args: { _new_driver_id: string; _reason?: string; _vehicle_id: string }
+        Returns: undefined
+      }
       admin_update_driver_data: {
         Args: {
           _category: string
@@ -1843,14 +1856,38 @@ export type Database = {
             }
             Returns: Json
           }
-      check_signup_dupes: {
-        Args: { _cpf: string; _phone: string }
+      check_signup_dupes:
+        | {
+            Args: { _cpf: string; _phone: string }
+            Returns: {
+              cpf_taken: boolean
+              phone_taken: boolean
+            }[]
+          }
+        | {
+            Args: {
+              _cpf: string
+              _phone: string
+              _plate?: string
+              _renavam?: string
+            }
+            Returns: {
+              cpf_taken: boolean
+              phone_taken: boolean
+              plate_taken: boolean
+              renavam_taken: boolean
+            }[]
+          }
+      cleanup_zombie_drivers: { Args: never; Returns: number }
+      driver_check_vehicle_dupes: {
+        Args: { _plate: string; _renavam: string }
         Returns: {
-          cpf_taken: boolean
-          phone_taken: boolean
+          plate_owner_is_self: boolean
+          plate_taken: boolean
+          renavam_owner_is_self: boolean
+          renavam_taken: boolean
         }[]
       }
-      cleanup_zombie_drivers: { Args: never; Returns: number }
       driver_request_vehicle_change: {
         Args: {
           _crlv_url: string
