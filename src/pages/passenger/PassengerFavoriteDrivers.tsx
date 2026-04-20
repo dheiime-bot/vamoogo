@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Heart, Loader2, Star, Car } from "lucide-react";
+import { ArrowLeft, Heart, Loader2, Star, Car, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface FavRow {
   id: string;
@@ -15,8 +16,10 @@ interface FavRow {
 interface DriverDetails {
   user_id: string;
   full_name: string | null;
+  selfie_url: string | null;
   rating: number | null;
   vehicle: string | null;
+  vehicle_plate: string | null;
   total_rides: number | null;
 }
 
@@ -25,6 +28,7 @@ const PassengerFavoriteDrivers = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<(FavRow & { driver: DriverDetails | null })[]>([]);
+  const [selected, setSelected] = useState<DriverDetails | null>(null);
 
   const load = async () => {
     if (!user?.id) return;
@@ -42,34 +46,27 @@ const PassengerFavoriteDrivers = () => {
     }
 
     const ids = list.map((f) => f.driver_id);
-    const [{ data: drivers }, { data: profiles }] = await Promise.all([
-      supabase
-        .from("drivers")
-        .select("user_id, rating, total_rides, vehicle_brand, vehicle_model, vehicle_color")
-        .in("user_id", ids),
-      supabase.from("profiles").select("user_id, full_name").in("user_id", ids),
-    ]);
-
-    const dmap = new Map((drivers || []).map((d: any) => [d.user_id, d]));
-    const pmap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+    const { data: details } = await supabase.rpc("get_favorite_driver_details", {
+      _driver_ids: ids,
+    });
+    const dmap = new Map((details || []).map((d: any) => [d.user_id, d]));
 
     setItems(
       list.map((f) => {
         const d: any = dmap.get(f.driver_id);
-        const p: any = pmap.get(f.driver_id);
         return {
           ...f,
-          driver: d
-            ? {
-                user_id: f.driver_id,
-                full_name: p?.full_name || "Motorista",
-                rating: d.rating,
-                total_rides: d.total_rides,
-                vehicle: [d.vehicle_brand, d.vehicle_model, d.vehicle_color]
-                  .filter(Boolean)
-                  .join(" "),
-              }
-            : { user_id: f.driver_id, full_name: p?.full_name || "Motorista", rating: null, total_rides: null, vehicle: null },
+          driver: {
+            user_id: f.driver_id,
+            full_name: d?.full_name || "Motorista",
+            selfie_url: d?.selfie_url || null,
+            rating: d?.rating ?? null,
+            total_rides: d?.total_rides ?? null,
+            vehicle: [d?.vehicle_brand, d?.vehicle_model, d?.vehicle_color]
+              .filter(Boolean)
+              .join(" ") || null,
+            vehicle_plate: d?.vehicle_plate || null,
+          },
         };
       })
     );
