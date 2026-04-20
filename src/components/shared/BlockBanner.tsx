@@ -84,16 +84,12 @@ const BlockBanner = ({ role }: { role: "passenger" | "driver" }) => {
     navigate(role === "passenger" ? "/passenger/chats?central=1" : "/driver/chats?central=1");
   };
 
-  const hasManual = items.some((i) => i.kind === "manual");
-  const hasAuto = items.some((i) => i.kind === "auto");
-  const autoItem = items.find((i) => i.kind === "auto");
+  // Mostra APENAS um motivo: manual tem prioridade sobre automático
   const manualItem = items.find((i) => i.kind === "manual");
-  const title =
-    hasManual && hasAuto
-      ? "Sua conta possui bloqueios ativos"
-      : hasManual
-        ? (manualItem?.title ?? "Você está bloqueado")
-        : (autoItem?.title ?? "Você está temporariamente bloqueado");
+  const autoItem = items.find((i) => i.kind === "auto");
+  const primary = manualItem ?? autoItem!;
+  const displayItems = [primary];
+  const title = primary.title;
 
   return (
     <div
@@ -117,7 +113,7 @@ const BlockBanner = ({ role }: { role: "passenger" | "driver" }) => {
         </div>
 
         <div className="space-y-2">
-          {items.map((it, idx) => (
+          {displayItems.map((it, idx) => (
             <div key={idx} className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
               <p className="text-[11px] font-bold uppercase tracking-wide text-destructive flex items-center gap-1">
                 {it.kind === "manual" ? <Lock className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
