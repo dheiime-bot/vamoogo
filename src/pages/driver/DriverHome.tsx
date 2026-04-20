@@ -147,12 +147,8 @@ const DriverHome = () => {
   // - Caso contrário, fica online automaticamente, EXCETO se o motorista tiver
   //   escolhido manualmente ficar offline neste dispositivo (flag em localStorage).
   // - Não força online se estiver bloqueado, sem saldo ou sem GPS.
-  // - 🚗 Se o motorista tem 2+ veículos aprovados, NÃO entra online automaticamente:
-  //   precisa primeiro escolher o veículo no modal (requireVehiclePick).
   useEffect(() => {
     if (!user) return;
-    // Se ainda precisa escolher veículo (2+ categorias), espera a seleção
-    if (requireVehiclePick) return;
     supabase.from("driver_locations")
       .select("is_online, updated_at")
       .eq("driver_id", user.id)
@@ -182,7 +178,7 @@ const DriverHome = () => {
         );
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, driverData?.online_blocked, lowBalance, requireVehiclePick]);
+  }, [user, driverData?.online_blocked, lowBalance]);
 
   // Refs para o handler de realtime ler estado mais recente sem reinscrever o canal
   const pendingOfferRef = useRef<any>(null);
@@ -872,25 +868,6 @@ const DriverHome = () => {
         open={requireVehiclePick}
         onOpenChange={setRequireVehiclePick}
         required
-        onSelected={() => {
-          // Após escolher o veículo, tenta entrar online automaticamente
-          // (respeitando bloqueio, saldo, escolha manual e GPS).
-          setRequireVehiclePick(false);
-          if (!user) return;
-          const manualOfflineKey = `driver-manual-offline-${user.id}`;
-          if (localStorage.getItem(manualOfflineKey)) return;
-          const blocked = (driverData as any)?.online_blocked;
-          if (blocked || lowBalance) return;
-          if (!navigator.geolocation) return;
-          navigator.geolocation.getCurrentPosition(
-            () => {
-              setIsOnline(true);
-              toast.success("Você está Online! Aguardando corridas...");
-            },
-            () => {},
-            { enableHighAccuracy: true, timeout: 10000 }
-          );
-        }}
       />
       <DriverBottomNav
         centerSlot={
