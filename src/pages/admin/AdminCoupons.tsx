@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Copy, Pencil, PowerOff, Power, TicketPercent, Send, Users, Search, MoreVertical, UserPlus, Megaphone, CheckCircle2 } from "lucide-react";
+import { Plus, Loader2, Copy, Pencil, PowerOff, Power, TicketPercent, Send, Users, Search, MoreVertical, UserPlus, Megaphone, CheckCircle2, Trash2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,7 +59,7 @@ const AdminCoupons = () => {
   const fetchSent = async () => {
     const { data: rows } = await supabase
       .from("passenger_coupons")
-      .select("id, code, discount_type, discount_value, min_fare, expires_at, created_at, used_at, passenger_id, message")
+      .select("id, code, discount_type, discount_value, min_fare, expires_at, created_at, used_at, passenger_id, message, active")
       .order("created_at", { ascending: false })
       .limit(500);
     if (!rows) { setSent([]); return; }
