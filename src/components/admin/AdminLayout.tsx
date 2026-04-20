@@ -56,6 +56,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "Motoristas", path: "/admin/drivers" },
       { label: "Passageiros", path: "/admin/passengers" },
+      { label: "Mudanças de veículo", path: "/admin/vehicle-requests" },
     ],
   },
   { icon: DollarSign, label: "Financeiro", path: "/admin/finance" },
