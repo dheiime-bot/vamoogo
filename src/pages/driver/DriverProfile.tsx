@@ -95,13 +95,12 @@ const DriverProfile = () => {
       <div className="relative -mt-10 px-4">
         <div className="rounded-2xl border bg-card p-5 shadow-md">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 overflow-hidden">
-              {profile?.selfie_url ? (
-                <img src={profile.selfie_url} alt="Foto" className="h-full w-full object-cover" />
-              ) : (
-                <CarIcon className="h-8 w-8 text-primary" />
-              )}
-            </div>
+            <UserAvatar
+              src={profile?.selfie_url}
+              name={displayName}
+              role="driver"
+              size="lg"
+            />
             <div className="flex-1">
               <h2 className="text-lg font-bold">{displayName}</h2>
               <p className="text-sm text-muted-foreground">Motorista • {categoryLabel}</p>

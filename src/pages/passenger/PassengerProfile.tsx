@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { User, Camera, FileText, Phone, Mail, Shield, ArrowLeft, Car, Pencil } from "lucide-react";
+import { Camera, FileText, Phone, Mail, Shield, ArrowLeft, Car, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import EditProfileModal from "@/components/shared/EditProfileModal";
@@ -44,13 +45,12 @@ const PassengerProfile = () => {
       <div className="relative -mt-10 px-4">
         <div className="rounded-2xl border bg-card p-5 shadow-md">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted overflow-hidden">
-              {profile?.selfie_url ? (
-                <img src={profile.selfie_url} alt="Foto" className="h-full w-full object-cover" />
-              ) : (
-                <User className="h-8 w-8 text-muted-foreground" />
-              )}
-            </div>
+            <UserAvatar
+              src={profile?.selfie_url}
+              name={displayName}
+              role="passenger"
+              size="lg"
+            />
             <div className="flex-1">
               <h2 className="text-lg font-bold">{displayName}</h2>
               <p className="text-sm text-muted-foreground">CPF: {cpfMasked}</p>

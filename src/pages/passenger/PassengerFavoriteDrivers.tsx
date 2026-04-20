@@ -269,17 +269,12 @@ const PassengerFavoriteDrivers = () => {
                 onClick={() => f.driver && setSelected(f.driver)}
                 className="flex items-center gap-3 cursor-pointer"
               >
-              {f.driver?.selfie_url ? (
-                <img
-                  src={f.driver.selfie_url}
-                  alt={f.driver.full_name || "Motorista"}
-                  className="h-12 w-12 rounded-full object-cover shrink-0 border border-border"
-                />
-              ) : (
-                <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold shrink-0">
-                  {(f.driver?.full_name?.[0] || "M").toUpperCase()}
-                </div>
-              )}
+              <UserAvatar
+                src={f.driver?.selfie_url}
+                name={f.driver?.full_name}
+                role="driver"
+                size="md"
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold truncate">
@@ -354,17 +349,13 @@ const PassengerFavoriteDrivers = () => {
         <DialogContent className="max-w-sm p-0 overflow-hidden">
           {selected && (
             <div className="flex flex-col items-center text-center p-6">
-              {selected.selfie_url ? (
-                <img
-                  src={selected.selfie_url}
-                  alt={selected.full_name || "Motorista"}
-                  className="h-24 w-24 rounded-full object-cover border-4 border-primary/20 shadow-lg"
-                />
-              ) : (
-                <div className="h-24 w-24 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-3xl shadow-lg">
-                  {(selected.full_name?.[0] || "M").toUpperCase()}
-                </div>
-              )}
+              <UserAvatar
+                src={selected.selfie_url}
+                name={selected.full_name}
+                role="driver"
+                size="xl"
+                className="border-4 border-primary/20 shadow-lg"
+              />
               <h2 className="mt-4 text-lg font-display font-bold">
                 {selected.full_name}
               </h2>
