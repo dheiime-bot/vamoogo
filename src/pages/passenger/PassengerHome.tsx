@@ -1235,7 +1235,7 @@ const PassengerHome = () => {
 
       <AppMenu role="passenger" />
       <PassengerSpendChip />
-      {!showFormSheet && (
+      {!showFormSheet && !["searching", "accepted", "driver_arriving", "arrived", "in_progress"].includes(rideState) && (
         <>
           <NotificationBell topOffsetPx={72} connectionStatus={gpsStatus} />
           <RefreshAppButton topOffsetPx={144} />
