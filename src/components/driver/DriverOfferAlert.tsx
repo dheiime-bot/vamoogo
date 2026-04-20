@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { playOfferAlert } from "@/lib/offerSound";
 
 const DriverOfferAlert = () => {
-  const { user, roles } = useAuth();
+  const { user, roles, activeRole } = useAuth();
   const navigate = useNavigate();
   const [offer, setOffer] = useState<any>(null);
   const [ride, setRide] = useState<any>(null);
@@ -29,10 +29,10 @@ const DriverOfferAlert = () => {
   const seenOfferIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => { offerRef.current = offer; }, [offer]);
 
-  // Só dispara para usuários com o papel "driver" carregado.
-  // Antes aceitávamos roles.length === 0 (ainda carregando), o que causava
-  // o popup de oferta aparecer para passageiros (mesmo user.id em ambos os papéis em testes).
-  const isDriver = !!user && roles.includes("driver");
+  // Só dispara quando o usuário está USANDO o app como motorista.
+  // Não basta ter o papel — usuários multi-papel (driver+passenger+admin)
+  // não devem ver o popup quando estão logados como passageiro/admin.
+  const isDriver = !!user && roles.includes("driver") && activeRole === "driver";
 
   const handleNewOffer = useCallback(async (offerRow: any) => {
     if (!user) return;
