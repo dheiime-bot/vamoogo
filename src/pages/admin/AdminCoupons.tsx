@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Copy, Trash2, TicketPercent, Send, Users, Search, CheckCircle2, MoreVertical, UserPlus, Megaphone } from "lucide-react";
+import { Plus, Loader2, Copy, Pencil, PowerOff, Power, TicketPercent, Send, Users, Search, MoreVertical, UserPlus, Megaphone, CheckCircle2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ const AdminCoupons = () => {
 
   const [coupons, setCoupons] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     code: "", discount_type: "percentage", discount_value: "",
     max_uses: "100", min_fare: "0", expires_at: "",
@@ -81,42 +82,48 @@ const AdminCoupons = () => {
   const create = async () => {
     if (!form.code || !form.discount_value) { toast.error("Preencha código e valor"); return; }
     setSaving(true);
-    const { error } = await supabase.from("coupons").insert({
+    const payload = {
       code: form.code.toUpperCase(),
       discount_type: form.discount_type,
       discount_value: parseFloat(form.discount_value),
       max_uses: parseInt(form.max_uses) || 100,
       min_fare: parseFloat(form.min_fare) || 0,
       expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
-    });
+    };
+    const { error } = editingId
+      ? await supabase.from("coupons").update(payload).eq("id", editingId)
+      : await supabase.from("coupons").insert(payload);
     setSaving(false);
     if (error) { toast.error("Erro: " + error.message); return; }
-    toast.success("Cupom criado!");
-    setShowForm(false);
-    setForm({ code: "", discount_type: "percentage", discount_value: "", max_uses: "100", min_fare: "0", expires_at: "" });
+    toast.success(editingId ? "Cupom atualizado!" : "Cupom criado!");
+    closeForm();
     fetch_();
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm({ code: "", discount_type: "percentage", discount_value: "", max_uses: "100", min_fare: "0", expires_at: "" });
   };
 
   const toggle = async (id: string, active: boolean) => {
-    await supabase.from("coupons").update({ active: !active }).eq("id", id);
+    const { error } = await supabase.from("coupons").update({ active: !active }).eq("id", id);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    toast.success(active ? "Cupom desativado" : "Cupom ativado");
     fetch_();
   };
 
-  const remove = async (id: string, code: string) => {
-    if (!confirm(`Excluir o cupom ${code}?\nIsso também removerá esse cupom de todos os passageiros que ainda não usaram.`)) return;
-    // Remove dos passageiros (apenas os não usados — preserva histórico de uso)
-    const { error: pErr, count } = await supabase
-      .from("passenger_coupons")
-      .delete({ count: "exact" })
-      .eq("code", code)
-      .is("used_at", null);
-    if (pErr) { toast.error("Erro ao remover dos passageiros: " + pErr.message); return; }
-    // Remove o cupom geral
-    const { error: cErr } = await supabase.from("coupons").delete().eq("id", id);
-    if (cErr) { toast.error("Erro ao excluir cupom: " + cErr.message); return; }
-    toast.success(`Cupom excluído${count ? ` (removido de ${count} passageiro${count === 1 ? "" : "s"})` : ""}`);
-    fetch_();
-    fetchSent();
+  const startEdit = (c: any) => {
+    setEditingId(c.id);
+    setForm({
+      code: c.code || "",
+      discount_type: c.discount_type || "percentage",
+      discount_value: String(c.discount_value ?? ""),
+      max_uses: String(c.max_uses ?? "100"),
+      min_fare: String(c.min_fare ?? "0"),
+      expires_at: c.expires_at ? new Date(c.expires_at).toISOString().slice(0, 16) : "",
+    });
+    setShowForm(true);
   };
 
   const isExpired = (c: any) => c.expires_at && new Date(c.expires_at) < new Date();
@@ -200,8 +207,8 @@ const AdminCoupons = () => {
       title="Cupons"
       actions={
         tab === "general" ? (
-          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
-            <Plus className="h-3.5 w-3.5" /> Novo cupom
+          <button onClick={() => (showForm ? closeForm() : setShowForm(true))} className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+            <Plus className="h-3.5 w-3.5" /> {showForm ? "Fechar" : "Novo cupom"}
           </button>
         ) : null
       }
@@ -227,6 +234,12 @@ const AdminCoupons = () => {
 
       {tab === "general" && showForm && (
         <div className="rounded-2xl border bg-card p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold flex items-center gap-1.5">
+              {editingId ? <><Pencil className="h-4 w-4 text-primary" /> Editar cupom</> : <><Plus className="h-4 w-4 text-primary" /> Novo cupom</>}
+            </h3>
+            <button onClick={closeForm} className="text-xs text-muted-foreground hover:text-foreground">Cancelar</button>
+          </div>
           <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="Código (ex: VAMOO10)" className="w-full rounded-lg bg-muted px-3 py-2.5 text-sm outline-none uppercase" />
           <div className="flex gap-2">
             {["percentage", "fixed"].map((t) => (
@@ -254,7 +267,7 @@ const AdminCoupons = () => {
             <input value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} type="datetime-local" className="w-full rounded-lg bg-muted px-3 py-2.5 text-sm outline-none" />
           </div>
           <button onClick={create} disabled={saving} className="rounded-xl bg-gradient-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50 flex items-center gap-2">
-            {saving && <Loader2 className="h-4 w-4 animate-spin" />} Criar cupom
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />} {editingId ? "Salvar alterações" : "Criar cupom"}
           </button>
         </div>
       )}
@@ -285,18 +298,20 @@ const AdminCoupons = () => {
                     <DropdownMenuItem onClick={() => useCouponForSend(c, "individual")}>
                       <UserPlus className="h-4 w-4 mr-2" /> Enviar individual
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => startEdit(c)}>
+                      <Pencil className="h-4 w-4 mr-2" /> Editar cupom
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Copiado!"); }}>
                       <Copy className="h-4 w-4 mr-2" /> Copiar código
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => toggle(c.id, c.active)}>
-                      <CheckCircle2 className="h-4 w-4 mr-2" /> {c.active ? "Desativar" : "Ativar"}
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => remove(c.id, c.code)}
-                      className="text-destructive focus:text-destructive"
+                      onClick={() => toggle(c.id, c.active)}
+                      className={c.active ? "text-destructive focus:text-destructive" : ""}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                      {c.active ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
+                      {c.active ? "Desativar" : "Ativar"}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
