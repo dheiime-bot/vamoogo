@@ -1,0 +1,35 @@
+ALTER TABLE public.notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
+
+ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check
+CHECK (type = ANY (ARRAY[
+  'chat'::text,
+  'ride_status'::text,
+  'ride_arrived'::text,
+  'ride_offer'::text,
+  'low_balance'::text,
+  'balance_adjustment'::text,
+  'admin'::text,
+  'admin_message'::text,
+  'system'::text,
+  'driver_status'::text,
+  'passenger_status'::text,
+  'support_message'::text,
+  'support_response'::text,
+  'rating_appeal'::text,
+  'rating_appeal_result'::text,
+  'withdrawal'::text,
+  'recharge'::text,
+  'campaign'::text,
+  'fraud_alert'::text,
+  'incident'::text,
+  'vehicle_change_request'::text,
+  'vehicle_change_approved'::text,
+  'vehicle_change_rejected'::text,
+  'coupon'::text,
+  'favorite_call'::text,
+  'vehicle_transfer'::text,
+  'cancellation_block'::text,
+  'cancellation_unblocked'::text,
+  'passenger_cancellation_alert'::text,
+  'driver_cancellation_alert'::text
+]));
