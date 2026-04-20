@@ -85,15 +85,6 @@ const DriverVehicles = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-lg font-display font-bold flex-1">Meus veículos</h1>
-        <button
-          onClick={() => navigate("/driver/vehicles/request")}
-          disabled={!!pending}
-          className="rounded-full bg-primary p-2 text-primary-foreground disabled:opacity-50"
-          aria-label="Solicitar mudança de veículo"
-          title={pending ? "Você já tem uma solicitação pendente" : "Solicitar mudança"}
-        >
-          <Plus className="h-5 w-5" />
-        </button>
       </header>
 
       <div className="px-4 py-4 space-y-5">
