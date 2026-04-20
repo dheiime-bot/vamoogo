@@ -71,6 +71,7 @@ const navItems: NavItem[] = [
       { label: "Campanhas", path: "/admin/campaigns" },
       { label: "Antifraude", path: "/admin/fraud" },
       { label: "Recursos de avaliação", path: "/admin/appeals" },
+      { label: "Cancelamentos", path: "/admin/cancellations" },
       { label: "Logs", path: "/admin/audit" },
     ],
   },
