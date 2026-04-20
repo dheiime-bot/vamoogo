@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Save, Loader2, Clock, ShieldAlert, Users, Car, Plus, X, RotateCcw, Info,
 } from "lucide-react";
+import CancellationReasonsManager from "@/components/admin/CancellationReasonsManager";
 
 interface Rules {
   grace_seconds: number;
