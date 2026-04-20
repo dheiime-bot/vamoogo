@@ -124,27 +124,16 @@ const PassengerFavoriteDrivers = () => {
     load();
   };
 
-  const callDriver = async (driverId: string, name: string) => {
-    if (!pos) {
-      toast.error("Permita acesso à sua localização para chamar.");
-      return;
-    }
-    setCalling(driverId);
-    const { error } = await supabase.rpc("passenger_call_favorite_driver", {
-      _driver_id: driverId,
-      _passenger_lat: pos.lat,
-      _passenger_lng: pos.lng,
-    });
-    setCalling(null);
-    if (error) {
-      const msg = error.message || "";
-      if (msg.includes("driver_offline")) toast.error(`${name} está offline agora.`);
-      else if (msg.includes("too_far")) toast.error(`${name} está fora do raio de ${maxKm} km.`);
-      else if (msg.includes("not_favorite")) toast.error("Motorista não está nos favoritos.");
-      else toast.error("Não foi possível chamar agora.");
-      return;
-    }
-    toast.success(`Aviso enviado para ${name}!`);
+  const callDriver = (driverId: string, name: string, photo: string | null) => {
+    // Salva o motorista pré-selecionado para a tela de pedido de corrida
+    try {
+      sessionStorage.setItem(
+        "preferred_driver",
+        JSON.stringify({ id: driverId, name, photo, ts: Date.now() })
+      );
+    } catch {}
+    toast.success(`Chamando ${name}…`);
+    navigate("/passenger?preferred=" + encodeURIComponent(driverId));
   };
 
   const canCall = (d: DriverDetails | null) =>
