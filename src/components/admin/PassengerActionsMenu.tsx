@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical, Eye, Pencil, Ban, AlertTriangle, Car, CreditCard, Star, MessageSquare, Trash2, Unlock, ShieldCheck } from "lucide-react";
+import { MoreVertical, Eye, Pencil, Ban, AlertTriangle, Car, CreditCard, Star, MessageSquare, Trash2, Unlock, ShieldCheck, TicketPercent } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -33,7 +33,7 @@ interface Props {
   onChanged: () => void;
 }
 
-type DialogKind = null | "edit" | "block" | "unblock" | "suspect" | "message" | "delete" | "password";
+type DialogKind = null | "edit" | "block" | "unblock" | "suspect" | "message" | "delete" | "password" | "coupon";
 
 const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
   const navigate = useNavigate();
@@ -53,7 +53,19 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
   const [msgTitle, setMsgTitle] = useState("");
   const [msgBody, setMsgBody] = useState("");
 
-  const close = () => { setDialog(null); setReason(""); setMsgTitle(""); setMsgBody(""); setNewPassword(""); };
+  // Coupon form
+  const [couponCode, setCouponCode] = useState("");
+  const [couponType, setCouponType] = useState<"percentage" | "fixed">("percentage");
+  const [couponValue, setCouponValue] = useState("");
+  const [couponMinFare, setCouponMinFare] = useState("");
+  const [couponExpires, setCouponExpires] = useState("");
+  const [couponMessage, setCouponMessage] = useState("");
+
+  const close = () => {
+    setDialog(null); setReason(""); setMsgTitle(""); setMsgBody(""); setNewPassword("");
+    setCouponCode(""); setCouponValue(""); setCouponMinFare(""); setCouponExpires(""); setCouponMessage("");
+    setCouponType("percentage");
+  };
 
   const handleEdit = async () => {
     setBusy(true);
@@ -135,6 +147,28 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
     close();
   };
 
+  const handleSendCoupon = async () => {
+    const code = couponCode.trim().toUpperCase();
+    const value = parseFloat(couponValue);
+    if (code.length < 2) return toast.error("Código inválido");
+    if (!value || value <= 0) return toast.error("Valor do desconto inválido");
+    setBusy(true);
+    const { data, error } = await supabase.rpc("admin_send_coupon" as any, {
+      _passenger_ids: [passenger.user_id],
+      _code: code,
+      _discount_type: couponType,
+      _discount_value: value,
+      _min_fare: couponMinFare ? parseFloat(couponMinFare) : 0,
+      _expires_at: couponExpires ? new Date(couponExpires).toISOString() : null,
+      _message: couponMessage.trim() || null,
+    });
+    setBusy(false);
+    if (error) return toast.error("Erro: " + error.message);
+    if (!data || Number(data) === 0) return toast.error("Cupom não enviado (já existia ativo)");
+    toast.success("Cupom enviado 🎁");
+    close();
+  };
+
   const isBlocked = passenger.status === "bloqueado";
 
   return (
@@ -170,6 +204,9 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
           {isAdmin && (
             <>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setDialog("coupon")}>
+                <TicketPercent className="mr-2 h-4 w-4 text-primary" /> Enviar cupom
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setDialog("message")}>
                 <MessageSquare className="mr-2 h-4 w-4" /> Enviar mensagem
               </DropdownMenuItem>
@@ -298,6 +335,54 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
           <DialogFooter>
             <button onClick={close} className="rounded-lg border px-4 py-2 text-sm">Cancelar</button>
             <button onClick={handleMessage} disabled={busy} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">Enviar</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send coupon */}
+      <Dialog open={dialog === "coupon"} onOpenChange={(o) => !o && close()}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Enviar cupom ao passageiro</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Código</Label>
+              <Input value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="EX: BEMVINDO10" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Tipo</Label>
+                <select
+                  value={couponType}
+                  onChange={(e) => setCouponType(e.target.value as any)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="percentage">Percentual (%)</option>
+                  <option value="fixed">Valor fixo (R$)</option>
+                </select>
+              </div>
+              <div>
+                <Label>{couponType === "percentage" ? "Desconto (%)" : "Desconto (R$)"}</Label>
+                <Input type="number" step="0.01" min="0" value={couponValue} onChange={(e) => setCouponValue(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Valor mínimo (R$)</Label>
+                <Input type="number" step="0.01" min="0" value={couponMinFare} onChange={(e) => setCouponMinFare(e.target.value)} placeholder="0" />
+              </div>
+              <div>
+                <Label>Expira em</Label>
+                <Input type="date" value={couponExpires} onChange={(e) => setCouponExpires(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <Label>Mensagem (opcional)</Label>
+              <Textarea value={couponMessage} onChange={(e) => setCouponMessage(e.target.value)} rows={2} placeholder="Ex: Obrigado por voltar a usar o Vamoo!" />
+            </div>
+          </div>
+          <DialogFooter>
+            <button onClick={close} className="rounded-lg border px-4 py-2 text-sm">Cancelar</button>
+            <button onClick={handleSendCoupon} disabled={busy} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">Enviar cupom</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

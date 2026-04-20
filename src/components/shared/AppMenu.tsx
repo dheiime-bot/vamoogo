@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Menu, Home, Clock, User, MessageCircle, LogOut, Car, Star } from "lucide-react";
+import { Menu, Home, Clock, User, MessageCircle, LogOut, Car, Star, TicketPercent, Heart, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import vamooLogo from "@/assets/vamoo-logo-menu.png";
@@ -26,7 +26,10 @@ const PASSENGER_ITEMS: MenuItem[] = [
   { icon: Home, label: "Início", path: "/passenger" },
   { icon: Clock, label: "Minhas corridas", path: "/passenger/history" },
   { icon: MessageCircle, label: "Chats", path: "/passenger/chats" },
+  { icon: TicketPercent, label: "Cupons", path: "/passenger/coupons" },
+  { icon: Heart, label: "Motoristas favoritos", path: "/passenger/favorites" },
   { icon: User, label: "Meus dados", path: "/passenger/profile" },
+  { icon: Lock, label: "Alterar senha", path: "/passenger/change-password" },
 ];
 
 const DRIVER_ITEMS: MenuItem[] = [

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode } from "lucide-react";
+import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode, Heart } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
@@ -60,6 +60,8 @@ const PassengerHome = () => {
   >([]);
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState("");
+  const [favoriteDriver, setFavoriteDriver] = useState(false);
+  const [favoritingDriver, setFavoritingDriver] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [driverInfo, setDriverInfo] = useState<any>(null);
@@ -559,10 +561,42 @@ const PassengerHome = () => {
     resetRide();
   };
 
+  // Quando o modal de rating abre, verifica se o motorista já é favorito
+  useEffect(() => {
+    if (rideState !== "rating" || !activeRide?.driver_id || !user?.id) {
+      setFavoriteDriver(false);
+      return;
+    }
+    supabase
+      .from("favorite_drivers")
+      .select("id")
+      .eq("passenger_id", user.id)
+      .eq("driver_id", activeRide.driver_id)
+      .maybeSingle()
+      .then(({ data }) => setFavoriteDriver(!!data));
+  }, [rideState, activeRide?.driver_id, user?.id]);
+
+  const toggleFavoriteDriver = async () => {
+    if (!activeRide?.driver_id || favoritingDriver) return;
+    setFavoritingDriver(true);
+    const { data, error } = await supabase.rpc("passenger_toggle_favorite_driver", {
+      _driver_id: activeRide.driver_id,
+    });
+    setFavoritingDriver(false);
+    if (error) {
+      toast.error("Não foi possível atualizar favoritos");
+      return;
+    }
+    const isFav = !!data;
+    setFavoriteDriver(isFav);
+    toast.success(isFav ? "Adicionado aos favoritos ❤️" : "Removido dos favoritos");
+  };
+
   const resetRide = () => {
     // Marca como finalizada para que UPDATEs em atraso não reabram o modal de rating
     if (activeRide?.id) finalizedRideIdsRef.current.add(activeRide.id);
     setRideState("idle"); setActiveRide(null); setRating(0); setRatingComment("");
+    setFavoriteDriver(false);
     setSelectedOrigin(null); setSelectedDestination(null); setSelectedStops([]);
     setDriverInfo(null); setPaymentMethod(null);
     setForOtherPerson(false); setOtherPerson({ name: "", phone: "" }); setOriginType("gps"); setReturnToOrigin(false);
@@ -1142,7 +1176,25 @@ const PassengerHome = () => {
             <>
               <div className="px-4 py-1.5 space-y-2 text-center">
                 {driverInfo && (
-                  <p className="text-xs text-muted-foreground truncate">Motorista: {driverInfo.profile?.full_name}</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-xs text-muted-foreground truncate">
+                      Motorista: {driverInfo.profile?.full_name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={toggleFavoriteDriver}
+                      disabled={favoritingDriver || !activeRide?.driver_id}
+                      className={`shrink-0 rounded-full p-1.5 transition-colors ${
+                        favoriteDriver
+                          ? "text-destructive bg-destructive/10"
+                          : "text-muted-foreground hover:bg-muted"
+                      } disabled:opacity-50`}
+                      aria-label={favoriteDriver ? "Remover dos favoritos" : "Favoritar motorista"}
+                      title={favoriteDriver ? "Remover dos favoritos" : "Favoritar motorista"}
+                    >
+                      <Heart className={`h-4 w-4 ${favoriteDriver ? "fill-current" : ""}`} />
+                    </button>
+                  </div>
                 )}
                 <RideSummary ride={activeRide} onRate={() => {}} hideRateButton compact />
                 {activeRide.payment_method === "pix" && (
