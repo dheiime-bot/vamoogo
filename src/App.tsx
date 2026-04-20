@@ -43,6 +43,7 @@ import AdminPassengers from "./pages/admin/AdminPassengers.tsx";
 import AdminRides from "./pages/admin/AdminRides.tsx";
 import AdminAppeals from "./pages/admin/AdminAppeals.tsx";
 import AdminCancellations from "./pages/admin/AdminCancellations.tsx";
+import AdminCancellationRules from "./pages/admin/AdminCancellationRules.tsx";
 import AdminFinance from "./pages/admin/AdminFinance.tsx";
 import AdminTariffs from "./pages/admin/AdminTariffs.tsx";
 import AdminFraud from "./pages/admin/AdminFraud.tsx";
