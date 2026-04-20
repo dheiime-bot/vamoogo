@@ -391,14 +391,14 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
       <AlertDialog open={dialog === "delete"} onOpenChange={(o) => !o && close()}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-destructive">Excluir conta definitivamente?</AlertDialogTitle>
+            <AlertDialogTitle className="text-destructive">Remover conta deste passageiro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Todos os dados de perfil e papéis do usuário serão removidos.
+              A conta será <strong>bloqueada permanentemente</strong> — o usuário não conseguirá mais entrar nem solicitar corridas. O histórico de corridas, chats e avaliações é preservado para auditoria. Para excluir definitivamente, faça o pedido por escrito ao suporte técnico.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={close}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={busy} className="bg-destructive hover:bg-destructive/90">Excluir</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} disabled={busy} className="bg-destructive hover:bg-destructive/90">Bloquear permanentemente</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
