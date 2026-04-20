@@ -261,9 +261,34 @@ const AdminCoupons = () => {
                 <button onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Copiado!"); }} className="rounded-lg p-1 hover:bg-muted">
                   <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
-                <button onClick={() => remove(c.id)} className="rounded-lg p-1 hover:bg-destructive/10">
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="rounded-lg p-1 hover:bg-muted" aria-label="Ações">
+                      <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuItem onClick={() => useCouponForSend(c, "mass")}>
+                      <Megaphone className="h-4 w-4 mr-2" /> Enviar em massa
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => useCouponForSend(c, "individual")}>
+                      <UserPlus className="h-4 w-4 mr-2" /> Enviar individual
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Copiado!"); }}>
+                      <Copy className="h-4 w-4 mr-2" /> Copiar código
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => toggle(c.id, c.active)}>
+                      <CheckCircle2 className="h-4 w-4 mr-2" /> {c.active ? "Desativar" : "Ativar"}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => remove(c.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
             <p className="text-sm font-bold">{c.discount_type === "percentage" ? `${c.discount_value}%` : `R$ ${c.discount_value}`} off</p>
