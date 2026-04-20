@@ -33,7 +33,7 @@ const PassengerFavoriteDrivers = () => {
   const [selected, setSelected] = useState<DriverDetails | null>(null);
   const [maxKm, setMaxKm] = useState<number>(5);
   const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
-  const [calling, setCalling] = useState<string | null>(null);
+  // (sem estado de loading do botão — navegação é instantânea)
 
   // Geolocalização do passageiro
   useEffect(() => {
@@ -110,6 +110,31 @@ const PassengerFavoriteDrivers = () => {
   }, [user?.id, pos?.lat, pos?.lng]);
 
   useRealtimeRefresh("favorite_drivers", load, "passenger-favorites");
+
+  // 🔴 Realtime: status (online/offline + posição) dos motoristas favoritos.
+  // Reconsulta a RPC sempre que driver_locations dos favoritos mudar.
+  useEffect(() => {
+    if (!user?.id || items.length === 0) return;
+    const driverIds = items.map((i) => i.driver_id);
+    const channel = supabase
+      .channel("fav-driver-locations")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "driver_locations" },
+        (payload) => {
+          const did = (payload.new as any)?.driver_id || (payload.old as any)?.driver_id;
+          if (did && driverIds.includes(did)) load();
+        }
+      )
+      .subscribe();
+    // Re-poll leve a cada 20s como rede de segurança
+    const t = setInterval(load, 20_000);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, items.map((i) => i.driver_id).join(",")]);
 
   const removeFav = async (driverId: string, name: string) => {
     if (!confirm(`Remover ${name} dos favoritos?`)) return;
