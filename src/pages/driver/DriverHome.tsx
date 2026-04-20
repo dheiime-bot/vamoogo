@@ -76,6 +76,14 @@ const DriverHome = () => {
     requestNotificationPermission().catch(() => {});
   }, []);
 
+  // Tick de 1s para reavaliar a cor do sino (conectado/desconectado) sem F5.
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    if (!isOnline) return;
+    const i = setInterval(() => setNowTick((t) => t + 1), 1000);
+    return () => clearInterval(i);
+  }, [isOnline]);
+
   // Stats do dia
   useEffect(() => {
     if (!user) return;
