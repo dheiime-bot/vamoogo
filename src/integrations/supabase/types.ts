@@ -1887,6 +1887,40 @@ export type Database = {
           lng: number
         }[]
       }
+      get_ride_for_driver: {
+        Args: { _ride_id: string }
+        Returns: {
+          arrived_at: string
+          cancelled_at: string
+          category: Database["public"]["Enums"]["vehicle_category"]
+          completed_at: string
+          created_at: string
+          destination_address: string
+          destination_lat: number
+          destination_lng: number
+          distance_km: number
+          driver_id: string
+          driver_net: number
+          duration_minutes: number
+          for_other_person: boolean
+          id: string
+          legs: Json
+          origin_address: string
+          origin_lat: number
+          origin_lng: number
+          other_person_name: string
+          passenger_count: number
+          passenger_id: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_status: string
+          platform_fee: number
+          price: number
+          ride_code: string
+          started_at: string
+          status: Database["public"]["Enums"]["ride_status"]
+          stops: Json
+        }[]
+      }
       has_permission: {
         Args: { _action: string; _module: string; _user_id: string }
         Returns: boolean
