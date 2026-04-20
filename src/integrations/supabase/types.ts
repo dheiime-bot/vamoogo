@@ -816,12 +816,16 @@ export type Database = {
           blocked_at: string | null
           blocked_by: string | null
           blocked_reason: string | null
+          cancellation_block_count: number
+          cancellation_block_until: string | null
           cpf: string
           created_at: string
+          daily_cancellations: number
           email: string | null
           full_name: string
           id: string
           is_suspect: boolean
+          last_cancellation_reset: string | null
           phone: string | null
           phone_verified: boolean | null
           rating: number
@@ -839,12 +843,16 @@ export type Database = {
           blocked_at?: string | null
           blocked_by?: string | null
           blocked_reason?: string | null
+          cancellation_block_count?: number
+          cancellation_block_until?: string | null
           cpf: string
           created_at?: string
+          daily_cancellations?: number
           email?: string | null
           full_name: string
           id?: string
           is_suspect?: boolean
+          last_cancellation_reset?: string | null
           phone?: string | null
           phone_verified?: boolean | null
           rating?: number
@@ -862,12 +870,16 @@ export type Database = {
           blocked_at?: string | null
           blocked_by?: string | null
           blocked_reason?: string | null
+          cancellation_block_count?: number
+          cancellation_block_until?: string | null
           cpf?: string
           created_at?: string
+          daily_cancellations?: number
           email?: string | null
           full_name?: string
           id?: string
           is_suspect?: boolean
+          last_cancellation_reset?: string | null
           phone?: string | null
           phone_verified?: boolean | null
           rating?: number
@@ -1579,6 +1591,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _cancel_block_hours: { Args: { _count: number }; Returns: number }
+      _cancel_grace_seconds: { Args: never; Returns: number }
       _driver_cancel_block_hours: { Args: { _count: number }; Returns: number }
       _driver_has_active_offer: {
         Args: { _driver_id: string; _ride_id: string }
@@ -1742,6 +1756,10 @@ export type Database = {
           _vehicle_year: number
         }
         Returns: string
+      }
+      cancel_ride: {
+        Args: { _reason: string; _ride_id: string }
+        Returns: Json
       }
       check_signup_dupes: {
         Args: { _cpf: string; _phone: string }

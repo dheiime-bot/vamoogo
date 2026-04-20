@@ -11,6 +11,7 @@ import RideChat from "@/components/passenger/RideChat";
 import RideSummary from "@/components/passenger/RideSummary";
 import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passenger/OriginPicker";
 import AddressAutocompleteField from "@/components/address/AddressAutocompleteField";
+import CancelRideDialog from "@/components/shared/CancelRideDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,6 +73,7 @@ const PassengerHome = () => {
   const [showPixModal, setShowPixModal] = useState(false);
   const [showChangeDest, setShowChangeDest] = useState(false);
   const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Status do GPS do dispositivo (alimenta o sino: verde=ok, vermelho=negado/erro)
   const [gpsStatus, setGpsStatus] = useState<"connected" | "disconnected" | "idle">("idle");
@@ -432,10 +434,13 @@ const PassengerHome = () => {
       .catch((e) => console.warn("dispatch-ride invoke:", e));
   };
 
-  const handleCancelRide = async () => {
-    if (!activeRide) return;
-    await supabase.from("rides").update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: user?.id }).eq("id", activeRide.id);
-    setRideState("idle"); setActiveRide(null); setDriverInfo(null); setPaymentMethod(null);
+  /** Limpa estado local após o backend confirmar o cancelamento (via RPC). */
+  const handleAfterCancel = () => {
+    setRideState("idle");
+    setActiveRide(null);
+    setDriverInfo(null);
+    setPaymentMethod(null);
+    setDriverLocation(null);
   };
 
   // Alterar destino — permitido APENAS com a corrida em andamento (in_progress).
@@ -896,9 +901,19 @@ const PassengerHome = () => {
               )}
 
               {rideState === "searching" && (
-                <button onClick={handleCancelRide}
+                <button onClick={() => setShowCancelDialog(true)}
                   className="w-full rounded-xl border border-destructive/30 py-3.5 text-sm font-bold text-destructive hover:bg-destructive/5 transition-colors">
                   Cancelar busca
+                </button>
+              )}
+
+              {/* Após aceite e antes do início — cancelamento ainda é permitido (passível de punição) */}
+              {(rideState === "accepted" || rideState === "driver_arriving" || rideState === "arrived") && (
+                <button
+                  onClick={() => setShowCancelDialog(true)}
+                  className="w-full rounded-xl border border-destructive/30 py-3 text-xs font-bold text-destructive hover:bg-destructive/5 transition-colors"
+                >
+                  Cancelar corrida
                 </button>
               )}
             </div>
@@ -1270,6 +1285,16 @@ const PassengerHome = () => {
           <RefreshAppButton topOffsetPx={144} />
         </>
       )}
+
+      {/* Modal de cancelamento — usado em todas as fases ativas (busca, aceito, chegando, chegou). */}
+      <CancelRideDialog
+        open={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onCancelled={handleAfterCancel}
+        rideId={activeRide?.id ?? null}
+        role="passenger"
+        afterAccept={["accepted", "driver_arriving", "arrived"].includes(rideState)}
+      />
     </div>
   );
 };

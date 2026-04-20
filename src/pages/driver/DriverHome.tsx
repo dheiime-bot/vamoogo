@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import RideChat from "@/components/passenger/RideChat";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
+import CancelRideDialog from "@/components/shared/CancelRideDialog";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
@@ -49,6 +50,7 @@ const DriverHome = () => {
   const [passengerRating, setPassengerRating] = useState(0);
   const [passengerRatingComment, setPassengerRatingComment] = useState("");
   const [ratedRide, setRatedRide] = useState<any>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
   // (incluindo o nosso próprio update do driver_rating) reabram o modal.
   const finalizedRideIdsRef = useRef<Set<string>>(new Set());
@@ -661,6 +663,12 @@ const DriverHome = () => {
               className="w-full rounded-xl bg-info py-2.5 text-sm font-bold text-info-foreground flex items-center justify-center gap-2">
               <MapPin className="h-4 w-4" /> Cheguei ao local
             </button>
+            <button
+              onClick={() => setShowCancelDialog(true)}
+              className="w-full rounded-xl border border-destructive/30 py-2 text-xs font-bold text-destructive hover:bg-destructive/5"
+            >
+              Cancelar corrida
+            </button>
           </div>
         </div>
       )}
@@ -680,6 +688,12 @@ const DriverHome = () => {
             <button onClick={handleStartRide}
               className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
               <Play className="h-4 w-4" /> Iniciar corrida
+            </button>
+            <button
+              onClick={() => setShowCancelDialog(true)}
+              className="w-full rounded-xl border border-destructive/30 py-2 text-xs font-bold text-destructive hover:bg-destructive/5"
+            >
+              Cancelar corrida
             </button>
           </div>
         </div>
@@ -807,6 +821,17 @@ const DriverHome = () => {
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
+      <CancelRideDialog
+        open={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onCancelled={() => {
+          setActiveRide(null);
+          setRideState("idle");
+        }}
+        rideId={activeRide?.id ?? null}
+        role="driver"
+        afterAccept={true}
+      />
       <NotificationBell
         topOffsetPx={72}
         connectionStatus={
