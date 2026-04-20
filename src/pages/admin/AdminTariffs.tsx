@@ -240,6 +240,38 @@ const AdminTariffs = () => {
         </div>
       )}
 
+      {activeTab === "favorites" && (
+        <div className="rounded-2xl border bg-card p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="rounded-xl bg-primary/10 p-2.5">
+              <Heart className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold">Chamar motorista favorito</h3>
+              <p className="text-xs text-muted-foreground">
+                Distância máxima (em km) entre o passageiro e o motorista para
+                que o botão <strong>Chamar</strong> fique ativo na lista de favoritos.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 max-w-xs">
+            <label className="text-xs font-medium text-muted-foreground">Raio máximo</label>
+            <div className="mt-1 flex items-center rounded-lg border bg-background px-3 py-2">
+              <input
+                type="text"
+                value={favoriteCallMaxKm}
+                onChange={(e) => setFavoriteCallMaxKm(e.target.value)}
+                className="flex-1 bg-transparent text-base font-bold outline-none"
+              />
+              <span className="text-sm font-bold text-muted-foreground ml-1">km</span>
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Mínimo 0,5 km · Máximo 50 km · Padrão 5 km
+            </p>
+          </div>
+        </div>
+      )}
+
       <button
         onClick={saveTariffs}
         disabled={saving}
