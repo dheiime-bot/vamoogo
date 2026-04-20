@@ -356,6 +356,15 @@ const AdminCancellationRules = () => {
           </table>
         </div>
       </div>
+
+      {/* Motivos de cancelamento */}
+      <div className="space-y-3 pt-2">
+        <h2 className="text-base font-bold">Motivos de cancelamento</h2>
+        <p className="text-xs text-muted-foreground">
+          Lista exibida nos apps quando o passageiro ou motorista cancela. Motivos marcados como "sem punição" não contam para o bloqueio.
+        </p>
+        <CancellationReasonsManager />
+      </div>
     </AdminLayout>
   );
 };
