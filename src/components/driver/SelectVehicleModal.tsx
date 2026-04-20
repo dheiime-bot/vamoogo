@@ -60,7 +60,7 @@ const SelectVehicleModal = ({ open, onOpenChange, required = false, onSelected }
     const { error } = await supabase.rpc("driver_set_active_vehicle", { _vehicle_id: v.id });
     setSubmitting(null);
     if (error) {
-      toast.error(guardErrorMessage(error));
+      toast.error(guardErrorMessage(error, "Não foi possível trocar de veículo"));
       return;
     }
     toast.success(`Você está rodando como ${categoryLabel(v.category)}`);
