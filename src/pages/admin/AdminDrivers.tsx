@@ -41,6 +41,7 @@ const AdminDrivers = () => {
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
   const [thumbs, setThumbs] = useState<Record<string, { selfie?: string; cnh?: string; vehicle?: string }>>({});
   const [zoomImg, setZoomImg] = useState<string | null>(null);
+  const [vehiclesByDriver, setVehiclesByDriver] = useState<Record<string, any[]>>({});
 
   const fetchDrivers = async () => {
     const { data: drvs, error } = await supabase
@@ -62,6 +63,22 @@ const AdminDrivers = () => {
       (profs || []).forEach((p) => { profMap[p.user_id] = p; });
     }
     setDrivers((drvs || []).map((d) => ({ ...d, profiles: profMap[d.user_id] || null })));
+    // Buscar veículos cadastrados por motorista (driver_vehicles)
+    if (ids.length) {
+      const { data: vehs } = await supabase
+        .from("driver_vehicles")
+        .select("id, driver_id, category, vehicle_brand, vehicle_model, vehicle_plate, vehicle_color, vehicle_year, status, is_active")
+        .in("driver_id", ids)
+        .order("created_at", { ascending: true });
+      const map: Record<string, any[]> = {};
+      (vehs || []).forEach((v) => {
+        if (!map[v.driver_id]) map[v.driver_id] = [];
+        map[v.driver_id].push(v);
+      });
+      setVehiclesByDriver(map);
+    } else {
+      setVehiclesByDriver({});
+    }
   };
 
   useEffect(() => { fetchDrivers(); }, []);
