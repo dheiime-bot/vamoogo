@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,11 +24,22 @@ interface ChatRow {
 
 const PassengerChats = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [rows, setRows] = useState<ChatRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [openRide, setOpenRide] = useState<{ id: string; name: string } | null>(null);
   const [openCentral, setOpenCentral] = useState(false);
   const [centralUnread, setCentralUnread] = useState(0);
+
+  // Auto-abrir Chat com a Central quando vier de /passenger/chats?central=1
+  useEffect(() => {
+    if (searchParams.get("central") === "1") {
+      setOpenCentral(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete("central");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const loadCentralUnread = async () => {
     if (!user) return;

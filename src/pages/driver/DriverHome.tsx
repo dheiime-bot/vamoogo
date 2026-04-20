@@ -4,6 +4,7 @@ import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, 
 import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import AppMenu from "@/components/shared/AppMenu";
+import BlockBanner from "@/components/shared/BlockBanner";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
@@ -840,6 +841,11 @@ const DriverHome = () => {
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
+      <div className="fixed left-0 right-0 top-16 z-30 pointer-events-none">
+        <div className="pointer-events-auto">
+          <BlockBanner role="driver" />
+        </div>
+      </div>
       <CancelRideDialog
         open={showCancelDialog}
         onClose={() => setShowCancelDialog(false)}

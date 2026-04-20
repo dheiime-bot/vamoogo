@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode, Heart } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
+import BlockBanner from "@/components/shared/BlockBanner";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import PassengerSpendChip from "@/components/passenger/PassengerSpendChip";
@@ -1385,6 +1386,11 @@ const PassengerHome = () => {
 
       <AppMenu role="passenger" />
       <PassengerSpendChip />
+      <div className="fixed left-0 right-0 top-16 z-30 pointer-events-none">
+        <div className="pointer-events-auto">
+          <BlockBanner role="passenger" />
+        </div>
+      </div>
       {!showFormSheet && !["searching", "accepted", "driver_arriving", "arrived", "in_progress"].includes(rideState) && (
         <>
           <NotificationBell topOffsetPx={72} connectionStatus={gpsStatus} />
