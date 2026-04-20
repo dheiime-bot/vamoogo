@@ -18,6 +18,7 @@ import { useDriverLocation } from "@/hooks/useDriverLocation";
 import RideChat from "@/components/passenger/RideChat";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import CancelRideDialog from "@/components/shared/CancelRideDialog";
+import SelectVehicleModal from "@/components/driver/SelectVehicleModal";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
@@ -51,6 +52,8 @@ const DriverHome = () => {
   const [passengerRatingComment, setPassengerRatingComment] = useState("");
   const [ratedRide, setRatedRide] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  // Modal obrigatório de seleção de veículo após login (quando há 2+ aprovados).
+  const [requireVehiclePick, setRequireVehiclePick] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
   // (incluindo o nosso próprio update do driver_rating) reabram o modal.
   const finalizedRideIdsRef = useRef<Set<string>>(new Set());
@@ -77,6 +80,22 @@ const DriverHome = () => {
     unlockAudioOnce();
     requestNotificationPermission().catch(() => {});
   }, []);
+
+  // Após login, se houver 2+ veículos aprovados, força o motorista a escolher.
+  useEffect(() => {
+    if (!user?.id) return;
+    const flag = sessionStorage.getItem("vamoo:driver:check_vehicle");
+    if (!flag) return;
+    sessionStorage.removeItem("vamoo:driver:check_vehicle");
+    supabase
+      .from("driver_vehicles")
+      .select("id", { count: "exact", head: true })
+      .eq("driver_id", user.id)
+      .eq("status", "approved")
+      .then(({ count }) => {
+        if ((count || 0) >= 2) setRequireVehiclePick(true);
+      });
+  }, [user?.id]);
 
   // Tick de 1s para reavaliar a cor do sino (conectado/desconectado) sem F5.
   const [, setNowTick] = useState(0);
@@ -843,6 +862,11 @@ const DriverHome = () => {
         }
       />
       <RefreshAppButton topOffsetPx={144} />
+      <SelectVehicleModal
+        open={requireVehiclePick}
+        onOpenChange={setRequireVehiclePick}
+        required
+      />
       <DriverBottomNav
         centerSlot={
           <button

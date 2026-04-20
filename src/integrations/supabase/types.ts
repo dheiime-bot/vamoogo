@@ -1799,6 +1799,10 @@ export type Database = {
         }
         Returns: string
       }
+      driver_set_active_vehicle: {
+        Args: { _vehicle_id: string }
+        Returns: undefined
+      }
       find_nearest_drivers: {
         Args: {
           _category: Database["public"]["Enums"]["vehicle_category"]

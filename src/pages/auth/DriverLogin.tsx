@@ -50,6 +50,8 @@ const DriverLogin = () => {
 
     setLoading(false);
     toast.success("Bem-vindo, motorista!");
+    // Sinaliza para o DriverHome verificar se precisa abrir o modal de seleção de veículo.
+    sessionStorage.setItem("vamoo:driver:check_vehicle", "1");
     navigate("/driver");
   };
 
