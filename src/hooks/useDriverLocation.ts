@@ -9,6 +9,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Options {
   driverId: string | undefined;
@@ -36,6 +37,22 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
   const watchIdRef = useRef<number | null>(null);
   const lastSentRef = useRef<{ lat: number; lng: number; ts: number } | null>(null);
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
+  const errorToastRef = useRef<number>(0);
+
+  const handleGeoError = (err: GeolocationPositionError, context: string) => {
+    console.warn(`Geo error (${context}):`, err.code, err.message);
+    // Throttle: 1 toast a cada 30s no máximo
+    const now = Date.now();
+    if (now - errorToastRef.current < 30000) return;
+    errorToastRef.current = now;
+    if (err.code === err.PERMISSION_DENIED) {
+      toast.error("Permissão de GPS negada. Habilite a localização nas configurações do navegador.", { duration: 8000 });
+    } else if (err.code === err.POSITION_UNAVAILABLE) {
+      toast.error("GPS indisponível. Verifique se a localização do dispositivo está ligada.");
+    } else if (err.code === err.TIMEOUT) {
+      toast.error("Tempo esgotado ao obter GPS. Tentando novamente...");
+    }
+  };
 
   // Auto-offline ao fechar/ocultar a aba
   useEffect(() => {
@@ -147,6 +164,7 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
 
     if (!navigator.geolocation) {
       console.warn("Geolocalização não suportada pelo navegador.");
+      toast.error("Geolocalização não suportada por este navegador");
       return;
     }
 
@@ -177,15 +195,40 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
       setLastSyncAt(Date.now());
     };
 
+    // Verifica permissão proativamente (quando suportado pelo navegador)
+    (async () => {
+      try {
+        // @ts-ignore - geolocation é válido em navigator.permissions
+        const status = await navigator.permissions?.query({ name: "geolocation" });
+        if (status?.state === "denied") {
+          toast.error("Permissão de GPS bloqueada. Habilite nas configurações do navegador para ficar online.", { duration: 8000 });
+          return;
+        }
+      } catch { /* navegador sem Permissions API — segue normal */ }
+    })();
+
+    // Primeira leitura: alta precisão com fallback para baixa precisão
     navigator.geolocation.getCurrentPosition(
       (pos) => broadcast(pos.coords),
-      (err) => console.warn("Geo error (getCurrentPosition):", err.message),
-      { enableHighAccuracy: true, timeout: 10000 }
+      (err) => {
+        if (err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE) {
+          // Fallback: baixa precisão (mais rápido, funciona em desktops sem GPS dedicado)
+          navigator.geolocation.getCurrentPosition(
+            (pos) => broadcast(pos.coords),
+            (err2) => handleGeoError(err2, "getCurrentPosition fallback"),
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60 * 1000 }
+          );
+        } else {
+          handleGeoError(err, "getCurrentPosition");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60 * 1000 }
     );
 
+    // Watch contínuo: alta precisão (se falhar repetidamente, o callback de erro alerta)
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => broadcast(pos.coords),
-      (err) => console.warn("Watch error:", err.message),
+      (err) => handleGeoError(err, "watchPosition"),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
 
