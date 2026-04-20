@@ -33,16 +33,42 @@ const PassengerFavoriteDrivers = () => {
   const [selected, setSelected] = useState<DriverDetails | null>(null);
   const [maxKm, setMaxKm] = useState<number>(5);
   const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
   // (sem estado de loading do botão — navegação é instantânea)
 
-  // Geolocalização do passageiro
+  // Geolocalização do passageiro: tenta alta precisão, faz fallback p/ baixa,
+  // e mantém watchPosition ativo para sempre ter o pos mais recente.
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (p) => setPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => {},
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
+    if (!navigator.geolocation) {
+      setGeoError("Navegador sem suporte a GPS");
+      return;
+    }
+    const ok = (p: GeolocationPosition) => {
+      setPos({ lat: p.coords.latitude, lng: p.coords.longitude });
+      setGeoError(null);
+    };
+    const fail = (err: GeolocationPositionError) => {
+      // Fallback: tenta baixa precisão (rápido, funciona em desktop sem GPS)
+      navigator.geolocation.getCurrentPosition(
+        ok,
+        (e2) => {
+          if (e2.code === e2.PERMISSION_DENIED) setGeoError("Permissão de GPS negada");
+          else setGeoError("GPS indisponível");
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 }
+      );
+    };
+    navigator.geolocation.getCurrentPosition(ok, fail, {
+      enableHighAccuracy: true,
+      timeout: 8000,
+      maximumAge: 60 * 1000,
+    });
+    const wid = navigator.geolocation.watchPosition(ok, () => {}, {
+      enableHighAccuracy: true,
+      maximumAge: 10000,
+      timeout: 20000,
+    });
+    return () => navigator.geolocation.clearWatch(wid);
   }, []);
 
   // Lê configuração admin
