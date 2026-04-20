@@ -85,6 +85,31 @@ const PassengerHome = () => {
   // Status do GPS do dispositivo (alimenta o sino: verde=ok, vermelho=negado/erro)
   const [gpsStatus, setGpsStatus] = useState<"connected" | "disconnected" | "idle">("idle");
 
+  // 🚖 Motorista pré-selecionado (vindo da tela "Motoristas favoritos")
+  useEffect(() => {
+    const id = searchParams.get("preferred");
+    if (!id) return;
+    try {
+      const raw = sessionStorage.getItem("preferred_driver");
+      const data = raw ? JSON.parse(raw) : null;
+      if (data?.id === id) {
+        setPreferredDriver({ id: data.id, name: data.name, photo: data.photo });
+        setShowRideForm(true);
+      } else {
+        setPreferredDriver({ id, name: "Motorista favorito", photo: null });
+        setShowRideForm(true);
+      }
+    } catch {
+      setPreferredDriver({ id, name: "Motorista favorito", photo: null });
+      setShowRideForm(true);
+    }
+    // limpa o query param para não reabrir ao voltar
+    const next = new URLSearchParams(searchParams);
+    next.delete("preferred");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!navigator.geolocation) { setGpsStatus("disconnected"); return; }
     let cancelled = false;
