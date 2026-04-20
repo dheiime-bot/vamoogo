@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Copy, Pencil, PowerOff, Power, TicketPercent, Send, Users, Search, CheckCircle2, MoreVertical, UserPlus, Megaphone } from "lucide-react";
+import { Plus, Loader2, Copy, Pencil, PowerOff, Power, TicketPercent, Send, Users, Search, MoreVertical, UserPlus, Megaphone, CheckCircle2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
@@ -298,18 +298,20 @@ const AdminCoupons = () => {
                     <DropdownMenuItem onClick={() => useCouponForSend(c, "individual")}>
                       <UserPlus className="h-4 w-4 mr-2" /> Enviar individual
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => startEdit(c)}>
+                      <Pencil className="h-4 w-4 mr-2" /> Editar cupom
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Copiado!"); }}>
                       <Copy className="h-4 w-4 mr-2" /> Copiar código
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => toggle(c.id, c.active)}>
-                      <CheckCircle2 className="h-4 w-4 mr-2" /> {c.active ? "Desativar" : "Ativar"}
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => remove(c.id, c.code)}
-                      className="text-destructive focus:text-destructive"
+                      onClick={() => toggle(c.id, c.active)}
+                      className={c.active ? "text-destructive focus:text-destructive" : ""}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                      {c.active ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
+                      {c.active ? "Desativar" : "Ativar"}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
