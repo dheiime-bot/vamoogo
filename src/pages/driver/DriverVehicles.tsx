@@ -149,6 +149,15 @@ const DriverVehicles = () => {
                   </article>
                 ))
               )}
+              <button
+                onClick={() => navigate("/driver/vehicles/request")}
+                disabled={!!pending}
+                className="w-full rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 p-4 flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={pending ? "Você já tem uma solicitação pendente" : "Cadastrar novo veículo"}
+              >
+                <Plus className="h-4 w-4" />
+                {pending ? "Solicitação pendente em análise" : "Novo veículo"}
+              </button>
             </section>
 
             <section className="space-y-3">
