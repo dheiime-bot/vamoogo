@@ -42,6 +42,7 @@ import AdminDrivers from "./pages/admin/AdminDrivers.tsx";
 import AdminPassengers from "./pages/admin/AdminPassengers.tsx";
 import AdminRides from "./pages/admin/AdminRides.tsx";
 import AdminAppeals from "./pages/admin/AdminAppeals.tsx";
+import AdminCancellations from "./pages/admin/AdminCancellations.tsx";
 import AdminFinance from "./pages/admin/AdminFinance.tsx";
 import AdminTariffs from "./pages/admin/AdminTariffs.tsx";
 import AdminFraud from "./pages/admin/AdminFraud.tsx";
@@ -163,6 +164,7 @@ const App = () => (
             <Route path="/admin/passengers" element={<ProtectedAdminRoute><AdminPassengers /></ProtectedAdminRoute>} />
             <Route path="/admin/rides" element={<ProtectedAdminRoute><AdminRides /></ProtectedAdminRoute>} />
             <Route path="/admin/appeals" element={<ProtectedAdminRoute><AdminAppeals /></ProtectedAdminRoute>} />
+            <Route path="/admin/cancellations" element={<ProtectedAdminRoute><AdminCancellations /></ProtectedAdminRoute>} />
             <Route path="/admin/finance" element={<ProtectedAdminRoute><AdminFinance /></ProtectedAdminRoute>} />
             <Route path="/admin/tariffs" element={<ProtectedAdminRoute><AdminTariffs /></ProtectedAdminRoute>} />
             <Route path="/admin/fraud" element={<ProtectedAdminRoute><AdminFraud /></ProtectedAdminRoute>} />
