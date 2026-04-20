@@ -1714,6 +1714,7 @@ export type Database = {
         Args: { _reason: string; _ride_id: string }
         Returns: string
       }
+      auto_cancel_stale_rides: { Args: never; Returns: number }
       become_driver: {
         Args: {
           _category: Database["public"]["Enums"]["vehicle_category"]

@@ -246,6 +246,36 @@ const PassengerHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
 
+  // ⏱️ Auto-cancelamento client-side de 30s para corridas sem motorista.
+  // Rede de segurança caso o dispatch/cron demore — garante feedback imediato ao passageiro.
+  useEffect(() => {
+    if (rideState !== "searching" || !activeRide?.id || !activeRide?.created_at) return;
+    const created = new Date(activeRide.created_at).getTime();
+    const remaining = 30_000 - (Date.now() - created);
+    if (remaining <= 0) return; // o realtime/cron vai cuidar
+    const t = setTimeout(async () => {
+      // Re-checa estado atual antes de cancelar (pode ter sido aceita)
+      const { data: cur } = await supabase
+        .from("rides").select("status").eq("id", activeRide.id).maybeSingle();
+      if (!cur || cur.status !== "requested") return;
+      await supabase.from("rides")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: "00000000-0000-0000-0000-000000000000",
+        })
+        .eq("id", activeRide.id)
+        .eq("status", "requested");
+      setRideState("idle");
+      setActiveRide(null);
+      setDriverInfo(null);
+      setPaymentMethod(null);
+      setDriverLocation(null);
+      toast.error("Nenhum motorista disponível. Tente novamente.");
+    }, remaining);
+    return () => clearTimeout(t);
+  }, [rideState, activeRide?.id, activeRide?.created_at]);
+
   // Motoristas online próximos no mapa (idle) — fetch inicial + realtime
   useEffect(() => {
     // Não mostra carrinhos genéricos enquanto há corrida ativa (já temos o motorista da corrida)

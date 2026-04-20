@@ -8,8 +8,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const OFFER_TTL_SECONDS = 25;
-const MAX_ROUNDS = 3;
+// Janela total de busca = 30s. 1 rodada com TTL de 28s + buffer de 2s.
+const OFFER_TTL_SECONDS = 28;
+const MAX_ROUNDS = 1;
 const BATCH_SIZE = 5;
 
 Deno.serve(async (req) => {
