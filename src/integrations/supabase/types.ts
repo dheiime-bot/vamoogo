@@ -265,6 +265,72 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_vehicles: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          category: Database["public"]["Enums"]["vehicle_category"]
+          created_at: string
+          crlv_url: string | null
+          driver_id: string
+          id: string
+          is_active: boolean
+          status: string
+          updated_at: string
+          vehicle_brand: string | null
+          vehicle_color: string | null
+          vehicle_model: string | null
+          vehicle_photo_back_url: string | null
+          vehicle_photo_front_url: string | null
+          vehicle_photo_left_url: string | null
+          vehicle_photo_right_url: string | null
+          vehicle_plate: string
+          vehicle_year: number | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category: Database["public"]["Enums"]["vehicle_category"]
+          created_at?: string
+          crlv_url?: string | null
+          driver_id: string
+          id?: string
+          is_active?: boolean
+          status?: string
+          updated_at?: string
+          vehicle_brand?: string | null
+          vehicle_color?: string | null
+          vehicle_model?: string | null
+          vehicle_photo_back_url?: string | null
+          vehicle_photo_front_url?: string | null
+          vehicle_photo_left_url?: string | null
+          vehicle_photo_right_url?: string | null
+          vehicle_plate: string
+          vehicle_year?: number | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category?: Database["public"]["Enums"]["vehicle_category"]
+          created_at?: string
+          crlv_url?: string | null
+          driver_id?: string
+          id?: string
+          is_active?: boolean
+          status?: string
+          updated_at?: string
+          vehicle_brand?: string | null
+          vehicle_color?: string | null
+          vehicle_model?: string | null
+          vehicle_photo_back_url?: string | null
+          vehicle_photo_front_url?: string | null
+          vehicle_photo_left_url?: string | null
+          vehicle_photo_right_url?: string | null
+          vehicle_plate?: string
+          vehicle_year?: number | null
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
           analysis_message: string | null
@@ -1391,6 +1457,87 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_change_requests: {
+        Row: {
+          admin_message: string | null
+          created_at: string
+          created_vehicle_id: string | null
+          crlv_url: string | null
+          current_category:
+            | Database["public"]["Enums"]["vehicle_category"]
+            | null
+          driver_id: string
+          id: string
+          new_category: Database["public"]["Enums"]["vehicle_category"]
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          vehicle_brand: string
+          vehicle_color: string
+          vehicle_model: string
+          vehicle_photo_back_url: string | null
+          vehicle_photo_front_url: string | null
+          vehicle_photo_left_url: string | null
+          vehicle_photo_right_url: string | null
+          vehicle_plate: string
+          vehicle_year: number | null
+        }
+        Insert: {
+          admin_message?: string | null
+          created_at?: string
+          created_vehicle_id?: string | null
+          crlv_url?: string | null
+          current_category?:
+            | Database["public"]["Enums"]["vehicle_category"]
+            | null
+          driver_id: string
+          id?: string
+          new_category: Database["public"]["Enums"]["vehicle_category"]
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_brand: string
+          vehicle_color: string
+          vehicle_model: string
+          vehicle_photo_back_url?: string | null
+          vehicle_photo_front_url?: string | null
+          vehicle_photo_left_url?: string | null
+          vehicle_photo_right_url?: string | null
+          vehicle_plate: string
+          vehicle_year?: number | null
+        }
+        Update: {
+          admin_message?: string | null
+          created_at?: string
+          created_vehicle_id?: string | null
+          crlv_url?: string | null
+          current_category?:
+            | Database["public"]["Enums"]["vehicle_category"]
+            | null
+          driver_id?: string
+          id?: string
+          new_category?: Database["public"]["Enums"]["vehicle_category"]
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_brand?: string
+          vehicle_color?: string
+          vehicle_model?: string
+          vehicle_photo_back_url?: string | null
+          vehicle_photo_front_url?: string | null
+          vehicle_photo_left_url?: string | null
+          vehicle_photo_right_url?: string | null
+          vehicle_plate?: string
+          vehicle_year?: number | null
+        }
+        Relationships: []
+      }
       withdrawals: {
         Row: {
           admin_notes: string | null
@@ -1463,6 +1610,10 @@ export type Database = {
         Args: { _new_price: number; _reason: string; _ride_id: string }
         Returns: Json
       }
+      admin_approve_vehicle_change: {
+        Args: { _message?: string; _request_id: string }
+        Returns: string
+      }
       admin_block_driver_online: {
         Args: { _block: boolean; _reason?: string; _user_id: string }
         Returns: undefined
@@ -1484,6 +1635,10 @@ export type Database = {
           _reason: string
           _ride_id: string
         }
+        Returns: undefined
+      }
+      admin_reject_vehicle_change: {
+        Args: { _message: string; _request_id: string }
         Returns: undefined
       }
       admin_resolve_appeal: {
@@ -1513,6 +1668,10 @@ export type Database = {
       admin_send_message: {
         Args: { _message: string; _title: string; _user_id: string }
         Returns: string
+      }
+      admin_set_active_vehicle: {
+        Args: { _vehicle_id: string }
+        Returns: undefined
       }
       admin_update_driver_data: {
         Args: {
@@ -1591,6 +1750,23 @@ export type Database = {
         }[]
       }
       cleanup_zombie_drivers: { Args: never; Returns: number }
+      driver_request_vehicle_change: {
+        Args: {
+          _crlv_url: string
+          _new_category: Database["public"]["Enums"]["vehicle_category"]
+          _reason?: string
+          _vehicle_brand: string
+          _vehicle_color: string
+          _vehicle_model: string
+          _vehicle_photo_back_url: string
+          _vehicle_photo_front_url: string
+          _vehicle_photo_left_url: string
+          _vehicle_photo_right_url: string
+          _vehicle_plate: string
+          _vehicle_year: number
+        }
+        Returns: string
+      }
       find_nearest_drivers: {
         Args: {
           _category: Database["public"]["Enums"]["vehicle_category"]

@@ -207,7 +207,8 @@ const DriverProfile = () => {
           <div className="mt-4 rounded-2xl border bg-card p-4">
             <h3 className="text-sm font-semibold mb-3">Veículo</h3>
             <p className="text-[11px] text-muted-foreground mb-3">
-              Para alterar dados do veículo, entre em contato com o suporte.
+              Para mudar de categoria ou cadastrar um novo veículo, envie uma solicitação.
+              O administrador analisa e aprova.
             </p>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -219,6 +220,12 @@ const DriverProfile = () => {
                 <div key={v.label}><p className="text-xs text-muted-foreground">{v.label}</p><p className="text-sm font-medium">{v.value}</p></div>
               ))}
             </div>
+            <button
+              onClick={() => navigate("/driver/vehicles")}
+              className="mt-4 w-full rounded-xl border border-primary/40 bg-primary/5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10"
+            >
+              Gerenciar veículos / mudar categoria
+            </button>
           </div>
         )}
 

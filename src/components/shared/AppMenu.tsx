@@ -35,6 +35,7 @@ const PASSENGER_ITEMS: MenuItem[] = [
 const DRIVER_ITEMS: MenuItem[] = [
   { icon: Home, label: "Início", path: "/driver" },
   { icon: Car, label: "Corridas", path: "/driver/rides" },
+  { icon: Car, label: "Meus veículos", path: "/driver/vehicles" },
   { icon: MessageCircle, label: "Chats", path: "/driver/chats" },
   { icon: User, label: "Meus dados", path: "/driver/profile" },
 ];

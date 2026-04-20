@@ -34,6 +34,8 @@ import DriverRides from "./pages/driver/DriverRides.tsx";
 import DriverOffers from "./pages/driver/DriverOffers.tsx";
 import DriverProfile from "./pages/driver/DriverProfile.tsx";
 import DriverChats from "./pages/driver/DriverChats.tsx";
+import DriverVehicles from "./pages/driver/DriverVehicles.tsx";
+import DriverVehicleChangeRequest from "./pages/driver/DriverVehicleChangeRequest.tsx";
 import AdminChats from "./pages/admin/AdminChats.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import AdminDrivers from "./pages/admin/AdminDrivers.tsx";
@@ -50,6 +52,7 @@ import AdminCoupons from "./pages/admin/AdminCoupons.tsx";
 import AdminReports from "./pages/admin/AdminReports.tsx";
 import AdminAudit from "./pages/admin/AdminAudit.tsx";
 import AdminStaff from "./pages/admin/AdminStaff.tsx";
+import AdminVehicleRequests from "./pages/admin/AdminVehicleRequests.tsx";
 import TestAutocomplete from "./pages/TestAutocomplete.tsx";
 
 const queryClient = new QueryClient();
@@ -152,6 +155,8 @@ const App = () => (
             <Route path="/driver/offers" element={<ProtectedDriverRoute><DriverOffers /></ProtectedDriverRoute>} />
             <Route path="/driver/profile" element={<ProtectedDriverRoute><DriverProfile /></ProtectedDriverRoute>} />
             <Route path="/driver/chats" element={<ProtectedDriverRoute><DriverChats /></ProtectedDriverRoute>} />
+            <Route path="/driver/vehicles" element={<ProtectedDriverRoute><DriverVehicles /></ProtectedDriverRoute>} />
+            <Route path="/driver/vehicles/request" element={<ProtectedDriverRoute><DriverVehicleChangeRequest /></ProtectedDriverRoute>} />
             <Route path="/admin" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
             <Route path="/admin/chats" element={<ProtectedAdminRoute><AdminChats /></ProtectedAdminRoute>} />
             <Route path="/admin/drivers" element={<ProtectedAdminRoute><AdminDrivers /></ProtectedAdminRoute>} />
@@ -168,6 +173,7 @@ const App = () => (
             <Route path="/admin/reports" element={<ProtectedAdminRoute><AdminReports /></ProtectedAdminRoute>} />
             <Route path="/admin/audit" element={<ProtectedAdminRoute><AdminAudit /></ProtectedAdminRoute>} />
             <Route path="/admin/staff" element={<ProtectedAdminRoute><AdminStaff /></ProtectedAdminRoute>} />
+            <Route path="/admin/vehicle-requests" element={<ProtectedAdminRoute><AdminVehicleRequests /></ProtectedAdminRoute>} />
             <Route path="/test-autocomplete" element={<TestAutocomplete />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
