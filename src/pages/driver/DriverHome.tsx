@@ -50,6 +50,7 @@ const DriverHome = () => {
   const [passengerRating, setPassengerRating] = useState(0);
   const [passengerRatingComment, setPassengerRatingComment] = useState("");
   const [ratedRide, setRatedRide] = useState<any>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
   // (incluindo o nosso próprio update do driver_rating) reabram o modal.
   const finalizedRideIdsRef = useRef<Set<string>>(new Set());
