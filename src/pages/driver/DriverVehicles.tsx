@@ -215,6 +215,21 @@ const DriverVehicles = () => {
                             </p>
                           )}
                         </div>
+                        {r.status !== "pending" && (
+                          <button
+                            onClick={() => deleteRequest(r.id)}
+                            disabled={deletingId === r.id}
+                            className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                            aria-label="Excluir solicitação"
+                            title="Excluir do histórico"
+                          >
+                            {deletingId === r.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     </article>
                   );
