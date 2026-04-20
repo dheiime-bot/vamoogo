@@ -257,39 +257,45 @@ const PassengerSignup = () => {
 
   // ---------- UI ----------
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
-      <div className="bg-gradient-primary p-6 pb-10 text-primary-foreground">
-        <button
-          onClick={back}
-          className="mb-4 flex items-center gap-1 text-primary-foreground/80 text-sm hover:text-primary-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </button>
-        <div className="flex flex-col items-center text-center">
-          <VamooLogo height={86} className="mb-3" />
-          <h1 className="text-base font-bold font-display">Criar conta de passageiro</h1>
-          <p className="text-xs text-primary-foreground/80">
-            Etapa {step + 1} de {STEPS.length} · {STEPS[step].label}
-          </p>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mt-5 flex gap-1.5">
-          {STEPS.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-all ${
-                i <= step ? "bg-primary-foreground" : "bg-primary-foreground/30"
-              }`}
-            />
-          ))}
-        </div>
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8 relative overflow-hidden">
+      {/* Background decorativo (igual ao login) */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-accent/10 blur-3xl" />
       </div>
 
-      {/* Content */}
-      <div className="relative -mt-6 flex-1 rounded-t-3xl p-6 pb-10" style={{ backgroundColor: "#f5fbfb" }}>
-        {/* STEP 0: Dados */}
+      <div className="relative z-10 w-full max-w-md">
+        <div className="border border-border rounded-3xl shadow-xl p-6 sm:p-8" style={{ backgroundColor: "#f5fbfb" }}>
+          {/* Header */}
+          <button
+            onClick={back}
+            className="mb-3 flex items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </button>
+          <div className="flex flex-col items-center text-center mb-5">
+            <VamooLogo height={96} card={false} className="mb-3" />
+            <h1 className="text-xl font-display font-extrabold text-foreground">Criar conta de passageiro</h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              Etapa {step + 1} de {STEPS.length} · {STEPS[step].label}
+            </p>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mb-5 flex gap-1.5">
+            {STEPS.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 flex-1 rounded-full transition-all ${
+                  i <= step ? "bg-primary" : "bg-muted"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Content */}
+          <div>
+            {/* STEP 0: Dados */}
         {step === 0 && (
           <div className="space-y-4 animate-fade-in">
             <Field
