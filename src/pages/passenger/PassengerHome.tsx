@@ -38,6 +38,12 @@ const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", de
 
 const PassengerHome = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [preferredDriver, setPreferredDriver] = useState<{
+    id: string;
+    name: string;
+    photo: string | null;
+  } | null>(null);
   const [passengers, setPassengers] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("economico");
   const [selectedOrigin, setSelectedOrigin] = useState<AppLocation | null>(null);
