@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Copy, Trash2, TicketPercent, Send, Users, Search, CheckCircle2 } from "lucide-react";
+import { Plus, Loader2, Copy, Trash2, TicketPercent, Send, Users, Search, CheckCircle2, MoreVertical, UserPlus, Megaphone } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const AdminCoupons = () => {
   type Tab = "general" | "send";
@@ -154,6 +161,29 @@ const AdminCoupons = () => {
     fetchSent();
   };
 
+  // Pré-preenche o formulário de envio direto com um cupom existente e troca para a aba de envio.
+  const useCouponForSend = (c: any, mode: "mass" | "individual") => {
+    setSendForm({
+      code: c.code,
+      discount_type: c.discount_type || "percentage",
+      discount_value: String(c.discount_value ?? ""),
+      min_fare: String(c.min_fare ?? "0"),
+      expires_at: c.expires_at ? new Date(c.expires_at).toISOString().slice(0, 16) : "",
+      message: "",
+    });
+    setTab("send");
+    if (mode === "mass") {
+      // seleciona todos os passageiros disponíveis após carregar
+      setTimeout(() => {
+        setSelectedIds(new Set(passengers.map((p) => p.user_id)));
+        toast.success(`Cupom ${c.code} pronto para envio em massa (${passengers.length})`);
+      }, 0);
+    } else {
+      clearSelection();
+      toast.success(`Cupom ${c.code} pronto. Selecione os passageiros.`);
+    }
+  };
+
   return (
     <AdminLayout
       title="Cupons"
@@ -231,9 +261,34 @@ const AdminCoupons = () => {
                 <button onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Copiado!"); }} className="rounded-lg p-1 hover:bg-muted">
                   <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
-                <button onClick={() => remove(c.id)} className="rounded-lg p-1 hover:bg-destructive/10">
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="rounded-lg p-1 hover:bg-muted" aria-label="Ações">
+                      <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuItem onClick={() => useCouponForSend(c, "mass")}>
+                      <Megaphone className="h-4 w-4 mr-2" /> Enviar em massa
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => useCouponForSend(c, "individual")}>
+                      <UserPlus className="h-4 w-4 mr-2" /> Enviar individual
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Copiado!"); }}>
+                      <Copy className="h-4 w-4 mr-2" /> Copiar código
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => toggle(c.id, c.active)}>
+                      <CheckCircle2 className="h-4 w-4 mr-2" /> {c.active ? "Desativar" : "Ativar"}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => remove(c.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
             <p className="text-sm font-bold">{c.discount_type === "percentage" ? `${c.discount_value}%` : `R$ ${c.discount_value}`} off</p>
