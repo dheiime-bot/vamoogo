@@ -397,8 +397,13 @@ const AdminCoupons = () => {
                       {r.used_at ? "Usado" : "Disponível"}
                     </span>
                   </div>
-                  <p className="text-sm font-medium truncate">{r._profile?.full_name || "Passageiro"}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{r._profile?.email || "—"}</p>
+                  <div className="flex items-center gap-2">
+                    <UserAvatar src={r._profile?.selfie_url} name={r._profile?.full_name} role="passenger" size="xs" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{r._profile?.full_name || "Passageiro"}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{r._profile?.email || "—"}</p>
+                    </div>
+                  </div>
                   <p className="text-[10px] text-muted-foreground">
                     {r.discount_type === "percentage" ? `${r.discount_value}%` : `R$ ${r.discount_value}`} • mín R$ {r.min_fare}
                     {r.expires_at && ` • até ${new Date(r.expires_at).toLocaleDateString("pt-BR")}`}
