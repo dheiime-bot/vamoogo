@@ -434,10 +434,13 @@ const PassengerHome = () => {
       .catch((e) => console.warn("dispatch-ride invoke:", e));
   };
 
-  const handleCancelRide = async () => {
-    if (!activeRide) return;
-    await supabase.from("rides").update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: user?.id }).eq("id", activeRide.id);
-    setRideState("idle"); setActiveRide(null); setDriverInfo(null); setPaymentMethod(null);
+  /** Limpa estado local após o backend confirmar o cancelamento (via RPC). */
+  const handleAfterCancel = () => {
+    setRideState("idle");
+    setActiveRide(null);
+    setDriverInfo(null);
+    setPaymentMethod(null);
+    setDriverLocation(null);
   };
 
   // Alterar destino — permitido APENAS com a corrida em andamento (in_progress).
