@@ -5,6 +5,7 @@ import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
+import UserAvatar from "@/components/shared/UserAvatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,7 +48,7 @@ const AdminCoupons = () => {
   const fetchPassengers = async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("user_id, full_name, email, phone")
+      .select("user_id, full_name, email, phone, selfie_url")
       .eq("user_type", "passenger")
       .order("full_name", { ascending: true })
       .limit(500);
@@ -66,9 +67,9 @@ const AdminCoupons = () => {
     if (ids.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("user_id, full_name, email")
+        .select("user_id, full_name, email, selfie_url")
         .in("user_id", ids);
-      (profs || []).forEach((p: any) => nameMap.set(p.user_id, { full_name: p.full_name, email: p.email }));
+      (profs || []).forEach((p: any) => nameMap.set(p.user_id, p));
     }
     setSent(rows.map((r: any) => ({ ...r, _profile: nameMap.get(r.passenger_id) || null })));
   };
