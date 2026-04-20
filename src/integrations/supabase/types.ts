@@ -125,6 +125,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cancellation_reasons: {
+        Row: {
+          active: boolean
+          code: string
+          counts_as_punishment: boolean
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          role: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          counts_as_punishment?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          role: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          counts_as_punishment?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          role?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -1054,6 +1093,8 @@ export type Database = {
         Row: {
           admin_notes: string | null
           arrived_at: string | null
+          cancel_reason_code: string | null
+          cancel_reason_note: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           category: Database["public"]["Enums"]["vehicle_category"]
@@ -1104,6 +1145,8 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           arrived_at?: string | null
+          cancel_reason_code?: string | null
+          cancel_reason_note?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           category?: Database["public"]["Enums"]["vehicle_category"]
@@ -1154,6 +1197,8 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           arrived_at?: string | null
+          cancel_reason_code?: string | null
+          cancel_reason_note?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           category?: Database["public"]["Enums"]["vehicle_category"]
@@ -1650,6 +1695,10 @@ export type Database = {
         Returns: undefined
       }
       admin_close_ticket: { Args: { _ticket_id: string }; Returns: undefined }
+      admin_delete_cancellation_reason: {
+        Args: { _id: string }
+        Returns: undefined
+      }
       admin_delete_user: { Args: { _user_id: string }; Returns: undefined }
       admin_mark_passenger_suspect: {
         Args: { _reason?: string; _suspect: boolean; _user_id: string }
@@ -1737,6 +1786,19 @@ export type Database = {
         Args: { _priority: string; _ticket_id: string }
         Returns: undefined
       }
+      admin_upsert_cancellation_reason: {
+        Args: {
+          _active: boolean
+          _code: string
+          _counts_as_punishment: boolean
+          _description: string
+          _id: string
+          _label: string
+          _role: string
+          _sort_order: number
+        }
+        Returns: string
+      }
       appeal_rating: {
         Args: { _reason: string; _ride_id: string }
         Returns: string
@@ -1770,10 +1832,17 @@ export type Database = {
         }
         Returns: string
       }
-      cancel_ride: {
-        Args: { _reason: string; _ride_id: string }
-        Returns: Json
-      }
+      cancel_ride:
+        | { Args: { _reason: string; _ride_id: string }; Returns: Json }
+        | {
+            Args: {
+              _reason: string
+              _reason_code?: string
+              _reason_note?: string
+              _ride_id: string
+            }
+            Returns: Json
+          }
       check_signup_dupes: {
         Args: { _cpf: string; _phone: string }
         Returns: {
