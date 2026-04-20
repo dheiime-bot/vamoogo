@@ -102,11 +102,21 @@ const AdminCoupons = () => {
     fetch_();
   };
 
-  const remove = async (id: string) => {
-    if (!confirm("Excluir este cupom?")) return;
-    await supabase.from("coupons").delete().eq("id", id);
-    toast.success("Cupom excluído");
+  const remove = async (id: string, code: string) => {
+    if (!confirm(`Excluir o cupom ${code}?\nIsso também removerá esse cupom de todos os passageiros que ainda não usaram.`)) return;
+    // Remove dos passageiros (apenas os não usados — preserva histórico de uso)
+    const { error: pErr, count } = await supabase
+      .from("passenger_coupons")
+      .delete({ count: "exact" })
+      .eq("code", code)
+      .is("used_at", null);
+    if (pErr) { toast.error("Erro ao remover dos passageiros: " + pErr.message); return; }
+    // Remove o cupom geral
+    const { error: cErr } = await supabase.from("coupons").delete().eq("id", id);
+    if (cErr) { toast.error("Erro ao excluir cupom: " + cErr.message); return; }
+    toast.success(`Cupom excluído${count ? ` (removido de ${count} passageiro${count === 1 ? "" : "s"})` : ""}`);
     fetch_();
+    fetchSent();
   };
 
   const isExpired = (c: any) => c.expires_at && new Date(c.expires_at) < new Date();
