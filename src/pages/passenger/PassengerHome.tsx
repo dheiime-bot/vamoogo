@@ -1285,6 +1285,16 @@ const PassengerHome = () => {
           <RefreshAppButton topOffsetPx={144} />
         </>
       )}
+
+      {/* Modal de cancelamento — usado em todas as fases ativas (busca, aceito, chegando, chegou). */}
+      <CancelRideDialog
+        open={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onCancelled={handleAfterCancel}
+        rideId={activeRide?.id ?? null}
+        role="passenger"
+        afterAccept={["accepted", "driver_arriving", "arrived"].includes(rideState)}
+      />
     </div>
   );
 };
