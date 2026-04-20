@@ -220,15 +220,6 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
                 );
               })}
 
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Configurações" asChild>
-                  <NavLink to="/admin/tariffs">
-                    <Settings className="h-4 w-4" />
-                    <span>Configurações</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
               {isMaster && (
                 <SidebarMenuItem>
                   <SidebarMenuButton tooltip="Funcionários" asChild isActive={isActive("/admin/staff")}>
