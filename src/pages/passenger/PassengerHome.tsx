@@ -788,6 +788,40 @@ const PassengerHome = () => {
             </button>
           </div>
         )}
+        {showFormSheet && preferredDriver && (
+          <div className="mx-4 mt-2 flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/10 p-3">
+            {preferredDriver.photo ? (
+              <img
+                src={preferredDriver.photo}
+                alt={preferredDriver.name}
+                className="h-10 w-10 rounded-full object-cover border border-primary/30"
+              />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">
+                {preferredDriver.name[0]?.toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                Chamando seu motorista favorito
+              </p>
+              <p className="text-sm font-bold truncate">{preferredDriver.name}</p>
+              <p className="text-[10px] text-muted-foreground">
+                Ele terá 20s para aceitar antes de abrir para outros motoristas.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setPreferredDriver(null);
+                try { sessionStorage.removeItem("preferred_driver"); } catch {}
+              }}
+              className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+              aria-label="Remover motorista preferido"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
         <div className="p-4 pb-3 space-y-4">
 
 
