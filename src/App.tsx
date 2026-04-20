@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
 import { useRealtimeReconnect } from "@/hooks/useRealtimeReconnect";
+import { useDevicePermissions } from "@/hooks/useDevicePermissions";
 import DriverOfferAlert from "@/components/driver/DriverOfferAlert";
 import Index from "./pages/Index.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
@@ -103,6 +104,15 @@ const RealtimeReconnect = () => {
   return null;
 };
 
+/**
+ * Solicita permissões do dispositivo (localização + câmera) na primeira
+ * carga da sessão para evitar bloqueios em fluxos de motorista/passageiro.
+ */
+const DevicePermissionsBootstrap = () => {
+  useDevicePermissions();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -112,6 +122,7 @@ const App = () => (
         <BrowserRouter>
           <KeyboardAwareScroll />
           <RealtimeReconnect />
+          <DevicePermissionsBootstrap />
           <DriverOfferAlert />
           <Routes>
             <Route path="/" element={<AdminLogin />} />
