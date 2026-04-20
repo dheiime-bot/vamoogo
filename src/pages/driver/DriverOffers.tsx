@@ -18,7 +18,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import { formatBRL } from "@/lib/brFormat";
-import { toast } from "sonner";
 
 const MAX_KM = 20;
 
@@ -170,9 +169,9 @@ const DriverOffers = () => {
     if (error || !updated) {
       const { isGuardError, guardErrorMessage } = await import("@/lib/guardErrors");
       if (error && isGuardError(error)) {
-        toast.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
+        console.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
       } else {
-        toast.error("Outro motorista já aceitou esta corrida");
+        console.error("Outro motorista já aceitou esta corrida");
       }
       setAccepting(null);
       reload();
@@ -184,7 +183,6 @@ const DriverOffers = () => {
         .update({ status: "accepted", responded_at: new Date().toISOString() })
         .eq("id", item.offerId);
     }
-    toast.success("Corrida aceita! 🚗");
     setAccepting(null);
     navigate("/driver");
   };
@@ -197,7 +195,6 @@ const DriverOffers = () => {
         .eq("id", item.offerId);
     }
     setItems((prev) => prev.filter((i) => i.ride.id !== item.ride.id));
-    toast("Corrida ignorada");
   };
 
   const sorted = useMemo(() => {
