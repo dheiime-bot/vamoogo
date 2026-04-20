@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Clock, ChevronRight } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
+import HomeFab from "@/components/passenger/HomeFab";
 import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 import ReportIssueButton from "@/components/shared/ReportIssueButton";
 
@@ -117,7 +118,7 @@ const PassengerHistory = () => {
       )}
 
       <AppMenu role="passenger" />
-      
+      <HomeFab />
     </div>
   );
 };
