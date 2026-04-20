@@ -146,21 +146,24 @@ const CarMarker = ({
 }) => {
   const baseColor = color || CATEGORY_DEFAULT_COLOR[variant];
   const light = isLightColor(baseColor);
-  const pinTop = baseColor;
-  const pinBottom = shadeColor(baseColor, -0.25);
-  const carStroke = light ? "#0f172a" : "#ffffff";
-  const carFill = light ? "#0f172a" : "#ffffff";
+  // Pino do mapa: sempre escuro neutro pra contrastar com a carroceria colorida
+  const pinTop = "#1f2937";
+  const pinBottom = "#0f172a";
+  // Carroceria: cor real do veículo. Contorno escuro pra recortar contra o branco.
+  const bodyFill = baseColor;
+  const bodyStroke = light ? "#0f172a" : "#1e293b";
+  const glassFill = light ? "#1e293b" : "#0f172a";
   // Rotação só do veículo interno (o pino não gira — fica sempre apontando p/ baixo)
   const smoothHeading = useSmoothHeading(heading);
   const uid = `${variant}-${baseColor.replace("#", "")}`;
   return (
     <div
       className="relative drop-shadow-xl"
-      style={{ width: 52, height: 64 }}
+      style={{ width: 60, height: 74 }}
       title={variant === "conforto" ? "Motorista (Conforto)" : "Motorista"}
     >
-      <div className="anim-vehicle-bob" style={{ width: 52, height: 64 }}>
-        <svg viewBox="0 0 64 80" width="52" height="64" style={{ overflow: "visible" }}>
+      <div className="anim-vehicle-bob" style={{ width: 60, height: 74 }}>
+        <svg viewBox="0 0 64 80" width="60" height="74" style={{ overflow: "visible" }}>
           <defs>
             <radialGradient id={`carShadow-${uid}`} cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="rgba(0,0,0,0.45)" />
@@ -170,6 +173,10 @@ const CarMarker = ({
               <stop offset="0%" stopColor={pinTop} />
               <stop offset="100%" stopColor={pinBottom} />
             </linearGradient>
+            <linearGradient id={`bodyGrad-${uid}`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={shadeColor(bodyFill, 0.18)} />
+              <stop offset="100%" stopColor={shadeColor(bodyFill, -0.12)} />
+            </linearGradient>
           </defs>
           {/* sombra */}
           <ellipse cx="32" cy="76" rx="14" ry="3" fill={`url(#carShadow-${uid})`} />
@@ -178,11 +185,11 @@ const CarMarker = ({
             d="M32 4 C18 4 8 14 8 28 C8 42 26 64 32 70 C38 64 56 42 56 28 C56 14 46 4 32 4 Z"
             fill={`url(#pinBg-${uid})`}
             stroke="#ffffff"
-            strokeWidth="2.5"
+            strokeWidth="2"
           />
-          {/* círculo branco interno */}
-          <circle cx="32" cy="28" r="16" fill="#ffffff" />
-          {/* carro dentro (gira pelo heading) */}
+          {/* fundo branco interno (maior pra dar espaço ao carro) */}
+          <circle cx="32" cy="28" r="20" fill="#ffffff" />
+          {/* carro vista superior — gira pelo heading */}
           <g
             style={{
               transform: `rotate(${smoothHeading}deg)`,
@@ -191,32 +198,45 @@ const CarMarker = ({
               transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            {/* Carro vista superior — chassi arredondado */}
+            {/* Carroceria vista superior — frente em cima (Y menor = norte) */}
             <path
-              d="M26 18 C24 18 22 20 22 23 L22 33 C22 36 24 38 26 38 L38 38 C40 38 42 36 42 33 L42 23 C42 20 40 18 38 18 Z"
-              fill={carFill}
-              stroke={carStroke}
-              strokeOpacity="0.15"
-              strokeWidth="0.5"
+              d="M23 16 C20 16 18 19 18 23 L18 35 C18 39 20 42 23 42 L41 42 C44 42 46 39 46 35 L46 23 C46 19 44 16 41 16 Z"
+              fill={`url(#bodyGrad-${uid})`}
+              stroke={bodyStroke}
+              strokeWidth="1.2"
+              strokeLinejoin="round"
             />
-            {/* para-brisa frontal */}
+            {/* Capô (frente) */}
             <path
-              d="M25 22 L27 25 L37 25 L39 22 Z"
-              fill={baseColor}
-              opacity="0.85"
-            />
-            {/* para-brisa traseiro */}
-            <path
-              d="M25 34 L27 31 L37 31 L39 34 Z"
-              fill={baseColor}
+              d="M21 17 L43 17 L43 22 L21 22 Z"
+              fill={shadeColor(bodyFill, -0.08)}
               opacity="0.6"
             />
-            {/* faróis */}
-            <rect x="25" y="19" width="3" height="1.5" rx="0.5" fill="#fef3c7" />
-            <rect x="36" y="19" width="3" height="1.5" rx="0.5" fill="#fef3c7" />
-            {/* lanternas */}
-            <rect x="25" y="36" width="3" height="1.5" rx="0.5" fill="#ef4444" opacity="0.9" />
-            <rect x="36" y="36" width="3" height="1.5" rx="0.5" fill="#ef4444" opacity="0.9" />
+            {/* Para-brisa frontal */}
+            <path
+              d="M22 22 L42 22 L40 27 L24 27 Z"
+              fill={glassFill}
+              opacity="0.85"
+            />
+            {/* Teto */}
+            <rect x="24" y="27" width="16" height="5" rx="1" fill={shadeColor(bodyFill, 0.25)} opacity="0.5" />
+            {/* Para-brisa traseiro */}
+            <path
+              d="M24 32 L40 32 L42 37 L22 37 Z"
+              fill={glassFill}
+              opacity="0.7"
+            />
+            {/* Linha central / divisória das portas */}
+            <line x1="18" y1="29" x2="46" y2="29" stroke={bodyStroke} strokeWidth="0.4" opacity="0.5" />
+            {/* Faróis dianteiros (amarelos) */}
+            <rect x="20" y="16.5" width="4" height="2" rx="0.8" fill="#fde047" stroke={bodyStroke} strokeWidth="0.3" />
+            <rect x="40" y="16.5" width="4" height="2" rx="0.8" fill="#fde047" stroke={bodyStroke} strokeWidth="0.3" />
+            {/* Lanternas traseiras (vermelhas) */}
+            <rect x="20" y="40" width="4" height="1.6" rx="0.6" fill="#dc2626" />
+            <rect x="40" y="40" width="4" height="1.6" rx="0.6" fill="#dc2626" />
+            {/* Retrovisores */}
+            <ellipse cx="17.5" cy="24" rx="1.2" ry="0.9" fill={shadeColor(bodyFill, -0.2)} stroke={bodyStroke} strokeWidth="0.3" />
+            <ellipse cx="46.5" cy="24" rx="1.2" ry="0.9" fill={shadeColor(bodyFill, -0.2)} stroke={bodyStroke} strokeWidth="0.3" />
           </g>
         </svg>
       </div>
