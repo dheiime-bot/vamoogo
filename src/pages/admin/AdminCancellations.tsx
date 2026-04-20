@@ -81,6 +81,7 @@ const AdminCancellations = () => {
   const [period, setPeriod] = useState<Period>("7d");
   const [who, setWho] = useState<WhoFilter>("all");
   const [reasonFilter, setReasonFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [rides, setRides] = useState<Cancelled[]>([]);
