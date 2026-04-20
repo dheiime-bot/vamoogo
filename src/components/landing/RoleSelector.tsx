@@ -1,4 +1,4 @@
-import { Car, User, Shield } from "lucide-react";
+import { Car, Smile, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const roles = [
@@ -6,7 +6,7 @@ const roles = [
     id: "passenger",
     title: "Passageiro",
     description: "Solicite corridas com segurança e praticidade",
-    icon: User,
+    icon: Smile,
     path: "/auth",
     gradient: "bg-gradient-primary",
   },
