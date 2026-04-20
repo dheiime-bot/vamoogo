@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Copy, Trash2, TicketPercent, Send, Users, Search, CheckCircle2, MoreVertical, UserPlus, Megaphone } from "lucide-react";
+import { Plus, Loader2, Copy, Pencil, PowerOff, Power, TicketPercent, Send, Users, Search, CheckCircle2, MoreVertical, UserPlus, Megaphone } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ const AdminCoupons = () => {
 
   const [coupons, setCoupons] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     code: "", discount_type: "percentage", discount_value: "",
     max_uses: "100", min_fare: "0", expires_at: "",
@@ -81,42 +82,48 @@ const AdminCoupons = () => {
   const create = async () => {
     if (!form.code || !form.discount_value) { toast.error("Preencha código e valor"); return; }
     setSaving(true);
-    const { error } = await supabase.from("coupons").insert({
+    const payload = {
       code: form.code.toUpperCase(),
       discount_type: form.discount_type,
       discount_value: parseFloat(form.discount_value),
       max_uses: parseInt(form.max_uses) || 100,
       min_fare: parseFloat(form.min_fare) || 0,
       expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
-    });
+    };
+    const { error } = editingId
+      ? await supabase.from("coupons").update(payload).eq("id", editingId)
+      : await supabase.from("coupons").insert(payload);
     setSaving(false);
     if (error) { toast.error("Erro: " + error.message); return; }
-    toast.success("Cupom criado!");
-    setShowForm(false);
-    setForm({ code: "", discount_type: "percentage", discount_value: "", max_uses: "100", min_fare: "0", expires_at: "" });
+    toast.success(editingId ? "Cupom atualizado!" : "Cupom criado!");
+    closeForm();
     fetch_();
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm({ code: "", discount_type: "percentage", discount_value: "", max_uses: "100", min_fare: "0", expires_at: "" });
   };
 
   const toggle = async (id: string, active: boolean) => {
-    await supabase.from("coupons").update({ active: !active }).eq("id", id);
+    const { error } = await supabase.from("coupons").update({ active: !active }).eq("id", id);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    toast.success(active ? "Cupom desativado" : "Cupom ativado");
     fetch_();
   };
 
-  const remove = async (id: string, code: string) => {
-    if (!confirm(`Excluir o cupom ${code}?\nIsso também removerá esse cupom de todos os passageiros que ainda não usaram.`)) return;
-    // Remove dos passageiros (apenas os não usados — preserva histórico de uso)
-    const { error: pErr, count } = await supabase
-      .from("passenger_coupons")
-      .delete({ count: "exact" })
-      .eq("code", code)
-      .is("used_at", null);
-    if (pErr) { toast.error("Erro ao remover dos passageiros: " + pErr.message); return; }
-    // Remove o cupom geral
-    const { error: cErr } = await supabase.from("coupons").delete().eq("id", id);
-    if (cErr) { toast.error("Erro ao excluir cupom: " + cErr.message); return; }
-    toast.success(`Cupom excluído${count ? ` (removido de ${count} passageiro${count === 1 ? "" : "s"})` : ""}`);
-    fetch_();
-    fetchSent();
+  const startEdit = (c: any) => {
+    setEditingId(c.id);
+    setForm({
+      code: c.code || "",
+      discount_type: c.discount_type || "percentage",
+      discount_value: String(c.discount_value ?? ""),
+      max_uses: String(c.max_uses ?? "100"),
+      min_fare: String(c.min_fare ?? "0"),
+      expires_at: c.expires_at ? new Date(c.expires_at).toISOString().slice(0, 16) : "",
+    });
+    setShowForm(true);
   };
 
   const isExpired = (c: any) => c.expires_at && new Date(c.expires_at) < new Date();
