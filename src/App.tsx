@@ -55,6 +55,7 @@ import AdminReports from "./pages/admin/AdminReports.tsx";
 import AdminAudit from "./pages/admin/AdminAudit.tsx";
 import AdminStaff from "./pages/admin/AdminStaff.tsx";
 import AdminVehicleRequests from "./pages/admin/AdminVehicleRequests.tsx";
+import AdminVehicles from "./pages/admin/AdminVehicles.tsx";
 import TestAutocomplete from "./pages/TestAutocomplete.tsx";
 
 const queryClient = new QueryClient();
@@ -178,6 +179,7 @@ const App = () => (
             <Route path="/admin/audit" element={<ProtectedAdminRoute><AdminAudit /></ProtectedAdminRoute>} />
             <Route path="/admin/staff" element={<ProtectedAdminRoute><AdminStaff /></ProtectedAdminRoute>} />
             <Route path="/admin/vehicle-requests" element={<ProtectedAdminRoute><AdminVehicleRequests /></ProtectedAdminRoute>} />
+            <Route path="/admin/vehicles" element={<ProtectedAdminRoute><AdminVehicles /></ProtectedAdminRoute>} />
             <Route path="/test-autocomplete" element={<TestAutocomplete />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

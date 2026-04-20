@@ -50,6 +50,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
   { icon: Car, label: "Corridas", path: "/admin/rides" },
+  { icon: Car, label: "Veículos", path: "/admin/vehicles" },
   {
     icon: Users,
     label: "Pessoas",
