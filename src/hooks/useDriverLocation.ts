@@ -173,7 +173,11 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
       const last = lastSentRef.current;
       if (last) {
         const dist = distanceMeters(coords, { lat: last.lat, lng: last.lng });
-        if (dist < MIN_DISTANCE_M && now - last.ts < MIN_INTERVAL_MS) return;
+        if (dist < MIN_DISTANCE_M && now - last.ts < MIN_INTERVAL_MS) {
+          // Mesmo sem upsert, marca heartbeat local para a UI mostrar GPS vivo.
+          setLastSyncAt(now);
+          return;
+        }
       }
       lastSentRef.current = { lat: coords.latitude, lng: coords.longitude, ts: now };
       const { error } = await supabase.from("driver_locations").upsert(
