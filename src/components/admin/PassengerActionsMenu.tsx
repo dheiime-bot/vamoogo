@@ -230,7 +230,7 @@ const PassengerActionsMenu = ({ passenger, onView, onChanged }: Props) => {
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setDialog("delete")} className="text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" /> Excluir conta
+                <Trash2 className="mr-2 h-4 w-4" /> Remover conta (bloqueio permanente)
               </DropdownMenuItem>
             </>
           )}
