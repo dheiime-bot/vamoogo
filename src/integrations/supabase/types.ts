@@ -1875,17 +1875,15 @@ export type Database = {
             }
             Returns: string
           }
-      cancel_ride:
-        | { Args: { _reason: string; _ride_id: string }; Returns: Json }
-        | {
-            Args: {
-              _reason: string
-              _reason_code?: string
-              _reason_note?: string
-              _ride_id: string
-            }
-            Returns: Json
-          }
+      cancel_ride: {
+        Args: {
+          _reason: string
+          _reason_code?: string
+          _reason_note?: string
+          _ride_id: string
+        }
+        Returns: Json
+      }
       check_signup_dupes:
         | {
             Args: { _cpf: string; _phone: string }
@@ -1971,6 +1969,20 @@ export type Database = {
           driver_id: string
           lat: number
           lng: number
+        }[]
+      }
+      get_favorite_driver_details: {
+        Args: { _driver_ids: string[] }
+        Returns: {
+          full_name: string
+          rating: number
+          selfie_url: string
+          total_rides: number
+          user_id: string
+          vehicle_brand: string
+          vehicle_color: string
+          vehicle_model: string
+          vehicle_plate: string
         }[]
       }
       get_ride_for_driver: {

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Heart, Loader2, Star, Car } from "lucide-react";
+import { ArrowLeft, Heart, Loader2, Star, Car, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface FavRow {
   id: string;
@@ -15,8 +16,10 @@ interface FavRow {
 interface DriverDetails {
   user_id: string;
   full_name: string | null;
+  selfie_url: string | null;
   rating: number | null;
   vehicle: string | null;
+  vehicle_plate: string | null;
   total_rides: number | null;
 }
 
@@ -25,6 +28,7 @@ const PassengerFavoriteDrivers = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<(FavRow & { driver: DriverDetails | null })[]>([]);
+  const [selected, setSelected] = useState<DriverDetails | null>(null);
 
   const load = async () => {
     if (!user?.id) return;
@@ -42,34 +46,27 @@ const PassengerFavoriteDrivers = () => {
     }
 
     const ids = list.map((f) => f.driver_id);
-    const [{ data: drivers }, { data: profiles }] = await Promise.all([
-      supabase
-        .from("drivers")
-        .select("user_id, rating, total_rides, vehicle_brand, vehicle_model, vehicle_color")
-        .in("user_id", ids),
-      supabase.from("profiles").select("user_id, full_name").in("user_id", ids),
-    ]);
-
-    const dmap = new Map((drivers || []).map((d: any) => [d.user_id, d]));
-    const pmap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+    const { data: details } = await supabase.rpc("get_favorite_driver_details", {
+      _driver_ids: ids,
+    });
+    const dmap = new Map((details || []).map((d: any) => [d.user_id, d]));
 
     setItems(
       list.map((f) => {
         const d: any = dmap.get(f.driver_id);
-        const p: any = pmap.get(f.driver_id);
         return {
           ...f,
-          driver: d
-            ? {
-                user_id: f.driver_id,
-                full_name: p?.full_name || "Motorista",
-                rating: d.rating,
-                total_rides: d.total_rides,
-                vehicle: [d.vehicle_brand, d.vehicle_model, d.vehicle_color]
-                  .filter(Boolean)
-                  .join(" "),
-              }
-            : { user_id: f.driver_id, full_name: p?.full_name || "Motorista", rating: null, total_rides: null, vehicle: null },
+          driver: {
+            user_id: f.driver_id,
+            full_name: d?.full_name || "Motorista",
+            selfie_url: d?.selfie_url || null,
+            rating: d?.rating ?? null,
+            total_rides: d?.total_rides ?? null,
+            vehicle: [d?.vehicle_brand, d?.vehicle_model, d?.vehicle_color]
+              .filter(Boolean)
+              .join(" ") || null,
+            vehicle_plate: d?.vehicle_plate || null,
+          },
         };
       })
     );
@@ -125,11 +122,20 @@ const PassengerFavoriteDrivers = () => {
           items.map((f) => (
             <article
               key={f.id}
-              className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3"
+              onClick={() => f.driver && setSelected(f.driver)}
+              className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors"
             >
-              <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold shrink-0">
-                {(f.driver?.full_name?.[0] || "M").toUpperCase()}
-              </div>
+              {f.driver?.selfie_url ? (
+                <img
+                  src={f.driver.selfie_url}
+                  alt={f.driver.full_name || "Motorista"}
+                  className="h-12 w-12 rounded-full object-cover shrink-0 border border-border"
+                />
+              ) : (
+                <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold shrink-0">
+                  {(f.driver?.full_name?.[0] || "M").toUpperCase()}
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold truncate">
                   {f.driver?.full_name}
@@ -153,7 +159,10 @@ const PassengerFavoriteDrivers = () => {
                 )}
               </div>
               <button
-                onClick={() => removeFav(f.driver_id, f.driver?.full_name || "Motorista")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFav(f.driver_id, f.driver?.full_name || "Motorista");
+                }}
                 className="shrink-0 rounded-full p-2 text-destructive hover:bg-destructive/10 transition-colors"
                 aria-label="Remover dos favoritos"
               >
@@ -163,6 +172,60 @@ const PassengerFavoriteDrivers = () => {
           ))
         )}
       </div>
+
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-sm p-0 overflow-hidden">
+          {selected && (
+            <div className="flex flex-col items-center text-center p-6">
+              {selected.selfie_url ? (
+                <img
+                  src={selected.selfie_url}
+                  alt={selected.full_name || "Motorista"}
+                  className="h-24 w-24 rounded-full object-cover border-4 border-primary/20 shadow-lg"
+                />
+              ) : (
+                <div className="h-24 w-24 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-3xl shadow-lg">
+                  {(selected.full_name?.[0] || "M").toUpperCase()}
+                </div>
+              )}
+              <h2 className="mt-4 text-lg font-display font-bold">
+                {selected.full_name}
+              </h2>
+
+              <div className="mt-3 flex items-center gap-4 text-sm">
+                {selected.rating != null && (
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 text-warning fill-warning" />
+                    <span className="font-semibold">
+                      {Number(selected.rating).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                {selected.total_rides != null && (
+                  <div className="text-muted-foreground">
+                    {selected.total_rides} corridas
+                  </div>
+                )}
+              </div>
+
+              {selected.vehicle && (
+                <div className="mt-4 w-full rounded-xl border border-border bg-muted/40 p-3 text-left">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Car className="h-3.5 w-3.5" />
+                    Veículo
+                  </div>
+                  <p className="mt-1 text-sm font-medium">{selected.vehicle}</p>
+                  {selected.vehicle_plate && (
+                    <p className="mt-0.5 text-xs font-mono text-muted-foreground">
+                      {selected.vehicle_plate}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
