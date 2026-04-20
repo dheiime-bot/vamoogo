@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Save, Bike, Car, Crown, Loader2, Percent } from "lucide-react";
+import { Save, Bike, Car, Crown, Loader2, Percent, Heart } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,16 +10,21 @@ const AdminTariffs = () => {
   const [activeTab, setActiveTab] = useState("categories");
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [globalFee, setGlobalFee] = useState<string>("15");
+  const [favoriteCallMaxKm, setFavoriteCallMaxKm] = useState<string>("5");
   const [saving, setSaving] = useState(false);
 
   const loadAll = () => {
     Promise.all([
       supabase.from("tariffs").select("*").order("category"),
       supabase.from("platform_settings").select("value").eq("key", "global_fee_percent").maybeSingle(),
-    ]).then(([tRes, sRes]) => {
+      supabase.from("platform_settings").select("value").eq("key", "favorite_call_max_km").maybeSingle(),
+    ]).then(([tRes, sRes, fRes]) => {
       if (tRes.data) setTariffs(tRes.data);
       if (sRes.data?.value !== undefined && sRes.data?.value !== null) {
         setGlobalFee(String(sRes.data.value));
+      }
+      if (fRes.data?.value !== undefined && fRes.data?.value !== null) {
+        setFavoriteCallMaxKm(String(fRes.data.value));
       }
     });
   };
@@ -57,6 +62,12 @@ const AdminTariffs = () => {
         .from("platform_settings")
         .update({ value: pct as any })
         .eq("key", "global_fee_percent");
+
+      // Salva distância máxima do botão Chamar (favoritos)
+      const km = Math.max(0.5, Math.min(50, parseFloat(favoriteCallMaxKm.replace(",", ".")) || 5));
+      await supabase
+        .from("platform_settings")
+        .upsert({ key: "favorite_call_max_km", value: km as any }, { onConflict: "key" });
 
       toast.success("Configurações salvas!");
     } catch (e: any) {
