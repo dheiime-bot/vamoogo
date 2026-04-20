@@ -33,7 +33,7 @@ const PassengerFavoriteDrivers = () => {
   const [selected, setSelected] = useState<DriverDetails | null>(null);
   const [maxKm, setMaxKm] = useState<number>(5);
   const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
-  const [calling, setCalling] = useState<string | null>(null);
+  // (sem estado de loading do botão — navegação é instantânea)
 
   // Geolocalização do passageiro
   useEffect(() => {
@@ -111,6 +111,31 @@ const PassengerFavoriteDrivers = () => {
 
   useRealtimeRefresh("favorite_drivers", load, "passenger-favorites");
 
+  // 🔴 Realtime: status (online/offline + posição) dos motoristas favoritos.
+  // Reconsulta a RPC sempre que driver_locations dos favoritos mudar.
+  useEffect(() => {
+    if (!user?.id || items.length === 0) return;
+    const driverIds = items.map((i) => i.driver_id);
+    const channel = supabase
+      .channel("fav-driver-locations")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "driver_locations" },
+        (payload) => {
+          const did = (payload.new as any)?.driver_id || (payload.old as any)?.driver_id;
+          if (did && driverIds.includes(did)) load();
+        }
+      )
+      .subscribe();
+    // Re-poll leve a cada 20s como rede de segurança
+    const t = setInterval(load, 20_000);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, items.map((i) => i.driver_id).join(",")]);
+
   const removeFav = async (driverId: string, name: string) => {
     if (!confirm(`Remover ${name} dos favoritos?`)) return;
     const { error } = await supabase.rpc("passenger_toggle_favorite_driver", {
@@ -124,27 +149,16 @@ const PassengerFavoriteDrivers = () => {
     load();
   };
 
-  const callDriver = async (driverId: string, name: string) => {
-    if (!pos) {
-      toast.error("Permita acesso à sua localização para chamar.");
-      return;
-    }
-    setCalling(driverId);
-    const { error } = await supabase.rpc("passenger_call_favorite_driver", {
-      _driver_id: driverId,
-      _passenger_lat: pos.lat,
-      _passenger_lng: pos.lng,
-    });
-    setCalling(null);
-    if (error) {
-      const msg = error.message || "";
-      if (msg.includes("driver_offline")) toast.error(`${name} está offline agora.`);
-      else if (msg.includes("too_far")) toast.error(`${name} está fora do raio de ${maxKm} km.`);
-      else if (msg.includes("not_favorite")) toast.error("Motorista não está nos favoritos.");
-      else toast.error("Não foi possível chamar agora.");
-      return;
-    }
-    toast.success(`Aviso enviado para ${name}!`);
+  const callDriver = (driverId: string, name: string, photo: string | null) => {
+    // Salva o motorista pré-selecionado para a tela de pedido de corrida
+    try {
+      sessionStorage.setItem(
+        "preferred_driver",
+        JSON.stringify({ id: driverId, name, photo, ts: Date.now() })
+      );
+    } catch {}
+    toast.success(`Chamando ${name}…`);
+    navigate("/passenger?preferred=" + encodeURIComponent(driverId));
   };
 
   const canCall = (d: DriverDetails | null) =>
@@ -243,17 +257,17 @@ const PassengerFavoriteDrivers = () => {
               </div>
 
               <button
-                disabled={!canCall(f.driver) || calling === f.driver_id}
+                disabled={!canCall(f.driver)}
                 onClick={() =>
-                  callDriver(f.driver_id, f.driver?.full_name || "Motorista")
+                  callDriver(
+                    f.driver_id,
+                    f.driver?.full_name || "Motorista",
+                    f.driver?.selfie_url || null
+                  )
                 }
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none disabled:cursor-not-allowed transition-all"
               >
-                {calling === f.driver_id ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Phone className="h-4 w-4" />
-                )}
+                <Phone className="h-4 w-4" />
                 {!f.driver?.is_online
                   ? "Offline"
                   : f.driver?.distance_km == null

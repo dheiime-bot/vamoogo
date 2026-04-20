@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { rideId } = await req.json();
+    const { rideId, preferredDriverId } = await req.json();
     if (!rideId) {
       return new Response(JSON.stringify({ error: "rideId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -48,6 +48,65 @@ Deno.serve(async (req) => {
     // Limpa motoristas zumbi (sem heartbeat há > 2min) antes de buscar candidatos
     const { data: zCount } = await supabase.rpc("cleanup_zombie_drivers");
     if (zCount && zCount > 0) console.log(`[dispatch] cleaned ${zCount} zombie drivers`);
+
+    // 🌟 PRIORIDADE: motorista preferido (vindo de "favoritos → chamar")
+    // Damos a ele 20s exclusivos antes do broadcast normal.
+    if (preferredDriverId) {
+      // valida que está online, na categoria certa e razoavelmente próximo (até 25 km)
+      const { data: dl } = await supabase
+        .from("driver_locations")
+        .select("driver_id, lat, lng, is_online, category")
+        .eq("driver_id", preferredDriverId)
+        .maybeSingle();
+
+      const distKm = dl?.lat != null
+        ? Math.round(haversineKm(ride.origin_lat, ride.origin_lng, dl.lat, dl.lng) * 100) / 100
+        : null;
+
+      if (dl?.is_online && dl.category === ride.category && distKm != null && distKm <= 25) {
+        const expiresAt = new Date(Date.now() + 20 * 1000).toISOString();
+        const { error: prefErr } = await supabase.from("ride_offers").insert({
+          ride_id: rideId,
+          driver_id: preferredDriverId,
+          distance_to_pickup_km: distKm,
+          expires_at: expiresAt,
+          status: "pending",
+        });
+        if (prefErr) {
+          console.error("[dispatch] preferred offer error:", prefErr);
+        } else {
+          console.log(`[dispatch] ⭐ exclusive offer to preferred driver ${preferredDriverId} (${distKm}km)`);
+          // Aguarda até 21s o motorista preferido responder
+          const deadline = Date.now() + 21 * 1000;
+          while (Date.now() < deadline) {
+            await new Promise((r) => setTimeout(r, 1500));
+            const { data: chk } = await supabase
+              .from("rides").select("status, driver_id").eq("id", rideId).single();
+            if (chk?.status === "accepted" && chk.driver_id) {
+              console.log(`[dispatch] ✅ preferred driver accepted ${rideId}`);
+              await supabase.from("ride_offers")
+                .update({ status: "expired" })
+                .eq("ride_id", rideId).eq("status", "pending");
+              return new Response(JSON.stringify({ ok: true, accepted_by: chk.driver_id, preferred: true }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+            if (chk?.status && chk.status !== "requested") {
+              return new Response(JSON.stringify({ ok: true, status: chk.status }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+          }
+          // Expira a oferta exclusiva e segue para o broadcast
+          await supabase.from("ride_offers")
+            .update({ status: "expired" })
+            .eq("ride_id", rideId).eq("driver_id", preferredDriverId).eq("status", "pending");
+          console.log(`[dispatch] ⏱️ preferred driver did not accept, falling back to broadcast`);
+        }
+      } else {
+        console.log(`[dispatch] preferred driver not eligible (online=${dl?.is_online}, cat=${dl?.category}, dist=${distKm})`);
+      }
+    }
 
     for (let round = 0; round < MAX_ROUNDS; round++) {
       // Re-checa: corrida já pode ter sido aceita/cancelada
@@ -149,3 +208,15 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+// Distância em km entre dois pontos (Haversine)
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode, Heart } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
@@ -37,6 +38,12 @@ const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", de
 
 const PassengerHome = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [preferredDriver, setPreferredDriver] = useState<{
+    id: string;
+    name: string;
+    photo: string | null;
+  } | null>(null);
   const [passengers, setPassengers] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("economico");
   const [selectedOrigin, setSelectedOrigin] = useState<AppLocation | null>(null);
@@ -77,6 +84,31 @@ const PassengerHome = () => {
 
   // Status do GPS do dispositivo (alimenta o sino: verde=ok, vermelho=negado/erro)
   const [gpsStatus, setGpsStatus] = useState<"connected" | "disconnected" | "idle">("idle");
+
+  // 🚖 Motorista pré-selecionado (vindo da tela "Motoristas favoritos")
+  useEffect(() => {
+    const id = searchParams.get("preferred");
+    if (!id) return;
+    try {
+      const raw = sessionStorage.getItem("preferred_driver");
+      const data = raw ? JSON.parse(raw) : null;
+      if (data?.id === id) {
+        setPreferredDriver({ id: data.id, name: data.name, photo: data.photo });
+        setShowRideForm(true);
+      } else {
+        setPreferredDriver({ id, name: "Motorista favorito", photo: null });
+        setShowRideForm(true);
+      }
+    } catch {
+      setPreferredDriver({ id, name: "Motorista favorito", photo: null });
+      setShowRideForm(true);
+    }
+    // limpa o query param para não reabrir ao voltar
+    const next = new URLSearchParams(searchParams);
+    next.delete("preferred");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!navigator.geolocation) { setGpsStatus("disconnected"); return; }
@@ -443,8 +475,13 @@ const PassengerHome = () => {
     setRideState("searching");
     setActiveRide(data);
     // Dispara o match em background (não bloqueia a UI)
-    supabase.functions.invoke("dispatch-ride", { body: { rideId: data.id } })
+    supabase.functions.invoke("dispatch-ride", {
+      body: { rideId: data.id, preferredDriverId: preferredDriver?.id || null },
+    })
       .catch((e) => console.warn("dispatch-ride invoke:", e));
+    // Limpa motorista preferido após uso (vale só p/ esta corrida)
+    setPreferredDriver(null);
+    try { sessionStorage.removeItem("preferred_driver"); } catch {}
   };
 
   /** Limpa estado local após o backend confirmar o cancelamento (via RPC). */
@@ -746,6 +783,40 @@ const PassengerHome = () => {
               onClick={() => setShowRideForm(false)}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-muted hover:bg-muted/70 transition-colors"
               aria-label="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+        {showFormSheet && preferredDriver && (
+          <div className="mx-4 mt-2 flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/10 p-3">
+            {preferredDriver.photo ? (
+              <img
+                src={preferredDriver.photo}
+                alt={preferredDriver.name}
+                className="h-10 w-10 rounded-full object-cover border border-primary/30"
+              />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">
+                {preferredDriver.name[0]?.toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                Chamando seu motorista favorito
+              </p>
+              <p className="text-sm font-bold truncate">{preferredDriver.name}</p>
+              <p className="text-[10px] text-muted-foreground">
+                Ele terá 20s para aceitar antes de abrir para outros motoristas.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setPreferredDriver(null);
+                try { sessionStorage.removeItem("preferred_driver"); } catch {}
+              }}
+              className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+              aria-label="Remover motorista preferido"
             >
               <X className="h-4 w-4" />
             </button>
