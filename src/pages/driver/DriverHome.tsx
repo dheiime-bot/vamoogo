@@ -821,6 +821,17 @@ const DriverHome = () => {
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
+      <CancelRideDialog
+        open={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onCancelled={() => {
+          setActiveRide(null);
+          setRideState("idle");
+        }}
+        rideId={activeRide?.id ?? null}
+        role="driver"
+        afterAccept={true}
+      />
       <NotificationBell
         topOffsetPx={72}
         connectionStatus={
