@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import SelectVehicleModal from "@/components/driver/SelectVehicleModal";
 
 type MenuRole = "passenger" | "driver";
 
@@ -52,6 +53,8 @@ const AppMenu = ({ role, floating = true }: Props) => {
   const location = useLocation();
   const { user, signOut, roles, profile } = useAuth();
   const [driverRating, setDriverRating] = useState<number | null>(null);
+  const [vehicleCount, setVehicleCount] = useState(0);
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
 
   const items = role === "driver" ? DRIVER_ITEMS : PASSENGER_ITEMS;
 
@@ -60,6 +63,17 @@ const AppMenu = ({ role, floating = true }: Props) => {
     if (role !== "driver" || !user?.id) return;
     supabase.from("drivers").select("rating").eq("user_id", user.id).maybeSingle()
       .then(({ data }) => { if (data?.rating != null) setDriverRating(Number(data.rating)); });
+  }, [role, user?.id]);
+
+  // Conta quantos veículos aprovados o motorista tem (para mostrar "Selecionar veículo")
+  useEffect(() => {
+    if (role !== "driver" || !user?.id) return;
+    supabase
+      .from("driver_vehicles")
+      .select("id", { count: "exact", head: true })
+      .eq("driver_id", user.id)
+      .eq("status", "approved")
+      .then(({ count }) => setVehicleCount(count || 0));
   }, [role, user?.id]);
 
   const ratingToShow = role === "driver" ? driverRating : (profile?.rating ?? null);
@@ -167,6 +181,15 @@ const AppMenu = ({ role, floating = true }: Props) => {
               </button>
             );
           })}
+          {role === "driver" && vehicleCount >= 2 && (
+            <button
+              onClick={() => { setOpen(false); setTimeout(() => setShowVehicleModal(true), 0); }}
+              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              <Car className="h-4.5 w-4.5 shrink-0" />
+              <span className="flex-1 text-left">Selecionar veículo</span>
+            </button>
+          )}
         </nav>
 
         {canBecomeDriver && (
@@ -192,6 +215,9 @@ const AppMenu = ({ role, floating = true }: Props) => {
           </button>
         </div>
       </SheetContent>
+      {role === "driver" && (
+        <SelectVehicleModal open={showVehicleModal} onOpenChange={setShowVehicleModal} />
+      )}
     </Sheet>
   );
 };
