@@ -77,6 +77,14 @@ const navItems: NavItem[] = [
   },
   { icon: MessageCircle, label: "Chats", path: "/admin/chats" },
   { icon: Headphones, label: "Suporte", path: "/admin/support" },
+  {
+    icon: Settings,
+    label: "Configurações",
+    children: [
+      { label: "Tarifas", path: "/admin/tariffs" },
+      { label: "Regras de cancelamento", path: "/admin/settings/cancellations" },
+    ],
+  },
 ];
 
 interface AdminLayoutProps {
