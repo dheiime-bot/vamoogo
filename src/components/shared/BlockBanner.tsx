@@ -78,6 +78,70 @@ const BlockBanner = ({ role }: { role: "passenger" | "driver" }) => {
     navigate(role === "passenger" ? "/passenger/chats?central=1" : "/driver/chats?central=1");
   };
 
+  // Motorista: consolida tudo em UM único card
+  if (role === "driver") {
+    const hasManual = items.some((i) => i.kind === "manual");
+    const hasAuto = items.some((i) => i.kind === "auto");
+    const autoItem = items.find((i) => i.kind === "auto");
+    const manualItem = items.find((i) => i.kind === "manual");
+
+    const title = hasManual && hasAuto
+      ? "Sua conta possui bloqueios ativos"
+      : hasManual
+        ? (manualItem?.title ?? "Você está bloqueado")
+        : (autoItem?.title ?? "Você está temporariamente bloqueado");
+
+    return (
+      <div className="px-4 pt-3">
+        <div className="rounded-2xl border-2 border-destructive/40 bg-destructive/10 p-3 shadow-sm animate-fade-in">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-destructive/20 flex items-center justify-center">
+              <Lock className="h-4 w-4 text-destructive" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-destructive flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                {title}
+              </p>
+
+              <div className="mt-2 space-y-2">
+                {items.map((it, idx) => (
+                  <div key={idx} className="rounded-lg bg-card/60 border border-destructive/20 p-2">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-destructive/90 flex items-center gap-1">
+                      {it.kind === "manual" ? <Lock className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
+                      {it.kind === "manual" ? "Bloqueio manual" : "Bloqueio automático"}
+                    </p>
+                    {it.reason && (
+                      <p className="mt-0.5 text-xs text-foreground/80">
+                        <span className="font-semibold">Motivo: </span>{it.reason}
+                      </p>
+                    )}
+                    {it.untilMs && (
+                      <div className="mt-1.5 inline-flex items-center gap-2 rounded-md bg-card px-2 py-0.5 border border-destructive/30">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Tempo restante</span>
+                        <span className="font-mono text-xs font-bold text-destructive tabular-nums">
+                          {formatRemaining(it.untilMs)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={goSupport}
+                className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Headset className="h-3.5 w-3.5" />
+                Falar com o suporte
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="px-4 pt-3 space-y-2">
       {items.map((it, idx) => (
