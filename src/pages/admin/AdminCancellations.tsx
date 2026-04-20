@@ -3,13 +3,18 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  XCircle, AlertTriangle, ShieldCheck, Unlock, Ban, Eye, Clock,
-  TrendingUp, TrendingDown, Users, Car, Loader2, RefreshCw,
+  XCircle, Unlock, Ban, Eye, Clock,
+  TrendingUp, Users, Car, Loader2, RefreshCw,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import StatCard from "@/components/shared/StatCard";
 import RideDetailsModal from "@/components/admin/rides/RideDetailsModal";
-import { brDateTime, brCurrency } from "@/lib/brFormat";
+
+const brDateTime = (iso?: string | null) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+};
 
 type Period = "today" | "7d" | "30d" | "all";
 type WhoFilter = "all" | "passenger" | "driver";
