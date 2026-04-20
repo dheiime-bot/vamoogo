@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Save, Bike, Car, Crown, Loader2, Percent } from "lucide-react";
+import { Save, Bike, Car, Crown, Loader2, Percent, Heart } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,16 +10,21 @@ const AdminTariffs = () => {
   const [activeTab, setActiveTab] = useState("categories");
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [globalFee, setGlobalFee] = useState<string>("15");
+  const [favoriteCallMaxKm, setFavoriteCallMaxKm] = useState<string>("5");
   const [saving, setSaving] = useState(false);
 
   const loadAll = () => {
     Promise.all([
       supabase.from("tariffs").select("*").order("category"),
       supabase.from("platform_settings").select("value").eq("key", "global_fee_percent").maybeSingle(),
-    ]).then(([tRes, sRes]) => {
+      supabase.from("platform_settings").select("value").eq("key", "favorite_call_max_km").maybeSingle(),
+    ]).then(([tRes, sRes, fRes]) => {
       if (tRes.data) setTariffs(tRes.data);
       if (sRes.data?.value !== undefined && sRes.data?.value !== null) {
         setGlobalFee(String(sRes.data.value));
+      }
+      if (fRes.data?.value !== undefined && fRes.data?.value !== null) {
+        setFavoriteCallMaxKm(String(fRes.data.value));
       }
     });
   };
@@ -58,6 +63,12 @@ const AdminTariffs = () => {
         .update({ value: pct as any })
         .eq("key", "global_fee_percent");
 
+      // Salva distância máxima do botão Chamar (favoritos)
+      const km = Math.max(0.5, Math.min(50, parseFloat(favoriteCallMaxKm.replace(",", ".")) || 5));
+      await supabase
+        .from("platform_settings")
+        .upsert({ key: "favorite_call_max_km", value: km as any }, { onConflict: "key" });
+
       toast.success("Configurações salvas!");
     } catch (e: any) {
       toast.error("Erro ao salvar: " + (e?.message || ""));
@@ -70,6 +81,7 @@ const AdminTariffs = () => {
     { id: "categories", label: "Categorias" },
     { id: "passengers", label: "Passageiros" },
     { id: "fees", label: "Taxa da plataforma" },
+    { id: "favorites", label: "Favoritos" },
   ];
 
   const catIcon: Record<string, any> = { moto: Bike, economico: Car, conforto: Crown };
@@ -224,6 +236,38 @@ const AdminTariffs = () => {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "favorites" && (
+        <div className="rounded-2xl border bg-card p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="rounded-xl bg-primary/10 p-2.5">
+              <Heart className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold">Chamar motorista favorito</h3>
+              <p className="text-xs text-muted-foreground">
+                Distância máxima (em km) entre o passageiro e o motorista para
+                que o botão <strong>Chamar</strong> fique ativo na lista de favoritos.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 max-w-xs">
+            <label className="text-xs font-medium text-muted-foreground">Raio máximo</label>
+            <div className="mt-1 flex items-center rounded-lg border bg-background px-3 py-2">
+              <input
+                type="text"
+                value={favoriteCallMaxKm}
+                onChange={(e) => setFavoriteCallMaxKm(e.target.value)}
+                className="flex-1 bg-transparent text-base font-bold outline-none"
+              />
+              <span className="text-sm font-bold text-muted-foreground ml-1">km</span>
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Mínimo 0,5 km · Máximo 50 km · Padrão 5 km
+            </p>
           </div>
         </div>
       )}

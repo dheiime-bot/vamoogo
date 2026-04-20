@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Heart, Loader2, Star, Car, X } from "lucide-react";
+import { ArrowLeft, Heart, Loader2, Star, Car, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,8 @@ interface DriverDetails {
   vehicle: string | null;
   vehicle_plate: string | null;
   total_rides: number | null;
+  is_online: boolean;
+  distance_km: number | null;
 }
 
 const PassengerFavoriteDrivers = () => {
@@ -29,6 +31,32 @@ const PassengerFavoriteDrivers = () => {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<(FavRow & { driver: DriverDetails | null })[]>([]);
   const [selected, setSelected] = useState<DriverDetails | null>(null);
+  const [maxKm, setMaxKm] = useState<number>(5);
+  const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [calling, setCalling] = useState<string | null>(null);
+
+  // Geolocalização do passageiro
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => setPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }, []);
+
+  // Lê configuração admin
+  useEffect(() => {
+    supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "favorite_call_max_km")
+      .maybeSingle()
+      .then(({ data }) => {
+        const v = Number((data as any)?.value);
+        if (!Number.isNaN(v) && v > 0) setMaxKm(v);
+      });
+  }, []);
 
   const load = async () => {
     if (!user?.id) return;
@@ -48,6 +76,8 @@ const PassengerFavoriteDrivers = () => {
     const ids = list.map((f) => f.driver_id);
     const { data: details } = await supabase.rpc("get_favorite_driver_details", {
       _driver_ids: ids,
+      _passenger_lat: pos?.lat ?? null,
+      _passenger_lng: pos?.lng ?? null,
     });
     const dmap = new Map((details || []).map((d: any) => [d.user_id, d]));
 
@@ -66,6 +96,8 @@ const PassengerFavoriteDrivers = () => {
               .filter(Boolean)
               .join(" ") || null,
             vehicle_plate: d?.vehicle_plate || null,
+            is_online: !!d?.is_online,
+            distance_km: d?.distance_km != null ? Number(d.distance_km) : null,
           },
         };
       })
@@ -75,7 +107,7 @@ const PassengerFavoriteDrivers = () => {
 
   useEffect(() => {
     load();
-  }, [user?.id]);
+  }, [user?.id, pos?.lat, pos?.lng]);
 
   useRealtimeRefresh("favorite_drivers", load, "passenger-favorites");
 
@@ -91,6 +123,32 @@ const PassengerFavoriteDrivers = () => {
     toast.success("Removido dos favoritos");
     load();
   };
+
+  const callDriver = async (driverId: string, name: string) => {
+    if (!pos) {
+      toast.error("Permita acesso à sua localização para chamar.");
+      return;
+    }
+    setCalling(driverId);
+    const { error } = await supabase.rpc("passenger_call_favorite_driver", {
+      _driver_id: driverId,
+      _passenger_lat: pos.lat,
+      _passenger_lng: pos.lng,
+    });
+    setCalling(null);
+    if (error) {
+      const msg = error.message || "";
+      if (msg.includes("driver_offline")) toast.error(`${name} está offline agora.`);
+      else if (msg.includes("too_far")) toast.error(`${name} está fora do raio de ${maxKm} km.`);
+      else if (msg.includes("not_favorite")) toast.error("Motorista não está nos favoritos.");
+      else toast.error("Não foi possível chamar agora.");
+      return;
+    }
+    toast.success(`Aviso enviado para ${name}!`);
+  };
+
+  const canCall = (d: DriverDetails | null) =>
+    !!d && d.is_online && d.distance_km != null && d.distance_km <= maxKm;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -122,9 +180,12 @@ const PassengerFavoriteDrivers = () => {
           items.map((f) => (
             <article
               key={f.id}
-              onClick={() => f.driver && setSelected(f.driver)}
-              className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors"
+              className="rounded-2xl border border-border bg-card p-4 space-y-3"
             >
+              <div
+                onClick={() => f.driver && setSelected(f.driver)}
+                className="flex items-center gap-3 cursor-pointer"
+              >
               {f.driver?.selfie_url ? (
                 <img
                   src={f.driver.selfie_url}
@@ -137,9 +198,17 @@ const PassengerFavoriteDrivers = () => {
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate">
-                  {f.driver?.full_name}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold truncate">
+                    {f.driver?.full_name}
+                  </p>
+                  <span
+                    className={`h-2 w-2 rounded-full shrink-0 ${
+                      f.driver?.is_online ? "bg-success animate-pulse" : "bg-muted-foreground/40"
+                    }`}
+                    aria-label={f.driver?.is_online ? "online" : "offline"}
+                  />
+                </div>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
                   {f.driver?.rating != null && (
                     <span className="flex items-center gap-1">
@@ -149,6 +218,9 @@ const PassengerFavoriteDrivers = () => {
                   )}
                   {f.driver?.total_rides != null && (
                     <span>{f.driver.total_rides} corridas</span>
+                  )}
+                  {f.driver?.is_online && f.driver?.distance_km != null && (
+                    <span>{f.driver.distance_km.toFixed(1)} km</span>
                   )}
                 </div>
                 {f.driver?.vehicle && (
@@ -167,6 +239,28 @@ const PassengerFavoriteDrivers = () => {
                 aria-label="Remover dos favoritos"
               >
                 <Heart className="h-5 w-5 fill-current" />
+              </button>
+              </div>
+
+              <button
+                disabled={!canCall(f.driver) || calling === f.driver_id}
+                onClick={() =>
+                  callDriver(f.driver_id, f.driver?.full_name || "Motorista")
+                }
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none disabled:cursor-not-allowed transition-all"
+              >
+                {calling === f.driver_id ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Phone className="h-4 w-4" />
+                )}
+                {!f.driver?.is_online
+                  ? "Offline"
+                  : f.driver?.distance_km == null
+                  ? "Sem localização"
+                  : f.driver.distance_km > maxKm
+                  ? `Longe (${f.driver.distance_km.toFixed(1)} km > ${maxKm} km)`
+                  : `Chamar (${f.driver.distance_km.toFixed(1)} km)`}
               </button>
             </article>
           ))
