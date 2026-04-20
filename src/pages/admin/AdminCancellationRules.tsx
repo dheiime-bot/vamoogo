@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Save, Loader2, Clock, ShieldAlert, Users, Car, Plus, X, RotateCcw, Info,
 } from "lucide-react";
+import CancellationReasonsManager from "@/components/admin/CancellationReasonsManager";
 
 interface Rules {
   grace_seconds: number;
@@ -354,6 +355,15 @@ const AdminCancellationRules = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Motivos de cancelamento */}
+      <div className="space-y-3 pt-2">
+        <h2 className="text-base font-bold">Motivos de cancelamento</h2>
+        <p className="text-xs text-muted-foreground">
+          Lista exibida nos apps quando o passageiro ou motorista cancela. Motivos marcados como "sem punição" não contam para o bloqueio.
+        </p>
+        <CancellationReasonsManager />
       </div>
     </AdminLayout>
   );

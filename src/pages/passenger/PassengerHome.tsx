@@ -1329,6 +1329,8 @@ const PassengerHome = () => {
         rideId={activeRide?.id ?? null}
         role="passenger"
         afterAccept={["accepted", "driver_arriving", "arrived"].includes(rideState)}
+        inProgress={rideState === "in_progress"}
+        acceptedAt={activeRide?.updated_at ?? null}
       />
     </div>
   );
