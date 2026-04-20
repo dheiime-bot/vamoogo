@@ -279,6 +279,13 @@ const DriverHome = () => {
   const handleAccept = async () => {
     if (!pendingOffer || !pendingRide || !user) return;
 
+    // Verifica se a oferta ainda é válida antes de tentar
+    if (pendingOffer.expires_at && new Date(pendingOffer.expires_at).getTime() < Date.now()) {
+      toast.error("Tempo da oferta esgotou");
+      setPendingOffer(null); setPendingRide(null); setRideState("idle");
+      return;
+    }
+
     // Tenta atualizar a corrida (atomic — só 1 motorista consegue)
     const { data: updated, error } = await supabase.from("rides")
       .update({ driver_id: user.id, status: "accepted" })
@@ -290,9 +297,14 @@ const DriverHome = () => {
     if (error || !updated) {
       const { isGuardError, guardErrorMessage } = await import("@/lib/guardErrors");
       if (error && isGuardError(error)) {
-        console.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
+        toast.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
       } else {
-        console.error("Outro motorista já aceitou");
+        // Verifica o estado real da corrida para dar feedback preciso
+        const { data: cur } = await supabase.from("rides")
+          .select("status, driver_id").eq("id", pendingRide.id).maybeSingle();
+        if (cur?.status === "cancelled") toast.error("O passageiro cancelou esta corrida");
+        else if (cur?.driver_id && cur.driver_id !== user.id) toast.error("Outro motorista já aceitou");
+        else toast.error("Não foi possível aceitar a corrida");
       }
       setPendingOffer(null); setPendingRide(null); setRideState("idle");
       return;
@@ -306,6 +318,7 @@ const DriverHome = () => {
     setPendingRide(null);
     setRideState("going_to_passenger");
     playPhaseSound("accepted");
+    toast.success("Corrida aceita! 🚗");
   };
 
   const handleReject = async () => {
