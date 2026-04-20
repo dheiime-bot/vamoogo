@@ -291,15 +291,28 @@ const PassengerHome = () => {
       if (cancelled || !data) return;
       // Considera "online de verdade" apenas quem atualizou nos últimos 2 minutos
       const cutoff = Date.now() - 2 * 60 * 1000;
+      const fresh = data.filter((d) => new Date(d.updated_at as any).getTime() > cutoff);
+      // Busca a cor real do veículo ativo de cada motorista para colorir os marcadores
+      const ids = Array.from(new Set(fresh.map((d) => d.driver_id).filter(Boolean)));
+      let colorMap = new Map<string, string>();
+      if (ids.length > 0) {
+        const { data: drvs } = await supabase
+          .from("drivers")
+          .select("user_id,vehicle_color")
+          .in("user_id", ids as string[]);
+        (drvs || []).forEach((d: any) => {
+          if (d.vehicle_color) colorMap.set(d.user_id, d.vehicle_color);
+        });
+      }
+      if (cancelled) return;
       setNearbyDrivers(
-        data
-          .filter((d) => new Date(d.updated_at as any).getTime() > cutoff)
-          .map((d) => ({
-            lat: Number(d.lat),
-            lng: Number(d.lng),
-            heading: (d.heading as any) ?? undefined,
-            category: (d.category as any) ?? undefined,
-          }))
+        fresh.map((d) => ({
+          lat: Number(d.lat),
+          lng: Number(d.lng),
+          heading: (d.heading as any) ?? undefined,
+          category: (d.category as any) ?? undefined,
+          color: vehicleColorToHex(colorMap.get(d.driver_id as string) || null) || undefined,
+        }))
       );
     };
     load();
