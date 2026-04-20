@@ -166,6 +166,7 @@ const App = () => (
             <Route path="/admin/rides" element={<ProtectedAdminRoute><AdminRides /></ProtectedAdminRoute>} />
             <Route path="/admin/appeals" element={<ProtectedAdminRoute><AdminAppeals /></ProtectedAdminRoute>} />
             <Route path="/admin/cancellations" element={<ProtectedAdminRoute><AdminCancellations /></ProtectedAdminRoute>} />
+            <Route path="/admin/settings/cancellations" element={<ProtectedAdminRoute><AdminCancellationRules /></ProtectedAdminRoute>} />
             <Route path="/admin/finance" element={<ProtectedAdminRoute><AdminFinance /></ProtectedAdminRoute>} />
             <Route path="/admin/tariffs" element={<ProtectedAdminRoute><AdminTariffs /></ProtectedAdminRoute>} />
             <Route path="/admin/fraud" element={<ProtectedAdminRoute><AdminFraud /></ProtectedAdminRoute>} />
