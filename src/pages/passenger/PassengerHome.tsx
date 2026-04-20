@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode } from "lucide-react";
+import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode, Heart } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
@@ -60,6 +60,8 @@ const PassengerHome = () => {
   >([]);
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState("");
+  const [favoriteDriver, setFavoriteDriver] = useState(false);
+  const [favoritingDriver, setFavoritingDriver] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [driverInfo, setDriverInfo] = useState<any>(null);
