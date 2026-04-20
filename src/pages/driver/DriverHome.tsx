@@ -147,8 +147,12 @@ const DriverHome = () => {
   // - Caso contrário, fica online automaticamente, EXCETO se o motorista tiver
   //   escolhido manualmente ficar offline neste dispositivo (flag em localStorage).
   // - Não força online se estiver bloqueado, sem saldo ou sem GPS.
+  // - 🚗 Se o motorista tem 2+ veículos aprovados, NÃO entra online automaticamente:
+  //   precisa primeiro escolher o veículo no modal (requireVehiclePick).
   useEffect(() => {
     if (!user) return;
+    // Se ainda precisa escolher veículo (2+ categorias), espera a seleção
+    if (requireVehiclePick) return;
     supabase.from("driver_locations")
       .select("is_online, updated_at")
       .eq("driver_id", user.id)
@@ -178,7 +182,7 @@ const DriverHome = () => {
         );
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, driverData?.online_blocked, lowBalance]);
+  }, [user, driverData?.online_blocked, lowBalance, requireVehiclePick]);
 
   // Refs para o handler de realtime ler estado mais recente sem reinscrever o canal
   const pendingOfferRef = useRef<any>(null);
