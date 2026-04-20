@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Copy, Trash2, TicketPercent, Send, Users, Search, CheckCircle2 } from "lucide-react";
+import { Plus, Loader2, Copy, Trash2, TicketPercent, Send, Users, Search, CheckCircle2, MoreVertical, UserPlus, Megaphone } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const AdminCoupons = () => {
   type Tab = "general" | "send";
