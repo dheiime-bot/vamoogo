@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import DocumentUpload from "@/components/auth/DocumentUpload";
 import { validatePlate } from "@/lib/plateValidator";
+import { formatRenavam, validateRenavam } from "@/lib/validators";
 
 type Category = "moto" | "economico" | "conforto";
 
@@ -28,6 +29,7 @@ const DriverVehicleChangeRequest = () => {
   const [color, setColor] = useState("");
   const [year, setYear] = useState("");
   const [plate, setPlate] = useState("");
+  const [renavam, setRenavam] = useState("");
   const [reason, setReason] = useState("");
 
   const [crlv, setCrlv] = useState<string | null>(null);
@@ -61,8 +63,29 @@ const DriverVehicleChangeRequest = () => {
       toast.error("Placa inválida (formato AAA0000 ou AAA0A00)");
       return;
     }
+    const cleanRenavam = renavam.replace(/\D/g, "");
+    if (!validateRenavam(cleanRenavam)) {
+      toast.error("RENAVAM inválido (9 a 11 dígitos)");
+      return;
+    }
     if (!crlv || !front || !back || !left || !right) {
       toast.error("Envie o CRLV e as 4 fotos do veículo");
+      return;
+    }
+
+    // Checa duplicidade antes de enviar
+    const cleanPlate = plate.trim().toUpperCase();
+    const { data: dupes } = await supabase.rpc("driver_check_vehicle_dupes", {
+      _plate: cleanPlate,
+      _renavam: cleanRenavam,
+    });
+    const row = Array.isArray(dupes) ? dupes[0] : dupes;
+    if (row?.plate_taken && !row?.plate_owner_is_self) {
+      toast.error("Esta placa já está cadastrada em outro motorista");
+      return;
+    }
+    if (row?.renavam_taken && !row?.renavam_owner_is_self) {
+      toast.error("Este RENAVAM já está cadastrado em outro veículo");
       return;
     }
 
@@ -74,6 +97,7 @@ const DriverVehicleChangeRequest = () => {
       _vehicle_color: color.trim(),
       _vehicle_year: year ? parseInt(year, 10) : null,
       _vehicle_plate: plate.trim().toUpperCase(),
+      _vehicle_renavam: cleanRenavam,
       _crlv_url: crlv,
       _vehicle_photo_front_url: front,
       _vehicle_photo_back_url: back,
@@ -157,6 +181,7 @@ const DriverVehicleChangeRequest = () => {
               <input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Cor" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
               <input value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="Ano" inputMode="numeric" className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
               <input value={plate} onChange={(e) => setPlate(e.target.value.toUpperCase())} placeholder="Placa (AAA0A00)" className="col-span-2 rounded-xl border border-input bg-background px-3 py-2.5 text-sm font-mono outline-none focus:ring-2 focus:ring-primary" maxLength={8} />
+              <input value={renavam} onChange={(e) => setRenavam(formatRenavam(e.target.value))} placeholder="RENAVAM (11 dígitos do CRLV)" inputMode="numeric" className="col-span-2 rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" maxLength={11} />
             </div>
           </section>
 

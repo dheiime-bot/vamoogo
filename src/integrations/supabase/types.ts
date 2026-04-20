@@ -324,6 +324,7 @@ export type Database = {
           vehicle_photo_left_url: string | null
           vehicle_photo_right_url: string | null
           vehicle_plate: string
+          vehicle_renavam: string | null
           vehicle_year: number | null
         }
         Insert: {
@@ -345,6 +346,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate: string
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Update: {
@@ -366,6 +368,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate?: string
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Relationships: []
@@ -411,6 +414,7 @@ export type Database = {
           vehicle_photo_left_url: string | null
           vehicle_photo_right_url: string | null
           vehicle_plate: string | null
+          vehicle_renavam: string | null
           vehicle_year: number | null
         }
         Insert: {
@@ -453,6 +457,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate?: string | null
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Update: {
@@ -495,6 +500,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate?: string | null
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Relationships: []
@@ -1539,6 +1545,7 @@ export type Database = {
           vehicle_photo_left_url: string | null
           vehicle_photo_right_url: string | null
           vehicle_plate: string
+          vehicle_renavam: string | null
           vehicle_year: number | null
         }
         Insert: {
@@ -1565,6 +1572,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate: string
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Update: {
@@ -1591,6 +1599,7 @@ export type Database = {
           vehicle_photo_left_url?: string | null
           vehicle_photo_right_url?: string | null
           vehicle_plate?: string
+          vehicle_renavam?: string | null
           vehicle_year?: number | null
         }
         Relationships: []
@@ -1749,6 +1758,10 @@ export type Database = {
         Args: { _vehicle_id: string }
         Returns: undefined
       }
+      admin_transfer_vehicle: {
+        Args: { _new_driver_id: string; _reason?: string; _vehicle_id: string }
+        Returns: undefined
+      }
       admin_update_driver_data: {
         Args: {
           _category: string
@@ -1804,34 +1817,64 @@ export type Database = {
         Returns: string
       }
       auto_cancel_stale_rides: { Args: never; Returns: number }
-      become_driver: {
-        Args: {
-          _category: Database["public"]["Enums"]["vehicle_category"]
-          _cnh_back_url: string
-          _cnh_ear: boolean
-          _cnh_front_url: string
-          _cnh_number: string
-          _criminal_record_issued_at: string
-          _criminal_record_url: string
-          _crlv_url: string
-          _liveness_verified: boolean
-          _pix_holder_name: string
-          _pix_key: string
-          _pix_key_type: string
-          _selfie_liveness_url: string
-          _selfie_with_document_url: string
-          _vehicle_brand: string
-          _vehicle_color: string
-          _vehicle_model: string
-          _vehicle_photo_back_url: string
-          _vehicle_photo_front_url: string
-          _vehicle_photo_left_url: string
-          _vehicle_photo_right_url: string
-          _vehicle_plate: string
-          _vehicle_year: number
-        }
-        Returns: string
-      }
+      become_driver:
+        | {
+            Args: {
+              _category: Database["public"]["Enums"]["vehicle_category"]
+              _cnh_back_url: string
+              _cnh_ear: boolean
+              _cnh_front_url: string
+              _cnh_number: string
+              _criminal_record_issued_at: string
+              _criminal_record_url: string
+              _crlv_url: string
+              _liveness_verified: boolean
+              _pix_holder_name: string
+              _pix_key: string
+              _pix_key_type: string
+              _selfie_liveness_url: string
+              _selfie_with_document_url: string
+              _vehicle_brand: string
+              _vehicle_color: string
+              _vehicle_model: string
+              _vehicle_photo_back_url: string
+              _vehicle_photo_front_url: string
+              _vehicle_photo_left_url: string
+              _vehicle_photo_right_url: string
+              _vehicle_plate: string
+              _vehicle_year: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _category: Database["public"]["Enums"]["vehicle_category"]
+              _cnh_back_url: string
+              _cnh_ear: boolean
+              _cnh_front_url: string
+              _cnh_number: string
+              _criminal_record_issued_at: string
+              _criminal_record_url: string
+              _crlv_url: string
+              _liveness_verified: boolean
+              _pix_holder_name: string
+              _pix_key: string
+              _pix_key_type: string
+              _selfie_liveness_url: string
+              _selfie_with_document_url: string
+              _vehicle_brand: string
+              _vehicle_color: string
+              _vehicle_model: string
+              _vehicle_photo_back_url: string
+              _vehicle_photo_front_url: string
+              _vehicle_photo_left_url: string
+              _vehicle_photo_right_url: string
+              _vehicle_plate: string
+              _vehicle_renavam?: string
+              _vehicle_year: number
+            }
+            Returns: string
+          }
       cancel_ride:
         | { Args: { _reason: string; _ride_id: string }; Returns: Json }
         | {
@@ -1843,31 +1886,74 @@ export type Database = {
             }
             Returns: Json
           }
-      check_signup_dupes: {
-        Args: { _cpf: string; _phone: string }
+      check_signup_dupes:
+        | {
+            Args: { _cpf: string; _phone: string }
+            Returns: {
+              cpf_taken: boolean
+              phone_taken: boolean
+            }[]
+          }
+        | {
+            Args: {
+              _cpf: string
+              _phone: string
+              _plate?: string
+              _renavam?: string
+            }
+            Returns: {
+              cpf_taken: boolean
+              phone_taken: boolean
+              plate_taken: boolean
+              renavam_taken: boolean
+            }[]
+          }
+      cleanup_zombie_drivers: { Args: never; Returns: number }
+      driver_check_vehicle_dupes: {
+        Args: { _plate: string; _renavam: string }
         Returns: {
-          cpf_taken: boolean
-          phone_taken: boolean
+          plate_owner_is_self: boolean
+          plate_taken: boolean
+          renavam_owner_is_self: boolean
+          renavam_taken: boolean
         }[]
       }
-      cleanup_zombie_drivers: { Args: never; Returns: number }
-      driver_request_vehicle_change: {
-        Args: {
-          _crlv_url: string
-          _new_category: Database["public"]["Enums"]["vehicle_category"]
-          _reason?: string
-          _vehicle_brand: string
-          _vehicle_color: string
-          _vehicle_model: string
-          _vehicle_photo_back_url: string
-          _vehicle_photo_front_url: string
-          _vehicle_photo_left_url: string
-          _vehicle_photo_right_url: string
-          _vehicle_plate: string
-          _vehicle_year: number
-        }
-        Returns: string
-      }
+      driver_request_vehicle_change:
+        | {
+            Args: {
+              _crlv_url: string
+              _new_category: Database["public"]["Enums"]["vehicle_category"]
+              _reason?: string
+              _vehicle_brand: string
+              _vehicle_color: string
+              _vehicle_model: string
+              _vehicle_photo_back_url: string
+              _vehicle_photo_front_url: string
+              _vehicle_photo_left_url: string
+              _vehicle_photo_right_url: string
+              _vehicle_plate: string
+              _vehicle_year: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _crlv_url: string
+              _new_category: Database["public"]["Enums"]["vehicle_category"]
+              _reason?: string
+              _vehicle_brand: string
+              _vehicle_color: string
+              _vehicle_model: string
+              _vehicle_photo_back_url: string
+              _vehicle_photo_front_url: string
+              _vehicle_photo_left_url: string
+              _vehicle_photo_right_url: string
+              _vehicle_plate: string
+              _vehicle_renavam?: string
+              _vehicle_year: number
+            }
+            Returns: string
+          }
       driver_set_active_vehicle: {
         Args: { _vehicle_id: string }
         Returns: undefined

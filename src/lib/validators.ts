@@ -60,3 +60,22 @@ export function formatPlate(value: string): string {
   if (cleaned.length <= 3) return cleaned;
   return `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
 }
+
+/**
+ * Formats a RENAVAM (only digits, max 11)
+ */
+export function formatRenavam(value: string): string {
+  return value.replace(/\D/g, "").slice(0, 11);
+}
+
+/**
+ * Validates a RENAVAM. RENAVAM brasileiro tem 11 dígitos (antigo: 9).
+ * Aceita 9-11 dígitos para compatibilidade com documentos antigos.
+ */
+export function validateRenavam(value: string): boolean {
+  const cleaned = value.replace(/\D/g, "");
+  if (cleaned.length < 9 || cleaned.length > 11) return false;
+  // rejeita todos iguais
+  if (/^(\d)\1+$/.test(cleaned)) return false;
+  return true;
+}
