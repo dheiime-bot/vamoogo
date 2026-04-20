@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Clock, Navigation } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 import ReportIssueButton from "@/components/shared/ReportIssueButton";
 
@@ -164,6 +165,7 @@ const DriverRides = () => {
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
+      <DriverHomeFab />
 
     </div>
   );

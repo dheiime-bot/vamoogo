@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import DocumentUpload from "@/components/auth/DocumentUpload";
 import { validatePlate } from "@/lib/plateValidator";
 import { formatRenavam, validateRenavam } from "@/lib/validators";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 
 type Category = "moto" | "economico" | "conforto";
 
@@ -211,6 +212,7 @@ const DriverVehicleChangeRequest = () => {
           </button>
         </form>
       )}
+      <DriverHomeFab />
     </div>
   );
 };

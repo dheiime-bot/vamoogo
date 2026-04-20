@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 
 import RideChat from "@/components/passenger/RideChat";
 import CentralChat from "@/components/shared/CentralChat";
@@ -120,6 +121,7 @@ const DriverChats = () => {
     <div className="min-h-screen bg-background">
       <AppMenu role="driver" />
       <DriverEarningsChip />
+      <DriverHomeFab />
       
       <header className="border-b bg-card px-4 py-4 pt-20">
         <h1 className="text-lg font-bold">Chats</h1>
