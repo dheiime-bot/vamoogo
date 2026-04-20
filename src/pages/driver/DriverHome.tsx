@@ -689,6 +689,12 @@ const DriverHome = () => {
               className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
               <Play className="h-4 w-4" /> Iniciar corrida
             </button>
+            <button
+              onClick={() => setShowCancelDialog(true)}
+              className="w-full rounded-xl border border-destructive/30 py-2 text-xs font-bold text-destructive hover:bg-destructive/5"
+            >
+              Cancelar corrida
+            </button>
           </div>
         </div>
       )}
