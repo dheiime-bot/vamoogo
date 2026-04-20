@@ -161,6 +161,29 @@ const AdminCoupons = () => {
     fetchSent();
   };
 
+  // Pré-preenche o formulário de envio direto com um cupom existente e troca para a aba de envio.
+  const useCouponForSend = (c: any, mode: "mass" | "individual") => {
+    setSendForm({
+      code: c.code,
+      discount_type: c.discount_type || "percentage",
+      discount_value: String(c.discount_value ?? ""),
+      min_fare: String(c.min_fare ?? "0"),
+      expires_at: c.expires_at ? new Date(c.expires_at).toISOString().slice(0, 16) : "",
+      message: "",
+    });
+    setTab("send");
+    if (mode === "mass") {
+      // seleciona todos os passageiros disponíveis após carregar
+      setTimeout(() => {
+        setSelectedIds(new Set(passengers.map((p) => p.user_id)));
+        toast.success(`Cupom ${c.code} pronto para envio em massa (${passengers.length})`);
+      }, 0);
+    } else {
+      clearSelection();
+      toast.success(`Cupom ${c.code} pronto. Selecione os passageiros.`);
+    }
+  };
+
   return (
     <AdminLayout
       title="Cupons"
