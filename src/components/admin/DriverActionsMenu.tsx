@@ -136,7 +136,7 @@ const DriverActionsMenu = ({ driver, onView, onChanged }: Props) => {
     const { error } = await supabase.rpc("admin_delete_user", { _user_id: driver.user_id });
     setBusy(false);
     if (error) return toast.error("Erro: " + error.message);
-    toast.success("Conta excluída");
+    toast.success("Conta bloqueada permanentemente");
     close(); onChanged();
   };
 
