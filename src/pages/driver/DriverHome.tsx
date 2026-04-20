@@ -663,6 +663,12 @@ const DriverHome = () => {
               className="w-full rounded-xl bg-info py-2.5 text-sm font-bold text-info-foreground flex items-center justify-center gap-2">
               <MapPin className="h-4 w-4" /> Cheguei ao local
             </button>
+            <button
+              onClick={() => setShowCancelDialog(true)}
+              className="w-full rounded-xl border border-destructive/30 py-2 text-xs font-bold text-destructive hover:bg-destructive/5"
+            >
+              Cancelar corrida
+            </button>
           </div>
         </div>
       )}
