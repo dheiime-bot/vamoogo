@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Activity, MapPin, RefreshCw, Zap, Loader2 } from "lucide-react";
+import { Activity, MapPin, RefreshCw, Zap, Loader2, UserPlus } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import GoogleMap from "@/components/shared/GoogleMap";
@@ -10,6 +10,7 @@ const AdminLive = () => {
   const [activeRides, setActiveRides] = useState<any[]>([]);
   const [stats, setStats] = useState({ active: 0, waiting: 0 });
   const [seeding, setSeeding] = useState(false);
+  const [seedingPax, setSeedingPax] = useState(false);
 
   const getDeviceLocation = (): Promise<{ lat: number; lng: number } | null> =>
     new Promise((resolve) => {
@@ -59,6 +60,30 @@ const AdminLive = () => {
     }
   };
 
+  const handleSeedTestPassengers = async () => {
+    if (seedingPax) return;
+    const input = prompt("Quantos passageiros de teste criar? (1 a 50)", "10");
+    if (!input) return;
+    const count = Math.max(1, Math.min(50, parseInt(input, 10) || 10));
+    if (!confirm(`Criar ${count} passageiro(s) de teste?\n\nSerão usados emails fictícios (pax.teste.*@vamoo.test) e senha padrão Teste@1234.`)) return;
+    setSeedingPax(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-test-passengers", { body: { count } });
+      if (error) throw error;
+      const created = data?.created ?? 0;
+      const requested = data?.requested ?? count;
+      if (created < requested) {
+        toast.warning(`⚠️ ${created}/${requested} criados — verifique logs para detalhes`);
+      } else {
+        toast.success(`✅ ${created} passageiros de teste criados!`);
+      }
+    } catch (e: any) {
+      toast.error("Falha ao criar passageiros: " + (e?.message || e));
+    } finally {
+      setSeedingPax(false);
+    }
+  };
+
   const fetchLive = async () => {
     const { data: rides } = await supabase
       .from("rides")
@@ -93,15 +118,24 @@ const AdminLive = () => {
 
   return (
     <AdminLayout title="Mapa ao Vivo" actions={
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          onClick={handleSeedTestPassengers}
+          disabled={seedingPax}
+          className="flex items-center gap-1.5 rounded-lg bg-info/10 hover:bg-info/20 text-info px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50"
+          title="Cria passageiros fictícios para uso em testes de disparo"
+        >
+          {seedingPax ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+          Criar 10 passageiros
+        </button>
         <button
           onClick={handleSeedTestRides}
           disabled={seeding}
           className="flex items-center gap-1.5 rounded-lg bg-warning/10 hover:bg-warning/20 text-warning px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50"
-          title="Cria 5 corridas fictícias e dispara para os motoristas online"
+          title="Cria corridas fictícias e dispara para os motoristas online"
         >
           {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
-          Simular 5 corridas
+          Simular corridas
         </button>
         <div className="flex items-center gap-1.5">
           <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
