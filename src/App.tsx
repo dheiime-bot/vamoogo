@@ -22,6 +22,9 @@ import PassengerHome from "./pages/passenger/PassengerHome.tsx";
 import PassengerHistory from "./pages/passenger/PassengerHistory.tsx";
 import PassengerProfile from "./pages/passenger/PassengerProfile.tsx";
 import PassengerChats from "./pages/passenger/PassengerChats.tsx";
+import PassengerCoupons from "./pages/passenger/PassengerCoupons.tsx";
+import PassengerFavoriteDrivers from "./pages/passenger/PassengerFavoriteDrivers.tsx";
+import PassengerChangePassword from "./pages/passenger/PassengerChangePassword.tsx";
 import BecomeDriver from "./pages/passenger/BecomeDriver.tsx";
 import DriverHome from "./pages/driver/DriverHome.tsx";
 import DriverStatusPage from "./pages/driver/DriverStatusPage.tsx";
@@ -137,6 +140,9 @@ const App = () => (
             <Route path="/passenger/history" element={<ProtectedPassengerRoute><PassengerHistory /></ProtectedPassengerRoute>} />
             <Route path="/passenger/profile" element={<ProtectedPassengerRoute><PassengerProfile /></ProtectedPassengerRoute>} />
             <Route path="/passenger/chats" element={<ProtectedPassengerRoute><PassengerChats /></ProtectedPassengerRoute>} />
+            <Route path="/passenger/coupons" element={<ProtectedPassengerRoute><PassengerCoupons /></ProtectedPassengerRoute>} />
+            <Route path="/passenger/favorites" element={<ProtectedPassengerRoute><PassengerFavoriteDrivers /></ProtectedPassengerRoute>} />
+            <Route path="/passenger/change-password" element={<ProtectedPassengerRoute><PassengerChangePassword /></ProtectedPassengerRoute>} />
             <Route path="/passenger/become-driver" element={<ProtectedPassengerRoute><BecomeDriver /></ProtectedPassengerRoute>} />
             <Route path="/driver" element={<ProtectedDriverRoute><DriverHome /></ProtectedDriverRoute>} />
             <Route path="/driver/status" element={<ProtectedDriverRoute><DriverStatusPage /></ProtectedDriverRoute>} />

@@ -154,7 +154,7 @@ const PassengerFavoriteDrivers = () => {
               </div>
               <button
                 onClick={() => removeFav(f.driver_id, f.driver?.full_name || "Motorista")}
-                className="shrink-0 rounded-full p-2 text-rose-500 hover:bg-rose-500/10 transition-colors"
+                className="shrink-0 rounded-full p-2 text-destructive hover:bg-destructive/10 transition-colors"
                 aria-label="Remover dos favoritos"
               >
                 <Heart className="h-5 w-5 fill-current" />
