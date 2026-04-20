@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { validateCPF, formatCPF, formatPhone, formatPlate } from "@/lib/validators";
+import { formatRenavam, validateRenavam } from "@/lib/validators";
 import { validatePlate, isFakePlate } from "@/lib/plateValidator";
 import { formatDateBR, parseDateBRtoISO, calcAgeBR } from "@/lib/brFormat";
 import {
@@ -79,6 +80,7 @@ const DriverSignup = () => {
   const [vehicleColor, setVehicleColor] = useState("");
   const [vehicleYear, setVehicleYear] = useState("");
   const [vehiclePlate, setVehiclePlate] = useState("");
+  const [vehicleRenavam, setVehicleRenavam] = useState("");
   // Fotos do veículo (4 ângulos)
   const [vehiclePhotoFront, setVehiclePhotoFront] = useState<string | null>(null);
   const [vehiclePhotoBack, setVehiclePhotoBack] = useState<string | null>(null);
@@ -178,6 +180,13 @@ const DriverSignup = () => {
     return "";
   };
 
+  const validateRenavamField = (v: string) => {
+    const cleaned = v.replace(/\D/g, "");
+    if (!cleaned) return "Informe o RENAVAM";
+    if (!validateRenavam(cleaned)) return "RENAVAM inválido (9 a 11 dígitos)";
+    return "";
+  };
+
   // ---------- Handlers ----------
   const handle = (
     setter: (v: string) => void,
@@ -197,6 +206,7 @@ const DriverSignup = () => {
   const handlePhone = handle(setPhone, formatPhone, validatePhoneField, "phone");
   const handleEmail = handle(setEmail, (v) => v, validateEmailField, "email");
   const handlePlate = handle(setVehiclePlate, formatPlate, validatePlateField, "plate");
+  const handleRenavam = handle(setVehicleRenavam, formatRenavam, validateRenavamField, "renavam");
   const handleYear = handle(setVehicleYear, (v) => v.replace(/\D/g, "").slice(0, 4), validateYear, "year");
   const handleCnhNumber = handle(setCnhNumber, (v) => v.replace(/\D/g, "").slice(0, 11), validateCnh, "cnh");
 
