@@ -787,11 +787,12 @@ const GoogleMapInner = ({
       {animatedDriver && (
         <AdvancedMarker position={{ lat: animatedDriver.lat, lng: animatedDriver.lng }}>
           {animatedDriver.category === "moto" ? (
-            <MotoMarker heading={animatedDriver.heading || 0} />
+            <MotoMarker heading={animatedDriver.heading || 0} color={animatedDriver.color} />
           ) : (
             <CarMarker
               heading={animatedDriver.heading || 0}
               variant={animatedDriver.category === "conforto" ? "conforto" : "economico"}
+              color={animatedDriver.color}
             />
           )}
         </AdvancedMarker>
