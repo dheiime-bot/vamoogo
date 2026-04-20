@@ -170,17 +170,14 @@ const PassengerHome = () => {
         } else if (ride.status === "accepted" && ride.arrived_at && !prev?.arrived_at) {
           // Motorista marcou chegada
           setRideState("arrived");
-          toast.success("Seu motorista chegou! 📍", { duration: 6000 });
           playPhaseSound("arrived");
         } else if (ride.status === "in_progress") {
           setRideState("in_progress");
-          toast.success("Corrida iniciada!");
           playPhaseSound("started");
         } else if (ride.status === "completed") {
           // Volta o app para a tela inicial e abre o rating como modal sobreposto.
           setRideState("rating");
           setDriverLocation(null);
-          toast.success("Corrida finalizada!");
           playPhaseSound("completed");
         } else if (ride.status === "cancelled") {
           setRideState("idle");
@@ -188,7 +185,6 @@ const PassengerHome = () => {
           setDriverInfo(null);
           setPaymentMethod(null);
           setDriverLocation(null);
-          toast.error("Não encontramos motorista disponível");
           playPhaseSound("cancelled");
         }
       }).subscribe();
@@ -271,7 +267,6 @@ const PassengerHome = () => {
       setDriverInfo(null);
       setPaymentMethod(null);
       setDriverLocation(null);
-      toast.error("Nenhum motorista disponível. Tente novamente.");
     }, remaining);
     return () => clearTimeout(t);
   }, [rideState, activeRide?.id, activeRide?.created_at]);
@@ -432,8 +427,6 @@ const PassengerHome = () => {
 
     setRideState("searching");
     setActiveRide(data);
-    toast.success("Buscando motorista mais próximo...");
-
     // Dispara o match em background (não bloqueia a UI)
     supabase.functions.invoke("dispatch-ride", { body: { rideId: data.id } })
       .catch((e) => console.warn("dispatch-ride invoke:", e));
@@ -443,7 +436,6 @@ const PassengerHome = () => {
     if (!activeRide) return;
     await supabase.from("rides").update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: user?.id }).eq("id", activeRide.id);
     setRideState("idle"); setActiveRide(null); setDriverInfo(null); setPaymentMethod(null);
-    toast("Corrida cancelada");
   };
 
   // Alterar destino — permitido APENAS com a corrida em andamento (in_progress).
@@ -569,7 +561,6 @@ const PassengerHome = () => {
     setSelectedDestination(newDestination);
     setShowChangeDest(false);
     setNewDestination(null);
-    toast.success(`Destino atualizado • R$ ${newPrice.toFixed(2)} • ${totalKm} km`);
     if (user) {
       supabase.from("chat_messages").insert({
         ride_id: activeRide.id,
@@ -587,7 +578,6 @@ const PassengerHome = () => {
       .from("rides")
       .update({ rating, rating_comment: ratingComment?.trim() || null } as any)
       .eq("id", activeRide.id);
-    toast.success("Avaliação enviada! Obrigado ⭐");
     resetRide();
   };
 
@@ -615,12 +605,10 @@ const PassengerHome = () => {
     setFavoritingDriver(false);
     if (error) {
       console.error("[favorite] rpc error:", error, "driver_id:", activeRide.driver_id);
-      toast.error(error.message || "Não foi possível atualizar favoritos");
       return;
     }
     const isFav = !!data;
     setFavoriteDriver(isFav);
-    toast.success(isFav ? "Adicionado aos favoritos ❤️" : "Removido dos favoritos");
   };
 
   const resetRide = () => {

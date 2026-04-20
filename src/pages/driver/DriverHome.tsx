@@ -185,7 +185,6 @@ const DriverHome = () => {
         setPendingRide(offer.rides);
         setRideState("offer");
         playOfferSound(offer.rides);
-        toast.success("Nova corrida! 🚗");
       }
     };
     fetchPending();
@@ -217,7 +216,6 @@ const DriverHome = () => {
           setPendingRide(ride);
           setRideState("offer");
         playOfferSound(ride);
-        toast.success("Nova corrida! 🚗");
         })
       .subscribe((status) => {
         console.log("[driver] ride_offers channel status:", status);
@@ -243,7 +241,6 @@ const DriverHome = () => {
             setActiveRide(null);
             setRideState("idle");
             setShowChat(false);
-            toast.error("O passageiro cancelou a corrida");
           } else if (ride.status === "completed") {
             // Mantém ride para avaliação; só limpa activeRide quando avaliar/pular
             setRatedRide((prev: any) => prev ?? ride);
@@ -293,9 +290,9 @@ const DriverHome = () => {
     if (error || !updated) {
       const { isGuardError, guardErrorMessage } = await import("@/lib/guardErrors");
       if (error && isGuardError(error)) {
-        toast.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
+        console.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
       } else {
-        toast.error("Outro motorista já aceitou");
+        console.error("Outro motorista já aceitou");
       }
       setPendingOffer(null); setPendingRide(null); setRideState("idle");
       return;
@@ -308,7 +305,6 @@ const DriverHome = () => {
     setPendingOffer(null);
     setPendingRide(null);
     setRideState("going_to_passenger");
-    toast.success("Corrida aceita! 🚗");
     playPhaseSound("accepted");
   };
 
@@ -316,7 +312,6 @@ const DriverHome = () => {
     if (!pendingOffer) return;
     await supabase.from("ride_offers").update({ status: "rejected", responded_at: new Date().toISOString() }).eq("id", pendingOffer.id);
     setPendingOffer(null); setPendingRide(null); setRideState("idle");
-    toast("Corrida recusada");
   };
 
   const handleArrived = async () => {
@@ -326,13 +321,9 @@ const DriverHome = () => {
       .from("rides")
       .update({ arrived_at: arrivedAt } as any)
       .eq("id", activeRide.id);
-    if (error) {
-      toast.error("Erro ao notificar chegada: " + error.message);
-      return;
-    }
+    if (error) return;
     setActiveRide({ ...activeRide, arrived_at: arrivedAt });
     setRideState("arrived");
-    toast.success("Passageiro avisado: você chegou! 📍");
     playPhaseSound("arrived");
   };
 
@@ -342,13 +333,9 @@ const DriverHome = () => {
     const { error } = await supabase.from("rides")
       .update({ status: "in_progress", started_at: new Date().toISOString() })
       .eq("id", activeRide.id);
-    if (error) {
-      toast.error("Erro ao iniciar corrida: " + error.message);
-      return;
-    }
+    if (error) return;
     setActiveRide({ ...activeRide, status: "in_progress", started_at: startedAt });
     setRideState("in_ride");
-    toast.success("Corrida iniciada!");
     playPhaseSound("started");
   };
 
@@ -364,11 +351,7 @@ const DriverHome = () => {
         ...(isPix ? { pix_paid_at: new Date().toISOString() } : {}),
       })
       .eq("id", activeRide.id);
-    if (finishErr) {
-      const { guardErrorMessage } = await import("@/lib/guardErrors");
-      toast.error(guardErrorMessage(finishErr, "Não foi possível finalizar a corrida"));
-      return;
-    }
+    if (finishErr) return;
     if (driverData) {
       await supabase.from("drivers")
         .update({
@@ -376,11 +359,6 @@ const DriverHome = () => {
           total_rides: (driverData.total_rides || 0) + 1,
         })
         .eq("user_id", user.id);
-    }
-    if (isPix) {
-      toast.success("Corrida finalizada! Confirme o recebimento do Pix com o passageiro.");
-    } else {
-      toast.success(`Corrida finalizada! Taxa: R$ ${platformFee.toFixed(2)}`);
     }
     // Guarda a corrida para avaliação e abre modal — mantém o motorista online.
     setRatedRide(activeRide);
@@ -400,7 +378,6 @@ const DriverHome = () => {
         driver_rating_comment: passengerRatingComment?.trim() || null,
       } as any)
       .eq("id", ratedRide.id);
-    toast.success("Avaliação enviada! ⭐");
     closeDriverRating();
   };
 
