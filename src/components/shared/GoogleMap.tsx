@@ -804,11 +804,12 @@ const GoogleMapInner = ({
           <AdvancedMarker key={`nb-${i}-${d.lat.toFixed(4)},${d.lng.toFixed(4)}`} position={{ lat: d.lat, lng: d.lng }}>
             <div className="rounded-full bg-card/90 p-1 shadow-lg ring-1 ring-border">
               {d.category === "moto" ? (
-                <MotoMarker heading={d.heading || 0} />
+                <MotoMarker heading={d.heading || 0} color={d.color} />
               ) : (
                 <CarMarker
                   heading={d.heading || 0}
                   variant={d.category === "conforto" ? "conforto" : "economico"}
+                  color={d.color}
                 />
               )}
             </div>
