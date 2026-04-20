@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 interface FavRow {
   id: string;

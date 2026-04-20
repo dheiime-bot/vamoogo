@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { User, Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check, Pencil } from "lucide-react";
+import { Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
+import UserAvatar from "@/components/shared/UserAvatar";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 
 import StatusBadge from "@/components/shared/StatusBadge";
