@@ -161,34 +161,7 @@ const OriginPicker = ({
   }, [forOtherPerson]);
 
   const handleRetryGps = () => {
-    if (!navigator.geolocation) {
-      toast.error("GPS indisponível");
-      return;
-    }
-    setLoadingGps(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const address = await reverseGeocode(latitude, longitude);
-        const loc: AppLocation = {
-          id: `gps-${Date.now()}`,
-          name: "Minha localização",
-          address,
-          lat: latitude,
-          lng: longitude,
-        };
-        setGpsLoc(loc);
-        setGpsAddress(address);
-        setGpsCoords({ lat: latitude, lng: longitude });
-        setLoadingGps(false);
-        if (!forOtherPerson) onSelectOrigin(loc, "gps");
-      },
-      () => {
-        setLoadingGps(false);
-        toast.error("Não foi possível obter localização");
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    void tryCaptureGps(true);
   };
 
   const selectedManualOrigin = selectedOrigin && !selectedOrigin.id.startsWith("gps-")
