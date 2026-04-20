@@ -525,6 +525,8 @@ const PassengerSignup = () => {
             </button>
           </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );
