@@ -232,17 +232,17 @@ const PassengerFavoriteDrivers = () => {
               </div>
 
               <button
-                disabled={!canCall(f.driver) || calling === f.driver_id}
+                disabled={!canCall(f.driver)}
                 onClick={() =>
-                  callDriver(f.driver_id, f.driver?.full_name || "Motorista")
+                  callDriver(
+                    f.driver_id,
+                    f.driver?.full_name || "Motorista",
+                    f.driver?.selfie_url || null
+                  )
                 }
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none disabled:cursor-not-allowed transition-all"
               >
-                {calling === f.driver_id ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Phone className="h-4 w-4" />
-                )}
+                <Phone className="h-4 w-4" />
                 {!f.driver?.is_online
                   ? "Offline"
                   : f.driver?.distance_km == null
