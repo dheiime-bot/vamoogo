@@ -1364,6 +1364,14 @@ export type Database = {
     }
     Functions: {
       _driver_cancel_block_hours: { Args: { _count: number }; Returns: number }
+      _driver_has_active_offer: {
+        Args: { _driver_id: string; _ride_id: string }
+        Returns: boolean
+      }
+      _is_ride_passenger: {
+        Args: { _ride_id: string; _user_id: string }
+        Returns: boolean
+      }
       _require_admin: { Args: never; Returns: undefined }
       admin_add_ride_note: {
         Args: { _note: string; _ride_id: string }
