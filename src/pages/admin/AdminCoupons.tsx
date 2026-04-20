@@ -366,6 +366,7 @@ const AdminCoupons = () => {
                   return (
                     <label key={p.user_id} className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/40">
                       <input type="checkbox" checked={checked} onChange={() => toggleSelect(p.user_id)} className="h-4 w-4 accent-primary" />
+                      <UserAvatar src={p.selfie_url} name={p.full_name} role="passenger" size="xs" />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{p.full_name}</p>
                         <p className="text-[10px] text-muted-foreground truncate">{p.email || p.phone || "—"}</p>
