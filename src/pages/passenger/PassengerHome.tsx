@@ -1236,15 +1236,15 @@ const PassengerHome = () => {
           {activeRide && (
             <>
               <div className="px-4 py-1.5 space-y-2 text-center">
-                {driverInfo && (
+                {activeRide?.driver_id && (
                   <div className="flex flex-col items-center gap-1.5">
                     <p className="text-xs text-muted-foreground truncate">
-                      Motorista: {driverInfo.profile?.full_name}
+                      Motorista: {driverInfo?.profile?.full_name || "Carregando..."}
                     </p>
                     <button
                       type="button"
                       onClick={toggleFavoriteDriver}
-                      disabled={favoritingDriver || !activeRide?.driver_id}
+                      disabled={favoritingDriver}
                       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                         favoriteDriver
                           ? "text-destructive bg-destructive/10"
