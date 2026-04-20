@@ -614,7 +614,8 @@ const PassengerHome = () => {
     });
     setFavoritingDriver(false);
     if (error) {
-      toast.error("Não foi possível atualizar favoritos");
+      console.error("[favorite] rpc error:", error, "driver_id:", activeRide.driver_id);
+      toast.error(error.message || "Não foi possível atualizar favoritos");
       return;
     }
     const isFav = !!data;
