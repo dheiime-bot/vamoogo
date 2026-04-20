@@ -177,19 +177,6 @@ const AppMenu = ({ role, floating = true }: Props) => {
           </div>
         )}
 
-        {hasBoth && (
-          <div className="border-t p-2">
-            <p className="px-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase">Modo</p>
-            <button
-              onClick={() => handleSwitch(role === "driver" ? "passenger" : "driver")}
-              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
-            >
-              <ArrowLeftRight className="h-4 w-4" />
-              {role === "driver" ? "Mudar para passageiro" : "Mudar para motorista"}
-            </button>
-          </div>
-        )}
-
         <div className="border-t p-2">
           <button
             onClick={handleSignOut}
