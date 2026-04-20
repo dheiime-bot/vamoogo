@@ -720,6 +720,17 @@ const PassengerHome = () => {
           {/* Active ride overlays */}
           {isRideActive && activeRide && (
             <div className="space-y-4 animate-fade-in">
+              {/* Título da fase atual da viagem — ajuda o passageiro a saber onde está no fluxo */}
+              <div className="text-center -mt-1">
+                <h2 className="text-lg font-bold font-display">
+                  {rideState === "searching" && "Buscando motorista"}
+                  {rideState === "accepted" && "Corrida aceita"}
+                  {rideState === "driver_arriving" && "Motorista a caminho"}
+                  {rideState === "arrived" && "Motorista chegou"}
+                  {rideState === "in_progress" && "Em viagem"}
+                </h2>
+              </div>
+
               {/* Searching animation */}
               {rideState === "searching" && (
                 <div className="text-center py-6">
@@ -730,7 +741,6 @@ const PassengerHome = () => {
                       <Car className="h-8 w-8 text-primary animate-pulse" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-bold font-display">Buscando motorista...</h3>
                   <p className="text-sm text-muted-foreground mt-1">Aguarde, estamos encontrando o melhor motorista para você</p>
                   {paymentMethod && (
                     <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
