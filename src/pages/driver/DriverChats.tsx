@@ -121,6 +121,7 @@ const DriverChats = () => {
     <div className="min-h-screen bg-background">
       <AppMenu role="driver" />
       <DriverEarningsChip />
+      <DriverHomeFab />
       
       <header className="border-b bg-card px-4 py-4 pt-20">
         <h1 className="text-lg font-bold">Chats</h1>

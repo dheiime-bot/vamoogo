@@ -3,6 +3,7 @@ import { Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCod
 import AppMenu from "@/components/shared/AppMenu";
 import UserAvatar from "@/components/shared/UserAvatar";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import EditProfileModal from "@/components/shared/EditProfileModal";
@@ -236,6 +237,7 @@ const DriverProfile = () => {
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
+      <DriverHomeFab />
       
       <EditProfileModal open={editOpen} onOpenChange={setEditOpen} />
     </div>

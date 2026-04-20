@@ -14,6 +14,7 @@ import { Car, MapPin, Clock, Loader2, CheckCircle2, XCircle, RefreshCw, Power } 
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
@@ -208,6 +209,7 @@ const DriverOffers = () => {
     <div className="min-h-screen bg-background pb-24">
       <AppMenu role="driver" />
       <DriverEarningsChip />
+      <DriverHomeFab />
 
       <div className="px-4 pt-20 pb-4">
         <div className="flex items-center justify-between mb-4">

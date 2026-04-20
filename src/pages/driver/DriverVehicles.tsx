@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 
 interface Vehicle {
   id: string;
@@ -240,6 +241,7 @@ const DriverVehicles = () => {
         )}
       </div>
     </div>
+      <DriverHomeFab />
   );
 };
 

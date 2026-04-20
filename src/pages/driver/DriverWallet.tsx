@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
@@ -357,6 +358,7 @@ const DriverWallet = () => {
       </div>
       <AppMenu role="driver" />
       <DriverEarningsChip />
+      <DriverHomeFab />
     </div>
   );
 };
