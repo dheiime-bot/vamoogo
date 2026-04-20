@@ -91,6 +91,7 @@ const DriverVehicles = () => {
   const pending = requests.find((r) => r.status === "pending");
 
   return (
+    <>
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <button
