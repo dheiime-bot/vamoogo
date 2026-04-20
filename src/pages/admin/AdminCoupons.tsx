@@ -207,8 +207,8 @@ const AdminCoupons = () => {
       title="Cupons"
       actions={
         tab === "general" ? (
-          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
-            <Plus className="h-3.5 w-3.5" /> Novo cupom
+          <button onClick={() => (showForm ? closeForm() : setShowForm(true))} className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+            <Plus className="h-3.5 w-3.5" /> {showForm ? "Fechar" : "Novo cupom"}
           </button>
         ) : null
       }
@@ -234,6 +234,12 @@ const AdminCoupons = () => {
 
       {tab === "general" && showForm && (
         <div className="rounded-2xl border bg-card p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold flex items-center gap-1.5">
+              {editingId ? <><Pencil className="h-4 w-4 text-primary" /> Editar cupom</> : <><Plus className="h-4 w-4 text-primary" /> Novo cupom</>}
+            </h3>
+            <button onClick={closeForm} className="text-xs text-muted-foreground hover:text-foreground">Cancelar</button>
+          </div>
           <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="Código (ex: VAMOO10)" className="w-full rounded-lg bg-muted px-3 py-2.5 text-sm outline-none uppercase" />
           <div className="flex gap-2">
             {["percentage", "fixed"].map((t) => (
@@ -261,7 +267,7 @@ const AdminCoupons = () => {
             <input value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} type="datetime-local" className="w-full rounded-lg bg-muted px-3 py-2.5 text-sm outline-none" />
           </div>
           <button onClick={create} disabled={saving} className="rounded-xl bg-gradient-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50 flex items-center gap-2">
-            {saving && <Loader2 className="h-4 w-4 animate-spin" />} Criar cupom
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />} {editingId ? "Salvar alterações" : "Criar cupom"}
           </button>
         </div>
       )}
