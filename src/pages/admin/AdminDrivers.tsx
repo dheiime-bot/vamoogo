@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, X, ImageIcon, User as UserIcon, WifiOff } from "lucide-react";
+import { Search, X, ImageIcon, User as UserIcon, WifiOff, ChevronDown, Check } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
@@ -9,6 +9,16 @@ import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const CAT_LABEL: Record<string, string> = { moto: "Moto", economico: "Econômico", conforto: "Conforto" };
 
 const onlyDigits = (s: string) => (s || "").replace(/\D/g, "");
 const normalizePlate = (s: string) => (s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
@@ -31,6 +41,7 @@ const AdminDrivers = () => {
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
   const [thumbs, setThumbs] = useState<Record<string, { selfie?: string; cnh?: string; vehicle?: string }>>({});
   const [zoomImg, setZoomImg] = useState<string | null>(null);
+  const [vehiclesByDriver, setVehiclesByDriver] = useState<Record<string, any[]>>({});
 
   const fetchDrivers = async () => {
     const { data: drvs, error } = await supabase
@@ -52,6 +63,22 @@ const AdminDrivers = () => {
       (profs || []).forEach((p) => { profMap[p.user_id] = p; });
     }
     setDrivers((drvs || []).map((d) => ({ ...d, profiles: profMap[d.user_id] || null })));
+    // Buscar veículos cadastrados por motorista (driver_vehicles)
+    if (ids.length) {
+      const { data: vehs } = await supabase
+        .from("driver_vehicles")
+        .select("id, driver_id, category, vehicle_brand, vehicle_model, vehicle_plate, vehicle_color, vehicle_year, status, is_active")
+        .in("driver_id", ids)
+        .order("created_at", { ascending: true });
+      const map: Record<string, any[]> = {};
+      (vehs || []).forEach((v) => {
+        if (!map[v.driver_id]) map[v.driver_id] = [];
+        map[v.driver_id].push(v);
+      });
+      setVehiclesByDriver(map);
+    } else {
+      setVehiclesByDriver({});
+    }
   };
 
   useEffect(() => { fetchDrivers(); }, []);
@@ -228,8 +255,58 @@ const AdminDrivers = () => {
                     <td className="px-4 py-3 text-muted-foreground font-mono">{profile?.cpf || "—"}</td>
                     <td className="px-4 py-3">{d.category === "moto" ? "Moto" : d.category === "conforto" ? "Conforto" : "Econômico"}</td>
                     <td className="px-4 py-3">
-                      <p className="text-xs font-medium">{d.vehicle_brand || ""} {d.vehicle_model || "—"}</p>
-                      <p className="text-[10px] text-muted-foreground font-mono">{d.vehicle_plate || "—"} • {d.vehicle_color || "—"}{d.vehicle_year ? ` • ${d.vehicle_year}` : ""}</p>
+                      {(() => {
+                        const list = vehiclesByDriver[d.user_id] || [];
+                        if (list.length > 1) {
+                          return (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-start gap-1 text-left rounded-md border border-dashed border-primary/40 bg-primary/5 px-2 py-1 hover:bg-primary/10 transition-colors w-full"
+                                title={`${list.length} veículos cadastrados`}
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium flex items-center gap-1">
+                                    {d.vehicle_brand || ""} {d.vehicle_model || "—"}
+                                    <span className="rounded-full bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5">{list.length}</span>
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground font-mono">{d.vehicle_plate || "—"} • {CAT_LABEL[d.category] || d.category}</p>
+                                </div>
+                                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" className="w-72 z-[60]" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuLabel className="text-xs">Veículos cadastrados ({list.length})</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {list.map((v) => {
+                                  const isCurrent = v.is_active || (v.vehicle_plate && d.vehicle_plate && v.vehicle_plate.toUpperCase() === d.vehicle_plate.toUpperCase());
+                                  const statusColor = v.status === "approved" ? "text-success" : v.status === "rejected" ? "text-destructive" : "text-warning";
+                                  return (
+                                    <DropdownMenuItem key={v.id} className="flex flex-col items-start gap-0.5 py-2 cursor-default" onSelect={(e) => e.preventDefault()}>
+                                      <div className="flex items-center justify-between w-full gap-2">
+                                        <span className="text-xs font-semibold flex items-center gap-1">
+                                          {isCurrent && <Check className="h-3 w-3 text-primary" />}
+                                          {v.vehicle_brand || ""} {v.vehicle_model || "—"}
+                                        </span>
+                                        <span className="rounded-full bg-muted text-[9px] font-bold px-1.5 py-0.5">{CAT_LABEL[v.category] || v.category}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between w-full">
+                                        <span className="text-[10px] text-muted-foreground font-mono">{v.vehicle_plate || "—"} • {v.vehicle_color || "—"}{v.vehicle_year ? ` • ${v.vehicle_year}` : ""}</span>
+                                        <span className={`text-[9px] font-bold uppercase ${statusColor}`}>{v.status}</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  );
+                                })}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          );
+                        }
+                        return (
+                          <>
+                            <p className="text-xs font-medium">{d.vehicle_brand || ""} {d.vehicle_model || "—"}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono">{d.vehicle_plate || "—"} • {d.vehicle_color || "—"}{d.vehicle_year ? ` • ${d.vehicle_year}` : ""}</p>
+                          </>
+                        );
+                      })()}
                     </td>
                     <td className="px-3 py-2">
                       {t.cnh ? (
