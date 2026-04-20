@@ -184,13 +184,33 @@ const AdminCancellations = () => {
 
   useEffect(() => { fetchData(); /* eslint-disable-next-line */ }, [period]);
 
+  // Normaliza: "vamoo 1000" / "VAMOO1000" / "1000" → "VAMOO1000"
+  const normalizeCode = (s: string) => {
+    const cleaned = (s || "").toUpperCase().replace(/\s+/g, "");
+    if (/^\d+$/.test(cleaned)) return `VAMOO${cleaned}`;
+    return cleaned;
+  };
+
   const filteredRides = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    const codeQuery = normalizeCode(search);
     return rides.filter((r) => {
       if (who !== "all" && r.who !== who) return false;
       if (reasonFilter !== "all" && classifyReason(r.admin_notes) !== reasonFilter) return false;
+      if (q) {
+        const matchSearch =
+          (codeQuery && r.ride_code?.toUpperCase().includes(codeQuery)) ||
+          r.passenger_name?.toLowerCase().includes(q) ||
+          r.driver_name?.toLowerCase().includes(q) ||
+          r.origin_address?.toLowerCase().includes(q) ||
+          r.destination_address?.toLowerCase().includes(q) ||
+          r.id?.toLowerCase().startsWith(q) ||
+          r.admin_notes?.toLowerCase().includes(q);
+        if (!matchSearch) return false;
+      }
       return true;
     });
-  }, [rides, who, reasonFilter]);
+  }, [rides, who, reasonFilter, search]);
 
   const kpis = useMemo(() => {
     const total = rides.length;
