@@ -1,8 +1,8 @@
 /**
  * useDriverLocation
  * Hook que mantém a posição do motorista atualizada na tabela driver_locations
- * via watchPosition do navegador. Faz upsert a cada movimento significativo (>= 10m)
- * ou no máximo a cada 8s. Para de transmitir quando isOnline = false.
+ * via watchPosition do navegador. Faz upsert a cada movimento significativo (>= 3m)
+ * ou no máximo a cada 2.5s. Para de transmitir quando isOnline = false.
  *
  * Também marca is_online=false automaticamente ao fechar a aba (beforeunload)
  * e expõe `lastSyncAt` para a UI exibir o heartbeat.
@@ -18,8 +18,8 @@ interface Options {
   onBlocked?: (message: string) => void;
 }
 
-const MIN_INTERVAL_MS = 8000;
-const MIN_DISTANCE_M = 10;
+const MIN_INTERVAL_MS = 2500;
+const MIN_DISTANCE_M = 3;
 
 function distanceMeters(a: GeolocationCoordinates, b: { lat: number; lng: number }) {
   const r = 6371000;
@@ -233,7 +233,7 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => broadcast(pos.coords),
       (err) => handleGeoError(err, "watchPosition"),
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+      { enableHighAccuracy: true, maximumAge: 1500, timeout: 8000 }
     );
 
     return () => {

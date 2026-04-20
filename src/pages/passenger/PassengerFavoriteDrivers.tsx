@@ -25,6 +25,18 @@ interface DriverDetails {
   distance_km: number | null;
 }
 
+const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  const r = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return r * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 const PassengerFavoriteDrivers = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -149,12 +161,38 @@ const PassengerFavoriteDrivers = () => {
         { event: "*", schema: "public", table: "driver_locations" },
         (payload) => {
           const did = (payload.new as any)?.driver_id || (payload.old as any)?.driver_id;
-          if (did && driverIds.includes(did)) load();
+          if (!did || !driverIds.includes(did)) return;
+
+          const next = payload.new as
+            | { driver_id?: string; is_online?: boolean; lat?: number; lng?: number }
+            | undefined;
+
+          setItems((prev) =>
+            prev.map((item) => {
+              if (item.driver_id !== did || !item.driver) return item;
+
+              const distanceKm =
+                pos && next?.lat != null && next?.lng != null
+                  ? haversineKm(pos.lat, pos.lng, Number(next.lat), Number(next.lng))
+                  : item.driver.distance_km;
+
+              return {
+                ...item,
+                driver: {
+                  ...item.driver,
+                  is_online: typeof next?.is_online === "boolean" ? next.is_online : item.driver.is_online,
+                  distance_km: distanceKm != null ? Number(distanceKm.toFixed(2)) : null,
+                },
+              };
+            })
+          );
+
+          load();
         }
       )
       .subscribe();
     // Re-poll leve a cada 20s como rede de segurança
-    const t = setInterval(load, 20_000);
+    const t = setInterval(load, 8_000);
     return () => {
       supabase.removeChannel(channel);
       clearInterval(t);
