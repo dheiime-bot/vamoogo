@@ -81,6 +81,7 @@ const AdminTariffs = () => {
     { id: "categories", label: "Categorias" },
     { id: "passengers", label: "Passageiros" },
     { id: "fees", label: "Taxa da plataforma" },
+    { id: "favorites", label: "Favoritos" },
   ];
 
   const catIcon: Record<string, any> = { moto: Bike, economico: Car, conforto: Crown };
