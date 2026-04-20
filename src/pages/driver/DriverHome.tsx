@@ -862,6 +862,11 @@ const DriverHome = () => {
         }
       />
       <RefreshAppButton topOffsetPx={144} />
+      <SelectVehicleModal
+        open={requireVehiclePick}
+        onOpenChange={setRequireVehiclePick}
+        required
+      />
       <DriverBottomNav
         centerSlot={
           <button
