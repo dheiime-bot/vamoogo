@@ -262,10 +262,10 @@ const AdminCancellations = () => {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Total cancelados" value={kpis.total.toString()} icon={XCircle} variant="destructive" />
-        <StatCard label="Por passageiros" value={kpis.byPass.toString()} icon={Users} />
-        <StatCard label="Por motoristas" value={kpis.byDrv.toString()} icon={Car} />
-        <StatCard label="Bloqueados agora" value={blocked.length.toString()} icon={Ban} variant="warning" />
+        <StatCard title="Total cancelados" value={kpis.total.toString()} icon={XCircle} variant="warning" />
+        <StatCard title="Por passageiros" value={kpis.byPass.toString()} icon={Users} variant="primary" />
+        <StatCard title="Por motoristas" value={kpis.byDrv.toString()} icon={Car} />
+        <StatCard title="Bloqueados agora" value={blocked.length.toString()} icon={Ban} variant="warning" />
       </div>
 
       {/* Breakdown por motivo */}
