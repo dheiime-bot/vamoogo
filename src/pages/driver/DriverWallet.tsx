@@ -63,9 +63,11 @@ const describeEntry = (tx: WalletEntry): EntryVisual => {
     const ref = tx.reference || {};
     const fee = Number(ref.fee || 0);
     const gross = Number(ref.gross || 0);
+    const feePct = ref.fee_percent != null ? Number(ref.fee_percent) : null;
+    const feeLabel = feePct != null ? `${feePct.toString().replace(".", ",")}%` : null;
     const subtitle =
       gross > 0
-        ? `Total da corrida R$ ${formatBRL(gross)}${fee > 0 ? ` • taxa R$ ${formatBRL(fee)}` : ""}`
+        ? `Total R$ ${formatBRL(gross)}${fee > 0 ? ` • Taxa Vamoo${feeLabel ? ` ${feeLabel}` : ""} R$ ${formatBRL(fee)}` : ""}`
         : "Corrida concluída";
     return {
       Icon: Car,
@@ -80,14 +82,22 @@ const describeEntry = (tx: WalletEntry): EntryVisual => {
   if (tx.kind === "ride_fee") {
     const ref = tx.reference || {};
     const gross = Number(ref.gross || 0);
+    const feePct = ref.fee_percent != null ? Number(ref.fee_percent) : null;
+    const feeLabel = feePct != null ? `${feePct.toString().replace(".", ",")}%` : null;
     return {
       Icon: Minus,
       bg: "bg-destructive/10",
       fg: "text-destructive",
       amountText: `- R$ ${formatBRL(Math.abs(tx.amount))}`,
       amountColor: "text-destructive",
-      subtitle: gross > 0 ? `Sobre o total R$ ${formatBRL(gross)}` : "Taxa da plataforma",
-      badge: { label: "Taxa Vamoo", cls: "bg-destructive/10 text-destructive" },
+      subtitle:
+        gross > 0
+          ? `${feeLabel ? `${feeLabel} sobre o total` : "Sobre o total"} R$ ${formatBRL(gross)}`
+          : "Taxa da plataforma",
+      badge: {
+        label: feeLabel ? `Taxa Vamoo ${feeLabel}` : "Taxa Vamoo",
+        cls: "bg-destructive/10 text-destructive",
+      },
     };
   }
   if (tx.kind === "recharge") {
