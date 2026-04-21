@@ -866,7 +866,7 @@ const RecenterButton = ({ target }: { target: MapPoint | null; bottomInset?: num
       style={{ bottom: `calc(env(safe-area-inset-bottom) + 24px)` }}
       className="absolute right-4 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-lg ring-2 ring-background border border-border transition-transform active:scale-95 hover:bg-muted"
     >
-      <LocateFixed className="h-6 w-6 text-primary" />
+      <LocateFixed className="h-7 w-7 text-primary" strokeWidth={2.2} />
     </button>
   );
 };
