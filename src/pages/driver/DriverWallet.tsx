@@ -7,17 +7,17 @@ import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronDown } from "lucide-react";
 
-type PeriodId = "today" | "week" | "month" | "3m" | "6m" | "year" | "all";
-const PERIODS: { id: PeriodId; label: string; days: number | null }[] = [
-  { id: "today", label: "Hoje", days: 1 },
-  { id: "week", label: "7 dias", days: 7 },
-  { id: "month", label: "Mês", days: 30 },
-  { id: "3m", label: "3 meses", days: 90 },
-  { id: "6m", label: "6 meses", days: 180 },
-  { id: "year", label: "12 meses", days: 365 },
-  { id: "all", label: "Tudo", days: null },
+type PeriodId = "today" | "week" | "month";
+const PERIODS: { id: PeriodId; label: string }[] = [
+  { id: "today", label: "Hoje" },
+  { id: "week", label: "Semana" },
+  { id: "month", label: "Mês" },
 ];
+
+const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 const DriverWallet = () => {
   const { user, driverData } = useAuth();
