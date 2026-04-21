@@ -778,7 +778,7 @@ const DriverHome = () => {
             </div>
             <div className="grid grid-cols-2 gap-1.5">
               <button
-                onClick={() => nextTarget && openGoogleMapsRoute(nextTarget.lat, nextTarget.lng, routePointName(nextTarget), remainingStops.slice(1).map((s) => ({ lat: s.lat, lng: s.lng })))}
+                onClick={() => nextTarget && openGoogleMapsRoute(nextTarget.lat, nextTarget.lng, routePointName(nextTarget))}
                 className="flex items-center justify-center gap-1 rounded-lg border py-2 text-xs font-semibold">
                 <NavigationIcon className="h-3.5 w-3.5 text-primary" /> Rota
               </button>
@@ -786,7 +786,12 @@ const DriverHome = () => {
                 <MessageCircle className="h-3.5 w-3.5 text-primary" /> Chat
               </button>
             </div>
-            {activeRide.payment_method === "pix" ? (
+            {currentStopIndex < rideStops.length ? (
+              <button onClick={handleConfirmStop}
+                className="w-full rounded-xl bg-warning py-2.5 text-sm font-bold text-warning-foreground flex items-center justify-center gap-2">
+                <MapPin className="h-4 w-4" /> Confirmar parada {currentStopIndex + 1}
+              </button>
+            ) : activeRide.payment_method === "pix" ? (
               <button onClick={() => setShowPixModal(true)}
                 className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
                 <QrCode className="h-4 w-4" /> Cobrar (Gerar Pix)
