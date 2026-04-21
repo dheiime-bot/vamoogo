@@ -44,6 +44,26 @@ const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }>
   cancelado: { label: "Cancelado", color: "bg-destructive/10 text-destructive", icon: XCircle },
 };
 
+const formatBRL = (n: number) =>
+  n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// Aplica máscara visual BR: +55 (11) 98765-4321
+const formatPhoneBR = (digitsOnly: string) => {
+  const d = digitsOnly.replace(/\D/g, "").slice(0, 13);
+  if (d.length === 0) return "";
+  // Garante DDI 55 quando o usuário começa a digitar só DDD
+  const withDdi = d.startsWith("55") ? d : (d.length > 2 ? `55${d}` : d);
+  const ddi = withDdi.slice(0, 2);
+  const ddd = withDdi.slice(2, 4);
+  const part1 = withDdi.slice(4, 9);
+  const part2 = withDdi.slice(9, 13);
+  let out = `+${ddi}`;
+  if (ddd) out += ` (${ddd})`;
+  if (part1) out += ` ${part1}`;
+  if (part2) out += `-${part2}`;
+  return out;
+};
+
 const AdminWalletTopup = () => {
   const [config, setConfig] = useState<WhatsappTopupConfig>(DEFAULT_CONFIG);
   const [newAmount, setNewAmount] = useState("");
@@ -86,28 +106,44 @@ const AdminWalletTopup = () => {
   }, []);
 
   const save = async () => {
-    if (config.enabled && !config.whatsapp_number.trim()) {
-      toast.error("Informe o número do WhatsApp para ativar");
+    const digits = config.whatsapp_number.replace(/\D/g, "");
+    if (config.enabled && digits.length < 12) {
+      toast.error("Informe o WhatsApp completo (DDI + DDD + número)");
       return;
     }
     setSaving(true);
-    const cleaned = {
+    const cleaned: WhatsappTopupConfig = {
       ...config,
-      whatsapp_number: config.whatsapp_number.replace(/\D/g, ""),
+      whatsapp_number: digits,
       quick_amounts: [...config.quick_amounts].sort((a, b) => a - b),
       bonus_tiers: [...(config.bonus_tiers || [])]
         .filter((t) => t.min_amount > 0 && t.percent > 0)
         .sort((a, b) => a.min_amount - b.min_amount),
     };
-    const { error } = await supabase
+
+    // Atualiza se existir, senão insere — evita problemas de upsert/RLS
+    const { data: existing } = await supabase
       .from("platform_settings")
-      .upsert(
-        { key: "whatsapp_topup", value: cleaned as any, description: "Configuração de recarga via WhatsApp" },
-        { onConflict: "key" },
-      );
+      .select("id")
+      .eq("key", "whatsapp_topup")
+      .maybeSingle();
+
+    let error;
+    if (existing) {
+      ({ error } = await supabase
+        .from("platform_settings")
+        .update({ value: cleaned as any, description: "Configuração de recarga via WhatsApp" })
+        .eq("key", "whatsapp_topup"));
+    } else {
+      ({ error } = await supabase
+        .from("platform_settings")
+        .insert({ key: "whatsapp_topup", value: cleaned as any, description: "Configuração de recarga via WhatsApp" }));
+    }
+
     setSaving(false);
     if (error) {
-      toast.error("Erro ao salvar configuração");
+      console.error("[wallet-topup save]", error);
+      toast.error(error.message || "Erro ao salvar configuração");
       return;
     }
     setConfig(cleaned);
@@ -221,16 +257,17 @@ const AdminWalletTopup = () => {
             <div className="space-y-1.5">
               <Label className="text-xs">Número WhatsApp (com DDI/DDD, só dígitos)</Label>
               <Input
-                value={config.whatsapp_number}
-                onChange={(e) =>
-                  setConfig({ ...config, whatsapp_number: e.target.value.replace(/\D/g, "") })
-                }
-                placeholder="559999999999"
-                inputMode="numeric"
-                maxLength={15}
+                value={formatPhoneBR(config.whatsapp_number)}
+                onChange={(e) => {
+                  const d = e.target.value.replace(/\D/g, "").slice(0, 13);
+                  setConfig({ ...config, whatsapp_number: d });
+                }}
+                placeholder="+55 (11) 98765-4321"
+                inputMode="tel"
+                maxLength={22}
               />
               <p className="text-[10px] text-muted-foreground">
-                Formato internacional, sem +, espaços ou traços. Ex: 5511987654321
+                Formato Brasil: digite DDD + número, o +55 é adicionado automaticamente. Ex.: 11987654321
               </p>
             </div>
           </div>
@@ -266,7 +303,7 @@ const AdminWalletTopup = () => {
                 key={v}
                 className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold"
               >
-                R$ {v}
+                R$ {formatBRL(v)}
                 <button
                   onClick={() => removeAmount(v)}
                   className="rounded-full hover:bg-destructive/20 p-0.5"
@@ -397,7 +434,7 @@ const AdminWalletTopup = () => {
                     <p className="text-sm font-semibold truncate">
                       {t.nome}{" "}
                       <span className="font-normal text-muted-foreground">
-                        • R$ {Number(t.valor).toFixed(2).replace(".", ",")}
+                      • R$ {formatBRL(Number(t.valor))}
                       </span>
                     </p>
                     <p className="text-[11px] text-muted-foreground">
