@@ -113,6 +113,14 @@ const DriverHome = () => {
     return () => clearInterval(i);
   }, [isOnline]);
 
+  // Tick global de 1s enquanto há countdown ativo (going_to_passenger / arrived / in_ride).
+  // Atualiza tickNow para que os segundos restantes na UI desçam suavemente.
+  useEffect(() => {
+    if (!phaseStartedAt) return;
+    const i = setInterval(() => setTickNow(Date.now()), 1000);
+    return () => clearInterval(i);
+  }, [phaseStartedAt]);
+
   // Stats do dia
   useEffect(() => {
     if (!user) return;
