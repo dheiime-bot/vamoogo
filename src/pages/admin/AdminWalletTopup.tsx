@@ -44,6 +44,26 @@ const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }>
   cancelado: { label: "Cancelado", color: "bg-destructive/10 text-destructive", icon: XCircle },
 };
 
+const formatBRL = (n: number) =>
+  n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// Aplica máscara visual BR: +55 (11) 98765-4321
+const formatPhoneBR = (digitsOnly: string) => {
+  const d = digitsOnly.replace(/\D/g, "").slice(0, 13);
+  if (d.length === 0) return "";
+  // Garante DDI 55 quando o usuário começa a digitar só DDD
+  const withDdi = d.startsWith("55") ? d : (d.length > 2 ? `55${d}` : d);
+  const ddi = withDdi.slice(0, 2);
+  const ddd = withDdi.slice(2, 4);
+  const part1 = withDdi.slice(4, 9);
+  const part2 = withDdi.slice(9, 13);
+  let out = `+${ddi}`;
+  if (ddd) out += ` (${ddd})`;
+  if (part1) out += ` ${part1}`;
+  if (part2) out += `-${part2}`;
+  return out;
+};
+
 const AdminWalletTopup = () => {
   const [config, setConfig] = useState<WhatsappTopupConfig>(DEFAULT_CONFIG);
   const [newAmount, setNewAmount] = useState("");
