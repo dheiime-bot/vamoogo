@@ -100,7 +100,7 @@ const ManualRechargeDialog = ({ open, onOpenChange, onSuccess }: Props) => {
     const { error } = await supabase.rpc("admin_adjust_balance", {
       _driver_id: selected.user_id,
       _amount: numericAmount,
-      _type: "credit",
+      _type: "add",
       _reason: reason || "Recarga manual via admin",
     });
     if (error) {
