@@ -40,6 +40,8 @@ const AdminCoupons = () => {
   // Listagem dos enviados (passenger_coupons)
   const [sent, setSent] = useState<any[]>([]);
   const [sentSearch, setSentSearch] = useState("");
+  const [selectedSentIds, setSelectedSentIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetch_ = async () => {
     const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
@@ -218,6 +220,42 @@ const AdminCoupons = () => {
     const { error } = await supabase.from("passenger_coupons").delete().eq("id", id);
     if (error) { toast.error("Erro: " + error.message); return; }
     toast.success("Cupom excluído");
+    fetchSent();
+  };
+
+  const toggleSentSelect = (id: string) => {
+    setSelectedSentIds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+  const selectAllSentVisible = () => setSelectedSentIds(new Set(filteredSent.map((r) => r.id)));
+  const clearSentSelection = () => setSelectedSentIds(new Set());
+
+  const deleteSelectedSent = async () => {
+    if (selectedSentIds.size === 0) return;
+    if (!confirm(`Excluir ${selectedSentIds.size} cupom(ns) selecionado(s)? Os passageiros deixarão de vê-los.`)) return;
+    setBulkDeleting(true);
+    const ids = Array.from(selectedSentIds);
+    const { error } = await supabase.from("passenger_coupons").delete().in("id", ids);
+    setBulkDeleting(false);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    toast.success(`${ids.length} cupom(ns) excluído(s)`);
+    clearSentSelection();
+    fetchSent();
+  };
+
+  const deleteAllSent = async () => {
+    if (sent.length === 0) return;
+    if (!confirm(`Excluir TODOS os ${sent.length} cupons enviados? Esta ação não pode ser desfeita.`)) return;
+    setBulkDeleting(true);
+    const ids = sent.map((r) => r.id);
+    const { error } = await supabase.from("passenger_coupons").delete().in("id", ids);
+    setBulkDeleting(false);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    toast.success("Todos os cupons enviados foram excluídos");
+    clearSentSelection();
     fetchSent();
   };
 
@@ -424,7 +462,42 @@ const AdminCoupons = () => {
 
           {/* Coluna 2 — Cupons enviados */}
           <div className="rounded-2xl border bg-card p-4 space-y-3">
-            <h3 className="text-sm font-bold flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-success" /> Cupons enviados ({sent.length})</h3>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <h3 className="text-sm font-bold flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-success" /> Cupons enviados ({sent.length})</h3>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={selectAllSentVisible}
+                  disabled={filteredSent.length === 0}
+                  className="rounded-md bg-muted px-2 py-1 text-[10px] font-bold disabled:opacity-50"
+                >
+                  Selecionar todos
+                </button>
+                <button
+                  onClick={clearSentSelection}
+                  disabled={selectedSentIds.size === 0}
+                  className="rounded-md bg-muted px-2 py-1 text-[10px] font-bold disabled:opacity-50"
+                >
+                  Limpar
+                </button>
+                <button
+                  onClick={deleteSelectedSent}
+                  disabled={selectedSentIds.size === 0 || bulkDeleting}
+                  className="rounded-md bg-destructive/15 text-destructive px-2 py-1 text-[10px] font-bold flex items-center gap-1 disabled:opacity-50"
+                  title="Excluir selecionados"
+                >
+                  {bulkDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                  Excluir ({selectedSentIds.size})
+                </button>
+                <button
+                  onClick={deleteAllSent}
+                  disabled={sent.length === 0 || bulkDeleting}
+                  className="rounded-md bg-destructive text-destructive-foreground px-2 py-1 text-[10px] font-bold flex items-center gap-1 disabled:opacity-50"
+                  title="Excluir todos os cupons enviados"
+                >
+                  <Trash2 className="h-3 w-3" /> Todos
+                </button>
+              </div>
+            </div>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <input value={sentSearch} onChange={(e) => setSentSearch(e.target.value)} placeholder="Buscar por nome, email ou código…" className="w-full rounded-lg bg-muted pl-8 pr-3 py-2 text-sm outline-none" />
@@ -436,7 +509,16 @@ const AdminCoupons = () => {
               {filteredSent.map((r) => (
                 <div key={r.id} className={`px-3 py-2.5 space-y-0.5 ${r.active === false ? "opacity-60" : ""}`}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-xs font-bold text-primary">{r.code}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={selectedSentIds.has(r.id)}
+                        onChange={() => toggleSentSelect(r.id)}
+                        className="h-4 w-4 accent-primary"
+                        aria-label={`Selecionar cupom ${r.code}`}
+                      />
+                      <span className="font-mono text-xs font-bold text-primary truncate">{r.code}</span>
+                    </div>
                     <div className="flex items-center gap-1.5">
                       <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${
                         r.used_at ? "bg-success/15 text-success"
