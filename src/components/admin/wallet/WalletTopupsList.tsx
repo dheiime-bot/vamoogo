@@ -80,13 +80,25 @@ const WalletTopupsList = ({ refreshKey = 0 }: Props) => {
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating(id);
-    const { error } = await supabase.from("wallet_topups").update({ status }).eq("id", id);
+    const { data, error } = await supabase.rpc("admin_set_wallet_topup_status", {
+      _topup_id: id,
+      _new_status: status,
+    });
     setUpdating(null);
     if (error) {
-      toast.error("Erro ao atualizar");
+      toast.error(error.message || "Erro ao atualizar");
       return;
     }
-    toast.success(`Status alterado para ${STATUS_LABELS[status]?.label || status}`);
+    const credited = Number((data as any)?.credited || 0);
+    const bonus = Number((data as any)?.bonus || 0);
+    if (credited > 0) {
+      toast.success(
+        `Saldo creditado: R$ ${formatBRL(credited)}` +
+          (bonus > 0 ? ` + bônus R$ ${formatBRL(bonus)}` : ""),
+      );
+    } else {
+      toast.success(`Status alterado para ${STATUS_LABELS[status]?.label || status}`);
+    }
   };
 
   const rangeText = useMemo(() => {
