@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Save, Loader2, MessageCircle, Plus, X, History, CheckCircle2, Clock, XCircle, DollarSign } from "lucide-react";
+import { Save, Loader2, MessageCircle, Plus, X, History, CheckCircle2, Clock, XCircle, DollarSign, Gift, Trash2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { Switch } from "@/components/ui/switch";
@@ -17,6 +17,8 @@ interface WhatsappTopupConfig {
   message_template: string;
   quick_amounts: number[];
   allow_custom_amount: boolean;
+  bonus_enabled: boolean;
+  bonus_tiers: { min_amount: number; percent: number }[];
 }
 
 const DEFAULT_CONFIG: WhatsappTopupConfig = {
@@ -27,6 +29,12 @@ const DEFAULT_CONFIG: WhatsappTopupConfig = {
     "Olá, gostaria de solicitar uma recarga para minha carteira de motorista.\n\nNome: {nome}\nCPF: {cpf}\nTelefone: {telefone}\nID do motorista: {id}\nValor da recarga: R$ {valor}",
   quick_amounts: [20, 30, 50, 100],
   allow_custom_amount: true,
+  bonus_enabled: true,
+  bonus_tiers: [
+    { min_amount: 100, percent: 5 },
+    { min_amount: 150, percent: 10 },
+    { min_amount: 200, percent: 15 },
+  ],
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }> = {
@@ -87,6 +95,9 @@ const AdminWalletTopup = () => {
       ...config,
       whatsapp_number: config.whatsapp_number.replace(/\D/g, ""),
       quick_amounts: [...config.quick_amounts].sort((a, b) => a - b),
+      bonus_tiers: [...(config.bonus_tiers || [])]
+        .filter((t) => t.min_amount > 0 && t.percent > 0)
+        .sort((a, b) => a.min_amount - b.min_amount),
     };
     const { error } = await supabase
       .from("platform_settings")
@@ -119,6 +130,26 @@ const AdminWalletTopup = () => {
 
   const removeAmount = (v: number) => {
     setConfig({ ...config, quick_amounts: config.quick_amounts.filter((x) => x !== v) });
+  };
+
+  const addTier = () => {
+    setConfig({
+      ...config,
+      bonus_tiers: [...(config.bonus_tiers || []), { min_amount: 0, percent: 0 }],
+    });
+  };
+
+  const updateTier = (i: number, patch: Partial<{ min_amount: number; percent: number }>) => {
+    const next = [...(config.bonus_tiers || [])];
+    next[i] = { ...next[i], ...patch };
+    setConfig({ ...config, bonus_tiers: next });
+  };
+
+  const removeTier = (i: number) => {
+    setConfig({
+      ...config,
+      bonus_tiers: (config.bonus_tiers || []).filter((_, idx) => idx !== i),
+    });
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -275,6 +306,68 @@ const AdminWalletTopup = () => {
               onCheckedChange={(v) => setConfig({ ...config, allow_custom_amount: v })}
             />
           </div>
+        </div>
+
+        {/* Bônus por faixa */}
+        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-primary/10 p-2.5">
+                <Gift className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold">Bônus de recarga</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Ofereça um percentual extra a partir de certos valores. A faixa de maior valor que o motorista atingir será aplicada.
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={config.bonus_enabled}
+              onCheckedChange={(v) => setConfig({ ...config, bonus_enabled: v })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            {(config.bonus_tiers || []).length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhuma faixa cadastrada.</p>
+            )}
+            {(config.bonus_tiers || []).map((t, i) => (
+              <div key={i} className="flex items-end gap-2 rounded-xl border bg-muted/30 p-3">
+                <div className="flex-1 space-y-1">
+                  <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">A partir de (R$)</Label>
+                  <Input
+                    value={t.min_amount || ""}
+                    onChange={(e) => updateTier(i, { min_amount: Number(e.target.value.replace(",", ".")) || 0 })}
+                    placeholder="100"
+                    inputMode="decimal"
+                  />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Bônus (%)</Label>
+                  <Input
+                    value={t.percent || ""}
+                    onChange={(e) => updateTier(i, { percent: Number(e.target.value.replace(",", ".")) || 0 })}
+                    placeholder="5"
+                    inputMode="decimal"
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeTier(i)}
+                  className="text-destructive hover:bg-destructive/10"
+                  aria-label="Remover faixa"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <Button onClick={addTier} size="sm" variant="outline">
+            <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar faixa
+          </Button>
         </div>
 
         {/* Histórico de solicitações */}

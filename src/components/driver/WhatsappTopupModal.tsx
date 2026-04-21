@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, MessageCircle, Send, AlertCircle } from "lucide-react";
+import { Loader2, MessageCircle, Send, AlertCircle, Gift } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,8 @@ interface Config {
   message_template: string;
   quick_amounts: number[];
   allow_custom_amount: boolean;
+  bonus_enabled?: boolean;
+  bonus_tiers?: { min_amount: number; percent: number }[];
 }
 
 const formatBRL = (n: number) =>
@@ -54,6 +56,26 @@ const WhatsappTopupModal = ({ open, onOpenChange }: Props) => {
     const v = Number(custom.replace(",", "."));
     return isFinite(v) && v > 0 ? v : 0;
   }, [selected, custom]);
+
+  const bonus = useMemo(() => {
+    if (!config?.bonus_enabled || !config?.bonus_tiers?.length || finalAmount <= 0) {
+      return { percent: 0, value: 0, total: finalAmount };
+    }
+    const tier = [...config.bonus_tiers]
+      .filter((t) => t.min_amount > 0 && t.percent > 0 && finalAmount >= t.min_amount)
+      .sort((a, b) => b.min_amount - a.min_amount)[0];
+    const percent = tier?.percent || 0;
+    const value = +(finalAmount * percent / 100).toFixed(2);
+    return { percent, value, total: +(finalAmount + value).toFixed(2) };
+  }, [config, finalAmount]);
+
+  const sortedTiers = useMemo(
+    () =>
+      (config?.bonus_tiers || [])
+        .filter((t) => t.min_amount > 0 && t.percent > 0)
+        .sort((a, b) => a.min_amount - b.min_amount),
+    [config],
+  );
 
   const isConfigured = !!(config?.enabled && config?.whatsapp_number);
 
@@ -91,12 +113,16 @@ const WhatsappTopupModal = ({ open, onOpenChange }: Props) => {
     }
 
     // Substitui variáveis na mensagem
-    const message = config.message_template
+    let message = config.message_template
       .replace(/\{nome\}/g, nome)
       .replace(/\{cpf\}/g, cpf || "—")
       .replace(/\{telefone\}/g, telefone || "—")
       .replace(/\{id\}/g, user.id)
       .replace(/\{valor\}/g, formatBRL(finalAmount));
+
+    if (bonus.percent > 0) {
+      message += `\n\n🎁 Bônus de ${bonus.percent}%: R$ ${formatBRL(bonus.value)}\nTotal a receber: R$ ${formatBRL(bonus.total)}`;
+    }
 
     const url = `https://wa.me/${config.whatsapp_number}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
@@ -186,12 +212,53 @@ const WhatsappTopupModal = ({ open, onOpenChange }: Props) => {
               </div>
             )}
 
+            {/* Faixas de bônus */}
+            {config!.bonus_enabled && sortedTiers.length > 0 && (
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold text-primary">Ganhe bônus de recarga</p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {sortedTiers.map((t, i) => {
+                    const reached = finalAmount >= t.min_amount;
+                    return (
+                      <span
+                        key={i}
+                        className={`text-[10px] font-semibold px-2 py-1 rounded-full border ${
+                          reached
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-primary/30 bg-background text-primary"
+                        }`}
+                      >
+                        R$ {t.min_amount}+ → +{t.percent}%
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Resumo */}
-            <div className="rounded-xl bg-muted/40 p-3 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Valor da recarga</span>
-              <span className="text-lg font-extrabold">
-                R$ {formatBRL(finalAmount)}
-              </span>
+            <div className="rounded-xl bg-muted/40 p-3 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Valor da recarga</span>
+                <span className="text-sm font-bold">R$ {formatBRL(finalAmount)}</span>
+              </div>
+              {bonus.percent > 0 && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-primary font-semibold flex items-center gap-1">
+                      <Gift className="h-3 w-3" /> Bônus ({bonus.percent}%)
+                    </span>
+                    <span className="text-sm font-bold text-primary">+ R$ {formatBRL(bonus.value)}</span>
+                  </div>
+                  <div className="border-t border-border pt-1.5 flex items-center justify-between">
+                    <span className="text-xs font-semibold">Total na carteira</span>
+                    <span className="text-lg font-extrabold text-success">R$ {formatBRL(bonus.total)}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <Button
