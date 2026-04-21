@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { Loader2, LocateFixed } from "lucide-react";
 import { useGoogleMapsKey } from "@/hooks/useGoogleMapsKey";
+import { CATEGORY_COLOR } from "@/lib/categoryStyle";
 
 interface MapPoint {
   lat: number;
@@ -126,11 +127,14 @@ const shadeColor = (hex: string, percent: number) => {
   return `#${[f(r), f(g), f(b)].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
 };
 
-/** Cores padrão por categoria quando o veículo do motorista não é conhecido (idle/nearby). */
+/**
+ * Cores padrão por categoria quando o veículo do motorista não é conhecido (idle/nearby).
+ * Reaproveita a paleta canônica em src/lib/categoryStyle.ts para ficar igual em todos os apps.
+ */
 const CATEGORY_DEFAULT_COLOR: Record<"economico" | "conforto" | "moto", string> = {
-  economico: "#2563eb", // azul vamoo
-  conforto: "#d4af37",  // dourado
-  moto: "#2563eb",
+  economico: CATEGORY_COLOR.economico,
+  conforto: CATEGORY_COLOR.conforto,
+  moto: CATEGORY_COLOR.moto,
 };
 
 /* ----- Pino estilo "map-pin" com veículo dentro ----- */

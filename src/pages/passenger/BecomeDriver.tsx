@@ -5,6 +5,7 @@ import {
   AlertCircle, Car, Bike, Sparkles, KeyRound, CreditCard, Hash, Palette, Shield,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getCategoryColor } from "@/lib/categoryStyle";
 import { supabase } from "@/integrations/supabase/client";
 import { validateCPF, formatCPF, formatPhone, formatPlate } from "@/lib/validators";
 import { formatRenavam, validateRenavam } from "@/lib/validators";
@@ -394,13 +395,18 @@ const BecomeDriver = () => {
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-2 block">Categoria</label>
               <div className="grid grid-cols-3 gap-2">
-                {CATEGORIES.map((c) => (
-                  <button key={c.id} type="button" onClick={() => setCategory(c.id)}
-                    className={`flex flex-col items-center gap-1 rounded-xl border-2 p-3 ${category === c.id ? "border-primary bg-primary/5" : "border-border bg-muted/30"}`}>
-                    <c.icon className={`h-5 w-5 ${category === c.id ? "text-primary" : "text-muted-foreground"}`} />
-                    <span className="text-xs font-semibold">{c.label}</span>
-                  </button>
-                ))}
+                {CATEGORIES.map((c) => {
+                  const color = getCategoryColor(c.id);
+                  const isActive = category === c.id;
+                  return (
+                    <button key={c.id} type="button" onClick={() => setCategory(c.id)}
+                      className={`flex flex-col items-center gap-1 rounded-xl border-2 p-3 transition-all ${isActive ? "bg-primary/5" : "border-border bg-muted/30"}`}
+                      style={isActive ? { borderColor: color, backgroundColor: `${color}14` } : undefined}>
+                      <c.icon className="h-5 w-5" style={{ color }} />
+                      <span className="text-xs font-semibold">{c.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
