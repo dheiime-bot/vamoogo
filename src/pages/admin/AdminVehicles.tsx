@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { getCategoryColor } from "@/lib/categoryStyle";
 
 interface Row {
   id: string;
@@ -28,8 +29,12 @@ interface Row {
 
 interface DriverOpt { user_id: string; full_name: string; email: string | null; }
 
-const CategoryIcon = ({ c, className }: { c: string; className?: string }) =>
-  c === "moto" ? <Bike className={className} /> : <Car className={className} />;
+const CategoryIcon = ({ c, className }: { c: string; className?: string }) => {
+  const color = getCategoryColor(c);
+  return c === "moto"
+    ? <Bike className={className} style={{ color }} />
+    : <Car className={className} style={{ color }} />;
+};
 
 const AdminVehicles = () => {
   const [loading, setLoading] = useState(true);
@@ -183,7 +188,7 @@ const AdminVehicles = () => {
                 <tr key={r.id} className="border-t hover:bg-muted/20">
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
-                      <CategoryIcon c={r.category} className="h-4 w-4 text-primary" />
+                      <CategoryIcon c={r.category} className="h-4 w-4" />
                       <div>
                         <p className="font-medium">{r.vehicle_brand} {r.vehicle_model}</p>
                         <p className="text-[11px] text-muted-foreground">{r.vehicle_color || "—"} • {r.vehicle_year || "—"}</p>
