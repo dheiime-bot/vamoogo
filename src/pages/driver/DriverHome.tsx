@@ -4,6 +4,7 @@ import { AlertTriangle, MapPin, Play, Flag, Phone, MessageCircle, Star, Clock, Q
 import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getRideDestination, getRideNextTarget, getRideStops, routePointName } from "@/lib/rideRoute";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
+import { formatBRL } from "@/lib/brFormat";
 import AppMenu from "@/components/shared/AppMenu";
 import BlockBanner from "@/components/shared/BlockBanner";
 import NotificationBell from "@/components/shared/NotificationBell";
