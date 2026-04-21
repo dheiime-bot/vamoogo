@@ -132,6 +132,26 @@ const AdminWalletTopup = () => {
     setConfig({ ...config, quick_amounts: config.quick_amounts.filter((x) => x !== v) });
   };
 
+  const addTier = () => {
+    setConfig({
+      ...config,
+      bonus_tiers: [...(config.bonus_tiers || []), { min_amount: 0, percent: 0 }],
+    });
+  };
+
+  const updateTier = (i: number, patch: Partial<{ min_amount: number; percent: number }>) => {
+    const next = [...(config.bonus_tiers || [])];
+    next[i] = { ...next[i], ...patch };
+    setConfig({ ...config, bonus_tiers: next });
+  };
+
+  const removeTier = (i: number) => {
+    setConfig({
+      ...config,
+      bonus_tiers: (config.bonus_tiers || []).filter((_, idx) => idx !== i),
+    });
+  };
+
   const updateStatus = async (id: string, status: string) => {
     setUpdating(id);
     const { error } = await supabase.from("wallet_topups").update({ status }).eq("id", id);
