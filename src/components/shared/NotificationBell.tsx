@@ -204,7 +204,7 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
       className={cn(floating && "fixed right-3 z-50")}
       style={floating ? { top: `calc(env(safe-area-inset-top) + 0.75rem + ${topOffsetPx}px)` } : undefined}
     >
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(o) => { if (o) stopOfferAlert(); setOpen(o); }}>
         <PopoverTrigger asChild>
           <button
             aria-label="Notificações"
