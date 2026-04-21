@@ -17,7 +17,7 @@ interface Props {
 }
 
 const HOME_PATH = "/driver";
-const RIDES_PATH = "/driver/rides";
+const OFFERS_PATH = "/driver/offers";
 
 /**
  * Ícone "pneu com chama" — pneu preto com aro/raios e uma chama saindo do topo,
@@ -128,10 +128,11 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem + 8px)" }}
     >
       <div className="mx-auto flex max-w-lg items-center justify-center gap-4 px-4 py-2">
-        {/* Botão Corridas — pneu com chama + badge de ofertas pendentes */}
+        {/* Botão Corridas — pneu com chama + badge de ofertas pendentes.
+            Leva o motorista direto para a lista de ofertas disponíveis. */}
         <button
-          onClick={() => navigate(RIDES_PATH)}
-          aria-label="Minhas corridas"
+          onClick={() => navigate(OFFERS_PATH)}
+          aria-label="Ofertas de corrida disponíveis"
           className="pointer-events-auto relative flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-lg ring-2 ring-background border border-border transition-transform active:scale-95 hover:bg-muted"
         >
           <TireFlameIcon size={34} />
