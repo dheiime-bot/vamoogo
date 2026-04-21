@@ -85,7 +85,7 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
           aria-label="Ofertas de corrida disponíveis"
           className="pointer-events-auto relative flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-lg ring-2 ring-background border border-border transition-transform active:scale-95 hover:bg-muted"
         >
-          <TireFlameIcon size={34} />
+          <Car className="h-7 w-7 text-foreground" strokeWidth={2.2} />
           {pendingCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-extrabold text-destructive-foreground ring-2 ring-background animate-pulse">
               {pendingCount > 9 ? "9+" : pendingCount}
