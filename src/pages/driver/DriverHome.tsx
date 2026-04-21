@@ -405,10 +405,7 @@ const DriverHome = () => {
     setPhaseStartedAt(null);
     playPhaseSound("accepted");
     toast.success("Corrida aceita! 🚗");
-    // 🚗 Abre Google Maps automaticamente até o passageiro
-    if (updated.origin_lat && updated.origin_lng) {
-      openGoogleMapsRoute(Number(updated.origin_lat), Number(updated.origin_lng), "Embarque");
-    }
+    // O Google Maps abre apenas quando o motorista clicar em "Ir até o passageiro".
   };
 
   const handleReject = async () => {
