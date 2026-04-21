@@ -23,6 +23,17 @@ const catLabel = (c: string) => c === "moto" ? "Moto" : c === "conforto" ? "Conf
 const payLabel = (p?: string | null) =>
   p === "pix" ? "Pix" : p === "cash" ? "Dinheiro" : p === "debit" ? "Débito" : p === "credit" ? "Crédito" : "—";
 
+const payStatusLabel = (s?: string | null) => {
+  switch ((s || "").toLowerCase()) {
+    case "paid": return "PAGO";
+    case "pending": return "PENDENTE";
+    case "failed": return "FALHOU";
+    case "refunded": return "REEMBOLSADO";
+    case "cancelled": return "CANCELADO";
+    default: return (s || "—").toUpperCase();
+  }
+};
+
 const RideDetailsDialog = ({ rideId, open, onClose, role }: Props) => {
   const [ride, setRide] = useState<any>(null);
   const [other, setOther] = useState<any>(null); // passageiro (p/ motorista) OU motorista (p/ passageiro)
@@ -175,7 +186,7 @@ const RideDetailsDialog = ({ rideId, open, onClose, role }: Props) => {
             <div className="rounded-xl border p-3 space-y-1.5">
               <p className="text-xs font-bold uppercase text-muted-foreground mb-1 flex items-center gap-1"><Receipt className="h-3.5 w-3.5" /> Financeiro</p>
               <div className="flex justify-between"><span className="text-muted-foreground">Pagamento</span><span className="font-medium flex items-center gap-1"><CreditCard className="h-3 w-3" />{payLabel(ride.payment_method)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Status pagamento</span><span className="font-medium uppercase text-xs">{ride.payment_status || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Status pagamento</span><span className="font-medium uppercase text-xs">{payStatusLabel(ride.payment_status)}</span></div>
               {role === "passenger" ? (
                 <div className="flex justify-between border-t pt-1.5 mt-1"><span className="font-semibold">Valor pago</span><span className="font-extrabold text-success">{formatBRL(Number(ride.price ?? 0))}</span></div>
               ) : (
