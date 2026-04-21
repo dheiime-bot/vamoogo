@@ -546,7 +546,8 @@ const DriverHome = () => {
         <GoogleMap
           className="h-full w-full rounded-none"
           origin={(rideState === "going_to_passenger" || rideState === "arrived" || rideState === "in_ride") ? originPoint : null}
-          destination={rideState === "in_ride" ? destPoint : null}
+          destination={rideState === "in_ride" ? destinationPoint : null}
+          stops={rideState === "in_ride" ? routeStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.label })) : []}
           trackUserLocation={!activeRide}
           showRoute={rideState === "going_to_passenger" || rideState === "in_ride"}
           userMarkerVariant={
@@ -755,15 +756,29 @@ const DriverHome = () => {
               <span className="text-sm font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
             </div>
             <div className="flex items-start gap-2">
-              <Flag className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
-              <p className="text-xs truncate">{activeRide.destination_address?.split(" - ")[0]}</p>
+              {currentStopIndex < rideStops.length ? (
+                <MapPin className="h-3.5 w-3.5 text-warning mt-0.5 shrink-0" />
+              ) : (
+                <Flag className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
+              )}
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-muted-foreground">
+                  {currentStopIndex < rideStops.length ? `Próxima parada ${currentStopIndex + 1}` : "Destino final"}
+                </p>
+                <p className="text-xs truncate">{routePointName(nextTarget, "Destino final")}</p>
+              </div>
             </div>
+            {currentStopIndex < rideStops.length && (
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-2 text-[11px] text-warning">
+                Confirme esta parada para liberar o próximo trecho da viagem.
+              </div>
+            )}
             <div className="text-[10px] text-muted-foreground">
               {activeRide.distance_km} km • ~{activeRide.duration_minutes} min • Taxa: R$ {Number(activeRide.platform_fee).toFixed(2)}
             </div>
             <div className="grid grid-cols-2 gap-1.5">
               <button
-                onClick={() => openGoogleMapsRoute(Number(activeRide.destination_lat), Number(activeRide.destination_lng), "Destino")}
+                onClick={() => nextTarget && openGoogleMapsRoute(nextTarget.lat, nextTarget.lng, routePointName(nextTarget), remainingStops.slice(1).map((s) => ({ lat: s.lat, lng: s.lng })))}
                 className="flex items-center justify-center gap-1 rounded-lg border py-2 text-xs font-semibold">
                 <NavigationIcon className="h-3.5 w-3.5 text-primary" /> Rota
               </button>
