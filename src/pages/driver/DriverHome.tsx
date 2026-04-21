@@ -491,11 +491,13 @@ const DriverHome = () => {
   useEffect(() => {
     if (!activeRide?.id || activeRide.status !== "in_progress") {
       setCurrentStopIndex(0);
+      setArrivedAtFinal(false);
       return;
     }
     const stored = Number(localStorage.getItem(`ride-stop-index-${activeRide.id}`) || 0);
     const max = getRideStops(activeRide).length;
     setCurrentStopIndex(Number.isFinite(stored) ? Math.min(Math.max(0, stored), max) : 0);
+    setArrivedAtFinal(localStorage.getItem(`ride-arrived-final-${activeRide.id}`) === "1");
   }, [activeRide]);
 
   // 🚨 Reage instantaneamente a mudanças de status feitas pelo admin (realtime).
