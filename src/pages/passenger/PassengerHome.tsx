@@ -547,9 +547,9 @@ const PassengerHome = () => {
     setDriverLocation(null);
   };
 
-  // Alterar destino — permitido APENAS com a corrida em andamento (in_progress).
-  // Recalcula preço, distância e tempo via Distance Matrix antes de gravar no banco.
-  const handleChangeDestination = async () => {
+  // ETAPA 1: calcula a "prévia" da troca de rota e abre o popup de confirmação.
+  // Permitido APENAS com a corrida em andamento (in_progress).
+  const handlePreviewChangeDestination = async () => {
     if (!activeRide || !newDestination) return;
     if (activeRide.status !== "in_progress") {
       toast.error("Só é possível alterar o destino com a corrida em andamento");
