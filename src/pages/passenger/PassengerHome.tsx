@@ -25,7 +25,7 @@ import { getRideStops, getRideDestination } from "@/lib/rideRoute";
 import type { PixKeyType } from "@/lib/pix";
 import { calcPlatformFee } from "@/lib/platformFee";
 import { toast } from "sonner";
-import { playPhaseSound, unlockAudioOnce } from "@/lib/offerSound";
+import { playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
 
 const categories = [
   { id: "moto", label: "Moto", icon: Bike, desc: "Rápido e barato" },
@@ -215,7 +215,10 @@ const PassengerHome = () => {
   }, [user]);
 
   // Destrava o áudio na 1ª interação (necessário para autoplay no Chrome/Safari)
-  useEffect(() => { unlockAudioOnce(); }, []);
+  useEffect(() => {
+    unlockAudioOnce();
+    requestNotificationPermission().catch(() => {});
+  }, []);
 
   // Realtime: updates da corrida + posição do motorista
   useEffect(() => {
