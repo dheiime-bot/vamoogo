@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Save, Loader2, MessageCircle, Plus, X, History, CheckCircle2, Clock, XCircle, DollarSign } from "lucide-react";
+import { Save, Loader2, MessageCircle, Plus, X, History, CheckCircle2, Clock, XCircle, DollarSign, Gift, Trash2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import { Switch } from "@/components/ui/switch";
@@ -17,6 +17,8 @@ interface WhatsappTopupConfig {
   message_template: string;
   quick_amounts: number[];
   allow_custom_amount: boolean;
+  bonus_enabled: boolean;
+  bonus_tiers: { min_amount: number; percent: number }[];
 }
 
 const DEFAULT_CONFIG: WhatsappTopupConfig = {
@@ -27,6 +29,12 @@ const DEFAULT_CONFIG: WhatsappTopupConfig = {
     "Olá, gostaria de solicitar uma recarga para minha carteira de motorista.\n\nNome: {nome}\nCPF: {cpf}\nTelefone: {telefone}\nID do motorista: {id}\nValor da recarga: R$ {valor}",
   quick_amounts: [20, 30, 50, 100],
   allow_custom_amount: true,
+  bonus_enabled: true,
+  bonus_tiers: [
+    { min_amount: 100, percent: 5 },
+    { min_amount: 150, percent: 10 },
+    { min_amount: 200, percent: 15 },
+  ],
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }> = {
