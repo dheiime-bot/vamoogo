@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar, MessageCircle } from "lucide-react";
+import { CreditCard, QrCode, ArrowDownLeft, ArrowUpRight, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar, MessageCircle, Car, ShieldCheck, Clock, XCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import WhatsappTopupModal from "@/components/driver/WhatsappTopupModal";
@@ -20,9 +20,20 @@ const PERIODS: { id: PeriodId; label: string }[] = [
 
 const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
+interface WalletEntry {
+  id: string;
+  kind: "ride" | "topup" | "adjustment";
+  description: string;
+  amount: number;
+  occurred_at: string;
+  status: string;
+  ride_code: string | null;
+  reference: any;
+}
+
 const DriverWallet = () => {
   const { user, driverData } = useAuth();
-  const [recharges, setRecharges] = useState<any[]>([]);
+  const [history, setHistory] = useState<WalletEntry[]>([]);
   const [completedRides, setCompletedRides] = useState<{ driver_net: number | null; completed_at: string | null; created_at: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"recharge" | "history">("recharge");
@@ -35,11 +46,11 @@ const DriverWallet = () => {
 
   const reload = async () => {
     if (!user) return;
-    const [rech, ridesRes] = await Promise.all([
-      supabase.from("recharges").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10),
+    const [hist, ridesRes] = await Promise.all([
+      supabase.rpc("driver_wallet_history", { _limit: 100 }),
       supabase.from("rides").select("driver_net, completed_at, created_at").eq("driver_id", user.id).eq("status", "completed").order("completed_at", { ascending: false }).limit(1000),
     ]);
-    if (rech.data) setRecharges(rech.data);
+    if (hist.data) setHistory(hist.data as any);
     if (ridesRes.data) setCompletedRides(ridesRes.data as any);
   };
 
@@ -51,6 +62,7 @@ const DriverWallet = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "recharges", filter: `driver_id=eq.${user.id}` }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "balance_adjustments", filter: `driver_id=eq.${user.id}` }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "wallet_topups", filter: `driver_id=eq.${user.id}` }, reload)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
