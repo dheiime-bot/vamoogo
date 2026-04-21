@@ -1025,7 +1025,21 @@ const DriverHome = () => {
                 );
               })()
             ) : !arrivedAtFinal ? (
-              (() => {
+              routeChanged ? (
+                <button
+                  onClick={() => {
+                    setRouteChanged(false);
+                    startPhaseTimer(activeRide.id, `stop-${currentStopIndex}`);
+                    if (nextTarget) openGoogleMapsRoute(nextTarget.lat, nextTarget.lng, routePointName(nextTarget));
+                  }}
+                  className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2 animate-pulse"
+                >
+                  <NavigationIcon className="h-4 w-4 shrink-0" />
+                  <span className="truncate text-left">
+                    🚨 Iniciar nova rota: {nextTarget?.address?.split(" - ")[0] || "novo destino"} • R$ {Number(activeRide.price).toFixed(2)}
+                  </span>
+                </button>
+              ) : (() => {
                 const left = phaseSecondsLeft(STOP_WAIT_SEC);
                 const ready = left <= 0;
                 const addr = nextTarget?.address?.split(" - ")[0]
