@@ -329,6 +329,21 @@ const DriverWallet = () => {
 
         {activeTab === "recharge" && (
           <div className="space-y-4 animate-slide-up">
+            {/* Recarga via WhatsApp (configurável pelo admin) */}
+            <button
+              onClick={() => setTopupOpen(true)}
+              className="w-full rounded-2xl bg-gradient-to-r from-success to-success/80 text-success-foreground p-4 flex items-center gap-3 shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all"
+            >
+              <div className="rounded-xl bg-white/20 p-2.5 shrink-0">
+                <MessageCircle className="h-5 w-5" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-extrabold">Recarregar saldo</p>
+                <p className="text-[11px] opacity-90">Solicitar recarga pela central via WhatsApp</p>
+              </div>
+              <span className="text-[10px] font-bold bg-white/20 rounded-full px-2 py-0.5">NOVO</span>
+            </button>
+
             {/* Quick amounts */}
             <div>
               <p className="text-[11px] font-semibold text-muted-foreground mb-2 px-1">Escolha um valor</p>
@@ -431,6 +446,7 @@ const DriverWallet = () => {
       </div>
       <AppMenu role="driver" />
       <DriverHomeFab />
+      <WhatsappTopupModal open={topupOpen} onOpenChange={setTopupOpen} />
     </div>
   );
 };
