@@ -191,6 +191,8 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
 
   const handleClick = async (n: NotificationRow) => {
     setOpen(false);
+    // Para qualquer alerta persistente (mudança de rota etc.) ao interagir.
+    stopOfferAlert();
     if (!n.is_read) await markAsRead(n.id);
     if (n.link) navigate(n.link);
   };
