@@ -9,6 +9,7 @@ import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
 import { useRealtimeReconnect } from "@/hooks/useRealtimeReconnect";
 import { useDevicePermissions } from "@/hooks/useDevicePermissions";
 import DriverOfferAlert from "@/components/driver/DriverOfferAlert";
+import GpsPermissionGate from "@/components/driver/GpsPermissionGate";
 import RouteErrorBoundary from "@/components/shared/RouteErrorBoundary";
 import Index from "./pages/Index.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
@@ -93,7 +94,8 @@ const ProtectedDriverRoute = ({ children }: { children: JSX.Element }) => {
   if (!roles.includes("driver") && !roles.includes("admin") && !roles.includes("master")) {
     return <Navigate to="/auth/driver/login" replace />;
   }
-  return children;
+  // Bloqueia toda a área do motorista até a permissão de GPS ser concedida.
+  return <GpsPermissionGate>{children}</GpsPermissionGate>;
 };
 
 /**
