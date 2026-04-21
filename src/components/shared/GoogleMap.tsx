@@ -912,7 +912,7 @@ const GoogleMapInner = ({
   return (
     <Map
       defaultCenter={ALTAMIRA_CENTER}
-      defaultZoom={14}
+      defaultZoom={17}
       mapId={MAP_ID}
       gestureHandling={interactive ? "greedy" : "none"}
       disableDefaultUI={true}
