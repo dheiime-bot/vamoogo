@@ -270,8 +270,8 @@
 .gmap-clean a[href*="maps.google.com/maps"],
 .gmap-clean a[title="Open this area in Google Maps (opens a new window)"] {
   position: absolute !important;
-  bottom: 8px !important;
-  left: 8px !important;
+  bottom: calc(env(safe-area-inset-bottom) + 8px) !important;
+  left: calc(env(safe-area-inset-left) + 8px) !important;
   top: auto !important;
   right: auto !important;
   z-index: 80 !important;
@@ -289,8 +289,8 @@
 /* Quando o Google renderiza o logo dentro de um .gm-style-cc com <img>, garante o canto inferior-esquerdo. */
 .gmap-clean .gm-style-cc:has(img) {
   position: absolute !important;
-  bottom: 8px !important;
-  left: 8px !important;
+  bottom: calc(env(safe-area-inset-bottom) + 8px) !important;
+  left: calc(env(safe-area-inset-left) + 8px) !important;
   top: auto !important;
   right: auto !important;
   z-index: 80 !important;
