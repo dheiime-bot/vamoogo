@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar } from "lucide-react";
+import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar, MessageCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
+import WhatsappTopupModal from "@/components/driver/WhatsappTopupModal";
 
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,7 @@ const DriverWallet = () => {
   // Mês selecionado: offset em relação ao mês atual (0 = atual, 1 = mês passado, ...)
   const [monthOffset, setMonthOffset] = useState<number>(0);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [topupOpen, setTopupOpen] = useState(false);
   const balance = driverData?.balance ?? 0;
 
   const reload = async () => {

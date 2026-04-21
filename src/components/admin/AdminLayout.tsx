@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Car, DollarSign, Settings, AlertTriangle, MapPin,
   Headphones, ScrollText, Megaphone, Ticket, BarChart3, LogOut,
   Search, Bell, Moon, Sun, RefreshCw, ChevronDown, ChevronRight, User,
-  Briefcase, Headset, MessageCircle, ShieldCheck, UserCog, KeyRound, LifeBuoy, Mail,
+  Briefcase, Headset, MessageCircle, ShieldCheck, UserCog, KeyRound, LifeBuoy, Mail, Wallet,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMaster } from "@/hooks/usePermission";
@@ -61,6 +61,7 @@ const navItems: NavItem[] = [
     ],
   },
   { icon: DollarSign, label: "Financeiro", path: "/admin/finance" },
+  { icon: Wallet, label: "Recarga de Carteira", path: "/admin/wallet-topup" },
   { icon: BarChart3, label: "Relatórios", path: "/admin/reports" },
   { icon: MapPin, label: "Mapa ao vivo", path: "/admin/live" },
   {
