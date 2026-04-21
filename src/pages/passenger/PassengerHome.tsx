@@ -216,12 +216,25 @@ const PassengerHome = () => {
           setDriverLocation(null);
           playPhaseSound("completed");
         } else if (ride.status === "cancelled") {
+          // Aviso especial quando ninguém aceitou (auto-cancel do sistema/dispatch)
+          const SYSTEM = "00000000-0000-0000-0000-000000000000";
+          const noDriver =
+            ride.cancel_reason_code === "no_drivers_available" ||
+            ride.cancelled_by === SYSTEM;
+          if (noDriver) {
+            toast.error("Nenhum motorista por perto!", {
+              description: "Tente novamente em alguns instantes.",
+              duration: 6000,
+            });
+            playPhaseSound("cancelled");
+          } else {
+            playPhaseSound("cancelled");
+          }
           setRideState("idle");
           setActiveRide(null);
           setDriverInfo(null);
           setPaymentMethod(null);
           setDriverLocation(null);
-          playPhaseSound("cancelled");
         }
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
