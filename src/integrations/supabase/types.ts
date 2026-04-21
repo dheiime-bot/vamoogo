@@ -1854,6 +1854,18 @@ export type Database = {
         Args: { _close?: boolean; _response: string; _ticket_id: string }
         Returns: undefined
       }
+      admin_search_drivers: {
+        Args: { _limit?: number; _term: string }
+        Returns: {
+          balance: number
+          cpf: string
+          email: string
+          full_name: string
+          phone: string
+          status: string
+          user_id: string
+        }[]
+      }
       admin_send_coupon: {
         Args: {
           _code: string
@@ -2071,6 +2083,19 @@ export type Database = {
       driver_set_active_vehicle: {
         Args: { _vehicle_id: string }
         Returns: undefined
+      }
+      driver_wallet_history: {
+        Args: { _limit?: number }
+        Returns: {
+          amount: number
+          description: string
+          id: string
+          kind: string
+          occurred_at: string
+          reference: Json
+          ride_code: string
+          status: string
+        }[]
       }
       find_nearest_drivers: {
         Args: {
