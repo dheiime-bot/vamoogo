@@ -900,10 +900,12 @@ const DriverHome = () => {
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold text-muted-foreground">
                   {currentStopIndex < rideStops.length
-                    ? `Próxima parada ${currentStopIndex + 1} de ${rideStops.length}`
-                    : arrivedAtFinal ? "Chegou ao destino final" : "Indo ao destino final"}
+                    ? `Você está indo para a parada ${currentStopIndex + 1} de ${rideStops.length}`
+                    : arrivedAtFinal ? "Chegou ao destino final" : "Você está indo para o destino final"}
                 </p>
-                <p className="text-xs truncate">{routePointName(nextTarget, "Destino final")}</p>
+                <p className="text-xs truncate">
+                  {nextTarget?.address || routePointName(nextTarget, "Destino final")}
+                </p>
               </div>
             </div>
             {currentStopIndex < rideStops.length && (
@@ -930,15 +932,55 @@ const DriverHome = () => {
               </button>
             </div>
             {currentStopIndex < rideStops.length ? (
-              <button onClick={handleConfirmStop}
-                className="w-full rounded-xl bg-warning py-2.5 text-sm font-bold text-warning-foreground flex items-center justify-center gap-2">
-                <MapPin className="h-4 w-4" /> Confirmar parada {currentStopIndex + 1}
-              </button>
+              (() => {
+                const left = phaseSecondsLeft(STOP_WAIT_SEC);
+                const ready = left <= 0;
+                const addr = nextTarget?.address?.split(" - ")[0]
+                  || routePointName(nextTarget, `Parada ${currentStopIndex + 1}`);
+                return (
+                  <button
+                    onClick={ready ? handleConfirmStop : undefined}
+                    disabled={!ready}
+                    className={`w-full rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                      ready
+                        ? "bg-warning text-warning-foreground"
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                    }`}
+                  >
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    <span className="truncate text-left">
+                      {ready
+                        ? `Confirmar parada em: ${addr}`
+                        : `Indo para parada: ${addr} (${left}s)`}
+                    </span>
+                  </button>
+                );
+              })()
             ) : !arrivedAtFinal ? (
-              <button onClick={handleArrivedFinal}
-                className="w-full rounded-xl bg-destructive py-2.5 text-sm font-bold text-destructive-foreground flex items-center justify-center gap-2">
-                <Flag className="h-4 w-4" /> Cheguei ao destino final
-              </button>
+              (() => {
+                const left = phaseSecondsLeft(STOP_WAIT_SEC);
+                const ready = left <= 0;
+                const addr = nextTarget?.address?.split(" - ")[0]
+                  || routePointName(nextTarget, "Destino final");
+                return (
+                  <button
+                    onClick={ready ? handleArrivedFinal : undefined}
+                    disabled={!ready}
+                    className={`w-full rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                      ready
+                        ? "bg-destructive text-destructive-foreground"
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                    }`}
+                  >
+                    <Flag className="h-4 w-4 shrink-0" />
+                    <span className="truncate text-left">
+                      {ready
+                        ? `Finalizar corrida em: ${addr}`
+                        : `Indo para destino: ${addr} (${left}s)`}
+                    </span>
+                  </button>
+                );
+              })()
             ) : activeRide.payment_method === "pix" ? (
               <button onClick={() => setShowPixModal(true)}
                 className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
