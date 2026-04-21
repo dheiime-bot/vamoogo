@@ -60,26 +60,18 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
     };
   }, [user?.id]);
 
-  const resolvedCenter =
-    centerSlot ??
-    (!isHome ? (
-      <button
-        onClick={() => navigate(HOME_PATH)}
-        aria-label="Voltar para a tela inicial"
-        className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-background transition-transform active:scale-95 hover:opacity-90"
-      >
-        <Home className="h-6 w-6" />
-      </button>
-    ) : null);
+  // O bottom nav do motorista só aparece na tela inicial.
+  // Na home: pneu (Corridas) à esquerda, switch ON/OFF no centro.
+  // O botão "centralizar mapa" fica à direita, renderizado dentro do GoogleMap.
+  if (!isHome) return null;
 
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none"
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem + 8px)" }}
     >
-      <div className="mx-auto flex max-w-lg items-center justify-center gap-4 px-4 py-2">
-        {/* Botão Corridas — pneu com chama + badge de ofertas pendentes.
-            Leva o motorista direto para a lista de ofertas disponíveis. */}
+      <div className="mx-auto flex max-w-lg items-center justify-between gap-4 px-4 py-2">
+        {/* Botão Corridas — pneu + badge de ofertas pendentes (esquerda) */}
         <button
           onClick={() => navigate(OFFERS_PATH)}
           aria-label="Ofertas de corrida disponíveis"
@@ -93,8 +85,12 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
           )}
         </button>
 
-        {/* Slot central (switch Ficar Online ou FAB de Home) */}
-        {resolvedCenter && <div className="pointer-events-auto flex justify-center">{resolvedCenter}</div>}
+        {/* Slot central (switch Ficar Online) */}
+        {centerSlot && <div className="pointer-events-auto flex justify-center">{centerSlot}</div>}
+
+        {/* Espaço reservado à direita — o botão de centralizar mapa
+            é renderizado pelo GoogleMap exatamente nesta posição (right-3). */}
+        <div className="h-16 w-16" aria-hidden />
       </div>
     </nav>
   );

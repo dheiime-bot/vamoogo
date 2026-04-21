@@ -13,7 +13,6 @@ import { useNavigate } from "react-router-dom";
 import { Car, MapPin, Clock, Loader2, CheckCircle2, XCircle, RefreshCw, Power } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
-import DriverBottomNav from "@/components/driver/DriverBottomNav";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -320,8 +319,6 @@ const DriverOffers = () => {
           </div>
         )}
       </div>
-
-      <DriverBottomNav />
     </div>
   );
 };
