@@ -14,7 +14,20 @@ import RideAddNoteDialog from "@/components/admin/rides/RideAddNoteDialog";
 
 const AdminRides = () => {
   const [rides, setRides] = useState<any[]>([]);
-  const [routeChanges, setRouteChanges] = useState<Record<string, { count: number; lastTo: string; lastDiff: number | null }>>({});
+  const [routeChanges, setRouteChanges] = useState<Record<string, {
+    count: number;
+    lastTo: string;
+    lastDiff: number | null;
+    firstFromAddress: string | null;
+    firstFromKm: number | null;
+    firstFromPrice: number | null;
+    lastToKm: number | null;
+    lastToPrice: number | null;
+    drivenKm: number | null;
+    drivenPrice: number | null;
+    newLegKm: number | null;
+    newLegPrice: number | null;
+  }>>({});
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -38,14 +51,30 @@ const AdminRides = () => {
       if (ids.length) {
         const { data: changes } = await supabase
           .from("ride_route_changes")
-          .select("ride_id, new_destination_address, previous_price, new_price, created_at")
+          .select("ride_id, previous_destination_address, new_destination_address, previous_distance_km, new_distance_km, previous_price, new_price, driven_km, driven_price, new_leg_km, new_leg_price, created_at")
           .in("ride_id", ids)
           .order("created_at", { ascending: true });
-        const map: Record<string, { count: number; lastTo: string; lastDiff: number | null }> = {};
+        const map: Record<string, any> = {};
         (changes || []).forEach((c: any) => {
-          const cur = map[c.ride_id] || { count: 0, lastTo: "", lastDiff: null };
+          const cur = map[c.ride_id] || {
+            count: 0, lastTo: "", lastDiff: null,
+            firstFromAddress: null, firstFromKm: null, firstFromPrice: null,
+            lastToKm: null, lastToPrice: null,
+            drivenKm: null, drivenPrice: null, newLegKm: null, newLegPrice: null,
+          };
+          if (cur.count === 0) {
+            cur.firstFromAddress = c.previous_destination_address;
+            cur.firstFromKm = c.previous_distance_km != null ? Number(c.previous_distance_km) : null;
+            cur.firstFromPrice = c.previous_price != null ? Number(c.previous_price) : null;
+          }
           cur.count += 1;
           cur.lastTo = c.new_destination_address;
+          cur.lastToKm = c.new_distance_km != null ? Number(c.new_distance_km) : null;
+          cur.lastToPrice = c.new_price != null ? Number(c.new_price) : null;
+          cur.drivenKm = c.driven_km != null ? Number(c.driven_km) : cur.drivenKm;
+          cur.drivenPrice = c.driven_price != null ? Number(c.driven_price) : cur.drivenPrice;
+          cur.newLegKm = c.new_leg_km != null ? Number(c.new_leg_km) : cur.newLegKm;
+          cur.newLegPrice = c.new_leg_price != null ? Number(c.new_leg_price) : cur.newLegPrice;
           cur.lastDiff = c.previous_price != null && c.new_price != null
             ? Number(c.new_price) - Number(c.previous_price)
             : null;
