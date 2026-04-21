@@ -344,6 +344,14 @@ const DriverHome = () => {
               description: `Novo destino: ${newAddr}\nNovo valor: R$ ${newPrice.toFixed(2)} (${newKm} km)`,
               duration: 12000,
             });
+            // Interrompe a navegação atual: força o motorista a clicar em "Iniciar
+            // nova rota" no app, fazendo o foco voltar do Google Maps externo.
+            setRouteChanged(true);
+            setPhaseStartedAt(null);
+            // Reseta para o destino final (assume troca de destino final)
+            setCurrentStopIndex(getRideStops(ride).length);
+            localStorage.setItem(`ride-stop-index-${ride.id}`, String(getRideStops(ride).length));
+            localStorage.setItem(`ride-phase-${ride.id}`, `route-changed|0`);
           }
           if (ride.status === "cancelled") {
             setActiveRide(null);
