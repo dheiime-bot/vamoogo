@@ -70,6 +70,35 @@ const DriverHome = () => {
   // (incluindo o nosso próprio update do driver_rating) reabram o modal.
   const finalizedRideIdsRef = useRef<Set<string>>(new Set());
 
+  // === Helpers de timer das fases (going_to_passenger / arrived / in_ride) ===
+  // Persistidos no localStorage sob a chave `ride-phase-${rideId}` no formato
+  // `${phaseKey}|${startedAtMs}` para sobreviver a reload da página.
+  const startPhaseTimer = (rideId: string, phaseKey: string) => {
+    const now = Date.now();
+    localStorage.setItem(`ride-phase-${rideId}`, `${phaseKey}|${now}`);
+    setPhaseStartedAt(now);
+    setTickNow(now);
+  };
+  const restorePhaseTimer = (rideId: string, expectedPhase: string) => {
+    const raw = localStorage.getItem(`ride-phase-${rideId}`);
+    if (raw) {
+      const [phase, ts] = raw.split("|");
+      const n = Number(ts);
+      if (phase === expectedPhase && Number.isFinite(n)) {
+        setPhaseStartedAt(n);
+        setTickNow(Date.now());
+        return;
+      }
+    }
+    // Sem registro válido — começa um novo timer agora.
+    startPhaseTimer(rideId, expectedPhase);
+  };
+  const phaseSecondsLeft = (totalSec: number) => {
+    if (!phaseStartedAt) return 0;
+    const elapsed = Math.floor((tickNow - phaseStartedAt) / 1000);
+    return Math.max(0, totalSec - elapsed);
+  };
+
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
   // Faz broadcast da posição GPS quando online
@@ -151,9 +180,18 @@ const DriverHome = () => {
         if (data && data.length > 0) {
           const r = data[0] as any;
           setActiveRide(r);
-          if (r.status === "in_progress") setRideState("in_ride");
-          else if (r.arrived_at) setRideState("arrived");
-          else setRideState("going_to_passenger");
+          if (r.status === "in_progress") {
+            setRideState("in_ride");
+            // Restaura/cria timer da parada/destino atual.
+            const idx = Number(localStorage.getItem(`ride-stop-index-${r.id}`) || 0);
+            restorePhaseTimer(r.id, `stop-${idx}`);
+          } else if (r.arrived_at) {
+            setRideState("arrived");
+            restorePhaseTimer(r.id, "arrived");
+          } else {
+            setRideState("going_to_passenger");
+            restorePhaseTimer(r.id, "going");
+          }
         }
       });
   }, [user]);
