@@ -21,7 +21,7 @@ import { useFareEstimate } from "@/hooks/useFareEstimate";
 import { useLiveEta } from "@/hooks/useLiveEta";
 import type { PlaceDetails } from "@/services/googlePlaces";
 import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
-import { getRideStops } from "@/lib/rideRoute";
+import { getRideStops, getRideDestination } from "@/lib/rideRoute";
 import type { PixKeyType } from "@/lib/pix";
 import { calcPlatformFee } from "@/lib/platformFee";
 import { toast } from "sonner";
@@ -890,9 +890,18 @@ const PassengerHome = () => {
                 <h2 className="text-lg font-bold font-display">
                   {rideState === "searching" && "Buscando motorista"}
                   {rideState === "accepted" && "Corrida aceita"}
-                  {rideState === "driver_arriving" && "Motorista a caminho"}
-                  {rideState === "arrived" && "Motorista chegou"}
-                  {rideState === "in_progress" && "Em viagem"}
+                  {rideState === "driver_arriving" && `Motorista a caminho para: ${activeRide.origin_address?.split(" - ")[0] || "embarque"}`}
+                  {rideState === "arrived" && `Motorista chegou em: ${activeRide.origin_address?.split(" - ")[0] || "embarque"}`}
+                  {rideState === "in_progress" && (() => {
+                    // Mostra a próxima parada, se houver, ou o destino final.
+                    const stops = getRideStops(activeRide);
+                    const next = stops[0] || getRideDestination(activeRide);
+                    const addr = next?.address?.split(" - ")[0]
+                      || next?.label
+                      || activeRide.destination_address?.split(" - ")[0]
+                      || "destino";
+                    return `A caminho para: ${addr}`;
+                  })()}
                 </h2>
               </div>
 
@@ -946,7 +955,7 @@ const PassengerHome = () => {
                   }`}>
                     {rideState === "driver_arriving" && (
                       <div className="space-y-0.5">
-                        <p>🚗 Motorista a caminho</p>
+                        <p>🚗 A caminho de: {activeRide.origin_address?.split(" - ")[0] || "embarque"}</p>
                         {liveEta && (
                           <p className="text-xs font-medium opacity-80">
                             Chega em ~{liveEta.minutes} min • {liveEta.km} km
@@ -954,8 +963,16 @@ const PassengerHome = () => {
                         )}
                       </div>
                     )}
-                    {rideState === "arrived" && "📍 Motorista chegou!"}
-                    {rideState === "in_progress" && "🛣️ Corrida em andamento"}
+                    {rideState === "arrived" && `📍 Chegou em: ${activeRide.origin_address?.split(" - ")[0] || "embarque"}`}
+                    {rideState === "in_progress" && (() => {
+                      const stops = getRideStops(activeRide);
+                      const next = stops[0] || getRideDestination(activeRide);
+                      const addr = next?.address?.split(" - ")[0]
+                        || next?.label
+                        || activeRide.destination_address?.split(" - ")[0]
+                        || "destino";
+                      return `🛣️ A caminho para: ${addr}`;
+                    })()}
                   </div>
 
                   {activeRide?.ride_code && (
@@ -1382,9 +1399,11 @@ const PassengerHome = () => {
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader className="px-4 pt-3 pb-1 shrink-0">
-            <DialogTitle className="text-center text-base font-display">Avalie sua viagem</DialogTitle>
+            <DialogTitle className="text-center text-base font-display">
+              🎉 Você chegou!
+            </DialogTitle>
             <p className="text-center text-[11px] text-muted-foreground mt-0.5">
-              A avaliação é obrigatória para continuar
+              Avalie sua viagem para voltar à tela inicial
             </p>
           </DialogHeader>
           {activeRide && (
