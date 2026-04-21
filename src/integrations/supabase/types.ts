@@ -1886,6 +1886,10 @@ export type Database = {
         Args: { _vehicle_id: string }
         Returns: undefined
       }
+      admin_set_wallet_topup_status: {
+        Args: { _new_status: string; _topup_id: string }
+        Returns: Json
+      }
       admin_transfer_vehicle: {
         Args: { _new_driver_id: string; _reason?: string; _vehicle_id: string }
         Returns: undefined
@@ -1906,12 +1910,46 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_update_driver_full: {
+        Args: {
+          _birth_date: string
+          _category: string
+          _cnh_ear: boolean
+          _cnh_number: string
+          _cpf: string
+          _email: string
+          _full_name: string
+          _phone: string
+          _pix_holder_name: string
+          _pix_key: string
+          _pix_key_type: string
+          _user_id: string
+          _vehicle_brand: string
+          _vehicle_color: string
+          _vehicle_model: string
+          _vehicle_plate: string
+          _vehicle_renavam: string
+          _vehicle_year: number
+        }
+        Returns: undefined
+      }
       admin_update_driver_status: {
         Args: { _message?: string; _new_status: string; _user_id: string }
         Returns: undefined
       }
       admin_update_passenger_data: {
         Args: {
+          _email: string
+          _full_name: string
+          _phone: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      admin_update_passenger_full: {
+        Args: {
+          _birth_date: string
+          _cpf: string
           _email: string
           _full_name: string
           _phone: string
