@@ -461,18 +461,33 @@ const PassengerHome = () => {
     // Taxa configurável: override por categoria (tariffs.fee_percent) ou global (platform_settings.global_fee_percent)
     const platformFee = await calcPlatformFee(price, selectedCategory as "moto" | "economico" | "conforto");
 
+    // 🔍 AUDITORIA: nunca grava "Minha localização" no banco. Para o motorista/admin/backend
+    // sempre persistimos o endereço real retornado pelo reverse geocode (GPS) ou pelo Google Places.
+    // Se o passageiro deu um apelido (ex.: "Casa", "Trabalho"), preservamos como prefixo.
+    const formatRideAddress = (loc: AppLocation) => {
+      const isGenericGps =
+        !loc.name ||
+        loc.name === "Minha localização" ||
+        loc.name.trim() === loc.address.trim();
+      return isGenericGps ? loc.address : `${loc.name} - ${loc.address}`;
+    };
     const { data, error } = await supabase.from("rides").insert({
       passenger_id: user.id,
-      origin_address: `${selectedOrigin.name} - ${selectedOrigin.address}`,
+      origin_address: formatRideAddress(selectedOrigin),
       origin_lat: selectedOrigin.lat, origin_lng: selectedOrigin.lng,
-      destination_address: `${effectiveDestination.name} - ${effectiveDestination.address}`,
+      destination_address: formatRideAddress(effectiveDestination),
       destination_lat: effectiveDestination.lat, destination_lng: effectiveDestination.lng,
       category: selectedCategory as "moto" | "economico" | "conforto",
       passenger_count: passengers, distance_km: distanceKm, duration_minutes: durationMin,
       price, platform_fee: platformFee, driver_net: price - platformFee,
       payment_method: method as any,
       stops: effectiveStops.length > 0
-        ? effectiveStops.map((s) => ({ name: s.name, address: s.address, lat: s.lat, lng: s.lng }))
+        ? effectiveStops.map((s) => ({
+            name: s.name === "Minha localização" ? s.address : s.name,
+            address: s.address,
+            lat: s.lat,
+            lng: s.lng,
+          }))
         : null,
       legs: fare.legs.length > 0 ? fare.legs : [],
       origin_type: originType,
