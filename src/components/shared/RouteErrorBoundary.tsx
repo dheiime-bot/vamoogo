@@ -7,7 +7,7 @@
  * para as demais.
  */
 import { Component, type ReactNode } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 
 interface Props {
@@ -95,6 +95,3 @@ const RouteErrorBoundary = ({ children }: { children: ReactNode }) => {
 };
 
 export default RouteErrorBoundary;
-
-// Mantém o hook útil mesmo se não usado (evita import lint).
-export const _useNavigateForBoundary = useNavigate;
