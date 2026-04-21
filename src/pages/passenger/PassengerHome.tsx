@@ -955,7 +955,7 @@ const PassengerHome = () => {
                   }`}>
                     {rideState === "driver_arriving" && (
                       <div className="space-y-0.5">
-                        <p>🚗 Motorista a caminho</p>
+                        <p>🚗 A caminho de: {activeRide.origin_address?.split(" - ")[0] || "embarque"}</p>
                         {liveEta && (
                           <p className="text-xs font-medium opacity-80">
                             Chega em ~{liveEta.minutes} min • {liveEta.km} km
@@ -963,8 +963,16 @@ const PassengerHome = () => {
                         )}
                       </div>
                     )}
-                    {rideState === "arrived" && "📍 Motorista chegou!"}
-                    {rideState === "in_progress" && "🛣️ Corrida em andamento"}
+                    {rideState === "arrived" && `📍 Chegou em: ${activeRide.origin_address?.split(" - ")[0] || "embarque"}`}
+                    {rideState === "in_progress" && (() => {
+                      const stops = getRideStops(activeRide);
+                      const next = stops[0] || getRideDestination(activeRide);
+                      const addr = next?.address?.split(" - ")[0]
+                        || next?.label
+                        || activeRide.destination_address?.split(" - ")[0]
+                        || "destino";
+                      return `🛣️ A caminho para: ${addr}`;
+                    })()}
                   </div>
 
                   {activeRide?.ride_code && (
