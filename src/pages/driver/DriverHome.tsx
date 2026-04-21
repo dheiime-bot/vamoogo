@@ -190,7 +190,14 @@ const DriverHome = () => {
             restorePhaseTimer(r.id, "arrived");
           } else {
             setRideState("going_to_passenger");
-            restorePhaseTimer(r.id, "going");
+            // Se ainda está na fase manual `accepted`, NÃO inicia timer.
+            const raw = localStorage.getItem(`ride-phase-${r.id}`);
+            const phase = raw?.split("|")[0];
+            if (phase === "accepted") {
+              setPhaseStartedAt(null);
+            } else {
+              restorePhaseTimer(r.id, "going");
+            }
           }
         }
       });
@@ -392,13 +399,13 @@ const DriverHome = () => {
     setPendingOffer(null);
     setPendingRide(null);
     setRideState("going_to_passenger");
-    startPhaseTimer(updated.id, "going");
+    // Fase manual: motorista precisa clicar em "Ir até o passageiro" para
+    // iniciar o countdown de 30s. Marca como `accepted` no localStorage.
+    localStorage.setItem(`ride-phase-${updated.id}`, `accepted|0`);
+    setPhaseStartedAt(null);
     playPhaseSound("accepted");
     toast.success("Corrida aceita! 🚗");
-    // 🚗 Abre Google Maps automaticamente até o passageiro
-    if (updated.origin_lat && updated.origin_lng) {
-      openGoogleMapsRoute(Number(updated.origin_lat), Number(updated.origin_lng), "Embarque");
-    }
+    // O Google Maps abre apenas quando o motorista clicar em "Ir até o passageiro".
   };
 
   const handleReject = async () => {
@@ -409,6 +416,8 @@ const DriverHome = () => {
 
   const handleArrived = async () => {
     if (!activeRide) return;
+    // Segurança: se ainda está na fase manual `accepted`, ignora.
+    if (!phaseStartedAt) return;
     const arrivedAt = new Date().toISOString();
     const { error } = await supabase
       .from("rides")
@@ -802,9 +811,32 @@ const DriverHome = () => {
             </div>
 
             {(() => {
+              const addr = activeRide.origin_address?.split(" - ")[0] || "embarque";
+              // Fase 1 (manual): motorista ainda não confirmou que vai sair.
+              if (!phaseStartedAt) {
+                return (
+                  <button
+                    onClick={() => {
+                      startPhaseTimer(activeRide.id, "going");
+                      // Abre Google Maps automaticamente ao iniciar o deslocamento
+                      if (activeRide.origin_lat && activeRide.origin_lng) {
+                        openGoogleMapsRoute(
+                          Number(activeRide.origin_lat),
+                          Number(activeRide.origin_lng),
+                          "Embarque"
+                        );
+                      }
+                    }}
+                    className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2"
+                  >
+                    <NavigationIcon className="h-4 w-4 shrink-0" />
+                    <span className="truncate text-left">Ir até o passageiro: {addr}</span>
+                  </button>
+                );
+              }
+              // Fase 2 (automática): countdown de 30s, depois libera "Cheguei".
               const left = phaseSecondsLeft(GOING_WAIT_SEC);
               const ready = left <= 0;
-              const addr = activeRide.origin_address?.split(" - ")[0] || "embarque";
               return (
                 <button
                   onClick={ready ? handleArrived : undefined}
