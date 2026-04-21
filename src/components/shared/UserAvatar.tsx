@@ -1,4 +1,4 @@
-import { Smile, Car as CarIcon } from "lucide-react";
+import { User, Car as CarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
@@ -32,7 +32,7 @@ const iconSizeMap: Record<NonNullable<UserAvatarProps["size"]>, string> = {
  *   passageiro = ícone de sorriso, motorista = ícone de carro.
  */
 const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: UserAvatarProps) => {
-  const Icon = role === "driver" ? CarIcon : Smile;
+  const Icon = role === "driver" ? CarIcon : User;
   const dim = sizeMap[size];
   const iconDim = iconSizeMap[size];
 
@@ -60,7 +60,7 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
       )}
       aria-label={name || "Avatar padrão"}
     >
-      <Icon className={iconDim} />
+      <Icon className={iconDim} strokeWidth={2.2} />
     </div>
   );
 };
