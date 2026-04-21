@@ -700,16 +700,14 @@ const DriverHome = () => {
         />
       </div>
 
-      {/* Aviso de saldo baixo — flutua logo acima da bottom nav (o botão Ficar Online
-          agora vive dentro da DriverBottomNav, entre Corridas e Carteira) */}
+      {/* Aviso de saldo baixo — centralizado na tela, em vermelho, alta visibilidade */}
       {lowBalance && !isOnline && (
-        <div
-          className="fixed inset-x-0 bottom-[72px] z-30 px-4 pointer-events-none"
-          style={{ marginBottom: "env(safe-area-inset-bottom)" }}
-        >
-          <div className="flex items-center gap-2 rounded-xl bg-warning/95 backdrop-blur-md border border-warning p-2.5 shadow-lg pointer-events-auto">
-            <AlertTriangle className="h-4 w-4 text-warning-foreground shrink-0" />
-            <p className="text-xs font-semibold text-warning-foreground">Saldo baixo — recarregue para ficar online</p>
+        <div className="fixed inset-0 z-30 flex items-center justify-center px-6 pointer-events-none">
+          <div className="flex items-center gap-3 rounded-2xl bg-destructive/95 backdrop-blur-md border-2 border-destructive px-5 py-4 shadow-2xl pointer-events-auto animate-pulse max-w-sm">
+            <AlertTriangle className="h-6 w-6 text-destructive-foreground shrink-0" />
+            <p className="text-sm font-bold text-destructive-foreground leading-snug">
+              Saldo baixo — recarregue para ficar online
+            </p>
           </div>
         </div>
       )}
