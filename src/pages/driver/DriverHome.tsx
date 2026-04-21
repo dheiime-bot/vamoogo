@@ -480,9 +480,11 @@ const DriverHome = () => {
   const originPoint = activeRide
     ? { lat: Number(activeRide.origin_lat), lng: Number(activeRide.origin_lng), label: "Passageiro" }
     : null;
-  const destPoint = activeRide
-    ? { lat: Number(activeRide.destination_lat), lng: Number(activeRide.destination_lng), label: "Destino" }
-    : null;
+  const rideStops = activeRide ? getRideStops(activeRide) : [];
+  const destinationPoint = activeRide ? getRideDestination(activeRide) : null;
+  const nextTarget = activeRide?.status === "in_progress" ? getRideNextTarget(activeRide, currentStopIndex) : destinationPoint;
+  const remainingStops = activeRide?.status === "in_progress" ? rideStops.slice(currentStopIndex) : rideStops;
+  const routeStops = activeRide?.status === "in_progress" ? remainingStops : rideStops;
 
   // Carrega nome do passageiro quando há corrida aceita
   useEffect(() => {
@@ -490,6 +492,16 @@ const DriverHome = () => {
     supabase.from("profiles").select("full_name").eq("user_id", activeRide.passenger_id).single()
       .then(({ data }) => setPassengerName(data?.full_name ?? "Passageiro"));
   }, [activeRide?.passenger_id]);
+
+  useEffect(() => {
+    if (!activeRide?.id || activeRide.status !== "in_progress") {
+      setCurrentStopIndex(0);
+      return;
+    }
+    const stored = Number(localStorage.getItem(`ride-stop-index-${activeRide.id}`) || 0);
+    const max = getRideStops(activeRide).length;
+    setCurrentStopIndex(Number.isFinite(stored) ? Math.min(Math.max(0, stored), max) : 0);
+  }, [activeRide?.id, activeRide?.status]);
 
   // 🚨 Reage instantaneamente a mudanças de status feitas pelo admin (realtime).
   // Se o admin reprova/bloqueia/pede docs, força o motorista offline na hora,
