@@ -165,7 +165,31 @@ const PassengerHome = () => {
         .limit(1)
         .maybeSingle();
 
-      if (!ride) return;
+      if (!ride) {
+        // 🚨 Avaliação obrigatória: se há corrida concluída sem avaliação,
+        // reabre o modal de rating ao entrar no app (impede pular fechando o app).
+        const { data: pendingRating } = await supabase
+          .from("rides")
+          .select("*")
+          .eq("passenger_id", user.id)
+          .eq("status", "completed")
+          .is("rating", null)
+          .order("completed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (pendingRating) {
+          setActiveRide(pendingRating);
+          setRideState("rating");
+          if (pendingRating.driver_id) {
+            const [{ data: driver }, { data: driverProfile }] = await Promise.all([
+              supabase.from("drivers").select("*").eq("user_id", pendingRating.driver_id).maybeSingle(),
+              supabase.from("profiles").select("*").eq("user_id", pendingRating.driver_id).maybeSingle(),
+            ]);
+            if (driver && driverProfile) setDriverInfo({ ...driver, profile: driverProfile });
+          }
+        }
+        return;
+      }
 
       setActiveRide(ride);
       setPaymentMethod((ride.payment_method as PaymentMethod) ?? null);
