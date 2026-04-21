@@ -21,7 +21,7 @@ import { useFareEstimate } from "@/hooks/useFareEstimate";
 import { useLiveEta } from "@/hooks/useLiveEta";
 import type { PlaceDetails } from "@/services/googlePlaces";
 import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
-import { getRideStops } from "@/lib/rideRoute";
+import { getRideStops, getRideDestination } from "@/lib/rideRoute";
 import type { PixKeyType } from "@/lib/pix";
 import { calcPlatformFee } from "@/lib/platformFee";
 import { toast } from "sonner";
@@ -893,8 +893,13 @@ const PassengerHome = () => {
                   {rideState === "driver_arriving" && `Motorista a caminho para: ${activeRide.origin_address?.split(" - ")[0] || "embarque"}`}
                   {rideState === "arrived" && `Motorista chegou em: ${activeRide.origin_address?.split(" - ")[0] || "embarque"}`}
                   {rideState === "in_progress" && (() => {
-                    const next = getRideNextTarget(activeRide, 0) || getRideDestination(activeRide);
-                    const addr = next?.address?.split(" - ")[0] || next?.label || activeRide.destination_address?.split(" - ")[0] || "destino";
+                    // Mostra a próxima parada, se houver, ou o destino final.
+                    const stops = getRideStops(activeRide);
+                    const next = stops[0] || getRideDestination(activeRide);
+                    const addr = next?.address?.split(" - ")[0]
+                      || next?.label
+                      || activeRide.destination_address?.split(" - ")[0]
+                      || "destino";
                     return `A caminho para: ${addr}`;
                   })()}
                 </h2>
