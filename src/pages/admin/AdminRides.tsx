@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, X, AlertTriangle } from "lucide-react";
+import { Search, X, AlertTriangle, Route } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -14,6 +14,7 @@ import RideAddNoteDialog from "@/components/admin/rides/RideAddNoteDialog";
 
 const AdminRides = () => {
   const [rides, setRides] = useState<any[]>([]);
+  const [routeChanges, setRouteChanges] = useState<Record<string, { count: number; lastTo: string; lastDiff: number | null }>>({});
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -31,7 +32,30 @@ const AdminRides = () => {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
-    if (data) setRides(data);
+    if (data) {
+      setRides(data);
+      const ids = data.map((r: any) => r.id);
+      if (ids.length) {
+        const { data: changes } = await supabase
+          .from("ride_route_changes")
+          .select("ride_id, new_destination_address, previous_price, new_price, created_at")
+          .in("ride_id", ids)
+          .order("created_at", { ascending: true });
+        const map: Record<string, { count: number; lastTo: string; lastDiff: number | null }> = {};
+        (changes || []).forEach((c: any) => {
+          const cur = map[c.ride_id] || { count: 0, lastTo: "", lastDiff: null };
+          cur.count += 1;
+          cur.lastTo = c.new_destination_address;
+          cur.lastDiff = c.previous_price != null && c.new_price != null
+            ? Number(c.new_price) - Number(c.previous_price)
+            : null;
+          map[c.ride_id] = cur;
+        });
+        setRouteChanges(map);
+      } else {
+        setRouteChanges({});
+      }
+    }
   };
 
   useEffect(() => { fetchRides(); }, []);
@@ -41,6 +65,7 @@ const AdminRides = () => {
     const channel = supabase
       .channel("admin-rides")
       .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, () => fetchRides())
+      .on("postgres_changes", { event: "*", schema: "public", table: "ride_route_changes" }, () => fetchRides())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
