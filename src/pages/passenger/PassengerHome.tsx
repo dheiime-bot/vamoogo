@@ -791,18 +791,29 @@ const PassengerHome = () => {
     });
     // 🔔 Notifica o motorista (toca som + aparece no sino + funciona em qualquer tela)
     if (activeRide.driver_id) {
+      const prevAddr = String(prevSnapshot.destination_address || "").split(" - ")[0] || "—";
+      const newAddrShort = newDestination.name;
+      const prevPrice = Number(prevSnapshot.price || 0);
+      const prevKm = Number(prevSnapshot.distance_km || 0);
+      const deltaPrice = totalPrice - prevPrice;
+      const deltaKm = totalKm - prevKm;
       supabase.from("notifications").insert({
         user_id: activeRide.driver_id,
         type: "ride_status",
         title: "🚨 Passageiro alterou a rota!",
-        message: `Novo destino: ${newDestination.name} • R$ ${totalPrice.toFixed(2)} (${totalKm} km)`,
+        message: `${prevAddr} → ${newAddrShort} • R$ ${totalPrice.toFixed(2)} (${deltaPrice >= 0 ? "+" : ""}R$ ${deltaPrice.toFixed(2)})`,
         link: "/driver",
         data: {
           ride_id: activeRide.id,
           event: "route_changed",
-          new_destination: newDestination.name,
+          previous_destination: prevAddr,
+          new_destination: newAddrShort,
+          previous_price: prevPrice,
           new_price: totalPrice,
+          previous_km: prevKm,
           new_km: totalKm,
+          delta_price: deltaPrice,
+          delta_km: deltaKm,
         },
       }).then(({ error: notifErr }) => {
         if (notifErr) console.error("[notify driver route change]", notifErr);
