@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { playOfferAlert } from "@/lib/offerSound";
+import { playOfferAlert, stopOfferAlert } from "@/lib/offerSound";
 
 interface NotificationRow {
   id: string;
@@ -122,8 +122,21 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
           // para garantir que o motorista/passageiro veja o aviso em qualquer tela.
           const isUrgent = n.type === "ride_status" || n.type === "chat";
           if (isUrgent) {
-            try { playOfferAlert({ title: n.title, body: n.message || undefined }); } catch {}
-            toast.warning(n.title, { description: n.message || undefined, duration: 10000 });
+            // Mudança de rota = persistente (loop até o motorista interagir).
+            // Outras urgências = um ciclo só.
+            const isRouteChange = (n.data && (n.data as any).event === "route_changed");
+            try {
+              playOfferAlert({
+                title: n.title,
+                body: n.message || undefined,
+                persistent: !!isRouteChange,
+                tag: isRouteChange ? "route-changed" : "ride-urgent",
+              });
+            } catch {}
+            toast.warning(n.title, {
+              description: n.message || undefined,
+              duration: isRouteChange ? 20000 : 10000,
+            });
           } else {
             toast(n.title, { description: n.message || undefined });
           }
