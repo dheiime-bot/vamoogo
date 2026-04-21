@@ -823,7 +823,7 @@ const MapStyler = () => {
 };
 
 /** Botão flutuante para recentralizar o mapa em um ponto preferido. */
-const RecenterButton = ({ target, bottomInset = 0 }: { target: MapPoint | null; bottomInset?: number }) => {
+const RecenterButton = ({ target }: { target: MapPoint | null; bottomInset?: number }) => {
   const map = useMap();
 
   const handleClick = () => {
