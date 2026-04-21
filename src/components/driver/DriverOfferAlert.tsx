@@ -231,6 +231,24 @@ const DriverOfferAlert = () => {
             <div className="mt-1 h-2.5 w-2.5 rounded-full bg-success shrink-0" />
             <p className="text-sm text-foreground line-clamp-2">{ride.origin_address}</p>
           </div>
+          {Array.isArray(ride.stops) && ride.stops.length > 0 && (
+            <>
+              {ride.stops.map((s: any, idx: number) => (
+                <div key={idx}>
+                  <div className="ml-1 border-l-2 border-dashed border-border h-3" />
+                  <div className="flex gap-2 items-start">
+                    <div className="mt-1 h-2.5 w-2.5 rounded-full bg-warning shrink-0 flex items-center justify-center">
+                      <span className="text-[8px] font-bold text-warning-foreground leading-none">{idx + 1}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] text-warning font-semibold uppercase">Parada {idx + 1}</p>
+                      <p className="text-sm text-foreground line-clamp-2">{s?.address || s?.name || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
           <div className="ml-1 border-l-2 border-dashed border-border h-3" />
           <div className="flex gap-2">
             <MapPin className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
