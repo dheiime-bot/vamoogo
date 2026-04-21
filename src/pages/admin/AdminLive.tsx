@@ -44,6 +44,10 @@ const AdminLive = () => {
         },
       });
       if (error) throw error;
+      // A função agora sempre retorna 200 com { ok, error?, ... }
+      if (data && data.ok === false) {
+        throw new Error(data.error || "Falha desconhecida na função");
+      }
       const created = data?.created ?? 0;
       const requested = data?.requested ?? count;
       const pool = data?.pool_size ?? 0;
