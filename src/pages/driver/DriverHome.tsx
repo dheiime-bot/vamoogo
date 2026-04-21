@@ -378,6 +378,7 @@ const DriverHome = () => {
     if (error) return;
     setActiveRide({ ...activeRide, arrived_at: arrivedAt });
     setRideState("arrived");
+    startPhaseTimer(activeRide.id, "arrived");
     playPhaseSound("arrived");
   };
 
@@ -393,6 +394,7 @@ const DriverHome = () => {
     setArrivedAtFinal(false);
     localStorage.removeItem(`ride-arrived-final-${activeRide.id}`);
     setRideState("in_ride");
+    startPhaseTimer(activeRide.id, `stop-0`);
     playPhaseSound("started");
     // 🚗 Abre Google Maps até o primeiro destino (parada 1 ou destino final se não houver paradas)
     const updatedRide = { ...activeRide, status: "in_progress" as const, started_at: startedAt };
@@ -406,6 +408,7 @@ const DriverHome = () => {
     const nextIndex = Math.min(currentStopIndex + 1, stops.length);
     setCurrentStopIndex(nextIndex);
     localStorage.setItem(`ride-stop-index-${activeRide.id}`, String(nextIndex));
+    startPhaseTimer(activeRide.id, `stop-${nextIndex}`);
     toast.success(nextIndex < stops.length ? `Parada ${nextIndex} confirmada` : "Última parada confirmada");
     // 🚗 Abre o Google Maps no próximo trecho (próxima parada ou destino final)
     const target = getRideNextTarget(activeRide, nextIndex);
