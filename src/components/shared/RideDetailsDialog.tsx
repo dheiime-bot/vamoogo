@@ -162,8 +162,26 @@ const RideDetailsDialog = ({ rideId, open, onClose, role }: Props) => {
                         <span className="text-[10px] text-muted-foreground">{fmtDate(c.created_at)}</span>
                       </div>
                       <div className="space-y-0.5">
-                        <div className="flex gap-1.5"><span className="text-muted-foreground shrink-0">De:</span><span className="line-through text-muted-foreground break-words">{prevAddr}</span></div>
-                        <div className="flex gap-1.5"><span className="text-success font-semibold shrink-0">Para:</span><span className="font-medium break-words">{newAddr}</span></div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded-md border bg-muted/30 p-1.5">
+                            <p className="text-[9px] uppercase font-bold text-muted-foreground mb-0.5">Rota original</p>
+                            <p className="text-success text-[11px]">● {(ride.origin_address || "").split(" - ")[0]}</p>
+                            <p className="text-destructive line-through opacity-70 text-[11px] break-words">● {prevAddr}</p>
+                            <p className="text-[10px] text-muted-foreground pt-0.5">
+                              {Number(c.previous_distance_km ?? 0).toFixed(2)} km · {formatBRL(prevPrice)}
+                            </p>
+                          </div>
+                          <div className="rounded-md border bg-card p-1.5">
+                            <p className="text-[9px] uppercase font-bold text-muted-foreground mb-0.5">Rota final</p>
+                            <p className="text-success text-[11px]">● {(ride.origin_address || "").split(" - ")[0]}</p>
+                            <p className="text-info font-medium text-[11px] break-words">● {newAddr}</p>
+                            <p className="text-[10px] text-foreground pt-0.5">
+                              <span className="font-semibold">{Number(c.new_distance_km ?? 0).toFixed(2)} km</span>
+                              {" · "}
+                              <span className="font-semibold">{formatBRL(newPrice)}</span>
+                            </p>
+                          </div>
+                        </div>
                       </div>
                       <div className="grid grid-cols-3 gap-1.5 pt-1 border-t">
                         {c.driven_km != null && (
