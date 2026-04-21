@@ -383,6 +383,7 @@ const DriverHome = () => {
       .update({
         status: "completed",
         completed_at: new Date().toISOString(),
+        payment_status: "paid",
         ...(isPix ? { pix_paid_at: new Date().toISOString() } : {}),
       })
       .eq("id", activeRide.id);
