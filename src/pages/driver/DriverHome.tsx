@@ -190,7 +190,14 @@ const DriverHome = () => {
             restorePhaseTimer(r.id, "arrived");
           } else {
             setRideState("going_to_passenger");
-            restorePhaseTimer(r.id, "going");
+            // Se ainda está na fase manual `accepted`, NÃO inicia timer.
+            const raw = localStorage.getItem(`ride-phase-${r.id}`);
+            const phase = raw?.split("|")[0];
+            if (phase === "accepted") {
+              setPhaseStartedAt(null);
+            } else {
+              restorePhaseTimer(r.id, "going");
+            }
           }
         }
       });
