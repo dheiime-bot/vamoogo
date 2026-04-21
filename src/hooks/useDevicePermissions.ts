@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { initGpsTracker } from "@/lib/gpsTracker";
 
 /**
  * Solicita as permissões nativas do dispositivo (localização e câmera) logo no
@@ -19,6 +20,11 @@ export const useDevicePermissions = () => {
 
     const askGeolocation = async () => {
       if (!("geolocation" in navigator)) return;
+      // Inicializa o tracker GLOBAL: abre um único watchPosition contínuo que
+      // alimenta um cache em memória e fica vivo durante toda a sessão. Assim,
+      // quando o motorista clica em Ficar Online, a posição já está pronta e
+      // o upsert no banco acontece em milissegundos.
+      initGpsTracker();
       try {
         // @ts-ignore - 'geolocation' é válido em navigator.permissions
         const status = await navigator.permissions?.query({ name: "geolocation" });
