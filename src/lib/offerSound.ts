@@ -9,6 +9,8 @@
 
 let ctx: AudioContext | null = null;
 let unlocked = false;
+let persistentTimer: number | null = null;
+let persistentNotification: Notification | null = null;
 
 function getCtx(): AudioContext | null {
   try {
@@ -42,7 +44,35 @@ export function unlockAudioOnce() {
 }
 
 /** Toca o jingle de nova corrida + vibração + notificação nativa */
-export async function playOfferAlert(payload?: { title?: string; body?: string }) {
+export async function playOfferAlert(payload?: { title?: string; body?: string; persistent?: boolean; tag?: string }) {
+  // Se for persistente, dispara um ciclo agora e agenda repetições a cada 3s.
+  if (payload?.persistent) {
+    stopOfferAlert();
+    await fireAlertCycle(payload);
+    persistentTimer = window.setInterval(() => {
+      fireAlertCycle(payload);
+    }, 3000);
+    return;
+  }
+  await fireAlertCycle(payload);
+}
+
+/** Para o alerta persistente (loop de som/vibração/notificação). */
+export function stopOfferAlert() {
+  if (persistentTimer != null) {
+    clearInterval(persistentTimer);
+    persistentTimer = null;
+  }
+  if (navigator.vibrate) {
+    try { navigator.vibrate(0); } catch { /* ignore */ }
+  }
+  if (persistentNotification) {
+    try { persistentNotification.close(); } catch { /* ignore */ }
+    persistentNotification = null;
+  }
+}
+
+async function fireAlertCycle(payload?: { title?: string; body?: string; tag?: string }) {
   // 1) Áudio
   const c = getCtx();
   if (c) {
@@ -78,13 +108,17 @@ export async function playOfferAlert(payload?: { title?: string; body?: string }
       const n = new Notification(payload?.title || "Nova corrida! 🚗", {
         body: payload?.body || "Toque para ver os detalhes",
         icon: "/favicon.ico",
-        tag: "ride-offer",
-        requireInteraction: false,
+        tag: payload?.tag || "ride-offer",
+        requireInteraction: !!persistentTimer, // persistente fica fixa até fechar
         silent: false,
       });
       // Foca na aba ao clicar
       n.onclick = () => { window.focus(); n.close(); };
-      setTimeout(() => n.close(), 12000);
+      if (persistentTimer) {
+        persistentNotification = n;
+      } else {
+        setTimeout(() => n.close(), 12000);
+      }
     }
   } catch (e) {
     console.warn("[offerSound] notification failed:", e);
