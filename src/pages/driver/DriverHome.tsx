@@ -66,9 +66,9 @@ const DriverHome = () => {
   // e o motorista vê o novo valor/endereço.
   const [routeChanged, setRouteChanged] = useState(false);
   // Janelas (em segundos) exigidas pelo produto:
-  const GOING_WAIT_SEC = 30;     // a caminho do passageiro
-  const ARRIVED_WAIT_SEC = 10;   // chegou ao passageiro → iniciar corrida
-  const STOP_WAIT_SEC = 30;      // indo para parada/destino → confirmar
+  const GOING_WAIT_SEC = 5;      // a caminho do passageiro
+  const ARRIVED_WAIT_SEC = 5;    // chegou ao passageiro → iniciar corrida
+  const STOP_WAIT_SEC = 5;       // indo para parada/destino → confirmar
   // Modal obrigatório de seleção de veículo após login (quando há 2+ aprovados).
   const [requireVehiclePick, setRequireVehiclePick] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
@@ -310,6 +310,33 @@ const DriverHome = () => {
 
     return () => { supabase.removeChannel(channel); };
   }, [isOnline, user]);
+
+  // 💬 Auto-abre o chat ao receber a 1ª mensagem do passageiro durante a corrida.
+  // Mantém o canal vivo enquanto há corrida ativa; abre o overlay assim que
+  // chegar uma mensagem cujo remetente NÃO seja o próprio motorista.
+  useEffect(() => {
+    if (!user || !activeRide?.id) return;
+    const ch = supabase
+      .channel(`driver-chat-autoopen-${activeRide.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `ride_id=eq.${activeRide.id}`,
+        },
+        (payload) => {
+          const msg = payload.new as any;
+          if (!msg || msg.sender_id === user.id) return;
+          setShowChat((open) => (open ? open : true));
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [user, activeRide?.id]);
 
   // Realtime: sincronia de UPDATEs em rides atribuídas a este motorista
   // (cobre cancelamento pelo passageiro, mudanças de status externas, etc)
