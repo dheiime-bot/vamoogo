@@ -655,6 +655,10 @@ const PassengerHome = () => {
     setSelectedDestination(newDestination);
     setShowChangeDest(false);
     setNewDestination(null);
+    toast.success("✅ Rota atualizada!", {
+      description: `Novo destino: ${newDestination.name}\nNovo valor: R$ ${newPrice.toFixed(2)} (${totalKm} km)`,
+      duration: 8000,
+    });
     if (user) {
       supabase.from("chat_messages").insert({
         ride_id: activeRide.id,
