@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Save, Loader2, MessageCircle, Plus, X, History, CheckCircle2, Clock, XCircle, DollarSign, Gift, Trash2 } from "lucide-react";
+import { Save, Loader2, MessageCircle, Plus, X, Gift, Trash2, Wallet } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import EmptyState from "@/components/admin/EmptyState";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ManualRechargeDialog from "@/components/admin/wallet/ManualRechargeDialog";
+import WalletTopupsList from "@/components/admin/wallet/WalletTopupsList";
 
 interface WhatsappTopupConfig {
   enabled: boolean;
@@ -37,13 +38,6 @@ const DEFAULT_CONFIG: WhatsappTopupConfig = {
   ],
 };
 
-const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }> = {
-  pendente: { label: "Pendente", color: "bg-warning/10 text-warning", icon: Clock },
-  pago: { label: "Pago", color: "bg-primary/10 text-primary", icon: CheckCircle2 },
-  creditado: { label: "Creditado", color: "bg-success/10 text-success", icon: CheckCircle2 },
-  cancelado: { label: "Cancelado", color: "bg-destructive/10 text-destructive", icon: XCircle },
-};
-
 const formatBRL = (n: number) =>
   n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -69,8 +63,8 @@ const AdminWalletTopup = () => {
   const [newAmount, setNewAmount] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [topups, setTopups] = useState<any[]>([]);
-  const [updating, setUpdating] = useState<string | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [refreshList, setRefreshList] = useState(0);
 
   const loadConfig = async () => {
     const { data } = await supabase
@@ -84,25 +78,8 @@ const AdminWalletTopup = () => {
     setLoading(false);
   };
 
-  const loadTopups = async () => {
-    const { data } = await supabase
-      .from("wallet_topups")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setTopups(data || []);
-  };
-
   useEffect(() => {
     loadConfig();
-    loadTopups();
-    const ch = supabase
-      .channel("admin-wallet-topups")
-      .on("postgres_changes", { event: "*", schema: "public", table: "wallet_topups" }, loadTopups)
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
   }, []);
 
   const save = async () => {
@@ -188,17 +165,6 @@ const AdminWalletTopup = () => {
     });
   };
 
-  const updateStatus = async (id: string, status: string) => {
-    setUpdating(id);
-    const { error } = await supabase.from("wallet_topups").update({ status }).eq("id", id);
-    setUpdating(null);
-    if (error) {
-      toast.error("Erro ao atualizar");
-      return;
-    }
-    toast.success(`Status alterado para ${STATUS_LABELS[status]?.label || status}`);
-  };
-
   if (loading) {
     return (
       <AdminLayout title="Recarga de Carteira">
@@ -213,10 +179,16 @@ const AdminWalletTopup = () => {
     <AdminLayout
       title="Recarga de Carteira"
       actions={
-        <Button onClick={save} disabled={saving} size="sm">
-          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-          <span className="ml-1.5">Salvar</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setManualOpen(true)} size="sm" variant="outline">
+            <Wallet className="h-3.5 w-3.5" />
+            <span className="ml-1.5">Recarga manual</span>
+          </Button>
+          <Button onClick={save} disabled={saving} size="sm">
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            <span className="ml-1.5">Salvar</span>
+          </Button>
+        </div>
       }
     >
       <div className="space-y-5">
@@ -407,60 +379,15 @@ const AdminWalletTopup = () => {
           </Button>
         </div>
 
-        {/* Histórico de solicitações */}
-        <div className="rounded-2xl border bg-card shadow-sm">
-          <div className="p-4 border-b flex items-center gap-2">
-            <History className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-bold">Solicitações de recarga</h3>
-            <span className="ml-auto text-[10px] text-muted-foreground">{topups.length} registros</span>
-          </div>
-          <div className="divide-y">
-            {topups.length === 0 && (
-              <EmptyState
-                icon={DollarSign}
-                title="Nenhuma solicitação"
-                description="As solicitações dos motoristas aparecerão aqui."
-              />
-            )}
-            {topups.map((t) => {
-              const meta = STATUS_LABELS[t.status] || STATUS_LABELS.pendente;
-              const Icon = meta.icon;
-              return (
-                <div key={t.id} className="flex items-center gap-3 p-4">
-                  <div className={`rounded-xl p-2 ${meta.color}`}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">
-                      {t.nome}{" "}
-                      <span className="font-normal text-muted-foreground">
-                      • R$ {formatBRL(Number(t.valor))}
-                      </span>
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {t.telefone || "—"} • {new Date(t.created_at).toLocaleString("pt-BR")}
-                    </p>
-                  </div>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.color}`}>
-                    {meta.label}
-                  </span>
-                  <select
-                    value={t.status}
-                    disabled={updating === t.id}
-                    onChange={(e) => updateStatus(t.id, e.target.value)}
-                    className="rounded-md border bg-background text-xs px-2 py-1"
-                  >
-                    <option value="pendente">Pendente</option>
-                    <option value="pago">Pago</option>
-                    <option value="creditado">Creditado</option>
-                    <option value="cancelado">Cancelado</option>
-                  </select>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        {/* Histórico de solicitações (paginado, 10/página) */}
+        <WalletTopupsList refreshKey={refreshList} />
       </div>
+
+      <ManualRechargeDialog
+        open={manualOpen}
+        onOpenChange={setManualOpen}
+        onSuccess={() => setRefreshList((k) => k + 1)}
+      />
     </AdminLayout>
   );
 };
