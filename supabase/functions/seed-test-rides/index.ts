@@ -22,26 +22,38 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
+    // Cliente service-role para todas as operações no banco
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+    // Cliente anon para validar o JWT do chamador (com a chave correta)
     const authHeader = req.headers.get("Authorization") || "";
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userRes } = await supabase.auth.getUser(token);
+    const token = authHeader.replace("Bearer ", "").trim();
+    if (!token) {
+      return new Response(JSON.stringify({ ok: false, error: "Sem token de autenticação" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supaAuth = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userRes, error: userErr } = await supaAuth.auth.getUser();
     const callerId = userRes?.user?.id;
-    if (!callerId) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (userErr || !callerId) {
+      console.error("[seed-test-rides] auth failed:", userErr);
+      return new Response(JSON.stringify({ ok: false, error: "Sessão inválida ou expirada — faça login novamente" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     const { data: roles } = await supabase
       .from("user_roles").select("role").eq("user_id", callerId);
     const isAdmin = (roles || []).some((r: any) => r.role === "admin" || r.role === "master");
     if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Acesso negado (apenas admin)" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ ok: false, error: "Acesso negado (apenas admin)" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -178,8 +190,8 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("[seed-test-rides] error:", err);
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ ok: false, error: String((err as any)?.message || err) }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
