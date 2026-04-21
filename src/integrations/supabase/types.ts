@@ -659,6 +659,45 @@ export type Database = {
         }
         Relationships: []
       }
+      negative_balance_alerts: {
+        Row: {
+          blocked_at: string | null
+          created_at: string
+          days_remaining: number
+          driver_id: string
+          first_alert_at: string
+          last_alert_at: string | null
+          last_balance: number
+          last_manual_alert_at: string | null
+          resolved_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocked_at?: string | null
+          created_at?: string
+          days_remaining?: number
+          driver_id: string
+          first_alert_at?: string
+          last_alert_at?: string | null
+          last_balance?: number
+          last_manual_alert_at?: string | null
+          resolved_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocked_at?: string | null
+          created_at?: string
+          days_remaining?: number
+          driver_id?: string
+          first_alert_at?: string
+          last_alert_at?: string | null
+          last_balance?: number
+          last_manual_alert_at?: string | null
+          resolved_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -1963,6 +2002,10 @@ export type Database = {
         Args: { _message: string; _title: string; _user_id: string }
         Returns: string
       }
+      admin_send_negative_balance_alert: {
+        Args: { _driver_id: string }
+        Returns: Json
+      }
       admin_set_active_vehicle: {
         Args: { _vehicle_id: string }
         Returns: undefined
@@ -2332,6 +2375,7 @@ export type Database = {
           min_fare: number
         }[]
       }
+      process_negative_balance_alerts: { Args: never; Returns: Json }
       recalc_driver_rating: { Args: { _driver_id: string }; Returns: number }
       recalc_passenger_rating: {
         Args: { _passenger_id: string }
