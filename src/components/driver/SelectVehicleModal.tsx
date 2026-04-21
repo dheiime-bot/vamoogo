@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Bike, Car, Loader2, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { getCategoryColor, getCategoryContentColor } from "@/lib/categoryStyle";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { guardErrorMessage } from "@/lib/guardErrors";
@@ -106,6 +107,8 @@ const SelectVehicleModal = ({ open, onOpenChange, required = false, onSelected }
             {vehicles.map((v) => {
               const Icon = v.category === "moto" ? Bike : Car;
               const isBusy = submitting === v.id;
+              const catColor = getCategoryColor(v.category);
+              const catContent = getCategoryContentColor(v.category);
               return (
                 <button
                   key={v.id}
@@ -113,14 +116,18 @@ const SelectVehicleModal = ({ open, onOpenChange, required = false, onSelected }
                   disabled={!!submitting}
                   className={`w-full rounded-2xl border p-3 flex items-center gap-3 text-left transition-colors ${
                     v.is_active
-                      ? "border-primary bg-primary/5"
+                      ? "bg-primary/5"
                       : "border-border hover:border-primary/40 hover:bg-muted/50"
                   } disabled:opacity-50`}
+                  style={v.is_active ? { borderColor: catColor } : undefined}
                 >
                   <div
-                    className={`rounded-xl p-2.5 shrink-0 ${
-                      v.is_active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                    }`}
+                    className="rounded-xl p-2.5 shrink-0"
+                    style={
+                      v.is_active
+                        ? { backgroundColor: catColor, color: catContent }
+                        : { backgroundColor: `${catColor}1f`, color: catColor }
+                    }
                   >
                     <Icon className="h-5 w-5" />
                   </div>
