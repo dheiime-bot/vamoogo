@@ -212,12 +212,53 @@ const WhatsappTopupModal = ({ open, onOpenChange }: Props) => {
               </div>
             )}
 
+            {/* Faixas de bônus */}
+            {config!.bonus_enabled && sortedTiers.length > 0 && (
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold text-primary">Ganhe bônus de recarga</p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {sortedTiers.map((t, i) => {
+                    const reached = finalAmount >= t.min_amount;
+                    return (
+                      <span
+                        key={i}
+                        className={`text-[10px] font-semibold px-2 py-1 rounded-full border ${
+                          reached
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-primary/30 bg-background text-primary"
+                        }`}
+                      >
+                        R$ {t.min_amount}+ → +{t.percent}%
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Resumo */}
-            <div className="rounded-xl bg-muted/40 p-3 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Valor da recarga</span>
-              <span className="text-lg font-extrabold">
-                R$ {formatBRL(finalAmount)}
-              </span>
+            <div className="rounded-xl bg-muted/40 p-3 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Valor da recarga</span>
+                <span className="text-sm font-bold">R$ {formatBRL(finalAmount)}</span>
+              </div>
+              {bonus.percent > 0 && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-primary font-semibold flex items-center gap-1">
+                      <Gift className="h-3 w-3" /> Bônus ({bonus.percent}%)
+                    </span>
+                    <span className="text-sm font-bold text-primary">+ R$ {formatBRL(bonus.value)}</span>
+                  </div>
+                  <div className="border-t border-border pt-1.5 flex items-center justify-between">
+                    <span className="text-xs font-semibold">Total na carteira</span>
+                    <span className="text-lg font-extrabold text-success">R$ {formatBRL(bonus.total)}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <Button
