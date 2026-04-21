@@ -53,6 +53,7 @@ const DriverHome = () => {
   const [ratedRide, setRatedRide] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
+  const [arrivedAtFinal, setArrivedAtFinal] = useState(false);
   // Modal obrigatório de seleção de veículo após login (quando há 2+ aprovados).
   const [requireVehiclePick, setRequireVehiclePick] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
