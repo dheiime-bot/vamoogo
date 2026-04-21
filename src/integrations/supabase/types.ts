@@ -1098,6 +1098,83 @@ export type Database = {
           },
         ]
       }
+      ride_route_changes: {
+        Row: {
+          changed_by: string
+          changed_by_role: string
+          created_at: string
+          details: Json | null
+          driven_km: number | null
+          driven_price: number | null
+          id: string
+          new_destination_address: string
+          new_destination_lat: number | null
+          new_destination_lng: number | null
+          new_distance_km: number | null
+          new_leg_km: number | null
+          new_leg_price: number | null
+          new_price: number | null
+          previous_destination_address: string | null
+          previous_destination_lat: number | null
+          previous_destination_lng: number | null
+          previous_distance_km: number | null
+          previous_price: number | null
+          ride_id: string
+        }
+        Insert: {
+          changed_by: string
+          changed_by_role?: string
+          created_at?: string
+          details?: Json | null
+          driven_km?: number | null
+          driven_price?: number | null
+          id?: string
+          new_destination_address: string
+          new_destination_lat?: number | null
+          new_destination_lng?: number | null
+          new_distance_km?: number | null
+          new_leg_km?: number | null
+          new_leg_price?: number | null
+          new_price?: number | null
+          previous_destination_address?: string | null
+          previous_destination_lat?: number | null
+          previous_destination_lng?: number | null
+          previous_distance_km?: number | null
+          previous_price?: number | null
+          ride_id: string
+        }
+        Update: {
+          changed_by?: string
+          changed_by_role?: string
+          created_at?: string
+          details?: Json | null
+          driven_km?: number | null
+          driven_price?: number | null
+          id?: string
+          new_destination_address?: string
+          new_destination_lat?: number | null
+          new_destination_lng?: number | null
+          new_distance_km?: number | null
+          new_leg_km?: number | null
+          new_leg_price?: number | null
+          new_price?: number | null
+          previous_destination_address?: string | null
+          previous_destination_lat?: number | null
+          previous_destination_lng?: number | null
+          previous_distance_km?: number | null
+          previous_price?: number | null
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_route_changes_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rides: {
         Row: {
           admin_notes: string | null
