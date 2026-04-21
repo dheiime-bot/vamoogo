@@ -308,9 +308,18 @@ const PassengerHome = () => {
           status: "cancelled",
           cancelled_at: new Date().toISOString(),
           cancelled_by: "00000000-0000-0000-0000-000000000000",
+          cancel_reason_code: "no_drivers_available",
+          cancel_reason_note: "Nenhum motorista por perto.",
         })
         .eq("id", activeRide.id)
         .eq("status", "requested");
+      // O realtime UPDATE vai cair no handler acima e já mostra
+      // o toast "Nenhum motorista por perto!" + zera os estados.
+      // Como fallback (caso o realtime atrase), também limpamos aqui.
+      toast.error("Nenhum motorista por perto!", {
+        description: "Tente novamente em alguns instantes.",
+        duration: 6000,
+      });
       setRideState("idle");
       setActiveRide(null);
       setDriverInfo(null);
