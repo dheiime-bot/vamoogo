@@ -57,6 +57,26 @@ const WhatsappTopupModal = ({ open, onOpenChange }: Props) => {
     return isFinite(v) && v > 0 ? v : 0;
   }, [selected, custom]);
 
+  const bonus = useMemo(() => {
+    if (!config?.bonus_enabled || !config?.bonus_tiers?.length || finalAmount <= 0) {
+      return { percent: 0, value: 0, total: finalAmount };
+    }
+    const tier = [...config.bonus_tiers]
+      .filter((t) => t.min_amount > 0 && t.percent > 0 && finalAmount >= t.min_amount)
+      .sort((a, b) => b.min_amount - a.min_amount)[0];
+    const percent = tier?.percent || 0;
+    const value = +(finalAmount * percent / 100).toFixed(2);
+    return { percent, value, total: +(finalAmount + value).toFixed(2) };
+  }, [config, finalAmount]);
+
+  const sortedTiers = useMemo(
+    () =>
+      (config?.bonus_tiers || [])
+        .filter((t) => t.min_amount > 0 && t.percent > 0)
+        .sort((a, b) => a.min_amount - b.min_amount),
+    [config],
+  );
+
   const isConfigured = !!(config?.enabled && config?.whatsapp_number);
 
   const handleConfirm = async () => {
@@ -93,12 +113,16 @@ const WhatsappTopupModal = ({ open, onOpenChange }: Props) => {
     }
 
     // Substitui variáveis na mensagem
-    const message = config.message_template
+    let message = config.message_template
       .replace(/\{nome\}/g, nome)
       .replace(/\{cpf\}/g, cpf || "—")
       .replace(/\{telefone\}/g, telefone || "—")
       .replace(/\{id\}/g, user.id)
       .replace(/\{valor\}/g, formatBRL(finalAmount));
+
+    if (bonus.percent > 0) {
+      message += `\n\n🎁 Bônus de ${bonus.percent}%: R$ ${formatBRL(bonus.value)}\nTotal a receber: R$ ${formatBRL(bonus.total)}`;
+    }
 
     const url = `https://wa.me/${config.whatsapp_number}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
