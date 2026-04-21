@@ -222,6 +222,60 @@ const AdminRides = () => {
                 <div><span className="text-muted-foreground">Duração</span><p className="font-medium">{ride.duration_minutes} min</p></div>
               </div>
             </div>
+            {routeChanges[ride.id] && (
+              <div className="mb-3 rounded-lg border border-info/30 bg-info/5 p-3 text-xs space-y-2">
+                <div className="flex items-center gap-1.5 font-semibold text-info">
+                  <Route className="h-3.5 w-3.5" />
+                  Detalhes da alteração de rota
+                  {routeChanges[ride.id].count > 1 && <span className="text-[10px] opacity-70">({routeChanges[ride.id].count} alterações)</span>}
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Rota original</p>
+                    <p className="text-success">● {ride.origin_address?.split(" - ")[0]}</p>
+                    <p className="text-destructive line-through opacity-70">
+                      ● {(routeChanges[ride.id].firstFromAddress || ride.destination_address)?.split(" - ")[0]}
+                    </p>
+                    <div className="flex gap-3 text-muted-foreground pt-0.5">
+                      <span>{routeChanges[ride.id].firstFromKm != null ? `${routeChanges[ride.id].firstFromKm!.toFixed(2)} km` : "—"}</span>
+                      <span>{routeChanges[ride.id].firstFromPrice != null ? `R$ ${routeChanges[ride.id].firstFromPrice!.toFixed(2)}` : "—"}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Rota final</p>
+                    <p className="text-success">● {ride.origin_address?.split(" - ")[0]}</p>
+                    <p className="text-info font-medium">● {routeChanges[ride.id].lastTo?.split(" - ")[0]}</p>
+                    <div className="flex gap-3 text-foreground pt-0.5">
+                      <span className="font-medium">{routeChanges[ride.id].lastToKm != null ? `${routeChanges[ride.id].lastToKm!.toFixed(2)} km` : "—"}</span>
+                      <span className="font-medium">{routeChanges[ride.id].lastToPrice != null ? `R$ ${routeChanges[ride.id].lastToPrice!.toFixed(2)}` : "—"}</span>
+                      {routeChanges[ride.id].lastDiff != null && (
+                        <span className={routeChanges[ride.id].lastDiff! >= 0 ? "text-success font-bold" : "text-destructive font-bold"}>
+                          {routeChanges[ride.id].lastDiff! >= 0 ? "+" : ""}R$ {routeChanges[ride.id].lastDiff!.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {(routeChanges[ride.id].drivenKm != null || routeChanges[ride.id].newLegKm != null) && (
+                  <div className="grid grid-cols-2 gap-3 border-t border-info/20 pt-2 text-[11px]">
+                    <div>
+                      <span className="text-muted-foreground">Já percorrido: </span>
+                      <span className="font-medium">
+                        {routeChanges[ride.id].drivenKm != null ? `${routeChanges[ride.id].drivenKm!.toFixed(2)} km` : "—"}
+                        {routeChanges[ride.id].drivenPrice != null && ` · R$ ${routeChanges[ride.id].drivenPrice!.toFixed(2)}`}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Novo trecho: </span>
+                      <span className="font-medium">
+                        {routeChanges[ride.id].newLegKm != null ? `${routeChanges[ride.id].newLegKm!.toFixed(2)} km` : "—"}
+                        {routeChanges[ride.id].newLegPrice != null && ` · R$ ${routeChanges[ride.id].newLegPrice!.toFixed(2)}`}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex items-center justify-between border-t pt-3">
               <div className="flex items-center gap-4">
                 <div>
