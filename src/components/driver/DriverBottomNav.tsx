@@ -5,7 +5,7 @@
  *
  * Mostra um badge com a contagem de ofertas pendentes no botão "Corridas" (pneu + chama).
  */
-import { Home } from "lucide-react";
+import { Home, Car } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ReactNode, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,56 +18,6 @@ interface Props {
 
 const HOME_PATH = "/driver";
 const OFFERS_PATH = "/driver/offers";
-
-/**
- * Ícone "pneu com chama" — pneu preto com aro/raios e uma chama saindo do topo,
- * comunicando "corrida em alta velocidade".
- */
-const TireFlameIcon = ({ size = 30 }: { size?: number }) => (
-  <svg viewBox="0 0 64 64" width={size} height={size} className="drop-shadow-sm">
-    <defs>
-      <radialGradient id="tireFlameTire" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor="#1f2937" />
-        <stop offset="100%" stopColor="#0b1220" />
-      </radialGradient>
-      <linearGradient id="tireFlameFire" x1="0" y1="1" x2="0" y2="0">
-        <stop offset="0%" stopColor="#fbbf24" />
-        <stop offset="55%" stopColor="#f97316" />
-        <stop offset="100%" stopColor="#ef4444" />
-      </linearGradient>
-    </defs>
-    {/* chama saindo do topo */}
-    <path
-      d="M32 2
-         C 28 10 22 12 24 22
-         C 26 18 28 17 30 18
-         C 28 22 28 26 32 28
-         C 36 26 36 22 34 18
-         C 36 17 38 18 40 22
-         C 42 12 36 10 32 2 Z"
-      fill="url(#tireFlameFire)"
-      stroke="#b45309"
-      strokeWidth="0.8"
-    />
-    {/* pneu */}
-    <circle cx="32" cy="40" r="20" fill="url(#tireFlameTire)" stroke="#000" strokeWidth="1.2" />
-    {/* aro */}
-    <circle cx="32" cy="40" r="9" fill="#cbd5e1" stroke="#475569" strokeWidth="1" />
-    {/* raios do aro */}
-    <g stroke="#475569" strokeWidth="1.4" strokeLinecap="round">
-      <line x1="32" y1="33" x2="32" y2="47" />
-      <line x1="25" y1="40" x2="39" y2="40" />
-      <line x1="27" y1="35" x2="37" y2="45" />
-      <line x1="37" y1="35" x2="27" y2="45" />
-    </g>
-    {/* miolo */}
-    <circle cx="32" cy="40" r="2.4" fill="#0f172a" />
-    {/* relevo do pneu (sulcos) */}
-    <g stroke="#1f2937" strokeWidth="1" opacity="0.7">
-      <circle cx="32" cy="40" r="16" fill="none" strokeDasharray="2 3" />
-    </g>
-  </svg>
-);
 
 const DriverBottomNav = ({ centerSlot }: Props) => {
   const location = useLocation();
@@ -135,7 +85,7 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
           aria-label="Ofertas de corrida disponíveis"
           className="pointer-events-auto relative flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-lg ring-2 ring-background border border-border transition-transform active:scale-95 hover:bg-muted"
         >
-          <TireFlameIcon size={34} />
+          <Car className="h-7 w-7 text-foreground" strokeWidth={2.2} />
           {pendingCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-extrabold text-destructive-foreground ring-2 ring-background animate-pulse">
               {pendingCount > 9 ? "9+" : pendingCount}
