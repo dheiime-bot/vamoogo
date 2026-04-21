@@ -179,10 +179,16 @@ const AdminWalletTopup = () => {
     <AdminLayout
       title="Recarga de Carteira"
       actions={
-        <Button onClick={save} disabled={saving} size="sm">
-          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-          <span className="ml-1.5">Salvar</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setManualOpen(true)} size="sm" variant="outline">
+            <Wallet className="h-3.5 w-3.5" />
+            <span className="ml-1.5">Recarga manual</span>
+          </Button>
+          <Button onClick={save} disabled={saving} size="sm">
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            <span className="ml-1.5">Salvar</span>
+          </Button>
+        </div>
       }
     >
       <div className="space-y-5">
