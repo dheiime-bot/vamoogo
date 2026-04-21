@@ -5,11 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Route, CreditCard, Star, Phone, MessageCircle,
-  AlertTriangle, FileText, User, Car, Copy, ScrollText,
+  AlertTriangle, FileText, User, Car, Bike, Copy, ScrollText,
 } from "lucide-react";
 import { toast } from "sonner";
 import StatusBadge from "@/components/shared/StatusBadge";
 import GoogleMap from "@/components/shared/GoogleMap";
+import { getCategoryColor, getCategoryLabel } from "@/lib/categoryStyle";
 
 interface Props {
   rideId: string | null;
@@ -215,7 +216,9 @@ const RideDetailsModal = ({ rideId, onClose }: Props) => {
                 {/* Motorista */}
                 <div className="rounded-xl border bg-card p-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <Car className="h-4 w-4 text-primary" />
+                    {driver?.category === "moto"
+                      ? <Bike className="h-4 w-4" style={{ color: getCategoryColor(driver?.category) }} />
+                      : <Car className="h-4 w-4" style={{ color: getCategoryColor(driver?.category) }} />}
                     <p className="text-xs font-bold">Motorista</p>
                   </div>
                   {driver ? (
@@ -224,7 +227,7 @@ const RideDetailsModal = ({ rideId, onClose }: Props) => {
                       <Row label="Telefone" value={driverProfile?.phone} />
                       <Row label="Veículo" value={`${driver.vehicle_brand ?? ""} ${driver.vehicle_model ?? ""} ${driver.vehicle_color ?? ""}`} />
                       <Row label="Placa" value={driver.vehicle_plate} mono />
-                      <Row label="Categoria" value={driver.category} />
+                      <Row label="Categoria" value={getCategoryLabel(driver.category)} />
                       <Row label="Avaliação" value={driver.rating ? `${Number(driver.rating).toFixed(2)} ⭐` : "—"} />
                       {driverProfile?.phone && (
                         <div className="flex gap-2 mt-2">
