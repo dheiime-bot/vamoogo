@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { playOfferAlert } from "@/lib/offerSound";
 
 interface NotificationRow {
   id: string;
@@ -117,7 +118,15 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
         (payload) => {
           const n = payload.new as NotificationRow;
           setItems((prev) => [n, ...prev].slice(0, 30));
-          toast(n.title, { description: n.message || undefined });
+          // Notificações importantes (corrida/chat) tocam som + toast destacado
+          // para garantir que o motorista/passageiro veja o aviso em qualquer tela.
+          const isUrgent = n.type === "ride_status" || n.type === "chat";
+          if (isUrgent) {
+            try { playOfferAlert({ title: n.title, body: n.message || undefined }); } catch {}
+            toast.warning(n.title, { description: n.message || undefined, duration: 10000 });
+          } else {
+            toast(n.title, { description: n.message || undefined });
+          }
         }
       )
       .on(
