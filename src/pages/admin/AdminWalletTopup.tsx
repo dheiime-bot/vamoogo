@@ -58,6 +58,13 @@ const formatPhoneBR = (digitsOnly: string) => {
   return out;
 };
 
+const normalizeWhatsappBR = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 13);
+  if (!digits) return "";
+  if (digits.startsWith("55")) return digits;
+  return digits.length >= 10 ? `55${digits}`.slice(0, 13) : digits;
+};
+
 const AdminWalletTopup = () => {
   const [config, setConfig] = useState<WhatsappTopupConfig>(DEFAULT_CONFIG);
   const [newAmount, setNewAmount] = useState("");
@@ -83,9 +90,9 @@ const AdminWalletTopup = () => {
   }, []);
 
   const save = async () => {
-    const digits = config.whatsapp_number.replace(/\D/g, "");
-    if (config.enabled && digits.length < 12) {
-      toast.error("Informe o WhatsApp completo (DDI + DDD + número)");
+    const digits = normalizeWhatsappBR(config.whatsapp_number);
+    if (config.enabled && !/^55\d{10,11}$/.test(digits)) {
+      toast.error("Informe um WhatsApp do Brasil válido com DDD e número");
       return;
     }
     setSaving(true);
@@ -165,6 +172,9 @@ const AdminWalletTopup = () => {
     });
   };
 
+  const whatsappDigits = normalizeWhatsappBR(config.whatsapp_number);
+  const configComplete = config.enabled && /^55\d{10,11}$/.test(whatsappDigits);
+
   if (loading) {
     return (
       <AdminLayout title="Recarga de Carteira">
@@ -192,6 +202,26 @@ const AdminWalletTopup = () => {
       }
     >
       <div className="space-y-5">
+        <div className={`rounded-2xl border p-4 ${configComplete ? "border-success/30 bg-success/10" : "border-destructive/30 bg-destructive/5"}`}>
+          <div className="flex items-start gap-3">
+            {configComplete ? (
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+            ) : (
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            )}
+            <div>
+              <p className={`text-sm font-bold ${configComplete ? "text-success" : "text-destructive"}`}>
+                {configComplete ? "Recarga via WhatsApp ativa" : "Recarga via WhatsApp incompleta"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {configComplete
+                  ? `Motoristas já podem solicitar recarga pelo número ${formatPhoneBR(whatsappDigits)}.`
+                  : "Ative a recarga, informe um WhatsApp brasileiro válido e clique em Salvar."}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Toggle ativar */}
         <div className="rounded-2xl border bg-card p-5 shadow-sm">
           <div className="flex items-start justify-between gap-4">
