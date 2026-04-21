@@ -1399,9 +1399,11 @@ const PassengerHome = () => {
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader className="px-4 pt-3 pb-1 shrink-0">
-            <DialogTitle className="text-center text-base font-display">Avalie sua viagem</DialogTitle>
+            <DialogTitle className="text-center text-base font-display">
+              🎉 Você chegou!
+            </DialogTitle>
             <p className="text-center text-[11px] text-muted-foreground mt-0.5">
-              A avaliação é obrigatória para continuar
+              Avalie sua viagem para voltar à tela inicial
             </p>
           </DialogHeader>
           {activeRide && (
