@@ -1057,6 +1057,41 @@ export type Database = {
         }
         Relationships: []
       }
+      ride_fee_debits: {
+        Row: {
+          debited_at: string
+          driver_id: string
+          fee_amount: number
+          new_balance: number
+          previous_balance: number
+          ride_id: string
+        }
+        Insert: {
+          debited_at?: string
+          driver_id: string
+          fee_amount: number
+          new_balance: number
+          previous_balance: number
+          ride_id: string
+        }
+        Update: {
+          debited_at?: string
+          driver_id?: string
+          fee_amount?: number
+          new_balance?: number
+          previous_balance?: number
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_fee_debits_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ride_offers: {
         Row: {
           created_at: string
@@ -2119,6 +2154,7 @@ export type Database = {
             }[]
           }
       cleanup_zombie_drivers: { Args: never; Returns: number }
+      debit_ride_fee: { Args: { _ride_id: string }; Returns: undefined }
       driver_check_vehicle_dupes: {
         Args: { _plate: string; _renavam: string }
         Returns: {

@@ -569,7 +569,9 @@ const DriverHome = () => {
     if (driverData) {
       await supabase.from("drivers")
         .update({
-          balance: Math.max(0, Number(balance) - platformFee),
+          // ⚠️ NÃO atualiza balance aqui — o trigger trg_debit_ride_fee_on_complete
+          // já debita a platform_fee automaticamente quando a corrida vira 'completed'
+          // (de forma idempotente). Atualizar manualmente causaria débito duplo.
           total_rides: (driverData.total_rides || 0) + 1,
         })
         .eq("user_id", user.id);
