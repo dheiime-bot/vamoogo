@@ -95,6 +95,9 @@ const AdminWalletTopup = () => {
       ...config,
       whatsapp_number: config.whatsapp_number.replace(/\D/g, ""),
       quick_amounts: [...config.quick_amounts].sort((a, b) => a - b),
+      bonus_tiers: [...(config.bonus_tiers || [])]
+        .filter((t) => t.min_amount > 0 && t.percent > 0)
+        .sort((a, b) => a.min_amount - b.min_amount),
     };
     const { error } = await supabase
       .from("platform_settings")
