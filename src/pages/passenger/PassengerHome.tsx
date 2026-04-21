@@ -772,6 +772,25 @@ const PassengerHome = () => {
         message: `📍 Destino alterado para: ${newDestination.name} • Novo valor: R$ ${totalPrice.toFixed(2)} (${totalKm} km)`,
       }).then(() => {});
     }
+    // 🔔 Notifica o motorista (toca som + aparece no sino + funciona em qualquer tela)
+    if (activeRide.driver_id) {
+      supabase.from("notifications").insert({
+        user_id: activeRide.driver_id,
+        type: "ride_status",
+        title: "🚨 Passageiro alterou a rota!",
+        message: `Novo destino: ${newDestination.name} • R$ ${totalPrice.toFixed(2)} (${totalKm} km)`,
+        link: "/driver",
+        data: {
+          ride_id: activeRide.id,
+          event: "route_changed",
+          new_destination: newDestination.name,
+          new_price: totalPrice,
+          new_km: totalKm,
+        },
+      }).then(({ error: notifErr }) => {
+        if (notifErr) console.error("[notify driver route change]", notifErr);
+      });
+    }
   };
 
   const handleSubmitRating = async () => {
