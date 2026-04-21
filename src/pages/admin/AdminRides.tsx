@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, X, AlertTriangle } from "lucide-react";
+import { Search, X, AlertTriangle, Route } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EmptyState from "@/components/admin/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -14,6 +14,7 @@ import RideAddNoteDialog from "@/components/admin/rides/RideAddNoteDialog";
 
 const AdminRides = () => {
   const [rides, setRides] = useState<any[]>([]);
+  const [routeChanges, setRouteChanges] = useState<Record<string, { count: number; lastTo: string; lastDiff: number | null }>>({});
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -31,7 +32,30 @@ const AdminRides = () => {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
-    if (data) setRides(data);
+    if (data) {
+      setRides(data);
+      const ids = data.map((r: any) => r.id);
+      if (ids.length) {
+        const { data: changes } = await supabase
+          .from("ride_route_changes")
+          .select("ride_id, new_destination_address, previous_price, new_price, created_at")
+          .in("ride_id", ids)
+          .order("created_at", { ascending: true });
+        const map: Record<string, { count: number; lastTo: string; lastDiff: number | null }> = {};
+        (changes || []).forEach((c: any) => {
+          const cur = map[c.ride_id] || { count: 0, lastTo: "", lastDiff: null };
+          cur.count += 1;
+          cur.lastTo = c.new_destination_address;
+          cur.lastDiff = c.previous_price != null && c.new_price != null
+            ? Number(c.new_price) - Number(c.previous_price)
+            : null;
+          map[c.ride_id] = cur;
+        });
+        setRouteChanges(map);
+      } else {
+        setRouteChanges({});
+      }
+    }
   };
 
   useEffect(() => { fetchRides(); }, []);
@@ -41,6 +65,7 @@ const AdminRides = () => {
     const channel = supabase
       .channel("admin-rides")
       .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, () => fetchRides())
+      .on("postgres_changes", { event: "*", schema: "public", table: "ride_route_changes" }, () => fetchRides())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
@@ -113,6 +138,20 @@ const AdminRides = () => {
                       <AlertTriangle className="h-3 w-3" /> {ride.issue_flag}
                     </span>
                   )}
+                  {routeChanges[ride.id] && (
+                    <span
+                      className="text-[10px] font-bold uppercase rounded-full bg-info/15 text-info px-2 py-0.5 flex items-center gap-1"
+                      title={`Última alteração: ${routeChanges[ride.id].lastTo}`}
+                    >
+                      <Route className="h-3 w-3" />
+                      Rota alterada{routeChanges[ride.id].count > 1 ? ` ×${routeChanges[ride.id].count}` : ""}
+                      {routeChanges[ride.id].lastDiff != null && (
+                        <span className={routeChanges[ride.id].lastDiff! >= 0 ? "text-success" : "text-destructive"}>
+                          {routeChanges[ride.id].lastDiff! >= 0 ? "+" : ""}R$ {routeChanges[ride.id].lastDiff!.toFixed(2)}
+                        </span>
+                      )}
+                    </span>
+                  )}
                   {ride.payment_status && ride.payment_status !== "pending" && (
                     <span className={`text-[10px] font-bold uppercase rounded-full px-2 py-0.5 ${
                       ride.payment_status === "paid" ? "bg-success/15 text-success" : "bg-primary/15 text-primary"
@@ -143,6 +182,11 @@ const AdminRides = () => {
               <div className="space-y-1">
                 <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success" /><p className="text-sm truncate">{ride.origin_address?.split(" - ")[0]}</p></div>
                 <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-destructive" /><p className="text-sm truncate">{ride.destination_address?.split(" - ")[0]}</p></div>
+                {routeChanges[ride.id] && (
+                  <p className="text-[10px] text-info pl-4 truncate" title={routeChanges[ride.id].lastTo}>
+                    ↳ alterado para: {routeChanges[ride.id].lastTo?.split(" - ")[0]}
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div><span className="text-muted-foreground">Distância</span><p className="font-medium">{ride.distance_km} km</p></div>
