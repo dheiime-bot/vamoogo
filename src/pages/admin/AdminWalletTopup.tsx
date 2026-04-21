@@ -257,16 +257,17 @@ const AdminWalletTopup = () => {
             <div className="space-y-1.5">
               <Label className="text-xs">Número WhatsApp (com DDI/DDD, só dígitos)</Label>
               <Input
-                value={config.whatsapp_number}
-                onChange={(e) =>
-                  setConfig({ ...config, whatsapp_number: e.target.value.replace(/\D/g, "") })
-                }
-                placeholder="559999999999"
-                inputMode="numeric"
-                maxLength={15}
+                value={formatPhoneBR(config.whatsapp_number)}
+                onChange={(e) => {
+                  const d = e.target.value.replace(/\D/g, "").slice(0, 13);
+                  setConfig({ ...config, whatsapp_number: d });
+                }}
+                placeholder="+55 (11) 98765-4321"
+                inputMode="tel"
+                maxLength={22}
               />
               <p className="text-[10px] text-muted-foreground">
-                Formato internacional, sem +, espaços ou traços. Ex: 5511987654321
+                Formato Brasil: digite DDD + número, o +55 é adicionado automaticamente. Ex.: 11987654321
               </p>
             </div>
           </div>
