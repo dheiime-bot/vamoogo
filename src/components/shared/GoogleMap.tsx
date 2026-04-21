@@ -823,7 +823,7 @@ const MapStyler = () => {
 };
 
 /** Botão flutuante para recentralizar o mapa em um ponto preferido. */
-const RecenterButton = ({ target, bottomInset = 0 }: { target: MapPoint | null; bottomInset?: number }) => {
+const RecenterButton = ({ target }: { target: MapPoint | null; bottomInset?: number }) => {
   const map = useMap();
 
   const handleClick = () => {
@@ -848,18 +848,19 @@ const RecenterButton = ({ target, bottomInset = 0 }: { target: MapPoint | null; 
     }
   };
 
-  // Alinhado verticalmente com a DriverBottomNav (h-16 + py-2 + safe-area + 8px).
-  // Os botões da nav inferior (Corridas/Switch ON-OFF) têm h-16 e ficam ancorados a
-  // `env(safe-area-inset-bottom) + 16px` do fundo (paddingBottom = safe + 0.5rem + 8px,
-  // mais py-2 = 8px do container). Aqui usamos `calc(env(safe-area-inset-bottom) + 16px)`
-  // para ficar EXATAMENTE na mesma linha do switch e do pneuzinho.
+  // Alinhado verticalmente com a DriverBottomNav.
+  // A nav fica ancorada em `safe-area + 0.5rem + 8px` (paddingBottom) e tem `py-2` (8px)
+  // no container interno, portanto a base dos botões (pneu/switch) fica em
+  // `safe-area + 24px`. Usamos o mesmo offset para o botão de recentralizar e ignoramos
+  // o `bottomInset` (que serve para o padding do mapa) para que ele fique exatamente
+  // na mesma linha do pneuzinho e do switch ON/OFF.
   return (
     <button
       type="button"
       onClick={handleClick}
       aria-label="Recentralizar mapa"
-      style={{ bottom: `calc(env(safe-area-inset-bottom) + ${bottomInset + 16}px)` }}
-      className="absolute right-3 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-lg ring-2 ring-background border border-border transition-transform active:scale-95 hover:bg-muted"
+      style={{ bottom: `calc(env(safe-area-inset-bottom) + 24px)` }}
+      className="absolute right-4 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-lg ring-2 ring-background border border-border transition-transform active:scale-95 hover:bg-muted"
     >
       <LocateFixed className="h-6 w-6 text-primary" />
     </button>
