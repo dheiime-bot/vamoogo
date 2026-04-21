@@ -176,12 +176,14 @@ const RideDetailsDialog = ({ rideId, open, onClose, role }: Props) => {
               <p className="text-xs font-bold uppercase text-muted-foreground mb-1 flex items-center gap-1"><Receipt className="h-3.5 w-3.5" /> Financeiro</p>
               <div className="flex justify-between"><span className="text-muted-foreground">Pagamento</span><span className="font-medium flex items-center gap-1"><CreditCard className="h-3 w-3" />{payLabel(ride.payment_method)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Status pagamento</span><span className="font-medium uppercase text-xs">{ride.payment_status || "—"}</span></div>
-              {ride.original_price && ride.original_price !== ride.price && (
-                <div className="flex justify-between"><span className="text-muted-foreground">Preço original</span><span className="font-medium line-through">{formatBRL(Number(ride.original_price))}</span></div>
-              )}
-              <div className="flex justify-between"><span className="text-muted-foreground">Valor da corrida</span><span className="font-bold">{formatBRL(Number(ride.price ?? 0))}</span></div>
-              {role === "driver" && (
+              {role === "passenger" ? (
+                <div className="flex justify-between border-t pt-1.5 mt-1"><span className="font-semibold">Valor pago</span><span className="font-extrabold text-success">{formatBRL(Number(ride.price ?? 0))}</span></div>
+              ) : (
                 <>
+                  {ride.original_price && ride.original_price !== ride.price && (
+                    <div className="flex justify-between"><span className="text-muted-foreground">Preço original</span><span className="font-medium line-through">{formatBRL(Number(ride.original_price))}</span></div>
+                  )}
+                  <div className="flex justify-between"><span className="text-muted-foreground">Valor da corrida</span><span className="font-bold">{formatBRL(Number(ride.price ?? 0))}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Taxa plataforma</span><span className="text-destructive">-{formatBRL(Number(ride.platform_fee ?? 0))}</span></div>
                   <div className="flex justify-between border-t pt-1.5 mt-1"><span className="font-semibold">Você recebeu</span><span className="font-extrabold text-success">{formatBRL(Number(ride.driver_net ?? 0))}</span></div>
                 </>
