@@ -5,7 +5,7 @@
  *
  * Mostra um badge com a contagem de ofertas pendentes no botão "Corridas" (pneu + chama).
  */
-import { Home, Car } from "lucide-react";
+import { Car } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type ReactNode, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
