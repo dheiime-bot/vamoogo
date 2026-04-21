@@ -182,6 +182,11 @@ const AdminRides = () => {
               <div className="space-y-1">
                 <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success" /><p className="text-sm truncate">{ride.origin_address?.split(" - ")[0]}</p></div>
                 <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-destructive" /><p className="text-sm truncate">{ride.destination_address?.split(" - ")[0]}</p></div>
+                {routeChanges[ride.id] && (
+                  <p className="text-[10px] text-info pl-4 truncate" title={routeChanges[ride.id].lastTo}>
+                    ↳ alterado para: {routeChanges[ride.id].lastTo?.split(" - ")[0]}
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div><span className="text-muted-foreground">Distância</span><p className="font-medium">{ride.distance_km} km</p></div>
