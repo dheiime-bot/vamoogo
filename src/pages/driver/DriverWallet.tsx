@@ -7,17 +7,17 @@ import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronDown } from "lucide-react";
 
-type PeriodId = "today" | "week" | "month" | "3m" | "6m" | "year" | "all";
-const PERIODS: { id: PeriodId; label: string; days: number | null }[] = [
-  { id: "today", label: "Hoje", days: 1 },
-  { id: "week", label: "7 dias", days: 7 },
-  { id: "month", label: "Mês", days: 30 },
-  { id: "3m", label: "3 meses", days: 90 },
-  { id: "6m", label: "6 meses", days: 180 },
-  { id: "year", label: "12 meses", days: 365 },
-  { id: "all", label: "Tudo", days: null },
+type PeriodId = "today" | "week" | "month";
+const PERIODS: { id: PeriodId; label: string }[] = [
+  { id: "today", label: "Hoje" },
+  { id: "week", label: "Semana" },
+  { id: "month", label: "Mês" },
 ];
+
+const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 const DriverWallet = () => {
   const { user, driverData } = useAuth();
@@ -26,6 +26,9 @@ const DriverWallet = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"recharge" | "history">("recharge");
   const [period, setPeriod] = useState<PeriodId>("week");
+  // Mês selecionado: offset em relação ao mês atual (0 = atual, 1 = mês passado, ...)
+  const [monthOffset, setMonthOffset] = useState<number>(0);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const balance = driverData?.balance ?? 0;
 
   const reload = async () => {
@@ -53,27 +56,23 @@ const DriverWallet = () => {
 
   const { totalNet, totalCount, chartData, bucketLabel } = useMemo(() => {
     const now = new Date();
-    const cfg = PERIODS.find((p) => p.id === period)!;
-    const sinceMs = cfg.days == null ? 0 : (cfg.id === "today"
-      ? new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-      : now.getTime() - cfg.days * 86400000);
-
-    const inRange = cfg.days == null
-      ? completedRides
-      : completedRides.filter((r) => new Date(r.completed_at || r.created_at).getTime() >= sinceMs);
-    const total = inRange.reduce((s, r) => s + Number(r.driver_net || 0), 0);
-
+    let inRange: typeof completedRides = [];
     let buckets: { name: string; value: number; key?: string }[] = [];
     let label = "";
-    if (cfg.id === "today") {
+
+    if (period === "today") {
+      const startMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      inRange = completedRides.filter((r) => new Date(r.completed_at || r.created_at).getTime() >= startMs);
       label = "por hora";
       buckets = Array.from({ length: 24 }, (_, h) => ({ name: `${h}h`, value: 0 }));
       inRange.forEach((r) => {
         const h = new Date(r.completed_at || r.created_at).getHours();
         buckets[h].value += Number(r.driver_net || 0);
       });
-    } else if (cfg.days && cfg.days <= 31) {
-      const days = cfg.days;
+    } else if (period === "week") {
+      const days = 7;
+      const sinceMs = now.getTime() - days * 86400000;
+      inRange = completedRides.filter((r) => new Date(r.completed_at || r.created_at).getTime() >= sinceMs);
       label = "por dia";
       buckets = Array.from({ length: days }, (_, i) => {
         const d = new Date(now.getTime() - (days - 1 - i) * 86400000);
@@ -86,22 +85,34 @@ const DriverWallet = () => {
         if (i != null) buckets[i].value += Number(r.driver_net || 0);
       });
     } else {
-      const months = cfg.days ? Math.max(3, Math.round(cfg.days / 30)) : 12;
-      label = "por mês";
-      buckets = Array.from({ length: months }, (_, i) => {
-        const d = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i), 1);
-        return { name: d.toLocaleDateString("pt-BR", { month: "short" }), value: 0, key: `${d.getFullYear()}-${d.getMonth()}` };
+      // mês específico (monthOffset)
+      const target = new Date(now.getFullYear(), now.getMonth() - monthOffset, 1);
+      const year = target.getFullYear();
+      const month = target.getMonth();
+      const startMs = new Date(year, month, 1).getTime();
+      const endMs = new Date(year, month + 1, 1).getTime();
+      inRange = completedRides.filter((r) => {
+        const t = new Date(r.completed_at || r.created_at).getTime();
+        return t >= startMs && t < endMs;
       });
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      label = `de ${MONTH_NAMES[month]}`;
+      buckets = Array.from({ length: daysInMonth }, (_, i) => ({
+        name: `${i + 1}`,
+        value: 0,
+        key: `${year}-${month}-${i + 1}`,
+      }));
       const idx = new Map(buckets.map((b, i) => [b.key!, i]));
       inRange.forEach((r) => {
         const d = new Date(r.completed_at || r.created_at);
-        const i = idx.get(`${d.getFullYear()}-${d.getMonth()}`);
+        const i = idx.get(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
         if (i != null) buckets[i].value += Number(r.driver_net || 0);
       });
     }
 
+    const total = inRange.reduce((s, r) => s + Number(r.driver_net || 0), 0);
     return { totalNet: total, totalCount: inRange.length, chartData: buckets, bucketLabel: label };
-  }, [completedRides, period]);
+  }, [completedRides, period, monthOffset]);
 
   const avgPerRide = totalCount > 0 ? totalNet / totalCount : 0;
 
@@ -184,20 +195,81 @@ const DriverWallet = () => {
           </div>
 
           {/* Period chips */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 mb-3 scrollbar-none">
-            {PERIODS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setPeriod(p.id)}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all ${
-                  period === p.id
-                    ? "bg-primary text-primary-foreground shadow-md scale-105"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+          <div className="flex gap-1.5 pb-1 mb-3">
+            {PERIODS.map((p) => {
+              const active = period === p.id;
+              if (p.id === "month") {
+                const target = new Date();
+                target.setDate(1);
+                target.setMonth(target.getMonth() - monthOffset);
+                const monthLabel = active
+                  ? `${MONTH_NAMES[target.getMonth()].slice(0, 3)}/${String(target.getFullYear()).slice(2)}`
+                  : "Mês";
+                return (
+                  <Popover key={p.id} open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        onClick={() => {
+                          setPeriod("month");
+                          setMonthPickerOpen(true);
+                        }}
+                        className={`shrink-0 inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all ${
+                          active
+                            ? "bg-primary text-primary-foreground shadow-md scale-105"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {monthLabel}
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-56 p-2">
+                      <p className="text-[10px] font-semibold text-muted-foreground px-2 pb-1.5 uppercase tracking-wider">
+                        Selecione o mês
+                      </p>
+                      <div className="max-h-64 overflow-y-auto">
+                        {Array.from({ length: 12 }, (_, i) => {
+                          const d = new Date();
+                          d.setDate(1);
+                          d.setMonth(d.getMonth() - i);
+                          const isSelected = monthOffset === i;
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => {
+                                setMonthOffset(i);
+                                setPeriod("month");
+                                setMonthPickerOpen(false);
+                              }}
+                              className={`w-full text-left rounded-md px-2.5 py-2 text-xs font-medium transition-colors ${
+                                isSelected
+                                  ? "bg-primary/10 text-primary"
+                                  : "hover:bg-muted text-foreground"
+                              }`}
+                            >
+                              {MONTH_NAMES[d.getMonth()]} {d.getFullYear()}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                );
+              }
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setPeriod(p.id)}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all ${
+                    active
+                      ? "bg-primary text-primary-foreground shadow-md scale-105"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
           </div>
 
           <div className="rounded-xl bg-muted/30 p-2 pt-3">
