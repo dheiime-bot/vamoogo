@@ -303,7 +303,7 @@ const AdminWalletTopup = () => {
                 key={v}
                 className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold"
               >
-                R$ {v}
+                R$ {formatBRL(v)}
                 <button
                   onClick={() => removeAmount(v)}
                   className="rounded-full hover:bg-destructive/20 p-0.5"
@@ -434,7 +434,7 @@ const AdminWalletTopup = () => {
                     <p className="text-sm font-semibold truncate">
                       {t.nome}{" "}
                       <span className="font-normal text-muted-foreground">
-                        • R$ {Number(t.valor).toFixed(2).replace(".", ",")}
+                      • R$ {formatBRL(Number(t.valor))}
                       </span>
                     </p>
                     <p className="text-[11px] text-muted-foreground">
