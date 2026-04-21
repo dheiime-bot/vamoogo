@@ -38,13 +38,14 @@ const RideDetailsDialog = ({ rideId, open, onClose, role }: Props) => {
   const [ride, setRide] = useState<any>(null);
   const [other, setOther] = useState<any>(null); // passageiro (p/ motorista) OU motorista (p/ passageiro)
   const [loading, setLoading] = useState(false);
+  const [routeChanges, setRouteChanges] = useState<any[]>([]);
 
   useEffect(() => {
     if (!open || !rideId) return;
     let alive = true;
     (async () => {
       setLoading(true);
-      setRide(null); setOther(null);
+      setRide(null); setOther(null); setRouteChanges([]);
       const { data: r } = await supabase.from("rides").select("*").eq("id", rideId).maybeSingle();
       if (!alive) return;
       setRide(r);
@@ -66,6 +67,14 @@ const RideDetailsDialog = ({ rideId, open, onClose, role }: Props) => {
           }
           setOther({ ...(prof || {}), ...extra });
         }
+        // Histórico de mudanças de rota (auditoria visível ao passageiro/motorista)
+        const { data: changes } = await supabase
+          .from("ride_route_changes")
+          .select("*")
+          .eq("ride_id", rideId)
+          .order("created_at", { ascending: true });
+        if (!alive) return;
+        setRouteChanges(changes || []);
       }
       setLoading(false);
     })();
