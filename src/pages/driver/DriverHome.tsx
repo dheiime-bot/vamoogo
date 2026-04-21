@@ -817,9 +817,18 @@ const DriverHome = () => {
         <div className="fixed inset-0 z-30 flex items-center justify-center px-6 pointer-events-none">
           <div className="flex items-center gap-3 rounded-2xl bg-destructive/95 backdrop-blur-md border-2 border-destructive px-5 py-4 shadow-2xl pointer-events-auto animate-pulse max-w-sm">
             <AlertTriangle className="h-6 w-6 text-destructive-foreground shrink-0" />
-            <p className="text-sm font-bold text-destructive-foreground leading-snug">
-              Saldo baixo — recarregue para ficar online
-            </p>
+            <div className="text-destructive-foreground leading-snug">
+              {negativeBalance ? (
+                <>
+                  <p className="text-sm font-bold">Carteira negativa: {formatBRL(balance)}</p>
+                  <p className="text-xs opacity-90 mt-0.5">
+                    A taxa da última corrida foi descontada. Recarregue para voltar a aceitar corridas.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm font-bold">Saldo baixo — recarregue para ficar online</p>
+              )}
+            </div>
           </div>
         </div>
       )}
