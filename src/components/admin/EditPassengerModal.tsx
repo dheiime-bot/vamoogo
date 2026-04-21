@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { X, Save, Loader2, User, Mail, Phone, IdCard, Calendar as CalendarIcon, ShieldCheck, AlertTriangle } from "lucide-react";
-import { format, parse, isValid } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,11 +20,35 @@ const today = new Date();
 const minBirth = new Date(1900, 0, 1);
 const maxBirth = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
 
-const toIsoDate = (d?: Date | null) => (d ? format(d, "yyyy-MM-dd") : "");
+// Conversão UTC-safe — evita "data retroativa" causada por timezone local.
+// O banco devolve `birth_date` como `YYYY-MM-DD` (puro) ou ISO completo
+// (`YYYY-MM-DDTHH:mm:ss+00:00`). Sempre extraímos os 10 primeiros caracteres.
+const toIsoDate = (d?: Date | null) => {
+  if (!d) return "";
+  // Usa componentes LOCAIS do Date para gerar a string YYYY-MM-DD que o usuário viu.
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 const fromIsoDate = (s?: string | null): Date | undefined => {
   if (!s) return undefined;
-  const d = parse(s, "yyyy-MM-dd", new Date());
-  return isValid(d) ? d : undefined;
+  // Aceita "YYYY-MM-DD" ou ISO completo — pega só a parte da data.
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return undefined;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return undefined;
+  // Constrói no fuso LOCAL para que o calendário exiba o mesmo dia.
+  const result = new Date(y, mo - 1, d, 12, 0, 0, 0);
+  if (
+    result.getFullYear() !== y ||
+    result.getMonth() !== mo - 1 ||
+    result.getDate() !== d
+  )
+    return undefined;
+  return result;
 };
 
 const EditPassengerModal = ({ passenger, onClose, onSaved }: Props) => {

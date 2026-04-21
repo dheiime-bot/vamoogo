@@ -3,7 +3,7 @@ import {
   X, Save, Loader2, User, Mail, Phone, IdCard, Calendar as CalendarIcon,
   Car, Palette, Hash, FileText, KeyRound, AlertTriangle, ShieldCheck,
 } from "lucide-react";
-import { format, parse, isValid } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,11 +42,33 @@ const maxBirth = new Date(today.getFullYear() - 18, today.getMonth(), today.getD
 const currentYear = today.getFullYear();
 const oldestVehicleYear = currentYear - 30;
 
-const toIsoDate = (d?: Date | null) => (d ? format(d, "yyyy-MM-dd") : "");
+// Conversão UTC-safe — evita "data retroativa" por causa do timezone local.
+// O banco devolve `birth_date` como `YYYY-MM-DD` puro ou ISO completo. Sempre
+// extraímos só os 10 primeiros caracteres e construímos no fuso local ao meio-dia
+// para que o usuário enxergue exatamente o mesmo dia que digitou/selecionou.
+const toIsoDate = (d?: Date | null) => {
+  if (!d) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 const fromIsoDate = (s?: string | null): Date | undefined => {
   if (!s) return undefined;
-  const d = parse(s, "yyyy-MM-dd", new Date());
-  return isValid(d) ? d : undefined;
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return undefined;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return undefined;
+  const result = new Date(y, mo - 1, d, 12, 0, 0, 0);
+  if (
+    result.getFullYear() !== y ||
+    result.getMonth() !== mo - 1 ||
+    result.getDate() !== d
+  )
+    return undefined;
+  return result;
 };
 
 // Aceita ABC1234 (antigo) ou ABC1D23 (Mercosul)
