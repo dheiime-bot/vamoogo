@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode, Navigation as NavigationIcon } from "lucide-react";
 import { openGoogleMapsRoute } from "@/lib/externalNav";
+import { getRideDestination, getRideNextTarget, getRideStops, routePointName } from "@/lib/rideRoute";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import AppMenu from "@/components/shared/AppMenu";
 import BlockBanner from "@/components/shared/BlockBanner";
@@ -53,6 +54,7 @@ const DriverHome = () => {
   const [passengerRatingComment, setPassengerRatingComment] = useState("");
   const [ratedRide, setRatedRide] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [currentStopIndex, setCurrentStopIndex] = useState(0);
   // Modal obrigatório de seleção de veículo após login (quando há 2+ aprovados).
   const [requireVehiclePick, setRequireVehiclePick] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
@@ -370,8 +372,18 @@ const DriverHome = () => {
       .eq("id", activeRide.id);
     if (error) return;
     setActiveRide({ ...activeRide, status: "in_progress", started_at: startedAt });
+    setCurrentStopIndex(0);
     setRideState("in_ride");
     playPhaseSound("started");
+  };
+
+  const handleConfirmStop = () => {
+    if (!activeRide) return;
+    const stops = getRideStops(activeRide);
+    const nextIndex = Math.min(currentStopIndex + 1, stops.length);
+    setCurrentStopIndex(nextIndex);
+    localStorage.setItem(`ride-stop-index-${activeRide.id}`, String(nextIndex));
+    toast.success(nextIndex < stops.length ? `Parada ${nextIndex} confirmada` : "Última parada confirmada");
   };
 
   const handleFinishRide = async () => {
@@ -397,6 +409,7 @@ const DriverHome = () => {
         .eq("user_id", user.id);
     }
     // Guarda a corrida para avaliação e abre modal — mantém o motorista online.
+    localStorage.removeItem(`ride-stop-index-${activeRide.id}`);
     setRatedRide(activeRide);
     setActiveRide(null);
     setRideState("rating");
