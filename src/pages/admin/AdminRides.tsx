@@ -14,7 +14,20 @@ import RideAddNoteDialog from "@/components/admin/rides/RideAddNoteDialog";
 
 const AdminRides = () => {
   const [rides, setRides] = useState<any[]>([]);
-  const [routeChanges, setRouteChanges] = useState<Record<string, { count: number; lastTo: string; lastDiff: number | null }>>({});
+  const [routeChanges, setRouteChanges] = useState<Record<string, {
+    count: number;
+    lastTo: string;
+    lastDiff: number | null;
+    firstFromAddress: string | null;
+    firstFromKm: number | null;
+    firstFromPrice: number | null;
+    lastToKm: number | null;
+    lastToPrice: number | null;
+    drivenKm: number | null;
+    drivenPrice: number | null;
+    newLegKm: number | null;
+    newLegPrice: number | null;
+  }>>({});
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -38,14 +51,30 @@ const AdminRides = () => {
       if (ids.length) {
         const { data: changes } = await supabase
           .from("ride_route_changes")
-          .select("ride_id, new_destination_address, previous_price, new_price, created_at")
+          .select("ride_id, previous_destination_address, new_destination_address, previous_distance_km, new_distance_km, previous_price, new_price, driven_km, driven_price, new_leg_km, new_leg_price, created_at")
           .in("ride_id", ids)
           .order("created_at", { ascending: true });
-        const map: Record<string, { count: number; lastTo: string; lastDiff: number | null }> = {};
+        const map: Record<string, any> = {};
         (changes || []).forEach((c: any) => {
-          const cur = map[c.ride_id] || { count: 0, lastTo: "", lastDiff: null };
+          const cur = map[c.ride_id] || {
+            count: 0, lastTo: "", lastDiff: null,
+            firstFromAddress: null, firstFromKm: null, firstFromPrice: null,
+            lastToKm: null, lastToPrice: null,
+            drivenKm: null, drivenPrice: null, newLegKm: null, newLegPrice: null,
+          };
+          if (cur.count === 0) {
+            cur.firstFromAddress = c.previous_destination_address;
+            cur.firstFromKm = c.previous_distance_km != null ? Number(c.previous_distance_km) : null;
+            cur.firstFromPrice = c.previous_price != null ? Number(c.previous_price) : null;
+          }
           cur.count += 1;
           cur.lastTo = c.new_destination_address;
+          cur.lastToKm = c.new_distance_km != null ? Number(c.new_distance_km) : null;
+          cur.lastToPrice = c.new_price != null ? Number(c.new_price) : null;
+          cur.drivenKm = c.driven_km != null ? Number(c.driven_km) : cur.drivenKm;
+          cur.drivenPrice = c.driven_price != null ? Number(c.driven_price) : cur.drivenPrice;
+          cur.newLegKm = c.new_leg_km != null ? Number(c.new_leg_km) : cur.newLegKm;
+          cur.newLegPrice = c.new_leg_price != null ? Number(c.new_leg_price) : cur.newLegPrice;
           cur.lastDiff = c.previous_price != null && c.new_price != null
             ? Number(c.new_price) - Number(c.previous_price)
             : null;
@@ -182,17 +211,66 @@ const AdminRides = () => {
               <div className="space-y-1">
                 <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success" /><p className="text-sm truncate">{ride.origin_address?.split(" - ")[0]}</p></div>
                 <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-destructive" /><p className="text-sm truncate">{ride.destination_address?.split(" - ")[0]}</p></div>
-                {routeChanges[ride.id] && (
-                  <p className="text-[10px] text-info pl-4 truncate" title={routeChanges[ride.id].lastTo}>
-                    ↳ alterado para: {routeChanges[ride.id].lastTo?.split(" - ")[0]}
-                  </p>
-                )}
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div><span className="text-muted-foreground">Distância</span><p className="font-medium">{ride.distance_km} km</p></div>
                 <div><span className="text-muted-foreground">Duração</span><p className="font-medium">{ride.duration_minutes} min</p></div>
               </div>
             </div>
+            {routeChanges[ride.id] && (
+              <div className="mb-3 rounded-lg border border-info/30 bg-info/5 p-3 text-xs space-y-2">
+                <div className="flex items-center gap-1.5 font-semibold text-info">
+                  <Route className="h-3.5 w-3.5" />
+                  Detalhes da alteração de rota
+                  {routeChanges[ride.id].count > 1 && <span className="text-[10px] opacity-70">({routeChanges[ride.id].count} alterações)</span>}
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Rota original</p>
+                    <p className="text-success">● {ride.origin_address?.split(" - ")[0]}</p>
+                    <p className="text-destructive line-through opacity-70">
+                      ● {(routeChanges[ride.id].firstFromAddress || ride.destination_address)?.split(" - ")[0]}
+                    </p>
+                    <div className="flex gap-3 text-muted-foreground pt-0.5">
+                      <span>{routeChanges[ride.id].firstFromKm != null ? `${routeChanges[ride.id].firstFromKm!.toFixed(2)} km` : "—"}</span>
+                      <span>{routeChanges[ride.id].firstFromPrice != null ? `R$ ${routeChanges[ride.id].firstFromPrice!.toFixed(2)}` : "—"}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Rota final</p>
+                    <p className="text-success">● {ride.origin_address?.split(" - ")[0]}</p>
+                    <p className="text-info font-medium">● {routeChanges[ride.id].lastTo?.split(" - ")[0]}</p>
+                    <div className="flex gap-3 text-foreground pt-0.5">
+                      <span className="font-medium">{routeChanges[ride.id].lastToKm != null ? `${routeChanges[ride.id].lastToKm!.toFixed(2)} km` : "—"}</span>
+                      <span className="font-medium">{routeChanges[ride.id].lastToPrice != null ? `R$ ${routeChanges[ride.id].lastToPrice!.toFixed(2)}` : "—"}</span>
+                      {routeChanges[ride.id].lastDiff != null && (
+                        <span className={routeChanges[ride.id].lastDiff! >= 0 ? "text-success font-bold" : "text-destructive font-bold"}>
+                          {routeChanges[ride.id].lastDiff! >= 0 ? "+" : ""}R$ {routeChanges[ride.id].lastDiff!.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {(routeChanges[ride.id].drivenKm != null || routeChanges[ride.id].newLegKm != null) && (
+                  <div className="grid grid-cols-2 gap-3 border-t border-info/20 pt-2 text-[11px]">
+                    <div>
+                      <span className="text-muted-foreground">Já percorrido: </span>
+                      <span className="font-medium">
+                        {routeChanges[ride.id].drivenKm != null ? `${routeChanges[ride.id].drivenKm!.toFixed(2)} km` : "—"}
+                        {routeChanges[ride.id].drivenPrice != null && ` · R$ ${routeChanges[ride.id].drivenPrice!.toFixed(2)}`}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Novo trecho: </span>
+                      <span className="font-medium">
+                        {routeChanges[ride.id].newLegKm != null ? `${routeChanges[ride.id].newLegKm!.toFixed(2)} km` : "—"}
+                        {routeChanges[ride.id].newLegPrice != null && ` · R$ ${routeChanges[ride.id].newLegPrice!.toFixed(2)}`}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex items-center justify-between border-t pt-3">
               <div className="flex items-center gap-4">
                 <div>
