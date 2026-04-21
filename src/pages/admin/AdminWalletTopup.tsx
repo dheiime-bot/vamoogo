@@ -165,17 +165,6 @@ const AdminWalletTopup = () => {
     });
   };
 
-  const updateStatus = async (id: string, status: string) => {
-    setUpdating(id);
-    const { error } = await supabase.from("wallet_topups").update({ status }).eq("id", id);
-    setUpdating(null);
-    if (error) {
-      toast.error("Erro ao atualizar");
-      return;
-    }
-    toast.success(`Status alterado para ${STATUS_LABELS[status]?.label || status}`);
-  };
-
   if (loading) {
     return (
       <AdminLayout title="Recarga de Carteira">
