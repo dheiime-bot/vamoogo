@@ -166,7 +166,7 @@ const EditPassengerModal = ({ passenger, onClose, onSaved }: Props) => {
               <ErrMsg k="cpf" />
             </label>
 
-            <label className="space-y-1 block">
+            <div className="space-y-1">
               <FieldLabel icon={CalendarIcon} label="Nascimento" />
               <Popover>
                 <PopoverTrigger asChild>
@@ -184,7 +184,7 @@ const EditPassengerModal = ({ passenger, onClose, onSaved }: Props) => {
                     {birthDate ? format(birthDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecione"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-[80]" align="start">
                   <Calendar
                     mode="single"
                     selected={birthDate}
@@ -197,13 +197,14 @@ const EditPassengerModal = ({ passenger, onClose, onSaved }: Props) => {
                     fromYear={1900}
                     toYear={maxBirth.getFullYear()}
                     disabled={(date) => date > maxBirth || date < minBirth}
+                    locale={ptBR}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
               <ErrMsg k="birth_date" />
-            </label>
+            </div>
           </div>
 
           <label className="space-y-1 block">
