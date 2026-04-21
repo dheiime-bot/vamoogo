@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Navigate } from "react-router-dom";
-import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode, Navigation as NavigationIcon } from "lucide-react";
+import { AlertTriangle, MapPin, Play, Flag, Phone, MessageCircle, Star, Clock, QrCode, Navigation as NavigationIcon } from "lucide-react";
 import { openGoogleMapsRoute } from "@/lib/externalNav";
+import { getRideDestination, getRideNextTarget, getRideStops, routePointName } from "@/lib/rideRoute";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import AppMenu from "@/components/shared/AppMenu";
 import BlockBanner from "@/components/shared/BlockBanner";
@@ -9,10 +10,8 @@ import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
-import DriverHeartbeat from "@/components/driver/DriverHeartbeat";
 
 import GoogleMap from "@/components/shared/GoogleMap";
-import { Home, User, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
@@ -43,7 +42,7 @@ const DriverHome = () => {
   const [pendingOffer, setPendingOffer] = useState<any>(null);
   const [pendingRide, setPendingRide] = useState<any>(null);
   const [activeRide, setActiveRide] = useState<any>(null);
-  const [todayStats, setTodayStats] = useState({ rides: 0, earnings: 0, hours: 0 });
+  const [, setTodayStats] = useState({ rides: 0, earnings: 0, hours: 0 });
   const [rideState, setRideState] = useState<DriverRideState>("idle");
   const [offerCountdown, setOfferCountdown] = useState(15);
   const [showChat, setShowChat] = useState(false);
@@ -53,6 +52,7 @@ const DriverHome = () => {
   const [passengerRatingComment, setPassengerRatingComment] = useState("");
   const [ratedRide, setRatedRide] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [currentStopIndex, setCurrentStopIndex] = useState(0);
   // Modal obrigatório de seleção de veículo após login (quando há 2+ aprovados).
   const [requireVehiclePick, setRequireVehiclePick] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
@@ -61,10 +61,6 @@ const DriverHome = () => {
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
-  const displayName = profile?.full_name?.split(" ")[0] || "Motorista";
-
-  const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
-
   // Faz broadcast da posição GPS quando online
   const { lastSyncAt } = useDriverLocation({
     driverId: user?.id,
@@ -370,8 +366,18 @@ const DriverHome = () => {
       .eq("id", activeRide.id);
     if (error) return;
     setActiveRide({ ...activeRide, status: "in_progress", started_at: startedAt });
+    setCurrentStopIndex(0);
     setRideState("in_ride");
     playPhaseSound("started");
+  };
+
+  const handleConfirmStop = () => {
+    if (!activeRide) return;
+    const stops = getRideStops(activeRide);
+    const nextIndex = Math.min(currentStopIndex + 1, stops.length);
+    setCurrentStopIndex(nextIndex);
+    localStorage.setItem(`ride-stop-index-${activeRide.id}`, String(nextIndex));
+    toast.success(nextIndex < stops.length ? `Parada ${nextIndex} confirmada` : "Última parada confirmada");
   };
 
   const handleFinishRide = async () => {
@@ -397,6 +403,7 @@ const DriverHome = () => {
         .eq("user_id", user.id);
     }
     // Guarda a corrida para avaliação e abre modal — mantém o motorista online.
+    localStorage.removeItem(`ride-stop-index-${activeRide.id}`);
     setRatedRide(activeRide);
     setActiveRide(null);
     setRideState("rating");
@@ -467,9 +474,11 @@ const DriverHome = () => {
   const originPoint = activeRide
     ? { lat: Number(activeRide.origin_lat), lng: Number(activeRide.origin_lng), label: "Passageiro" }
     : null;
-  const destPoint = activeRide
-    ? { lat: Number(activeRide.destination_lat), lng: Number(activeRide.destination_lng), label: "Destino" }
-    : null;
+  const rideStops = activeRide ? getRideStops(activeRide) : [];
+  const destinationPoint = activeRide ? getRideDestination(activeRide) : null;
+  const nextTarget = activeRide?.status === "in_progress" ? getRideNextTarget(activeRide, currentStopIndex) : destinationPoint;
+  const remainingStops = activeRide?.status === "in_progress" ? rideStops.slice(currentStopIndex) : rideStops;
+  const routeStops = activeRide?.status === "in_progress" ? remainingStops : rideStops;
 
   // Carrega nome do passageiro quando há corrida aceita
   useEffect(() => {
@@ -477,6 +486,16 @@ const DriverHome = () => {
     supabase.from("profiles").select("full_name").eq("user_id", activeRide.passenger_id).single()
       .then(({ data }) => setPassengerName(data?.full_name ?? "Passageiro"));
   }, [activeRide?.passenger_id]);
+
+  useEffect(() => {
+    if (!activeRide?.id || activeRide.status !== "in_progress") {
+      setCurrentStopIndex(0);
+      return;
+    }
+    const stored = Number(localStorage.getItem(`ride-stop-index-${activeRide.id}`) || 0);
+    const max = getRideStops(activeRide).length;
+    setCurrentStopIndex(Number.isFinite(stored) ? Math.min(Math.max(0, stored), max) : 0);
+  }, [activeRide]);
 
   // 🚨 Reage instantaneamente a mudanças de status feitas pelo admin (realtime).
   // Se o admin reprova/bloqueia/pede docs, força o motorista offline na hora,
@@ -527,7 +546,8 @@ const DriverHome = () => {
         <GoogleMap
           className="h-full w-full rounded-none"
           origin={(rideState === "going_to_passenger" || rideState === "arrived" || rideState === "in_ride") ? originPoint : null}
-          destination={rideState === "in_ride" ? destPoint : null}
+          destination={rideState === "in_ride" ? destinationPoint : null}
+          stops={rideState === "in_ride" ? routeStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.label })) : []}
           trackUserLocation={!activeRide}
           showRoute={rideState === "going_to_passenger" || rideState === "in_ride"}
           userMarkerVariant={
@@ -736,15 +756,29 @@ const DriverHome = () => {
               <span className="text-sm font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
             </div>
             <div className="flex items-start gap-2">
-              <Flag className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
-              <p className="text-xs truncate">{activeRide.destination_address?.split(" - ")[0]}</p>
+              {currentStopIndex < rideStops.length ? (
+                <MapPin className="h-3.5 w-3.5 text-warning mt-0.5 shrink-0" />
+              ) : (
+                <Flag className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
+              )}
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-muted-foreground">
+                  {currentStopIndex < rideStops.length ? `Próxima parada ${currentStopIndex + 1}` : "Destino final"}
+                </p>
+                <p className="text-xs truncate">{routePointName(nextTarget, "Destino final")}</p>
+              </div>
             </div>
+            {currentStopIndex < rideStops.length && (
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-2 text-[11px] text-warning">
+                Confirme esta parada para liberar o próximo trecho da viagem.
+              </div>
+            )}
             <div className="text-[10px] text-muted-foreground">
               {activeRide.distance_km} km • ~{activeRide.duration_minutes} min • Taxa: R$ {Number(activeRide.platform_fee).toFixed(2)}
             </div>
             <div className="grid grid-cols-2 gap-1.5">
               <button
-                onClick={() => openGoogleMapsRoute(Number(activeRide.destination_lat), Number(activeRide.destination_lng), "Destino")}
+                onClick={() => nextTarget && openGoogleMapsRoute(nextTarget.lat, nextTarget.lng, routePointName(nextTarget))}
                 className="flex items-center justify-center gap-1 rounded-lg border py-2 text-xs font-semibold">
                 <NavigationIcon className="h-3.5 w-3.5 text-primary" /> Rota
               </button>
@@ -752,7 +786,12 @@ const DriverHome = () => {
                 <MessageCircle className="h-3.5 w-3.5 text-primary" /> Chat
               </button>
             </div>
-            {activeRide.payment_method === "pix" ? (
+            {currentStopIndex < rideStops.length ? (
+              <button onClick={handleConfirmStop}
+                className="w-full rounded-xl bg-warning py-2.5 text-sm font-bold text-warning-foreground flex items-center justify-center gap-2">
+                <MapPin className="h-4 w-4" /> Confirmar parada {currentStopIndex + 1}
+              </button>
+            ) : activeRide.payment_method === "pix" ? (
               <button onClick={() => setShowPixModal(true)}
                 className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
                 <QrCode className="h-4 w-4" /> Cobrar (Gerar Pix)

@@ -21,6 +21,7 @@ import { useFareEstimate } from "@/hooks/useFareEstimate";
 import { useLiveEta } from "@/hooks/useLiveEta";
 import type { PlaceDetails } from "@/services/googlePlaces";
 import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocation } from "@/lib/locationAdapters";
+import { getRideStops } from "@/lib/rideRoute";
 import type { PixKeyType } from "@/lib/pix";
 import { calcPlatformFee } from "@/lib/platformFee";
 import { toast } from "sonner";
@@ -696,6 +697,7 @@ const PassengerHome = () => {
   };
 
   const isRideActive = ["searching", "accepted", "driver_arriving", "arrived", "in_progress"].includes(rideState);
+  const activeRideStops = activeRide ? getRideStops(activeRide) : [];
 
   // Chat overlay
   if (showChat && activeRide) {
@@ -724,7 +726,7 @@ const PassengerHome = () => {
         {(() => {
           // Define origem/destino da rota conforme a fase:
           //  - driver_arriving: rota motorista → embarque (mostra deslocamento dele em tempo real)
-          //  - in_progress:    rota embarque → destino (acompanha trajeto da corrida)
+          //  - in_progress:    rota embarque → paradas → destino (acompanha trajeto completo)
           //  - demais (idle/searching/arrived/rating): comportamento padrão (origem/destino selecionados)
           let mapOrigin = selectedOrigin ? { lat: selectedOrigin.lat, lng: selectedOrigin.lng, label: selectedOrigin.name } : null;
           let mapDestination = effectiveDestination ? { lat: effectiveDestination.lat, lng: effectiveDestination.lng, label: effectiveDestination.name } : null;
@@ -751,12 +753,15 @@ const PassengerHome = () => {
             else if (rideState === "payment") dynamicInset = 220;
             else dynamicInset = 180;
           }
+          const mapStops = activeRide && rideState === "in_progress"
+            ? activeRideStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.label }))
+            : effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }));
           return (
             <GoogleMap
               className="h-screen w-screen rounded-none"
               origin={mapOrigin}
               destination={mapDestination}
-              stops={effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }))}
+              stops={mapStops}
               driverLocation={driverLocation ? {
                 ...driverLocation,
                 label: "Motorista",
@@ -920,6 +925,17 @@ const PassengerHome = () => {
                   <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-success" />
                   <p className="text-sm truncate">{activeRide.origin_address?.split(" - ")[0]}</p>
                 </div>
+                {activeRideStops.map((stop, index) => (
+                  <div key={`${stop.lat}-${stop.lng}-${index}`}>
+                    <div className="ml-1 h-2.5 border-l border-dashed border-muted-foreground/30" />
+                    <div className="flex items-start gap-2">
+                      <div className="mt-1 h-4 w-4 rounded-full bg-warning text-[9px] font-bold text-warning-foreground flex items-center justify-center shrink-0">
+                        {index + 1}
+                      </div>
+                      <p className="text-sm truncate">{stop.label}</p>
+                    </div>
+                  </div>
+                ))}
                 <div className="ml-1 h-2.5 border-l border-dashed border-muted-foreground/30" />
                 <div className="flex items-start gap-2">
                   <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-destructive" />
