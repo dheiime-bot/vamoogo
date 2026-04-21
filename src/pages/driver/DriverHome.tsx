@@ -54,11 +54,50 @@ const DriverHome = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
   const [arrivedAtFinal, setArrivedAtFinal] = useState(false);
+  // Timers de confirmação: bloqueiam o botão de avanço por X segundos para
+  // garantir que o motorista realmente chegou ao local antes de confirmar.
+  // - phaseStartedAt: timestamp (ms) quando a fase corrente começou.
+  // - tickNow: força re-render a cada 1s para atualizar o countdown na UI.
+  const [phaseStartedAt, setPhaseStartedAt] = useState<number | null>(null);
+  const [tickNow, setTickNow] = useState(Date.now());
+  // Janelas (em segundos) exigidas pelo produto:
+  const GOING_WAIT_SEC = 30;     // a caminho do passageiro
+  const ARRIVED_WAIT_SEC = 10;   // chegou ao passageiro → iniciar corrida
+  const STOP_WAIT_SEC = 30;      // indo para parada/destino → confirmar
   // Modal obrigatório de seleção de veículo após login (quando há 2+ aprovados).
   const [requireVehiclePick, setRequireVehiclePick] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
   // (incluindo o nosso próprio update do driver_rating) reabram o modal.
   const finalizedRideIdsRef = useRef<Set<string>>(new Set());
+
+  // === Helpers de timer das fases (going_to_passenger / arrived / in_ride) ===
+  // Persistidos no localStorage sob a chave `ride-phase-${rideId}` no formato
+  // `${phaseKey}|${startedAtMs}` para sobreviver a reload da página.
+  const startPhaseTimer = (rideId: string, phaseKey: string) => {
+    const now = Date.now();
+    localStorage.setItem(`ride-phase-${rideId}`, `${phaseKey}|${now}`);
+    setPhaseStartedAt(now);
+    setTickNow(now);
+  };
+  const restorePhaseTimer = (rideId: string, expectedPhase: string) => {
+    const raw = localStorage.getItem(`ride-phase-${rideId}`);
+    if (raw) {
+      const [phase, ts] = raw.split("|");
+      const n = Number(ts);
+      if (phase === expectedPhase && Number.isFinite(n)) {
+        setPhaseStartedAt(n);
+        setTickNow(Date.now());
+        return;
+      }
+    }
+    // Sem registro válido — começa um novo timer agora.
+    startPhaseTimer(rideId, expectedPhase);
+  };
+  const phaseSecondsLeft = (totalSec: number) => {
+    if (!phaseStartedAt) return 0;
+    const elapsed = Math.floor((tickNow - phaseStartedAt) / 1000);
+    return Math.max(0, totalSec - elapsed);
+  };
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
@@ -103,6 +142,14 @@ const DriverHome = () => {
     return () => clearInterval(i);
   }, [isOnline]);
 
+  // Tick global de 1s enquanto há countdown ativo (going_to_passenger / arrived / in_ride).
+  // Atualiza tickNow para que os segundos restantes na UI desçam suavemente.
+  useEffect(() => {
+    if (!phaseStartedAt) return;
+    const i = setInterval(() => setTickNow(Date.now()), 1000);
+    return () => clearInterval(i);
+  }, [phaseStartedAt]);
+
   // Stats do dia
   useEffect(() => {
     if (!user) return;
@@ -133,9 +180,18 @@ const DriverHome = () => {
         if (data && data.length > 0) {
           const r = data[0] as any;
           setActiveRide(r);
-          if (r.status === "in_progress") setRideState("in_ride");
-          else if (r.arrived_at) setRideState("arrived");
-          else setRideState("going_to_passenger");
+          if (r.status === "in_progress") {
+            setRideState("in_ride");
+            // Restaura/cria timer da parada/destino atual.
+            const idx = Number(localStorage.getItem(`ride-stop-index-${r.id}`) || 0);
+            restorePhaseTimer(r.id, `stop-${idx}`);
+          } else if (r.arrived_at) {
+            setRideState("arrived");
+            restorePhaseTimer(r.id, "arrived");
+          } else {
+            setRideState("going_to_passenger");
+            restorePhaseTimer(r.id, "going");
+          }
         }
       });
   }, [user]);
@@ -336,6 +392,7 @@ const DriverHome = () => {
     setPendingOffer(null);
     setPendingRide(null);
     setRideState("going_to_passenger");
+    startPhaseTimer(updated.id, "going");
     playPhaseSound("accepted");
     toast.success("Corrida aceita! 🚗");
     // 🚗 Abre Google Maps automaticamente até o passageiro
@@ -360,6 +417,7 @@ const DriverHome = () => {
     if (error) return;
     setActiveRide({ ...activeRide, arrived_at: arrivedAt });
     setRideState("arrived");
+    startPhaseTimer(activeRide.id, "arrived");
     playPhaseSound("arrived");
   };
 
@@ -375,6 +433,7 @@ const DriverHome = () => {
     setArrivedAtFinal(false);
     localStorage.removeItem(`ride-arrived-final-${activeRide.id}`);
     setRideState("in_ride");
+    startPhaseTimer(activeRide.id, `stop-0`);
     playPhaseSound("started");
     // 🚗 Abre Google Maps até o primeiro destino (parada 1 ou destino final se não houver paradas)
     const updatedRide = { ...activeRide, status: "in_progress" as const, started_at: startedAt };
@@ -388,6 +447,7 @@ const DriverHome = () => {
     const nextIndex = Math.min(currentStopIndex + 1, stops.length);
     setCurrentStopIndex(nextIndex);
     localStorage.setItem(`ride-stop-index-${activeRide.id}`, String(nextIndex));
+    startPhaseTimer(activeRide.id, `stop-${nextIndex}`);
     toast.success(nextIndex < stops.length ? `Parada ${nextIndex} confirmada` : "Última parada confirmada");
     // 🚗 Abre o Google Maps no próximo trecho (próxima parada ou destino final)
     const target = getRideNextTarget(activeRide, nextIndex);
@@ -426,6 +486,8 @@ const DriverHome = () => {
     // Guarda a corrida para avaliação e abre modal — mantém o motorista online.
     localStorage.removeItem(`ride-stop-index-${activeRide.id}`);
     localStorage.removeItem(`ride-arrived-final-${activeRide.id}`);
+    localStorage.removeItem(`ride-phase-${activeRide.id}`);
+    setPhaseStartedAt(null);
     setRatedRide(activeRide);
     setActiveRide(null);
     setRideState("rating");
@@ -739,10 +801,27 @@ const DriverHome = () => {
               </button>
             </div>
 
-            <button onClick={handleArrived}
-              className="w-full rounded-xl bg-info py-2.5 text-sm font-bold text-info-foreground flex items-center justify-center gap-2">
-              <MapPin className="h-4 w-4" /> Cheguei ao local
-            </button>
+            {(() => {
+              const left = phaseSecondsLeft(GOING_WAIT_SEC);
+              const ready = left <= 0;
+              const addr = activeRide.origin_address?.split(" - ")[0] || "embarque";
+              return (
+                <button
+                  onClick={ready ? handleArrived : undefined}
+                  disabled={!ready}
+                  className={`w-full rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                    ready
+                      ? "bg-info text-info-foreground"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                  }`}
+                >
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  <span className="truncate text-left">
+                    {ready ? `Cheguei ao local: ${addr}` : `Você está indo para: ${addr} (${left}s)`}
+                  </span>
+                </button>
+              );
+            })()}
             <button
               onClick={() => setShowCancelDialog(true)}
               className="w-full rounded-xl border border-destructive/30 py-2 text-xs font-bold text-destructive hover:bg-destructive/5"
@@ -765,10 +844,30 @@ const DriverHome = () => {
                 <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{activeRide.ride_code}</span>
               )}
             </div>
-            <button onClick={handleStartRide}
-              className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
-              <Play className="h-4 w-4" /> Iniciar corrida
-            </button>
+            {(() => {
+              const left = phaseSecondsLeft(ARRIVED_WAIT_SEC);
+              const ready = left <= 0;
+              const firstTarget = getRideNextTarget(activeRide, 0);
+              const firstName = firstTarget
+                ? routePointName(firstTarget, "destino")
+                : (activeRide.destination_address?.split(" - ")[0] || "destino");
+              return (
+                <button
+                  onClick={ready ? handleStartRide : undefined}
+                  disabled={!ready}
+                  className={`w-full rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                    ready
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                  }`}
+                >
+                  <Play className="h-4 w-4 shrink-0" />
+                  <span className="truncate text-left">
+                    {ready ? `Iniciar corrida para: ${firstName}` : `Aguarde ${left}s para iniciar`}
+                  </span>
+                </button>
+              );
+            })()}
             <button
               onClick={() => setShowCancelDialog(true)}
               className="w-full rounded-xl border border-destructive/30 py-2 text-xs font-bold text-destructive hover:bg-destructive/5"
@@ -803,10 +902,12 @@ const DriverHome = () => {
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold text-muted-foreground">
                   {currentStopIndex < rideStops.length
-                    ? `Próxima parada ${currentStopIndex + 1} de ${rideStops.length}`
-                    : arrivedAtFinal ? "Chegou ao destino final" : "Indo ao destino final"}
+                    ? `Você está indo para a parada ${currentStopIndex + 1} de ${rideStops.length}`
+                    : arrivedAtFinal ? "Chegou ao destino final" : "Você está indo para o destino final"}
                 </p>
-                <p className="text-xs truncate">{routePointName(nextTarget, "Destino final")}</p>
+                <p className="text-xs truncate">
+                  {nextTarget?.address || routePointName(nextTarget, "Destino final")}
+                </p>
               </div>
             </div>
             {currentStopIndex < rideStops.length && (
@@ -833,15 +934,55 @@ const DriverHome = () => {
               </button>
             </div>
             {currentStopIndex < rideStops.length ? (
-              <button onClick={handleConfirmStop}
-                className="w-full rounded-xl bg-warning py-2.5 text-sm font-bold text-warning-foreground flex items-center justify-center gap-2">
-                <MapPin className="h-4 w-4" /> Confirmar parada {currentStopIndex + 1}
-              </button>
+              (() => {
+                const left = phaseSecondsLeft(STOP_WAIT_SEC);
+                const ready = left <= 0;
+                const addr = nextTarget?.address?.split(" - ")[0]
+                  || routePointName(nextTarget, `Parada ${currentStopIndex + 1}`);
+                return (
+                  <button
+                    onClick={ready ? handleConfirmStop : undefined}
+                    disabled={!ready}
+                    className={`w-full rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                      ready
+                        ? "bg-warning text-warning-foreground"
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                    }`}
+                  >
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    <span className="truncate text-left">
+                      {ready
+                        ? `Confirmar parada em: ${addr}`
+                        : `Indo para parada: ${addr} (${left}s)`}
+                    </span>
+                  </button>
+                );
+              })()
             ) : !arrivedAtFinal ? (
-              <button onClick={handleArrivedFinal}
-                className="w-full rounded-xl bg-destructive py-2.5 text-sm font-bold text-destructive-foreground flex items-center justify-center gap-2">
-                <Flag className="h-4 w-4" /> Cheguei ao destino final
-              </button>
+              (() => {
+                const left = phaseSecondsLeft(STOP_WAIT_SEC);
+                const ready = left <= 0;
+                const addr = nextTarget?.address?.split(" - ")[0]
+                  || routePointName(nextTarget, "Destino final");
+                return (
+                  <button
+                    onClick={ready ? handleArrivedFinal : undefined}
+                    disabled={!ready}
+                    className={`w-full rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                      ready
+                        ? "bg-destructive text-destructive-foreground"
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                    }`}
+                  >
+                    <Flag className="h-4 w-4 shrink-0" />
+                    <span className="truncate text-left">
+                      {ready
+                        ? `Finalizar corrida em: ${addr}`
+                        : `Indo para destino: ${addr} (${left}s)`}
+                    </span>
+                  </button>
+                );
+              })()
             ) : activeRide.payment_method === "pix" ? (
               <button onClick={() => setShowPixModal(true)}
                 className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
