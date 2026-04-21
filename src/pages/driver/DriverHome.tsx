@@ -54,6 +54,16 @@ const DriverHome = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
   const [arrivedAtFinal, setArrivedAtFinal] = useState(false);
+  // Timers de confirmação: bloqueiam o botão de avanço por X segundos para
+  // garantir que o motorista realmente chegou ao local antes de confirmar.
+  // - phaseStartedAt: timestamp (ms) quando a fase corrente começou.
+  // - tickNow: força re-render a cada 1s para atualizar o countdown na UI.
+  const [phaseStartedAt, setPhaseStartedAt] = useState<number | null>(null);
+  const [tickNow, setTickNow] = useState(Date.now());
+  // Janelas (em segundos) exigidas pelo produto:
+  const GOING_WAIT_SEC = 30;     // a caminho do passageiro
+  const ARRIVED_WAIT_SEC = 10;   // chegou ao passageiro → iniciar corrida
+  const STOP_WAIT_SEC = 30;      // indo para parada/destino → confirmar
   // Modal obrigatório de seleção de veículo após login (quando há 2+ aprovados).
   const [requireVehiclePick, setRequireVehiclePick] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
