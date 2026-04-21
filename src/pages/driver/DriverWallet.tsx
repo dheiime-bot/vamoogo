@@ -130,20 +130,6 @@ const DriverWallet = () => {
 
   const avgPerRide = totalCount > 0 ? totalNet / totalCount : 0;
 
-  const handleRecharge = async (amount: number) => {
-    if (!user) return;
-    setLoading(true);
-    const bonus = amount >= 100 ? amount * 0.1 : amount >= 50 ? amount * 0.05 : 0;
-    const { error } = await supabase.from("recharges").insert({ driver_id: user.id, amount, bonus: Math.round(bonus * 100) / 100, method: "pix" as const, status: "completed" as const });
-    if (!error) {
-      await supabase.from("drivers").update({ balance: balance + amount + bonus }).eq("user_id", user.id);
-      toast.success(`Recarga de R$ ${amount.toFixed(2)} + bônus R$ ${bonus.toFixed(2)} realizada!`);
-      const { data } = await supabase.from("recharges").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10);
-      if (data) setRecharges(data);
-    } else toast.error("Erro na recarga");
-    setLoading(false);
-  };
-
   const lowBalance = balance < 20;
 
   return (
