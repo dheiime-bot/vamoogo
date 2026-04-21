@@ -842,10 +842,30 @@ const DriverHome = () => {
                 <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{activeRide.ride_code}</span>
               )}
             </div>
-            <button onClick={handleStartRide}
-              className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2">
-              <Play className="h-4 w-4" /> Iniciar corrida
-            </button>
+            {(() => {
+              const left = phaseSecondsLeft(ARRIVED_WAIT_SEC);
+              const ready = left <= 0;
+              const firstTarget = getRideNextTarget(activeRide, 0);
+              const firstName = firstTarget
+                ? routePointName(firstTarget, "destino")
+                : (activeRide.destination_address?.split(" - ")[0] || "destino");
+              return (
+                <button
+                  onClick={ready ? handleStartRide : undefined}
+                  disabled={!ready}
+                  className={`w-full rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                    ready
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                  }`}
+                >
+                  <Play className="h-4 w-4 shrink-0" />
+                  <span className="truncate text-left">
+                    {ready ? `Iniciar corrida para: ${firstName}` : `Aguarde ${left}s para iniciar`}
+                  </span>
+                </button>
+              );
+            })()}
             <button
               onClick={() => setShowCancelDialog(true)}
               className="w-full rounded-xl border border-destructive/30 py-2 text-xs font-bold text-destructive hover:bg-destructive/5"
