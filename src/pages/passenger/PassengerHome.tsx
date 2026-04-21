@@ -547,10 +547,7 @@ const PassengerHome = () => {
 
     // Increment coupon usage (best-effort, non-blocking)
     if (coupon) {
-      supabase.from("coupons").select("used_count").eq("id", coupon.id).single()
-        .then(({ data: c }) => {
-          if (c) supabase.from("coupons").update({ used_count: (c.used_count || 0) + 1 }).eq("id", coupon.id).then(() => {});
-        });
+      supabase.rpc("passenger_consume_coupon", { _coupon_id: coupon.id }).then(() => {});
     }
 
     setRideState("searching");

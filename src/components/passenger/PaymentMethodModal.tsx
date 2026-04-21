@@ -64,21 +64,16 @@ const PaymentMethodModal = ({
     if (!code) return;
     setValidatingCoupon(true);
 
-    const { data, error } = await supabase
-      .from("coupons")
-      .select("*")
-      .eq("code", code)
-      .eq("active", true)
-      .maybeSingle();
+    // Valida via RPC segura (não expõe a tabela coupons)
+    const { data: rows, error } = await supabase.rpc("passenger_validate_coupon", {
+      _code: code,
+      _fare: estimatedPrice,
+    });
 
     setValidatingCoupon(false);
 
-    if (error || !data) { toast.error("Cupom inválido"); return; }
-    if (data.expires_at && new Date(data.expires_at) < new Date()) { toast.error("Cupom expirado"); return; }
-    if (data.max_uses && data.used_count >= data.max_uses) { toast.error("Cupom esgotado"); return; }
-    if (data.min_fare && estimatedPrice < Number(data.min_fare)) {
-      toast.error(`Valor mínimo: R$ ${Number(data.min_fare).toFixed(2)}`); return;
-    }
+    const data = Array.isArray(rows) ? rows[0] : null;
+    if (error || !data) { toast.error("Cupom inválido ou não aplicável"); return; }
 
     const discount = data.discount_type === "percentage"
       ? estimatedPrice * (Number(data.discount_value) / 100)
