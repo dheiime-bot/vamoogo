@@ -925,6 +925,17 @@ const PassengerHome = () => {
                   <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-success" />
                   <p className="text-sm truncate">{activeRide.origin_address?.split(" - ")[0]}</p>
                 </div>
+                {activeRideStops.map((stop, index) => (
+                  <div key={`${stop.lat}-${stop.lng}-${index}`}>
+                    <div className="ml-1 h-2.5 border-l border-dashed border-muted-foreground/30" />
+                    <div className="flex items-start gap-2">
+                      <div className="mt-1 h-4 w-4 rounded-full bg-warning text-[9px] font-bold text-warning-foreground flex items-center justify-center shrink-0">
+                        {index + 1}
+                      </div>
+                      <p className="text-sm truncate">{stop.label}</p>
+                    </div>
+                  </div>
+                ))}
                 <div className="ml-1 h-2.5 border-l border-dashed border-muted-foreground/30" />
                 <div className="flex items-start gap-2">
                   <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-destructive" />
