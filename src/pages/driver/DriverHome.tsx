@@ -419,6 +419,8 @@ const DriverHome = () => {
 
   const handleArrived = async () => {
     if (!activeRide) return;
+    // Segurança: se ainda está na fase manual `accepted`, ignora.
+    if (!phaseStartedAt) return;
     const arrivedAt = new Date().toISOString();
     const { error } = await supabase
       .from("rides")
@@ -812,9 +814,32 @@ const DriverHome = () => {
             </div>
 
             {(() => {
+              const addr = activeRide.origin_address?.split(" - ")[0] || "embarque";
+              // Fase 1 (manual): motorista ainda não confirmou que vai sair.
+              if (!phaseStartedAt) {
+                return (
+                  <button
+                    onClick={() => {
+                      startPhaseTimer(activeRide.id, "going");
+                      // Abre Google Maps automaticamente ao iniciar o deslocamento
+                      if (activeRide.origin_lat && activeRide.origin_lng) {
+                        openGoogleMapsRoute(
+                          Number(activeRide.origin_lat),
+                          Number(activeRide.origin_lng),
+                          "Embarque"
+                        );
+                      }
+                    }}
+                    className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2"
+                  >
+                    <NavigationIcon className="h-4 w-4 shrink-0" />
+                    <span className="truncate text-left">Ir até o passageiro: {addr}</span>
+                  </button>
+                );
+              }
+              // Fase 2 (automática): countdown de 30s, depois libera "Cheguei".
               const left = phaseSecondsLeft(GOING_WAIT_SEC);
               const ready = left <= 0;
-              const addr = activeRide.origin_address?.split(" - ")[0] || "embarque";
               return (
                 <button
                   onClick={ready ? handleArrived : undefined}
