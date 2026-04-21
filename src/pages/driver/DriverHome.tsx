@@ -376,13 +376,22 @@ const DriverHome = () => {
             )
           ) {
             const newAddr = String(ride.destination_address || "").split(" - ")[0] || "novo destino";
+            const prevAddr = String(prev?.destination_address || "").split(" - ")[0] || "—";
             const newPrice = Number(ride.price || 0);
+            const prevPrice = Number(prev?.price || 0);
             const newKm = Number(ride.distance_km || 0);
-            try { playOfferAlert({ title: "Rota alterada!", body: `${newAddr} • R$ ${newPrice.toFixed(2)}` }); } catch {}
-            toast.warning("🚨 Passageiro alterou a rota!", {
-              description: `Novo destino: ${newAddr}\nNovo valor: R$ ${newPrice.toFixed(2)} (${newKm} km)`,
-              duration: 12000,
-            });
+            const prevKm = Number(prev?.distance_km || 0);
+            const dPrice = newPrice - prevPrice;
+            // Modal persistente + som em loop até o motorista clicar em "Entendi"
+            setRouteChangeDiff({ prevAddr, newAddr, prevPrice, newPrice, prevKm, newKm });
+            try {
+              playOfferAlert({
+                title: "🚨 Rota alterada!",
+                body: `${prevAddr} → ${newAddr} • ${dPrice >= 0 ? "+" : ""}R$ ${dPrice.toFixed(2)}`,
+                persistent: true,
+                tag: "route-changed",
+              });
+            } catch {}
             // Interrompe a navegação atual: força o motorista a clicar em "Iniciar
             // nova rota" no app, fazendo o foco voltar do Google Maps externo.
             setRouteChanged(true);
