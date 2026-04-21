@@ -1758,7 +1758,53 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      rating_appeals_driver_view: {
+        Row: {
+          admin_response: string | null
+          created_at: string | null
+          driver_id: string | null
+          id: string | null
+          original_rating: number | null
+          reason: string | null
+          resolved_at: string | null
+          ride_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string | null
+          original_rating?: number | null
+          reason?: string | null
+          resolved_at?: string | null
+          ride_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string | null
+          original_rating?: number | null
+          reason?: string | null
+          resolved_at?: string | null
+          ride_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rating_appeals_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _cancel_block_hours: { Args: { _count: number }; Returns: number }
@@ -2228,6 +2274,10 @@ export type Database = {
         }
         Returns: Json
       }
+      passenger_consume_coupon: {
+        Args: { _coupon_id: string }
+        Returns: undefined
+      }
       passenger_redeem_coupon: {
         Args: { _coupon_id: string; _ride_id: string }
         Returns: undefined
@@ -2235,6 +2285,16 @@ export type Database = {
       passenger_toggle_favorite_driver: {
         Args: { _driver_id: string }
         Returns: boolean
+      }
+      passenger_validate_coupon: {
+        Args: { _code: string; _fare?: number }
+        Returns: {
+          code: string
+          discount_type: string
+          discount_value: number
+          id: string
+          min_fare: number
+        }[]
       }
       recalc_driver_rating: { Args: { _driver_id: string }; Returns: number }
       recalc_passenger_rating: {
