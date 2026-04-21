@@ -9,6 +9,7 @@ import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
 import { useRealtimeReconnect } from "@/hooks/useRealtimeReconnect";
 import { useDevicePermissions } from "@/hooks/useDevicePermissions";
 import DriverOfferAlert from "@/components/driver/DriverOfferAlert";
+import RouteErrorBoundary from "@/components/shared/RouteErrorBoundary";
 import Index from "./pages/Index.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -133,6 +134,7 @@ const App = () => (
           <RealtimeReconnect />
           <DevicePermissionsBootstrap />
           <DriverOfferAlert />
+          <RouteErrorBoundary>
           <Routes>
             <Route path="/" element={<AdminLogin />} />
             <Route path="/landing" element={<Index />} />
@@ -183,6 +185,7 @@ const App = () => (
             <Route path="/test-autocomplete" element={<TestAutocomplete />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </RouteErrorBoundary>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
