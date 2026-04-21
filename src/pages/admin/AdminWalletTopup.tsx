@@ -379,60 +379,15 @@ const AdminWalletTopup = () => {
           </Button>
         </div>
 
-        {/* Histórico de solicitações */}
-        <div className="rounded-2xl border bg-card shadow-sm">
-          <div className="p-4 border-b flex items-center gap-2">
-            <History className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-bold">Solicitações de recarga</h3>
-            <span className="ml-auto text-[10px] text-muted-foreground">{topups.length} registros</span>
-          </div>
-          <div className="divide-y">
-            {topups.length === 0 && (
-              <EmptyState
-                icon={DollarSign}
-                title="Nenhuma solicitação"
-                description="As solicitações dos motoristas aparecerão aqui."
-              />
-            )}
-            {topups.map((t) => {
-              const meta = STATUS_LABELS[t.status] || STATUS_LABELS.pendente;
-              const Icon = meta.icon;
-              return (
-                <div key={t.id} className="flex items-center gap-3 p-4">
-                  <div className={`rounded-xl p-2 ${meta.color}`}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">
-                      {t.nome}{" "}
-                      <span className="font-normal text-muted-foreground">
-                      • R$ {formatBRL(Number(t.valor))}
-                      </span>
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {t.telefone || "—"} • {new Date(t.created_at).toLocaleString("pt-BR")}
-                    </p>
-                  </div>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.color}`}>
-                    {meta.label}
-                  </span>
-                  <select
-                    value={t.status}
-                    disabled={updating === t.id}
-                    onChange={(e) => updateStatus(t.id, e.target.value)}
-                    className="rounded-md border bg-background text-xs px-2 py-1"
-                  >
-                    <option value="pendente">Pendente</option>
-                    <option value="pago">Pago</option>
-                    <option value="creditado">Creditado</option>
-                    <option value="cancelado">Cancelado</option>
-                  </select>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        {/* Histórico de solicitações (paginado, 10/página) */}
+        <WalletTopupsList refreshKey={refreshList} />
       </div>
+
+      <ManualRechargeDialog
+        open={manualOpen}
+        onOpenChange={setManualOpen}
+        onSuccess={() => setRefreshList((k) => k + 1)}
+      />
     </AdminLayout>
   );
 };
