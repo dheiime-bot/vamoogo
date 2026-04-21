@@ -83,6 +83,21 @@ const PassengerHome = () => {
   const [showChangeDest, setShowChangeDest] = useState(false);
   const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  // Preview da troca de rota (passageiro): calcula km/R$ já percorridos pelo motorista
+  // + km/R$ do novo trecho a partir da posição atual, para o passageiro confirmar.
+  const [routePreview, setRoutePreview] = useState<{
+    drivenKm: number;
+    drivenPrice: number;
+    newLegKm: number;
+    newLegMin: number;
+    newLegPrice: number;
+    totalKm: number;
+    totalMin: number;
+    totalPrice: number;
+    totalFee: number;
+    newLegs: any[];
+  } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   // Status do GPS do dispositivo (alimenta o sino: verde=ok, vermelho=negado/erro)
   const [gpsStatus, setGpsStatus] = useState<"connected" | "disconnected" | "idle">("idle");
