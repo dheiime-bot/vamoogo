@@ -890,9 +890,13 @@ const PassengerHome = () => {
                 <h2 className="text-lg font-bold font-display">
                   {rideState === "searching" && "Buscando motorista"}
                   {rideState === "accepted" && "Corrida aceita"}
-                  {rideState === "driver_arriving" && "Motorista a caminho"}
-                  {rideState === "arrived" && "Motorista chegou"}
-                  {rideState === "in_progress" && "Em viagem"}
+                  {rideState === "driver_arriving" && `Motorista a caminho para: ${activeRide.origin_address?.split(" - ")[0] || "embarque"}`}
+                  {rideState === "arrived" && `Motorista chegou em: ${activeRide.origin_address?.split(" - ")[0] || "embarque"}`}
+                  {rideState === "in_progress" && (() => {
+                    const next = getRideNextTarget(activeRide, 0) || getRideDestination(activeRide);
+                    const addr = next?.address?.split(" - ")[0] || next?.label || activeRide.destination_address?.split(" - ")[0] || "destino";
+                    return `A caminho para: ${addr}`;
+                  })()}
                 </h2>
               </div>
 
