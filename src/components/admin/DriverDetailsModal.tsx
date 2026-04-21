@@ -1,24 +1,27 @@
-import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserIcon, AlertCircle, FileWarning, MessageSquare, ShieldCheck, Calendar, KeyRound, Hash, ScrollText } from "lucide-react";
+import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserIcon, AlertCircle, FileWarning, MessageSquare, ShieldCheck, Calendar, KeyRound, Hash, ScrollText, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
+import EditDriverModal from "./EditDriverModal";
 
 interface DriverDetailsModalProps {
   driver: any;
   onClose: () => void;
   onAction: (status: string, message?: string) => void;
+  onRefresh?: () => void;
 }
 
 type ActionMode = null | "approve" | "reject" | "request_docs" | "block";
 
-const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalProps) => {
+const DriverDetailsModal = ({ driver, onClose, onAction, onRefresh }: DriverDetailsModalProps) => {
   const profile = driver.profiles;
   const [zoomImg, setZoomImg] = useState<string | null>(null);
   const [actionMode, setActionMode] = useState<ActionMode>(null);
   const [message, setMessage] = useState("");
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState(false);
 
   const status = getDriverStatusInfo(driver.status);
 
@@ -104,6 +107,12 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
                 >
                   <ScrollText className="h-3 w-3" /> Ver na auditoria
                 </Link>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+                >
+                  <Pencil className="h-3 w-3" /> Editar dados
+                </button>
               </div>
             </div>
             <button onClick={onClose} className="rounded-full p-1.5 hover:bg-muted transition-colors">
@@ -288,6 +297,14 @@ const DriverDetailsModal = ({ driver, onClose, onAction }: DriverDetailsModalPro
           <button className="absolute top-4 right-4 rounded-full bg-card p-2"><X className="h-5 w-5" /></button>
           <img src={zoomImg} alt="Zoom" className="max-w-full max-h-full object-contain rounded-xl" />
         </div>
+      )}
+
+      {editing && (
+        <EditDriverModal
+          driver={driver}
+          onClose={() => setEditing(false)}
+          onSaved={() => onRefresh?.()}
+        />
       )}
     </>
   );
