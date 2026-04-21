@@ -392,6 +392,7 @@ const DriverHome = () => {
     setPendingOffer(null);
     setPendingRide(null);
     setRideState("going_to_passenger");
+    startPhaseTimer(updated.id, "going");
     playPhaseSound("accepted");
     toast.success("Corrida aceita! 🚗");
     // 🚗 Abre Google Maps automaticamente até o passageiro
