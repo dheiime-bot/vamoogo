@@ -40,6 +40,8 @@ const AdminCoupons = () => {
   // Listagem dos enviados (passenger_coupons)
   const [sent, setSent] = useState<any[]>([]);
   const [sentSearch, setSentSearch] = useState("");
+  const [selectedSentIds, setSelectedSentIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetch_ = async () => {
     const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
