@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Navigate } from "react-router-dom";
-import { Power, Wallet, AlertTriangle, Car, MapPin, Loader2, Play, Flag, Phone, MessageCircle, Star, Clock, X, QrCode, Navigation as NavigationIcon } from "lucide-react";
+import { AlertTriangle, MapPin, Play, Flag, Phone, MessageCircle, Star, Clock, QrCode, Navigation as NavigationIcon } from "lucide-react";
 import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getRideDestination, getRideNextTarget, getRideStops, routePointName } from "@/lib/rideRoute";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
@@ -10,10 +10,8 @@ import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import DriverBottomNav from "@/components/driver/DriverBottomNav";
-import DriverHeartbeat from "@/components/driver/DriverHeartbeat";
 
 import GoogleMap from "@/components/shared/GoogleMap";
-import { Home, User, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
@@ -44,7 +42,7 @@ const DriverHome = () => {
   const [pendingOffer, setPendingOffer] = useState<any>(null);
   const [pendingRide, setPendingRide] = useState<any>(null);
   const [activeRide, setActiveRide] = useState<any>(null);
-  const [todayStats, setTodayStats] = useState({ rides: 0, earnings: 0, hours: 0 });
+  const [, setTodayStats] = useState({ rides: 0, earnings: 0, hours: 0 });
   const [rideState, setRideState] = useState<DriverRideState>("idle");
   const [offerCountdown, setOfferCountdown] = useState(15);
   const [showChat, setShowChat] = useState(false);
@@ -63,10 +61,6 @@ const DriverHome = () => {
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
-  const displayName = profile?.full_name?.split(" ")[0] || "Motorista";
-
-  const categoryLabel = driverData?.category === "moto" ? "Moto" : driverData?.category === "conforto" ? "Conforto" : "Econômico";
-
   // Faz broadcast da posição GPS quando online
   const { lastSyncAt } = useDriverLocation({
     driverId: user?.id,
