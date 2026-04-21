@@ -21,8 +21,9 @@ import CancelRideDialog from "@/components/shared/CancelRideDialog";
 import SelectVehicleModal from "@/components/driver/SelectVehicleModal";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
-import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission, stopOfferAlert } from "@/lib/offerSound";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ArrowRight, TrendingUp, TrendingDown } from "lucide-react";
 
 
 type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in_ride" | "rating";
