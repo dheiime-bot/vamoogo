@@ -414,6 +414,7 @@ const DriverHome = () => {
     }
     // Guarda a corrida para avaliação e abre modal — mantém o motorista online.
     localStorage.removeItem(`ride-stop-index-${activeRide.id}`);
+    localStorage.removeItem(`ride-arrived-final-${activeRide.id}`);
     setRatedRide(activeRide);
     setActiveRide(null);
     setRideState("rating");
