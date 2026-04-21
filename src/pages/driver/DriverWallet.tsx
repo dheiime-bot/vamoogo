@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, QrCode, ArrowDownLeft, ArrowUpRight, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar, MessageCircle, Car, ShieldCheck, Clock, XCircle } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Gift, History, TrendingUp, Wallet, Sparkles, Calendar, MessageCircle, Car, ShieldCheck, Clock, XCircle, Receipt } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import WhatsappTopupModal from "@/components/driver/WhatsappTopupModal";
@@ -7,7 +7,6 @@ import WhatsappTopupModal from "@/components/driver/WhatsappTopupModal";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronDown } from "lucide-react";
 
@@ -35,7 +34,6 @@ const DriverWallet = () => {
   const { user, driverData } = useAuth();
   const [history, setHistory] = useState<WalletEntry[]>([]);
   const [completedRides, setCompletedRides] = useState<{ driver_net: number | null; completed_at: string | null; created_at: string }[]>([]);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"recharge" | "history">("recharge");
   const [period, setPeriod] = useState<PeriodId>("week");
   // Mês selecionado: offset em relação ao mês atual (0 = atual, 1 = mês passado, ...)
