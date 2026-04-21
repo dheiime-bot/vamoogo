@@ -106,28 +106,44 @@ const AdminWalletTopup = () => {
   }, []);
 
   const save = async () => {
-    if (config.enabled && !config.whatsapp_number.trim()) {
-      toast.error("Informe o número do WhatsApp para ativar");
+    const digits = config.whatsapp_number.replace(/\D/g, "");
+    if (config.enabled && digits.length < 12) {
+      toast.error("Informe o WhatsApp completo (DDI + DDD + número)");
       return;
     }
     setSaving(true);
-    const cleaned = {
+    const cleaned: WhatsappTopupConfig = {
       ...config,
-      whatsapp_number: config.whatsapp_number.replace(/\D/g, ""),
+      whatsapp_number: digits,
       quick_amounts: [...config.quick_amounts].sort((a, b) => a - b),
       bonus_tiers: [...(config.bonus_tiers || [])]
         .filter((t) => t.min_amount > 0 && t.percent > 0)
         .sort((a, b) => a.min_amount - b.min_amount),
     };
-    const { error } = await supabase
+
+    // Atualiza se existir, senão insere — evita problemas de upsert/RLS
+    const { data: existing } = await supabase
       .from("platform_settings")
-      .upsert(
-        { key: "whatsapp_topup", value: cleaned as any, description: "Configuração de recarga via WhatsApp" },
-        { onConflict: "key" },
-      );
+      .select("id")
+      .eq("key", "whatsapp_topup")
+      .maybeSingle();
+
+    let error;
+    if (existing) {
+      ({ error } = await supabase
+        .from("platform_settings")
+        .update({ value: cleaned as any, description: "Configuração de recarga via WhatsApp" })
+        .eq("key", "whatsapp_topup"));
+    } else {
+      ({ error } = await supabase
+        .from("platform_settings")
+        .insert({ key: "whatsapp_topup", value: cleaned as any, description: "Configuração de recarga via WhatsApp" }));
+    }
+
     setSaving(false);
     if (error) {
-      toast.error("Erro ao salvar configuração");
+      console.error("[wallet-topup save]", error);
+      toast.error(error.message || "Erro ao salvar configuração");
       return;
     }
     setConfig(cleaned);
