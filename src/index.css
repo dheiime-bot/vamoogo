@@ -15,8 +15,11 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 12%;
 
-    --primary: 210 100% 56%;
+    /* Azul oficial da logo Vamoo (#1080e0) */
+    --primary: 208 87% 47%;
     --primary-foreground: 0 0% 100%;
+    /* Tom mais claro do azul para hover/destaques */
+    --primary-glow: 208 95% 60%;
 
     --secondary: 220 15% 92%;
     --secondary-foreground: 220 25% 15%;
@@ -24,7 +27,8 @@
     --muted: 220 15% 94%;
     --muted-foreground: 220 10% 45%;
 
-    --accent: 145 100% 39%;
+    /* Verde oficial da logo Vamoo (#00b050) */
+    --accent: 147 100% 35%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -32,37 +36,38 @@
 
     --border: 220 15% 90%;
     --input: 220 15% 90%;
-    --ring: 210 100% 56%;
+    --ring: 208 87% 47%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 210 25% 97%;
     --sidebar-foreground: 215 25% 20%;
-    --sidebar-primary: 210 100% 56%;
+    --sidebar-primary: 208 87% 47%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 30% 92%;
     --sidebar-accent-foreground: 215 25% 15%;
     --sidebar-border: 215 20% 88%;
-    --sidebar-ring: 210 100% 56%;
+    --sidebar-ring: 208 87% 47%;
 
-    --success: 145 100% 39%;
+    --success: 147 100% 35%;
     --success-foreground: 0 0% 100%;
     --warning: 38 95% 55%;
     --warning-foreground: 38 95% 15%;
-    --info: 210 100% 56%;
+    --info: 208 87% 47%;
     --info-foreground: 0 0% 100%;
 
     --surface-elevated: 0 0% 100%;
     --surface-sunken: 220 20% 95%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(210, 100%, 56%), hsl(145, 100%, 39%));
+    /* Gradiente oficial Vamoo: azul da logo → verde da logo */
+    --gradient-primary: linear-gradient(135deg, hsl(208, 87%, 47%), hsl(147, 100%, 35%));
     --gradient-dark: linear-gradient(135deg, hsl(215, 30%, 8%), hsl(220, 20%, 18%));
-    --gradient-accent: linear-gradient(135deg, hsl(145, 100%, 39%), hsl(160, 80%, 35%));
+    --gradient-accent: linear-gradient(135deg, hsl(147, 100%, 35%), hsl(160, 90%, 32%));
 
     --shadow-sm: 0 1px 3px hsl(215 25% 12% / 0.06);
     --shadow-md: 0 4px 12px hsl(215 25% 12% / 0.08);
     --shadow-lg: 0 8px 30px hsl(215 25% 12% / 0.12);
-    --shadow-glow: 0 0 25px hsl(210 100% 56% / 0.2);
+    --shadow-glow: 0 0 25px hsl(208 87% 47% / 0.25);
   }
 
   .dark {
@@ -75,8 +80,9 @@
     --popover: 215 25% 12%;
     --popover-foreground: 220 10% 92%;
 
-    --primary: 210 100% 56%;
+    --primary: 208 87% 47%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 208 95% 60%;
 
     --secondary: 220 20% 18%;
     --secondary-foreground: 220 10% 85%;
@@ -84,7 +90,7 @@
     --muted: 220 20% 16%;
     --muted-foreground: 220 10% 55%;
 
-    --accent: 145 100% 39%;
+    --accent: 147 100% 35%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 30%;
@@ -92,16 +98,16 @@
 
     --border: 220 20% 18%;
     --input: 220 20% 18%;
-    --ring: 210 100% 56%;
+    --ring: 208 87% 47%;
 
     --sidebar-background: 215 35% 6%;
     --sidebar-foreground: 220 10% 85%;
-    --sidebar-primary: 210 100% 56%;
+    --sidebar-primary: 208 87% 47%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 20% 12%;
     --sidebar-accent-foreground: 220 10% 85%;
     --sidebar-border: 220 20% 14%;
-    --sidebar-ring: 210 100% 56%;
+    --sidebar-ring: 208 87% 47%;
 
     --surface-elevated: 215 25% 14%;
     --surface-sunken: 215 30% 6%;
