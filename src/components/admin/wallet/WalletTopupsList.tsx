@@ -89,6 +89,8 @@ const WalletTopupsList = ({ refreshKey = 0 }: Props) => {
       toast.error(error.message || "Erro ao atualizar");
       return;
     }
+    setTopups((current) => current.map((t) => (t.id === id ? { ...t, status } : t)));
+    void load(page);
     const credited = Number((data as any)?.credited || 0);
     const bonus = Number((data as any)?.bonus || 0);
     if (credited > 0) {

@@ -187,7 +187,7 @@ const describeEntry = (tx: WalletEntry): EntryVisual => {
 };
 
 const DriverWallet = () => {
-  const { user, driverData } = useAuth();
+  const { user, driverData, refreshProfile } = useAuth();
   const [history, setHistory] = useState<WalletEntry[]>([]);
   const [completedRides, setCompletedRides] = useState<{ driver_net: number | null; completed_at: string | null; created_at: string }[]>([]);
   const [activeTab, setActiveTab] = useState<"recharge" | "history">("recharge");
@@ -206,6 +206,7 @@ const DriverWallet = () => {
     ]);
     if (hist.data) setHistory(hist.data as any);
     if (ridesRes.data) setCompletedRides(ridesRes.data as any);
+    await refreshProfile();
   };
 
   useEffect(() => {
