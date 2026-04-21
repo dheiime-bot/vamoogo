@@ -265,10 +265,36 @@
 .gmap-clean button[aria-label*="keyboard"] {
   display: none !important;
 }
-/* Garante que o logo Google fique acima de qualquer sheet/CTA sobreposto ao mapa. */
+/* Garante que o logo Google apareça SEMPRE no canto inferior-esquerdo,
+   acima de qualquer sheet/CTA sobreposto ao mapa (exigência dos Termos da API). */
 .gmap-clean a[href*="maps.google.com/maps"],
 .gmap-clean a[title="Open this area in Google Maps (opens a new window)"] {
-  z-index: 60 !important;
-  position: relative;
+  position: absolute !important;
+  bottom: 8px !important;
+  left: 8px !important;
+  top: auto !important;
+  right: auto !important;
+  z-index: 80 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+/* Container do logo (img dentro do <a>) — evita que seja recortado/escondido. */
+.gmap-clean a[href*="maps.google.com/maps"] img,
+.gmap-clean a[title="Open this area in Google Maps (opens a new window)"] img {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+/* Quando o Google renderiza o logo dentro de um .gm-style-cc com <img>, garante o canto inferior-esquerdo. */
+.gmap-clean .gm-style-cc:has(img) {
+  position: absolute !important;
+  bottom: 8px !important;
+  left: 8px !important;
+  top: auto !important;
+  right: auto !important;
+  z-index: 80 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
