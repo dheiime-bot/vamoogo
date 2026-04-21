@@ -789,13 +789,6 @@ const PassengerHome = () => {
       description: `Novo destino: ${newDestination.name}\nNovo valor: R$ ${totalPrice.toFixed(2)} (${totalKm} km)`,
       duration: 8000,
     });
-    if (user) {
-      supabase.from("chat_messages").insert({
-        ride_id: activeRide.id,
-        sender_id: user.id,
-        message: `📍 Destino alterado para: ${newDestination.name} • Novo valor: R$ ${totalPrice.toFixed(2)} (${totalKm} km)`,
-      }).then(() => {});
-    }
     // 🔔 Notifica o motorista (toca som + aparece no sino + funciona em qualquer tela)
     if (activeRide.driver_id) {
       supabase.from("notifications").insert({

@@ -371,16 +371,6 @@ const DriverHome = () => {
               description: `Novo destino: ${newAddr}\nNovo valor: R$ ${newPrice.toFixed(2)} (${newKm} km)`,
               duration: 12000,
             });
-            // 📋 Auditoria visível: registra no chat da corrida que o motorista
-            // recebeu/visualizou a alteração de rota (passageiro já gravou em
-            // ride_route_changes ao confirmar). Assim ambos têm trilha mútua.
-            try {
-              supabase.from("chat_messages").insert({
-                ride_id: ride.id,
-                sender_id: user.id,
-                message: `🚨 Recebi a alteração de rota: ${newAddr} • R$ ${newPrice.toFixed(2)} (${newKm} km)`,
-              }).then(() => {});
-            } catch {}
             // Interrompe a navegação atual: força o motorista a clicar em "Iniciar
             // nova rota" no app, fazendo o foco voltar do Google Maps externo.
             setRouteChanged(true);
