@@ -338,6 +338,10 @@ const DriverHome = () => {
     setRideState("going_to_passenger");
     playPhaseSound("accepted");
     toast.success("Corrida aceita! 🚗");
+    // 🚗 Abre Google Maps automaticamente até o passageiro
+    if (updated.origin_lat && updated.origin_lng) {
+      openGoogleMapsRoute(Number(updated.origin_lat), Number(updated.origin_lng), "Embarque");
+    }
   };
 
   const handleReject = async () => {
@@ -372,6 +376,10 @@ const DriverHome = () => {
     localStorage.removeItem(`ride-arrived-final-${activeRide.id}`);
     setRideState("in_ride");
     playPhaseSound("started");
+    // 🚗 Abre Google Maps até o primeiro destino (parada 1 ou destino final se não houver paradas)
+    const updatedRide = { ...activeRide, status: "in_progress" as const, started_at: startedAt };
+    const target = getRideNextTarget(updatedRide, 0);
+    if (target) openGoogleMapsRoute(target.lat, target.lng, routePointName(target));
   };
 
   const handleConfirmStop = () => {
@@ -381,6 +389,9 @@ const DriverHome = () => {
     setCurrentStopIndex(nextIndex);
     localStorage.setItem(`ride-stop-index-${activeRide.id}`, String(nextIndex));
     toast.success(nextIndex < stops.length ? `Parada ${nextIndex} confirmada` : "Última parada confirmada");
+    // 🚗 Abre o Google Maps no próximo trecho (próxima parada ou destino final)
+    const target = getRideNextTarget(activeRide, nextIndex);
+    if (target) openGoogleMapsRoute(target.lat, target.lng, routePointName(target));
   };
 
   const handleArrivedFinal = () => {
