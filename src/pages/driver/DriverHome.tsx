@@ -53,6 +53,7 @@ const DriverHome = () => {
   const [ratedRide, setRatedRide] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
+  const [arrivedAtFinal, setArrivedAtFinal] = useState(false);
   // Modal obrigatório de seleção de veículo após login (quando há 2+ aprovados).
   const [requireVehiclePick, setRequireVehiclePick] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
@@ -367,6 +368,8 @@ const DriverHome = () => {
     if (error) return;
     setActiveRide({ ...activeRide, status: "in_progress", started_at: startedAt });
     setCurrentStopIndex(0);
+    setArrivedAtFinal(false);
+    localStorage.removeItem(`ride-arrived-final-${activeRide.id}`);
     setRideState("in_ride");
     playPhaseSound("started");
   };
@@ -378,6 +381,13 @@ const DriverHome = () => {
     setCurrentStopIndex(nextIndex);
     localStorage.setItem(`ride-stop-index-${activeRide.id}`, String(nextIndex));
     toast.success(nextIndex < stops.length ? `Parada ${nextIndex} confirmada` : "Última parada confirmada");
+  };
+
+  const handleArrivedFinal = () => {
+    if (!activeRide) return;
+    setArrivedAtFinal(true);
+    localStorage.setItem(`ride-arrived-final-${activeRide.id}`, "1");
+    toast.success("Chegada ao destino confirmada");
   };
 
   const handleFinishRide = async () => {
@@ -404,6 +414,7 @@ const DriverHome = () => {
     }
     // Guarda a corrida para avaliação e abre modal — mantém o motorista online.
     localStorage.removeItem(`ride-stop-index-${activeRide.id}`);
+    localStorage.removeItem(`ride-arrived-final-${activeRide.id}`);
     setRatedRide(activeRide);
     setActiveRide(null);
     setRideState("rating");
@@ -490,11 +501,13 @@ const DriverHome = () => {
   useEffect(() => {
     if (!activeRide?.id || activeRide.status !== "in_progress") {
       setCurrentStopIndex(0);
+      setArrivedAtFinal(false);
       return;
     }
     const stored = Number(localStorage.getItem(`ride-stop-index-${activeRide.id}`) || 0);
     const max = getRideStops(activeRide).length;
     setCurrentStopIndex(Number.isFinite(stored) ? Math.min(Math.max(0, stored), max) : 0);
+    setArrivedAtFinal(localStorage.getItem(`ride-arrived-final-${activeRide.id}`) === "1");
   }, [activeRide]);
 
   // 🚨 Reage instantaneamente a mudanças de status feitas pelo admin (realtime).
@@ -763,7 +776,9 @@ const DriverHome = () => {
               )}
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold text-muted-foreground">
-                  {currentStopIndex < rideStops.length ? `Próxima parada ${currentStopIndex + 1}` : "Destino final"}
+                  {currentStopIndex < rideStops.length
+                    ? `Próxima parada ${currentStopIndex + 1} de ${rideStops.length}`
+                    : arrivedAtFinal ? "Chegou ao destino final" : "Indo ao destino final"}
                 </p>
                 <p className="text-xs truncate">{routePointName(nextTarget, "Destino final")}</p>
               </div>
@@ -771,6 +786,11 @@ const DriverHome = () => {
             {currentStopIndex < rideStops.length && (
               <div className="rounded-lg border border-warning/30 bg-warning/10 p-2 text-[11px] text-warning">
                 Confirme esta parada para liberar o próximo trecho da viagem.
+              </div>
+            )}
+            {currentStopIndex >= rideStops.length && !arrivedAtFinal && rideStops.length > 0 && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-2 text-[11px] text-destructive">
+                Siga até o destino final do passageiro e confirme a chegada para cobrar.
               </div>
             )}
             <div className="text-[10px] text-muted-foreground">
@@ -790,6 +810,11 @@ const DriverHome = () => {
               <button onClick={handleConfirmStop}
                 className="w-full rounded-xl bg-warning py-2.5 text-sm font-bold text-warning-foreground flex items-center justify-center gap-2">
                 <MapPin className="h-4 w-4" /> Confirmar parada {currentStopIndex + 1}
+              </button>
+            ) : !arrivedAtFinal ? (
+              <button onClick={handleArrivedFinal}
+                className="w-full rounded-xl bg-destructive py-2.5 text-sm font-bold text-destructive-foreground flex items-center justify-center gap-2">
+                <Flag className="h-4 w-4" /> Cheguei ao destino final
               </button>
             ) : activeRide.payment_method === "pix" ? (
               <button onClick={() => setShowPixModal(true)}
