@@ -38,13 +38,6 @@ const DEFAULT_CONFIG: WhatsappTopupConfig = {
   ],
 };
 
-const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }> = {
-  pendente: { label: "Pendente", color: "bg-warning/10 text-warning", icon: Clock },
-  pago: { label: "Pago", color: "bg-primary/10 text-primary", icon: CheckCircle2 },
-  creditado: { label: "Creditado", color: "bg-success/10 text-success", icon: CheckCircle2 },
-  cancelado: { label: "Cancelado", color: "bg-destructive/10 text-destructive", icon: XCircle },
-};
-
 const formatBRL = (n: number) =>
   n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -70,8 +63,8 @@ const AdminWalletTopup = () => {
   const [newAmount, setNewAmount] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [topups, setTopups] = useState<any[]>([]);
-  const [updating, setUpdating] = useState<string | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [refreshList, setRefreshList] = useState(0);
 
   const loadConfig = async () => {
     const { data } = await supabase
@@ -85,25 +78,8 @@ const AdminWalletTopup = () => {
     setLoading(false);
   };
 
-  const loadTopups = async () => {
-    const { data } = await supabase
-      .from("wallet_topups")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setTopups(data || []);
-  };
-
   useEffect(() => {
     loadConfig();
-    loadTopups();
-    const ch = supabase
-      .channel("admin-wallet-topups")
-      .on("postgres_changes", { event: "*", schema: "public", table: "wallet_topups" }, loadTopups)
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
   }, []);
 
   const save = async () => {
