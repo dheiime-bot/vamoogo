@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.cleanup-signup-orphans]
 verify_jwt = false
+
+[functions.seed-test-rides]
+verify_jwt = false
+
+[functions.seed-test-passengers]
+verify_jwt = false
+
+[functions.seed-test-users]
+verify_jwt = false
