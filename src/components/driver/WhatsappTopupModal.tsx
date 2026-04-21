@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, MessageCircle, Send, AlertCircle } from "lucide-react";
+import { Loader2, MessageCircle, Send, AlertCircle, Gift } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,8 @@ interface Config {
   message_template: string;
   quick_amounts: number[];
   allow_custom_amount: boolean;
+  bonus_enabled?: boolean;
+  bonus_tiers?: { min_amount: number; percent: number }[];
 }
 
 const formatBRL = (n: number) =>
