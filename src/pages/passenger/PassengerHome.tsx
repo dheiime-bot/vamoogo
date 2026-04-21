@@ -668,6 +668,15 @@ const PassengerHome = () => {
     if (!activeRide || !newDestination || !routePreview) return;
     const { totalKm, totalMin, totalPrice, totalFee, newLegs } = routePreview;
 
+    // Snapshot dos valores ANTERIORES para auditoria
+    const prevSnapshot = {
+      destination_address: activeRide.destination_address as string | null,
+      destination_lat: activeRide.destination_lat as number | null,
+      destination_lng: activeRide.destination_lng as number | null,
+      distance_km: Number(activeRide.distance_km || 0),
+      price: Number(activeRide.price || 0),
+    };
+
     const { error } = await supabase
       .from("rides")
       .update({
@@ -685,6 +694,32 @@ const PassengerHome = () => {
     if (error) {
       toast.error("Erro ao alterar destino: " + error.message);
       return;
+    }
+    // 📋 Auditoria: registra a alteração de rota (visível ao passageiro, motorista e admin)
+    if (user) {
+      const newAddrFull = `${newDestination.name} - ${newDestination.address}`;
+      supabase.from("ride_route_changes").insert({
+        ride_id: activeRide.id,
+        changed_by: user.id,
+        changed_by_role: "passenger",
+        previous_destination_address: prevSnapshot.destination_address,
+        previous_destination_lat: prevSnapshot.destination_lat,
+        previous_destination_lng: prevSnapshot.destination_lng,
+        previous_distance_km: prevSnapshot.distance_km,
+        previous_price: prevSnapshot.price,
+        new_destination_address: newAddrFull,
+        new_destination_lat: newDestination.lat,
+        new_destination_lng: newDestination.lng,
+        new_distance_km: totalKm,
+        new_price: totalPrice,
+        driven_km: routePreview.drivenKm,
+        driven_price: routePreview.drivenPrice,
+        new_leg_km: routePreview.newLegKm,
+        new_leg_price: routePreview.newLegPrice,
+        details: { totalMin, totalFee, legs: newLegs },
+      }).then(({ error: auditErr }) => {
+        if (auditErr) console.error("[audit route change]", auditErr);
+      });
     }
     setActiveRide((r: any) => ({
       ...r,
