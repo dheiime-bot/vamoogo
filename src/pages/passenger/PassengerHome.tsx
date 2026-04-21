@@ -1117,22 +1117,73 @@ const PassengerHome = () => {
                         label=""
                         placeholder="Para onde mudar?"
                         value={newDestination ? placeDetailsFromAppLocation(newDestination) : null}
-                        onChange={(place) => setNewDestination(place ? appLocationFromPlaceDetails(place) : null)}
+                        onChange={(place) => {
+                          setNewDestination(place ? appLocationFromPlaceDetails(place) : null);
+                          setRoutePreview(null);
+                        }}
                       />
+
+                      {/* Prévia da nova rota — exibida após "Calcular novo valor".
+                          Detalhamento exigido pelo produto: km/R$ já percorridos pelo motorista
+                          + km/R$ do novo trecho a partir da posição atual + total. */}
+                      {routePreview && (
+                        <div className="rounded-lg border border-primary/30 bg-background p-2.5 space-y-2 text-xs">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                            Resumo da nova rota
+                          </p>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="flex items-start gap-2 flex-1 min-w-0">
+                              <span className="mt-1 h-2 w-2 rounded-full bg-success shrink-0" />
+                              <span className="min-w-0">
+                                <span className="block font-semibold">Já percorrido pelo motorista</span>
+                                <span className="block text-muted-foreground">{routePreview.drivenKm} km</span>
+                              </span>
+                            </span>
+                            <span className="font-bold text-foreground whitespace-nowrap">R$ {routePreview.drivenPrice.toFixed(2)}</span>
+                          </div>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="flex items-start gap-2 flex-1 min-w-0">
+                              <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
+                              <span className="min-w-0">
+                                <span className="block font-semibold truncate">Novo trecho até {newDestination?.name || "destino"}</span>
+                                <span className="block text-muted-foreground">{routePreview.newLegKm} km • ~{routePreview.newLegMin} min</span>
+                              </span>
+                            </span>
+                            <span className="font-bold text-foreground whitespace-nowrap">R$ {routePreview.newLegPrice.toFixed(2)}</span>
+                          </div>
+                          <div className="border-t border-primary/20 pt-2 flex items-center justify-between">
+                            <div>
+                              <p className="font-bold text-primary">Total a pagar</p>
+                              <p className="text-[10px] text-muted-foreground">{routePreview.totalKm} km • ~{routePreview.totalMin} min</p>
+                            </div>
+                            <span className="text-lg font-extrabold text-primary">R$ {routePreview.totalPrice.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-2 gap-2">
                         <button
-                          onClick={() => { setShowChangeDest(false); setNewDestination(null); }}
+                          onClick={() => { setShowChangeDest(false); setNewDestination(null); setRoutePreview(null); }}
                           className="rounded-xl border py-2.5 text-sm font-semibold hover:bg-muted transition-colors"
                         >
                           Cancelar
                         </button>
-                        <button
-                          onClick={handlePreviewChangeDestination}
-                          disabled={!newDestination || previewLoading}
-                          className="rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-40"
-                        >
-                          {previewLoading ? "Calculando..." : "Calcular novo valor"}
-                        </button>
+                        {!routePreview ? (
+                          <button
+                            onClick={handlePreviewChangeDestination}
+                            disabled={!newDestination || previewLoading}
+                            className="rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-40"
+                          >
+                            {previewLoading ? "Calculando..." : "Calcular novo valor"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleConfirmChangeDestination}
+                            className="rounded-xl bg-success py-2.5 text-sm font-bold text-success-foreground shadow-glow"
+                          >
+                            Confirmar e avisar motorista
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
