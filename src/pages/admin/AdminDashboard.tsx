@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, L
 import AdminLayout from "@/components/admin/AdminLayout";
 import GoogleMap from "@/components/shared/GoogleMap";
 import StatusBadge from "@/components/shared/StatusBadge";
+import NegativeBalanceAlert from "@/components/admin/NegativeBalanceAlert";
 import { supabase } from "@/integrations/supabase/client";
 
 const COLORS = ["hsl(210,100%,56%)", "hsl(145,100%,39%)", "hsl(38,95%,55%)", "hsl(0,84%,60%)"];
@@ -159,6 +160,9 @@ const AdminDashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Alerta de motoristas com saldo negativo */}
+      <NegativeBalanceAlert />
 
       {/* Map */}
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
