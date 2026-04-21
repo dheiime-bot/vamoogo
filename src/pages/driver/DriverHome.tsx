@@ -316,9 +316,30 @@ const DriverHome = () => {
         { event: "UPDATE", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` },
         (payload) => {
           const ride = payload.new as any;
+          const prev = payload.old as any;
           // Se já avaliamos/pulamos esta corrida, ignora UPDATEs subsequentes
           // (caso contrário o próprio UPDATE do driver_rating reabriria o modal).
           if (finalizedRideIdsRef.current.has(ride.id)) return;
+          // 🚨 Passageiro alterou a rota durante a corrida (destino/preço/distância mudaram)
+          if (
+            ride.status === "in_progress" &&
+            prev?.status === "in_progress" &&
+            (
+              ride.destination_address !== prev?.destination_address ||
+              Number(ride.destination_lat) !== Number(prev?.destination_lat) ||
+              Number(ride.destination_lng) !== Number(prev?.destination_lng) ||
+              Number(ride.price) !== Number(prev?.price)
+            )
+          ) {
+            const newAddr = String(ride.destination_address || "").split(" - ")[0] || "novo destino";
+            const newPrice = Number(ride.price || 0);
+            const newKm = Number(ride.distance_km || 0);
+            try { playOfferAlert({ title: "Rota alterada!", body: `${newAddr} • R$ ${newPrice.toFixed(2)}` }); } catch {}
+            toast.warning("🚨 Passageiro alterou a rota!", {
+              description: `Novo destino: ${newAddr}\nNovo valor: R$ ${newPrice.toFixed(2)} (${newKm} km)`,
+              duration: 12000,
+            });
+          }
           if (ride.status === "cancelled") {
             setActiveRide(null);
             setRideState("idle");
