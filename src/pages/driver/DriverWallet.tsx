@@ -1,5 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar, MessageCircle } from "lucide-react";
+import {
+  Gift,
+  History,
+  TrendingUp,
+  Wallet,
+  Sparkles,
+  Calendar,
+  MessageCircle,
+  Car,
+  Clock,
+  XCircle,
+  Minus,
+  Plus,
+  CheckCircle2,
+  type LucideIcon,
+} from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import WhatsappTopupModal from "@/components/driver/WhatsappTopupModal";
@@ -7,7 +22,6 @@ import WhatsappTopupModal from "@/components/driver/WhatsappTopupModal";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronDown } from "lucide-react";
 
@@ -20,11 +34,105 @@ const PERIODS: { id: PeriodId; label: string }[] = [
 
 const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
+interface WalletEntry {
+  id: string;
+  kind: "ride" | "topup" | "adjustment";
+  description: string;
+  amount: number;
+  occurred_at: string;
+  status: string;
+  ride_code: string | null;
+  reference: any;
+}
+
+const formatBRL = (n: number) =>
+  Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+interface EntryVisual {
+  Icon: LucideIcon;
+  bg: string;
+  fg: string;
+  amountText: string;
+  amountColor: string;
+  subtitle?: string;
+  badge?: { label: string; cls: string };
+}
+
+const describeEntry = (tx: WalletEntry): EntryVisual => {
+  if (tx.kind === "ride") {
+    const ref = tx.reference || {};
+    const fee = Number(ref.fee || 0);
+    const subtitle = fee > 0 ? `Taxa Vamoo R$ ${formatBRL(fee)}` : "Corrida concluída";
+    return {
+      Icon: Car,
+      bg: "bg-success/10",
+      fg: "text-success",
+      amountText: `+ R$ ${formatBRL(tx.amount)}`,
+      amountColor: "text-success",
+      subtitle,
+    };
+  }
+  if (tx.kind === "topup") {
+    const requested = Number(tx.reference?.requested || 0);
+    if (tx.status === "creditado") {
+      return {
+        Icon: Plus,
+        bg: "bg-success/10",
+        fg: "text-success",
+        amountText: `+ R$ ${formatBRL(tx.amount)}`,
+        amountColor: "text-success",
+        subtitle: "Recarga via WhatsApp",
+        badge: { label: "Creditado", cls: "bg-success/15 text-success" },
+      };
+    }
+    if (tx.status === "pago") {
+      return {
+        Icon: CheckCircle2,
+        bg: "bg-warning/10",
+        fg: "text-warning",
+        amountText: `R$ ${formatBRL(requested)}`,
+        amountColor: "text-warning",
+        subtitle: "Aguardando crédito",
+        badge: { label: "Pago", cls: "bg-warning/15 text-warning" },
+      };
+    }
+    if (tx.status === "cancelado") {
+      return {
+        Icon: XCircle,
+        bg: "bg-destructive/10",
+        fg: "text-destructive",
+        amountText: `R$ ${formatBRL(requested)}`,
+        amountColor: "text-destructive line-through",
+        subtitle: "Recarga cancelada",
+        badge: { label: "Cancelado", cls: "bg-destructive/15 text-destructive" },
+      };
+    }
+    return {
+      Icon: Clock,
+      bg: "bg-muted",
+      fg: "text-muted-foreground",
+      amountText: `R$ ${formatBRL(requested)}`,
+      amountColor: "text-muted-foreground",
+      subtitle: "Recarga solicitada",
+      badge: { label: "Pendente", cls: "bg-muted text-muted-foreground" },
+    };
+  }
+  // adjustment
+  const isCredit = tx.amount >= 0;
+  return {
+    Icon: isCredit ? Plus : Minus,
+    bg: isCredit ? "bg-primary/10" : "bg-destructive/10",
+    fg: isCredit ? "text-primary" : "text-destructive",
+    amountText: `${isCredit ? "+" : "-"} R$ ${formatBRL(Math.abs(tx.amount))}`,
+    amountColor: isCredit ? "text-primary" : "text-destructive",
+    subtitle: tx.reference?.reason || "Ajuste do administrador",
+  };
+};
+
 const DriverWallet = () => {
   const { user, driverData } = useAuth();
-  const [recharges, setRecharges] = useState<any[]>([]);
+  const [history, setHistory] = useState<WalletEntry[]>([]);
   const [completedRides, setCompletedRides] = useState<{ driver_net: number | null; completed_at: string | null; created_at: string }[]>([]);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"recharge" | "history">("recharge");
   const [period, setPeriod] = useState<PeriodId>("week");
   // Mês selecionado: offset em relação ao mês atual (0 = atual, 1 = mês passado, ...)
@@ -35,11 +143,11 @@ const DriverWallet = () => {
 
   const reload = async () => {
     if (!user) return;
-    const [rech, ridesRes] = await Promise.all([
-      supabase.from("recharges").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10),
+    const [hist, ridesRes] = await Promise.all([
+      supabase.rpc("driver_wallet_history", { _limit: 100 }),
       supabase.from("rides").select("driver_net, completed_at, created_at").eq("driver_id", user.id).eq("status", "completed").order("completed_at", { ascending: false }).limit(1000),
     ]);
-    if (rech.data) setRecharges(rech.data);
+    if (hist.data) setHistory(hist.data as any);
     if (ridesRes.data) setCompletedRides(ridesRes.data as any);
   };
 
@@ -51,6 +159,7 @@ const DriverWallet = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "recharges", filter: `driver_id=eq.${user.id}` }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "rides", filter: `driver_id=eq.${user.id}` }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "balance_adjustments", filter: `driver_id=eq.${user.id}` }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "wallet_topups", filter: `driver_id=eq.${user.id}` }, reload)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,20 +226,6 @@ const DriverWallet = () => {
   }, [completedRides, period, monthOffset]);
 
   const avgPerRide = totalCount > 0 ? totalNet / totalCount : 0;
-
-  const handleRecharge = async (amount: number) => {
-    if (!user) return;
-    setLoading(true);
-    const bonus = amount >= 100 ? amount * 0.1 : amount >= 50 ? amount * 0.05 : 0;
-    const { error } = await supabase.from("recharges").insert({ driver_id: user.id, amount, bonus: Math.round(bonus * 100) / 100, method: "pix" as const, status: "completed" as const });
-    if (!error) {
-      await supabase.from("drivers").update({ balance: balance + amount + bonus }).eq("user_id", user.id);
-      toast.success(`Recarga de R$ ${amount.toFixed(2)} + bônus R$ ${bonus.toFixed(2)} realizada!`);
-      const { data } = await supabase.from("recharges").select("*").eq("driver_id", user.id).order("created_at", { ascending: false }).limit(10);
-      if (data) setRecharges(data);
-    } else toast.error("Erro na recarga");
-    setLoading(false);
-  };
 
   const lowBalance = balance < 20;
 
@@ -315,7 +410,7 @@ const DriverWallet = () => {
       <div className="mt-5 px-4">
         <div className="flex gap-1 bg-muted rounded-2xl p-1 mb-4">
           {[
-            { id: "recharge" as const, label: "Recarregar", icon: QrCode },
+            { id: "recharge" as const, label: "Recarregar", icon: MessageCircle },
             { id: "history" as const, label: "Histórico", icon: History },
           ].map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -338,37 +433,11 @@ const DriverWallet = () => {
                 <MessageCircle className="h-5 w-5" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-extrabold">Recarregar saldo</p>
-                <p className="text-[11px] opacity-90">Solicitar recarga pela central via WhatsApp</p>
+                <p className="text-sm font-extrabold">Recarregar pela central</p>
+                <p className="text-[11px] opacity-90">Solicite via WhatsApp e o crédito cai automaticamente</p>
               </div>
-              <span className="text-[10px] font-bold bg-white/20 rounded-full px-2 py-0.5">NOVO</span>
+              <span className="text-[10px] font-bold bg-white/20 rounded-full px-2 py-0.5">RÁPIDO</span>
             </button>
-
-            {/* Quick amounts */}
-            <div>
-              <p className="text-[11px] font-semibold text-muted-foreground mb-2 px-1">Escolha um valor</p>
-              <div className="grid grid-cols-4 gap-2">
-                {[20, 50, 100, 200].map((val) => {
-                  const bonusPct = val >= 100 ? 10 : val >= 50 ? 5 : 0;
-                  return (
-                    <button
-                      key={val}
-                      onClick={() => handleRecharge(val)}
-                      disabled={loading}
-                      className="relative rounded-2xl border-2 border-border bg-card py-4 text-sm font-bold hover:border-primary hover:bg-primary/5 hover:scale-[1.03] active:scale-95 transition-all disabled:opacity-50"
-                    >
-                      {bonusPct > 0 && (
-                        <span className="absolute -top-2 -right-1 rounded-full bg-success px-1.5 py-0.5 text-[9px] font-extrabold text-success-foreground shadow-md">
-                          +{bonusPct}%
-                        </span>
-                      )}
-                      <p className="text-[10px] text-muted-foreground font-normal">R$</p>
-                      <p className="text-base">{val}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
 
             {/* Bonus banner */}
             <div className="rounded-2xl bg-gradient-to-r from-success/10 to-primary/5 border border-success/20 p-3 flex items-center gap-3">
@@ -377,34 +446,7 @@ const DriverWallet = () => {
               </div>
               <div className="flex-1">
                 <p className="text-xs font-bold text-foreground">Ganhe bônus em recargas!</p>
-                <p className="text-[10px] text-muted-foreground">5% para R$ 50+ • 10% para R$ 100+</p>
-              </div>
-            </div>
-
-            {/* Payment methods */}
-            <div>
-              <p className="text-[11px] font-semibold text-muted-foreground mb-2 px-1">Forma de pagamento</p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => handleRecharge(50)}
-                  disabled={loading}
-                  className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-card border-2 border-border py-4 hover:border-primary hover:shadow-md transition-all disabled:opacity-50"
-                >
-                  <div className="rounded-xl bg-primary/10 p-2.5 group-hover:bg-primary/20 transition-colors">
-                    {loading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <QrCode className="h-5 w-5 text-primary" />}
-                  </div>
-                  <span className="text-xs font-semibold">Pix</span>
-                </button>
-                <button
-                  onClick={() => handleRecharge(100)}
-                  disabled={loading}
-                  className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-card border-2 border-border py-4 hover:border-primary hover:shadow-md transition-all disabled:opacity-50"
-                >
-                  <div className="rounded-xl bg-primary/10 p-2.5 group-hover:bg-primary/20 transition-colors">
-                    {loading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <CreditCard className="h-5 w-5 text-primary" />}
-                  </div>
-                  <span className="text-xs font-semibold">Cartão</span>
-                </button>
+                <p className="text-[10px] text-muted-foreground">Veja as faixas de bônus ao escolher o valor.</p>
               </div>
             </div>
           </div>
@@ -412,35 +454,50 @@ const DriverWallet = () => {
 
         {activeTab === "history" && (
           <div className="space-y-2 animate-slide-up">
-            {recharges.length === 0 && (
+            {history.length === 0 && (
               <div className="rounded-2xl border border-dashed border-border bg-card/50 py-10 text-center">
                 <History className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-xs text-muted-foreground">Nenhuma transação ainda</p>
+                <p className="text-xs text-muted-foreground">Nenhuma movimentação ainda</p>
               </div>
             )}
-            {recharges.map((tx, i) => (
-              <div
-                key={tx.id}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 hover:shadow-md transition-shadow animate-slide-up"
-                style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
-              >
-                <div className="rounded-xl p-2.5 bg-success/10">
-                  {tx.bonus > 0 ? <Gift className="h-4 w-4 text-success" /> : <ArrowDownLeft className="h-4 w-4 text-success" />}
+            {history.map((tx, i) => {
+              const visual = describeEntry(tx);
+              const dateText = tx.occurred_at
+                ? new Date(tx.occurred_at).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "—";
+              return (
+                <div
+                  key={tx.id}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 hover:shadow-md transition-shadow animate-slide-up"
+                  style={{ animationDelay: `${i * 30}ms`, animationFillMode: "both" }}
+                >
+                  <div className={`rounded-xl p-2.5 ${visual.bg}`}>
+                    <visual.Icon className={`h-4 w-4 ${visual.fg}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{tx.description}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {dateText}
+                      {visual.subtitle ? ` • ${visual.subtitle}` : ""}
+                    </p>
+                  </div>
+                  <div className="text-right whitespace-nowrap">
+                    {visual.amountText && (
+                      <p className={`text-sm font-extrabold ${visual.amountColor}`}>{visual.amountText}</p>
+                    )}
+                    {visual.badge && (
+                      <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${visual.badge.cls}`}>
+                        {visual.badge.label}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">Recarga {tx.method === "pix" ? "Pix" : "Cartão"}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {new Date(tx.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-extrabold text-success">+R$ {(tx.amount + (tx.bonus || 0)).toFixed(2).replace(".", ",")}</p>
-                  {tx.bonus > 0 && (
-                    <p className="text-[10px] text-success/80 font-medium">bônus +R$ {tx.bonus.toFixed(2).replace(".", ",")}</p>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

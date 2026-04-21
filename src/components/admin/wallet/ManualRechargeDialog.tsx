@@ -60,37 +60,24 @@ const ManualRechargeDialog = ({ open, onOpenChange, onSuccess }: Props) => {
     }
     const handle = setTimeout(async () => {
       setSearching(true);
-      const digits = term.replace(/\D/g, "");
-      const orFilter = digits
-        ? `full_name.ilike.%${term}%,cpf.ilike.%${digits}%,phone.ilike.%${digits}%`
-        : `full_name.ilike.%${term}%`;
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, phone, cpf, user_type")
-        .eq("user_type", "driver")
-        .or(orFilter)
-        .limit(8);
-
-      const ids = (profs || []).map((p) => p.user_id);
-      if (ids.length === 0) {
+      const { data, error } = await supabase.rpc("admin_search_drivers", {
+        _term: term,
+        _limit: 10,
+      });
+      if (error) {
+        console.error("[admin_search_drivers]", error);
+        toast.error(error.message || "Erro ao buscar motoristas");
         setResults([]);
         setSearching(false);
         return;
       }
-      const { data: drvs } = await supabase
-        .from("drivers")
-        .select("user_id, balance")
-        .in("user_id", ids);
-      const balanceMap = new Map<string, number>(
-        (drvs || []).map((d: any) => [d.user_id, Number(d.balance) || 0]),
-      );
       setResults(
-        (profs || []).map((p: any) => ({
-          user_id: p.user_id,
-          full_name: p.full_name,
-          phone: p.phone,
-          cpf: p.cpf,
-          balance: balanceMap.get(p.user_id) ?? 0,
+        (data || []).map((d: any) => ({
+          user_id: d.user_id,
+          full_name: d.full_name,
+          phone: d.phone,
+          cpf: d.cpf,
+          balance: Number(d.balance) || 0,
         })),
       );
       setSearching(false);
