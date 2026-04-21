@@ -799,10 +799,27 @@ const DriverHome = () => {
               </button>
             </div>
 
-            <button onClick={handleArrived}
-              className="w-full rounded-xl bg-info py-2.5 text-sm font-bold text-info-foreground flex items-center justify-center gap-2">
-              <MapPin className="h-4 w-4" /> Cheguei ao local
-            </button>
+            {(() => {
+              const left = phaseSecondsLeft(GOING_WAIT_SEC);
+              const ready = left <= 0;
+              const addr = activeRide.origin_address?.split(" - ")[0] || "embarque";
+              return (
+                <button
+                  onClick={ready ? handleArrived : undefined}
+                  disabled={!ready}
+                  className={`w-full rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                    ready
+                      ? "bg-info text-info-foreground"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                  }`}
+                >
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  <span className="truncate text-left">
+                    {ready ? `Cheguei ao local: ${addr}` : `Você está indo para: ${addr} (${left}s)`}
+                  </span>
+                </button>
+              );
+            })()}
             <button
               onClick={() => setShowCancelDialog(true)}
               className="w-full rounded-xl border border-destructive/30 py-2 text-xs font-bold text-destructive hover:bg-destructive/5"
