@@ -848,15 +848,18 @@ const RecenterButton = ({ target, bottomInset = 0 }: { target: MapPoint | null; 
     }
   };
 
-  // Mesmo tamanho dos botões superiores (sino, atualizar, saldo): h-16 w-16.
-  // +28px ≈ 6mm acima do CTA inferior (3mm + mais 3mm), conforto de toque.
+  // Alinhado verticalmente com a DriverBottomNav (h-16 + py-2 + safe-area + 8px).
+  // Os botões da nav inferior (Corridas/Switch ON-OFF) têm h-16 e ficam ancorados a
+  // `env(safe-area-inset-bottom) + 16px` do fundo (paddingBottom = safe + 0.5rem + 8px,
+  // mais py-2 = 8px do container). Aqui usamos `calc(env(safe-area-inset-bottom) + 16px)`
+  // para ficar EXATAMENTE na mesma linha do switch e do pneuzinho.
   return (
     <button
       type="button"
       onClick={handleClick}
       aria-label="Recentralizar mapa"
-      style={{ bottom: `${bottomInset + 28}px` }}
-      className="absolute right-3 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
+      style={{ bottom: `calc(env(safe-area-inset-bottom) + ${bottomInset + 16}px)` }}
+      className="absolute right-3 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-lg ring-2 ring-background border border-border transition-transform active:scale-95 hover:bg-muted"
     >
       <LocateFixed className="h-6 w-6 text-primary" />
     </button>
