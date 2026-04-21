@@ -66,9 +66,9 @@ const DriverHome = () => {
   // e o motorista vê o novo valor/endereço.
   const [routeChanged, setRouteChanged] = useState(false);
   // Janelas (em segundos) exigidas pelo produto:
-  const GOING_WAIT_SEC = 30;     // a caminho do passageiro
-  const ARRIVED_WAIT_SEC = 10;   // chegou ao passageiro → iniciar corrida
-  const STOP_WAIT_SEC = 30;      // indo para parada/destino → confirmar
+  const GOING_WAIT_SEC = 5;      // a caminho do passageiro
+  const ARRIVED_WAIT_SEC = 5;    // chegou ao passageiro → iniciar corrida
+  const STOP_WAIT_SEC = 5;       // indo para parada/destino → confirmar
   // Modal obrigatório de seleção de veículo após login (quando há 2+ aprovados).
   const [requireVehiclePick, setRequireVehiclePick] = useState(false);
   // IDs de corridas já avaliadas/encerradas localmente — evita que UPDATEs do realtime
