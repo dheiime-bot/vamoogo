@@ -569,7 +569,10 @@ const DriverHome = () => {
     if (driverData) {
       await supabase.from("drivers")
         .update({
-          balance: Math.max(0, Number(balance) - platformFee),
+          // Saldo pode ficar NEGATIVO quando a taxa é maior que o saldo atual.
+          // O trigger trg_debit_ride_fee_on_complete também debita no banco
+          // (idempotente), então o update aqui é apenas para refletir já no UI.
+          balance: Number(balance) - platformFee,
           total_rides: (driverData.total_rides || 0) + 1,
         })
         .eq("user_id", user.id);
