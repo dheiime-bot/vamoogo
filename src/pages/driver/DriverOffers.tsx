@@ -35,6 +35,7 @@ type Ride = {
   driver_net: number | null;
   payment_method: string | null;
   created_at: string;
+  stops: Array<{ name?: string; address?: string; lat?: number; lng?: number }> | null;
 };
 
 type Item = {
