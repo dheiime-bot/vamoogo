@@ -613,11 +613,38 @@ const DriverHome = () => {
           });
         });
 
+      // "Race-to-success": dispara baixa e alta precisão; vence o primeiro que
+      // resolver. Se ambos falharem, agregamos os erros para diagnóstico.
+      const raceToSuccess = (
+        attempts: Array<Promise<GeolocationPosition>>
+      ): Promise<GeolocationPosition> =>
+        new Promise((resolve, reject) => {
+          let pending = attempts.length;
+          const errors: GeolocationPositionError[] = [];
+          let settled = false;
+          attempts.forEach((p) => {
+            p.then(
+              (pos) => {
+                if (settled) return;
+                settled = true;
+                resolve(pos);
+              },
+              (e: GeolocationPositionError) => {
+                errors.push(e);
+                pending -= 1;
+                if (pending === 0 && !settled) {
+                  settled = true;
+                  reject(errors);
+                }
+              }
+            );
+          });
+        });
+
       try {
-        // Promise.any: o primeiro que resolver vence. Se ambos falharem, cai no catch.
-        await Promise.any([
-          getOnce(false, 6000),  // baixa precisão: rápido, ótimo em desktop
-          getOnce(true, 12_000), // alta precisão: ideal em mobile
+        await raceToSuccess([
+          getOnce(false, 6000),   // baixa precisão: rápido, ótimo em desktop
+          getOnce(true, 12_000),  // alta precisão: ideal em mobile
         ]);
         toast.dismiss(loadingId);
         setIsOnline(true);
@@ -625,7 +652,7 @@ const DriverHome = () => {
         toast.success("Você está Online! Aguardando corridas...");
       } catch (err: any) {
         toast.dismiss(loadingId);
-        const errors = (err?.errors ?? [err]) as GeolocationPositionError[];
+        const errors = (Array.isArray(err) ? err : [err]) as GeolocationPositionError[];
         const denied = errors.some((e) => e?.code === 1 /* PERMISSION_DENIED */);
         if (denied) {
           toast.error(
