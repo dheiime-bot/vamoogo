@@ -172,6 +172,9 @@ const AdminWalletTopup = () => {
     });
   };
 
+  const whatsappDigits = normalizeWhatsappBR(config.whatsapp_number);
+  const configComplete = config.enabled && /^55\d{10,11}$/.test(whatsappDigits);
+
   if (loading) {
     return (
       <AdminLayout title="Recarga de Carteira">
@@ -199,6 +202,26 @@ const AdminWalletTopup = () => {
       }
     >
       <div className="space-y-5">
+        <div className={`rounded-2xl border p-4 ${configComplete ? "border-success/30 bg-success/10" : "border-destructive/30 bg-destructive/5"}`}>
+          <div className="flex items-start gap-3">
+            {configComplete ? (
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+            ) : (
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            )}
+            <div>
+              <p className={`text-sm font-bold ${configComplete ? "text-success" : "text-destructive"}`}>
+                {configComplete ? "Recarga via WhatsApp ativa" : "Recarga via WhatsApp incompleta"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {configComplete
+                  ? `Motoristas já podem solicitar recarga pelo número ${formatPhoneBR(whatsappDigits)}.`
+                  : "Ative a recarga, informe um WhatsApp brasileiro válido e clique em Salvar."}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Toggle ativar */}
         <div className="rounded-2xl border bg-card p-5 shadow-sm">
           <div className="flex items-start justify-between gap-4">
