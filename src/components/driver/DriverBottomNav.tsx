@@ -45,7 +45,7 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
     const interval = setInterval(fetchCount, 4000);
 
     const channel = supabase
-      .channel(`driver-offers-${user.id}`)
+      .channel(`driver-bottomnav-offers-${user.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "ride_offers", filter: `driver_id=eq.${user.id}` },
