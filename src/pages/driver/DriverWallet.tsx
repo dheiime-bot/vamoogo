@@ -26,6 +26,9 @@ const DriverWallet = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"recharge" | "history">("recharge");
   const [period, setPeriod] = useState<PeriodId>("week");
+  // Mês selecionado: offset em relação ao mês atual (0 = atual, 1 = mês passado, ...)
+  const [monthOffset, setMonthOffset] = useState<number>(0);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const balance = driverData?.balance ?? 0;
 
   const reload = async () => {
@@ -53,27 +56,23 @@ const DriverWallet = () => {
 
   const { totalNet, totalCount, chartData, bucketLabel } = useMemo(() => {
     const now = new Date();
-    const cfg = PERIODS.find((p) => p.id === period)!;
-    const sinceMs = cfg.days == null ? 0 : (cfg.id === "today"
-      ? new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-      : now.getTime() - cfg.days * 86400000);
-
-    const inRange = cfg.days == null
-      ? completedRides
-      : completedRides.filter((r) => new Date(r.completed_at || r.created_at).getTime() >= sinceMs);
-    const total = inRange.reduce((s, r) => s + Number(r.driver_net || 0), 0);
-
+    let inRange: typeof completedRides = [];
     let buckets: { name: string; value: number; key?: string }[] = [];
     let label = "";
-    if (cfg.id === "today") {
+
+    if (period === "today") {
+      const startMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      inRange = completedRides.filter((r) => new Date(r.completed_at || r.created_at).getTime() >= startMs);
       label = "por hora";
       buckets = Array.from({ length: 24 }, (_, h) => ({ name: `${h}h`, value: 0 }));
       inRange.forEach((r) => {
         const h = new Date(r.completed_at || r.created_at).getHours();
         buckets[h].value += Number(r.driver_net || 0);
       });
-    } else if (cfg.days && cfg.days <= 31) {
-      const days = cfg.days;
+    } else if (period === "week") {
+      const days = 7;
+      const sinceMs = now.getTime() - days * 86400000;
+      inRange = completedRides.filter((r) => new Date(r.completed_at || r.created_at).getTime() >= sinceMs);
       label = "por dia";
       buckets = Array.from({ length: days }, (_, i) => {
         const d = new Date(now.getTime() - (days - 1 - i) * 86400000);
@@ -86,22 +85,34 @@ const DriverWallet = () => {
         if (i != null) buckets[i].value += Number(r.driver_net || 0);
       });
     } else {
-      const months = cfg.days ? Math.max(3, Math.round(cfg.days / 30)) : 12;
-      label = "por mês";
-      buckets = Array.from({ length: months }, (_, i) => {
-        const d = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i), 1);
-        return { name: d.toLocaleDateString("pt-BR", { month: "short" }), value: 0, key: `${d.getFullYear()}-${d.getMonth()}` };
+      // mês específico (monthOffset)
+      const target = new Date(now.getFullYear(), now.getMonth() - monthOffset, 1);
+      const year = target.getFullYear();
+      const month = target.getMonth();
+      const startMs = new Date(year, month, 1).getTime();
+      const endMs = new Date(year, month + 1, 1).getTime();
+      inRange = completedRides.filter((r) => {
+        const t = new Date(r.completed_at || r.created_at).getTime();
+        return t >= startMs && t < endMs;
       });
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      label = `de ${MONTH_NAMES[month]}`;
+      buckets = Array.from({ length: daysInMonth }, (_, i) => ({
+        name: `${i + 1}`,
+        value: 0,
+        key: `${year}-${month}-${i + 1}`,
+      }));
       const idx = new Map(buckets.map((b, i) => [b.key!, i]));
       inRange.forEach((r) => {
         const d = new Date(r.completed_at || r.created_at);
-        const i = idx.get(`${d.getFullYear()}-${d.getMonth()}`);
+        const i = idx.get(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
         if (i != null) buckets[i].value += Number(r.driver_net || 0);
       });
     }
 
+    const total = inRange.reduce((s, r) => s + Number(r.driver_net || 0), 0);
     return { totalNet: total, totalCount: inRange.length, chartData: buckets, bucketLabel: label };
-  }, [completedRides, period]);
+  }, [completedRides, period, monthOffset]);
 
   const avgPerRide = totalCount > 0 ? totalNet / totalCount : 0;
 
