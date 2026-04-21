@@ -571,7 +571,7 @@ const DriverHome = () => {
     // Motorista permanece online — pronto para receber novas corridas
   };
 
-  const handleToggleOnline = () => {
+  const handleToggleOnline = async () => {
     if ((driverData as any)?.online_blocked && !isOnline) {
       toast.error("Você está impedido de ficar online. Entre em contato com o suporte.");
       return;
@@ -580,27 +580,93 @@ const DriverHome = () => {
       toast.error("Saldo insuficiente. Recarregue para ficar online!");
       return;
     }
-    // Se vai ficar online, pede permissão de GPS imediatamente para não cair em lat/lng = 0
+    // Se vai ficar online, FORÇA captura de GPS antes — corre alta precisão e
+    // baixa precisão em paralelo, o que vier primeiro vence. Isso evita o
+    // problema clássico de timeout em desktops/notebooks sem chip GPS dedicado.
     if (!isOnline) {
       if (!navigator.geolocation) {
         toast.error("Seu navegador não suporta geolocalização.");
         return;
       }
-      navigator.geolocation.getCurrentPosition(
-        () => {
-          setIsOnline(true);
-          if (user) localStorage.removeItem(`driver-manual-offline-${user.id}`);
-          toast.success("Você está Online! Aguardando corridas...");
-        },
-        (err) => {
-          console.warn("GPS negado/erro:", err.message);
+
+      // Verifica permissão antes — se foi bloqueada, instrui o usuário direto.
+      try {
+        // @ts-ignore - 'geolocation' é válido em navigator.permissions
+        const perm = await navigator.permissions?.query({ name: "geolocation" });
+        if (perm?.state === "denied") {
           toast.error(
-            "Não foi possível obter sua localização. Ative o GPS e permita o acesso para receber corridas.",
-            { duration: 6000 }
+            "GPS bloqueado para este site. Abra as configurações do navegador, libere a localização e recarregue a página.",
+            { duration: 9000 }
           );
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+          return;
+        }
+      } catch { /* sem Permissions API — segue */ }
+
+      const loadingId = toast.loading("Ativando GPS...");
+
+      const getOnce = (highAccuracy: boolean, timeout: number) =>
+        new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: highAccuracy,
+            timeout,
+            maximumAge: highAccuracy ? 30_000 : 5 * 60_000,
+          });
+        });
+
+      // "Race-to-success": dispara baixa e alta precisão; vence o primeiro que
+      // resolver. Se ambos falharem, agregamos os erros para diagnóstico.
+      const raceToSuccess = (
+        attempts: Array<Promise<GeolocationPosition>>
+      ): Promise<GeolocationPosition> =>
+        new Promise((resolve, reject) => {
+          let pending = attempts.length;
+          const errors: GeolocationPositionError[] = [];
+          let settled = false;
+          attempts.forEach((p) => {
+            p.then(
+              (pos) => {
+                if (settled) return;
+                settled = true;
+                resolve(pos);
+              },
+              (e: GeolocationPositionError) => {
+                errors.push(e);
+                pending -= 1;
+                if (pending === 0 && !settled) {
+                  settled = true;
+                  reject(errors);
+                }
+              }
+            );
+          });
+        });
+
+      try {
+        await raceToSuccess([
+          getOnce(false, 6000),   // baixa precisão: rápido, ótimo em desktop
+          getOnce(true, 12_000),  // alta precisão: ideal em mobile
+        ]);
+        toast.dismiss(loadingId);
+        setIsOnline(true);
+        if (user) localStorage.removeItem(`driver-manual-offline-${user.id}`);
+        toast.success("Você está Online! Aguardando corridas...");
+      } catch (err: any) {
+        toast.dismiss(loadingId);
+        const errors = (Array.isArray(err) ? err : [err]) as GeolocationPositionError[];
+        const denied = errors.some((e) => e?.code === 1 /* PERMISSION_DENIED */);
+        if (denied) {
+          toast.error(
+            "Permissão de GPS negada. Habilite a localização nas configurações do navegador para ficar online.",
+            { duration: 9000 }
+          );
+        } else {
+          toast.error(
+            "Não foi possível obter sua localização. Verifique se o GPS do dispositivo está LIGADO e tente novamente.",
+            { duration: 8000 }
+          );
+        }
+        console.warn("[GPS] Falha ao ativar:", errors.map((e) => `${e?.code}:${e?.message}`).join(" | "));
+      }
       return;
     }
     setIsOnline(false);
