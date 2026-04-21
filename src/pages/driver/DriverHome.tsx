@@ -392,7 +392,10 @@ const DriverHome = () => {
     setPendingOffer(null);
     setPendingRide(null);
     setRideState("going_to_passenger");
-    startPhaseTimer(updated.id, "going");
+    // Fase manual: motorista precisa clicar em "Ir até o passageiro" para
+    // iniciar o countdown de 30s. Marca como `accepted` no localStorage.
+    localStorage.setItem(`ride-phase-${updated.id}`, `accepted|0`);
+    setPhaseStartedAt(null);
     playPhaseSound("accepted");
     toast.success("Corrida aceita! 🚗");
     // 🚗 Abre Google Maps automaticamente até o passageiro
