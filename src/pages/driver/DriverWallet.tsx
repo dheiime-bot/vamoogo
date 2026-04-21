@@ -195,20 +195,81 @@ const DriverWallet = () => {
           </div>
 
           {/* Period chips */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 mb-3 scrollbar-none">
-            {PERIODS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setPeriod(p.id)}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all ${
-                  period === p.id
-                    ? "bg-primary text-primary-foreground shadow-md scale-105"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+          <div className="flex gap-1.5 pb-1 mb-3">
+            {PERIODS.map((p) => {
+              const active = period === p.id;
+              if (p.id === "month") {
+                const target = new Date();
+                target.setDate(1);
+                target.setMonth(target.getMonth() - monthOffset);
+                const monthLabel = active
+                  ? `${MONTH_NAMES[target.getMonth()].slice(0, 3)}/${String(target.getFullYear()).slice(2)}`
+                  : "Mês";
+                return (
+                  <Popover key={p.id} open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        onClick={() => {
+                          setPeriod("month");
+                          setMonthPickerOpen(true);
+                        }}
+                        className={`shrink-0 inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all ${
+                          active
+                            ? "bg-primary text-primary-foreground shadow-md scale-105"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {monthLabel}
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-56 p-2">
+                      <p className="text-[10px] font-semibold text-muted-foreground px-2 pb-1.5 uppercase tracking-wider">
+                        Selecione o mês
+                      </p>
+                      <div className="max-h-64 overflow-y-auto">
+                        {Array.from({ length: 12 }, (_, i) => {
+                          const d = new Date();
+                          d.setDate(1);
+                          d.setMonth(d.getMonth() - i);
+                          const isSelected = monthOffset === i;
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => {
+                                setMonthOffset(i);
+                                setPeriod("month");
+                                setMonthPickerOpen(false);
+                              }}
+                              className={`w-full text-left rounded-md px-2.5 py-2 text-xs font-medium transition-colors ${
+                                isSelected
+                                  ? "bg-primary/10 text-primary"
+                                  : "hover:bg-muted text-foreground"
+                              }`}
+                            >
+                              {MONTH_NAMES[d.getMonth()]} {d.getFullYear()}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                );
+              }
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setPeriod(p.id)}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all ${
+                    active
+                      ? "bg-primary text-primary-foreground shadow-md scale-105"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
           </div>
 
           <div className="rounded-xl bg-muted/30 p-2 pt-3">
