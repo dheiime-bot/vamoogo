@@ -1,5 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowDownLeft, Gift, History, TrendingUp, Wallet, Sparkles, Calendar, MessageCircle, Car, ShieldCheck, Clock, XCircle, Minus, Plus } from "lucide-react";
+import {
+  Gift,
+  History,
+  TrendingUp,
+  Wallet,
+  Sparkles,
+  Calendar,
+  MessageCircle,
+  Car,
+  Clock,
+  XCircle,
+  Minus,
+  Plus,
+  CheckCircle2,
+  type LucideIcon,
+} from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import WhatsappTopupModal from "@/components/driver/WhatsappTopupModal";
@@ -29,6 +44,90 @@ interface WalletEntry {
   ride_code: string | null;
   reference: any;
 }
+
+const formatBRL = (n: number) =>
+  Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+interface EntryVisual {
+  Icon: LucideIcon;
+  bg: string;
+  fg: string;
+  amountText: string;
+  amountColor: string;
+  subtitle?: string;
+  badge?: { label: string; cls: string };
+}
+
+const describeEntry = (tx: WalletEntry): EntryVisual => {
+  if (tx.kind === "ride") {
+    const ref = tx.reference || {};
+    const fee = Number(ref.fee || 0);
+    const subtitle = fee > 0 ? `Taxa Vamoo R$ ${formatBRL(fee)}` : "Corrida concluída";
+    return {
+      Icon: Car,
+      bg: "bg-success/10",
+      fg: "text-success",
+      amountText: `+ R$ ${formatBRL(tx.amount)}`,
+      amountColor: "text-success",
+      subtitle,
+    };
+  }
+  if (tx.kind === "topup") {
+    const requested = Number(tx.reference?.requested || 0);
+    if (tx.status === "creditado") {
+      return {
+        Icon: Plus,
+        bg: "bg-success/10",
+        fg: "text-success",
+        amountText: `+ R$ ${formatBRL(tx.amount)}`,
+        amountColor: "text-success",
+        subtitle: "Recarga via WhatsApp",
+        badge: { label: "Creditado", cls: "bg-success/15 text-success" },
+      };
+    }
+    if (tx.status === "pago") {
+      return {
+        Icon: CheckCircle2,
+        bg: "bg-warning/10",
+        fg: "text-warning",
+        amountText: `R$ ${formatBRL(requested)}`,
+        amountColor: "text-warning",
+        subtitle: "Aguardando crédito",
+        badge: { label: "Pago", cls: "bg-warning/15 text-warning" },
+      };
+    }
+    if (tx.status === "cancelado") {
+      return {
+        Icon: XCircle,
+        bg: "bg-destructive/10",
+        fg: "text-destructive",
+        amountText: `R$ ${formatBRL(requested)}`,
+        amountColor: "text-destructive line-through",
+        subtitle: "Recarga cancelada",
+        badge: { label: "Cancelado", cls: "bg-destructive/15 text-destructive" },
+      };
+    }
+    return {
+      Icon: Clock,
+      bg: "bg-muted",
+      fg: "text-muted-foreground",
+      amountText: `R$ ${formatBRL(requested)}`,
+      amountColor: "text-muted-foreground",
+      subtitle: "Recarga solicitada",
+      badge: { label: "Pendente", cls: "bg-muted text-muted-foreground" },
+    };
+  }
+  // adjustment
+  const isCredit = tx.amount >= 0;
+  return {
+    Icon: isCredit ? Plus : Minus,
+    bg: isCredit ? "bg-primary/10" : "bg-destructive/10",
+    fg: isCredit ? "text-primary" : "text-destructive",
+    amountText: `${isCredit ? "+" : "-"} R$ ${formatBRL(Math.abs(tx.amount))}`,
+    amountColor: isCredit ? "text-primary" : "text-destructive",
+    subtitle: tx.reference?.reason || "Ajuste do administrador",
+  };
+};
 
 const DriverWallet = () => {
   const { user, driverData } = useAuth();
