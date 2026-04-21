@@ -338,6 +338,10 @@ const DriverHome = () => {
     setRideState("going_to_passenger");
     playPhaseSound("accepted");
     toast.success("Corrida aceita! 🚗");
+    // 🚗 Abre Google Maps automaticamente até o passageiro
+    if (updated.origin_lat && updated.origin_lng) {
+      openGoogleMapsRoute(Number(updated.origin_lat), Number(updated.origin_lng), "Embarque");
+    }
   };
 
   const handleReject = async () => {
