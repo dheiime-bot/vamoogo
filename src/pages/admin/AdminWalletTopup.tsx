@@ -58,6 +58,13 @@ const formatPhoneBR = (digitsOnly: string) => {
   return out;
 };
 
+const normalizeWhatsappBR = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 13);
+  if (!digits) return "";
+  if (digits.startsWith("55")) return digits;
+  return digits.length >= 10 ? `55${digits}`.slice(0, 13) : digits;
+};
+
 const AdminWalletTopup = () => {
   const [config, setConfig] = useState<WhatsappTopupConfig>(DEFAULT_CONFIG);
   const [newAmount, setNewAmount] = useState("");
@@ -83,9 +90,9 @@ const AdminWalletTopup = () => {
   }, []);
 
   const save = async () => {
-    const digits = config.whatsapp_number.replace(/\D/g, "");
-    if (config.enabled && digits.length < 12) {
-      toast.error("Informe o WhatsApp completo (DDI + DDD + número)");
+    const digits = normalizeWhatsappBR(config.whatsapp_number);
+    if (config.enabled && !/^55\d{10,11}$/.test(digits)) {
+      toast.error("Informe um WhatsApp do Brasil válido com DDD e número");
       return;
     }
     setSaving(true);
