@@ -11,6 +11,7 @@ import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 import ReportIssueButton from "@/components/shared/ReportIssueButton";
+import RideDetailsDialog from "@/components/shared/RideDetailsDialog";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,6 +47,7 @@ const DriverRides = () => {
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
   const [reportRide, setReportRide] = useState<{ id: string; code: string | null; endedAt: string | null } | null>(null);
+  const [detailsRideId, setDetailsRideId] = useState<string | null>(null);
 
   const reload = async () => {
     if (!user) return;
@@ -97,7 +99,12 @@ const DriverRides = () => {
             >
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <span className="text-sm font-bold font-mono text-primary">{ride.ride_code || `#${ride.id.slice(0, 8).toUpperCase()}`}</span>
+                  <button
+                    onClick={() => setDetailsRideId(ride.id)}
+                    className="text-sm font-bold font-mono text-primary hover:underline"
+                  >
+                    {ride.ride_code || `#${ride.id.slice(0, 8).toUpperCase()}`}
+                  </button>
                   <p className="text-xs text-muted-foreground">{formatDate(ride.created_at)}</p>
                 </div>
                 <StatusBadge status={ride.status as any} />
@@ -162,6 +169,13 @@ const DriverRides = () => {
           rideEndedAt={reportRide.endedAt}
         />
       )}
+
+      <RideDetailsDialog
+        rideId={detailsRideId}
+        open={!!detailsRideId}
+        onClose={() => setDetailsRideId(null)}
+        role="driver"
+      />
 
       <AppMenu role="driver" />
       <DriverEarningsChip />
