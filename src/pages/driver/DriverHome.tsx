@@ -654,6 +654,21 @@ const DriverHome = () => {
                   <p className="text-sm font-medium truncate">{pendingRide.origin_address?.split(" - ")[0]}</p>
                 </div>
               </div>
+              {Array.isArray((pendingRide as any).stops) && (pendingRide as any).stops.length > 0 && (
+                <>
+                  {(pendingRide as any).stops.map((s: any, idx: number) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <div className="h-2.5 w-2.5 rounded-full bg-warning mt-1.5 flex items-center justify-center shrink-0">
+                        <span className="text-[8px] font-bold text-warning-foreground leading-none">{idx + 1}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-warning font-semibold uppercase">Parada {idx + 1}</p>
+                        <p className="text-sm font-medium truncate">{(s?.address || s?.name || "—").split(" - ")[0]}</p>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
               <div className="flex items-start gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-destructive mt-1.5" />
                 <div className="min-w-0">
