@@ -5,12 +5,9 @@
  *
  * Mostra um badge com a contagem de ofertas pendentes no botão "Corridas" (poll 2s + realtime).
  */
-import { Car, Wallet, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { useEffect, useState, type ReactNode } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { type ReactNode } from "react";
 
 interface Props {
   /** Nó renderizado no centro, entre Corridas e Carteira (ex: botão Ficar Online). */
@@ -22,64 +19,7 @@ const HOME_PATH = "/driver";
 const DriverBottomNav = ({ centerSlot }: Props) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, roles } = useAuth();
   const isHome = location.pathname === HOME_PATH;
-  const isDriver = !!user && roles.includes("driver");
-  const [pendingOffers, setPendingOffers] = useState(0);
-
-  // Contagem de ofertas pendentes (poll 2s + realtime para resposta instantânea)
-  useEffect(() => {
-    if (!isDriver || !user) { setPendingOffers(0); return; }
-    let cancelled = false;
-    const fetchCount = async () => {
-      const { count } = await supabase
-        .from("ride_offers")
-        .select("id", { count: "exact", head: true })
-        .eq("driver_id", user.id)
-        .eq("status", "pending")
-        .gte("expires_at", new Date().toISOString());
-      if (!cancelled) setPendingOffers(count ?? 0);
-    };
-    fetchCount();
-    const i = setInterval(fetchCount, 2000);
-
-    const channel = supabase
-      .channel(`bottom-nav-offers-${user.id}-${Date.now()}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "ride_offers", filter: `driver_id=eq.${user.id}` },
-        () => fetchCount()
-      )
-      .subscribe();
-
-    return () => { cancelled = true; clearInterval(i); supabase.removeChannel(channel); };
-  }, [isDriver, user]);
-
-  const PillButton = ({
-    icon: Icon, label, path, badge,
-  }: { icon: typeof Car; label: string; path: string; badge?: number }) => {
-    const active = location.pathname === path;
-    return (
-      <button
-        onClick={() => navigate(path)}
-        className={cn(
-          "pointer-events-auto relative flex h-16 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-5 transition-transform active:scale-95 hover:bg-muted",
-          active ? "text-primary" : "text-foreground"
-        )}
-      >
-        <Icon className="h-5 w-5" />
-        <span className="font-display text-sm font-extrabold leading-none select-none">{label}</span>
-        {badge && badge > 0 ? (
-          <span
-            aria-label={`${badge} ofertas pendentes`}
-            className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 rounded-full bg-destructive text-destructive-foreground text-[11px] font-extrabold flex items-center justify-center shadow-md ring-2 ring-background animate-pulse"
-          >
-            {badge > 9 ? "9+" : badge}
-          </span>
-        ) : null}
-      </button>
-    );
-  };
 
   const resolvedCenter =
     centerSlot ??
@@ -99,9 +39,7 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem + 8px)" }}
     >
       <div className="mx-auto flex max-w-lg items-center justify-around gap-2 px-4 py-2">
-        <PillButton icon={Car} label="Corridas" path="/driver/offers" badge={pendingOffers} />
-        {resolvedCenter && <div className="pointer-events-auto flex-1 flex justify-center">{resolvedCenter}</div>}
-        <PillButton icon={Wallet} label="Carteira" path="/driver/wallet" />
+        {resolvedCenter && <div className="pointer-events-auto flex justify-center">{resolvedCenter}</div>}
       </div>
     </nav>
   );
