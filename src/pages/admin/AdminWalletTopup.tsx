@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Save, Loader2, MessageCircle, Plus, X, Gift, Trash2, Wallet } from "lucide-react";
+import { Save, Loader2, MessageCircle, Plus, X, Gift, Trash2, Wallet, AlertCircle, CheckCircle2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
