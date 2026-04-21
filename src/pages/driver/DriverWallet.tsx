@@ -124,7 +124,7 @@ const DriverWallet = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* === Hero Card: Cartão estilo bank === */}
-      <div className="relative overflow-hidden bg-gradient-dark px-4 pt-16 pb-12">
+      <div className="relative overflow-hidden bg-gradient-dark px-4 pt-24 pb-12">
         {/* Decorative blobs */}
         <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
         <div className="absolute -bottom-32 -left-10 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
