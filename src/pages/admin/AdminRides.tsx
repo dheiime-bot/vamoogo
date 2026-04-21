@@ -185,7 +185,11 @@ const AdminRides = () => {
                     <span className={`text-[10px] font-bold uppercase rounded-full px-2 py-0.5 ${
                       ride.payment_status === "paid" ? "bg-success/15 text-success" : "bg-primary/15 text-primary"
                     }`}>
-                      {ride.payment_status}
+                      {ride.payment_status === "paid" ? "Pago"
+                        : ride.payment_status === "failed" ? "Falhou"
+                        : ride.payment_status === "refunded" ? "Reembolsado"
+                        : ride.payment_status === "cancelled" ? "Cancelado"
+                        : ride.payment_status}
                     </span>
                   )}
                 </div>
