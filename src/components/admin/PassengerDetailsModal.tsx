@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { X, User as UserIcon, Phone, Mail, FileText, Calendar, ShieldCheck, Hash, AlertCircle, ScrollText } from "lucide-react";
+import { X, User as UserIcon, Phone, Mail, FileText, Calendar, ShieldCheck, Hash, AlertCircle, ScrollText, Pencil } from "lucide-react";
 import { formatDateBR } from "@/lib/brFormat";
 import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
+import EditPassengerModal from "./EditPassengerModal";
 
 interface Props {
   passenger: any;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
-const PassengerDetailsModal = ({ passenger, onClose }: Props) => {
+const PassengerDetailsModal = ({ passenger, onClose, onRefresh }: Props) => {
   const [zoomImg, setZoomImg] = useState<string | null>(null);
   const [signed, setSigned] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     const fields: Array<[string, string | null]> = [
@@ -85,6 +88,12 @@ const PassengerDetailsModal = ({ passenger, onClose }: Props) => {
                 >
                   <ScrollText className="h-3 w-3" /> Ver na auditoria
                 </Link>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+                >
+                  <Pencil className="h-3 w-3" /> Editar dados
+                </button>
               </div>
             </div>
             <button onClick={onClose} className="rounded-full p-1.5 hover:bg-muted"><X className="h-5 w-5" /></button>
@@ -135,6 +144,14 @@ const PassengerDetailsModal = ({ passenger, onClose }: Props) => {
             className="max-w-full max-h-full object-contain rounded-xl"
           />
         </div>
+      )}
+
+      {editing && (
+        <EditPassengerModal
+          passenger={passenger}
+          onClose={() => setEditing(false)}
+          onSaved={() => onRefresh?.()}
+        />
       )}
     </>
   );
