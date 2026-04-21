@@ -721,8 +721,19 @@ const PassengerHome = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Mapa em tela cheia em TODAS as fases (idle, form aberto, corrida ativa, rating).
-          O bottom-sheet flutua sobre o mapa em vez de empurrá-lo. */}
-      <div className="fixed inset-0 z-0">
+          O bottom-sheet flutua sobre o mapa em vez de empurrá-lo.
+          Usamos `top/right/bottom/left: 0` com `margin negativo das safe-areas`
+          para que o mapa preencha 100% do viewport real (edge-to-edge),
+          já que o #root aplica padding com env(safe-area-inset-*). */}
+      <div
+        className="fixed z-0"
+        style={{
+          top: "calc(env(safe-area-inset-top) * -1)",
+          bottom: "calc(env(safe-area-inset-bottom) * -1)",
+          left: "calc(env(safe-area-inset-left) * -1)",
+          right: "calc(env(safe-area-inset-right) * -1)",
+        }}
+      >
         {(() => {
           // Define origem/destino da rota conforme a fase:
           //  - driver_arriving: rota motorista → embarque (mostra deslocamento dele em tempo real)
@@ -758,7 +769,7 @@ const PassengerHome = () => {
             : effectiveStops.map((s) => ({ lat: s.lat, lng: s.lng, label: s.name }));
           return (
             <GoogleMap
-              className="h-screen w-screen rounded-none"
+              className="h-full w-full rounded-none"
               origin={mapOrigin}
               destination={mapDestination}
               stops={mapStops}
