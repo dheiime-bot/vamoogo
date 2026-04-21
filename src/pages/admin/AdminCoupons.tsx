@@ -223,6 +223,42 @@ const AdminCoupons = () => {
     fetchSent();
   };
 
+  const toggleSentSelect = (id: string) => {
+    setSelectedSentIds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+  const selectAllSentVisible = () => setSelectedSentIds(new Set(filteredSent.map((r) => r.id)));
+  const clearSentSelection = () => setSelectedSentIds(new Set());
+
+  const deleteSelectedSent = async () => {
+    if (selectedSentIds.size === 0) return;
+    if (!confirm(`Excluir ${selectedSentIds.size} cupom(ns) selecionado(s)? Os passageiros deixarão de vê-los.`)) return;
+    setBulkDeleting(true);
+    const ids = Array.from(selectedSentIds);
+    const { error } = await supabase.from("passenger_coupons").delete().in("id", ids);
+    setBulkDeleting(false);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    toast.success(`${ids.length} cupom(ns) excluído(s)`);
+    clearSentSelection();
+    fetchSent();
+  };
+
+  const deleteAllSent = async () => {
+    if (sent.length === 0) return;
+    if (!confirm(`Excluir TODOS os ${sent.length} cupons enviados? Esta ação não pode ser desfeita.`)) return;
+    setBulkDeleting(true);
+    const ids = sent.map((r) => r.id);
+    const { error } = await supabase.from("passenger_coupons").delete().in("id", ids);
+    setBulkDeleting(false);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    toast.success("Todos os cupons enviados foram excluídos");
+    clearSentSelection();
+    fetchSent();
+  };
+
   return (
     <AdminLayout
       title="Cupons"
