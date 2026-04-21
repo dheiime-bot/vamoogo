@@ -368,6 +368,8 @@ const DriverHome = () => {
     if (error) return;
     setActiveRide({ ...activeRide, status: "in_progress", started_at: startedAt });
     setCurrentStopIndex(0);
+    setArrivedAtFinal(false);
+    localStorage.removeItem(`ride-arrived-final-${activeRide.id}`);
     setRideState("in_ride");
     playPhaseSound("started");
   };
@@ -379,6 +381,13 @@ const DriverHome = () => {
     setCurrentStopIndex(nextIndex);
     localStorage.setItem(`ride-stop-index-${activeRide.id}`, String(nextIndex));
     toast.success(nextIndex < stops.length ? `Parada ${nextIndex} confirmada` : "Última parada confirmada");
+  };
+
+  const handleArrivedFinal = () => {
+    if (!activeRide) return;
+    setArrivedAtFinal(true);
+    localStorage.setItem(`ride-arrived-final-${activeRide.id}`, "1");
+    toast.success("Chegada ao destino confirmada");
   };
 
   const handleFinishRide = async () => {
