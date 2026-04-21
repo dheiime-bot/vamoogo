@@ -570,52 +570,63 @@ const PassengerHome = () => {
       return;
     }
 
-    // 1) Distância/tempo via Google (com fallback haversine)
-    let km = 0; let min = 0;
-    const g = (window as any).google;
-    if (g?.maps?.DistanceMatrixService) {
-      try {
-        const svc = new g.maps.DistanceMatrixService();
-        const res: any = await new Promise((resolve, reject) => {
-          svc.getDistanceMatrix(
-            {
-              origins: [{ lat: fromLat, lng: fromLng }],
-              destinations: [{ lat: newDestination.lat, lng: newDestination.lng }],
-              travelMode: g.maps.TravelMode.DRIVING,
-              unitSystem: g.maps.UnitSystem.METRIC,
-            },
-            (r: any, status: string) => (status === "OK" ? resolve(r) : reject(new Error(status)))
-          );
-        });
-        const elem = res?.rows?.[0]?.elements?.[0];
-        if (elem?.status === "OK") {
-          km = Math.round((elem.distance.value / 1000) * 10) / 10;
-          min = Math.round(elem.duration.value / 60);
-        }
-      } catch { /* usa fallback abaixo */ }
-    }
-    if (!km) {
+    setPreviewLoading(true);
+
+    const haversine = (aLat: number, aLng: number, bLat: number, bLng: number) => {
       const R = 6371;
-      const dLat = ((newDestination.lat - fromLat) * Math.PI) / 180;
-      const dLng = ((newDestination.lng - fromLng) * Math.PI) / 180;
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos((fromLat * Math.PI) / 180) * Math.cos((newDestination.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
-      km = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
-      min = Math.max(2, Math.round(km * 2.5));
+      const dLat = ((bLat - aLat) * Math.PI) / 180;
+      const dLng = ((bLng - aLng) * Math.PI) / 180;
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    };
+    const g = (window as any).google;
+    const dmDistance = async (a: { lat: number; lng: number }, b: { lat: number; lng: number }): Promise<{ km: number; min: number }> => {
+      if (g?.maps?.DistanceMatrixService) {
+        try {
+          const svc = new g.maps.DistanceMatrixService();
+          const res: any = await new Promise((resolve, reject) => {
+            svc.getDistanceMatrix(
+              { origins: [a], destinations: [b], travelMode: g.maps.TravelMode.DRIVING, unitSystem: g.maps.UnitSystem.METRIC },
+              (r: any, st: string) => (st === "OK" ? resolve(r) : reject(new Error(st)))
+            );
+          });
+          const elem = res?.rows?.[0]?.elements?.[0];
+          if (elem?.status === "OK") {
+            return { km: Math.round((elem.distance.value / 1000) * 10) / 10, min: Math.round(elem.duration.value / 60) };
+          }
+        } catch { /* fallback */ }
+      }
+      const k = Math.round(haversine(a.lat, a.lng, b.lat, b.lng) * 10) / 10;
+      return { km: k, min: Math.max(2, Math.round(k * 2.5)) };
+    };
+
+    // (A) Deslocamento JÁ realizado: origem da corrida → posição atual do motorista
+    const originLat = Number(activeRide.origin_lat);
+    const originLng = Number(activeRide.origin_lng);
+    let drivenKm = 0;
+    let drivenMin = 0;
+    if (Number.isFinite(originLat) && Number.isFinite(originLng) && originLat !== 0 && originLng !== 0) {
+      const r = await dmDistance({ lat: originLat, lng: originLng }, { lat: fromLat, lng: fromLng });
+      drivenKm = r.km;
+      drivenMin = r.min;
     }
 
-    // 2) Soma com o já percorrido (origem → posição atual) para preço total justo
-    const startedKm = Number(activeRide.distance_km || 0);
-    const totalKm = Math.round((startedKm + km) * 10) / 10;
-    const totalMin = (activeRide.duration_minutes || 0) + min;
+    // (B) Novo trecho: posição atual → novo destino
+    const newLeg = await dmDistance({ lat: fromLat, lng: fromLng }, { lat: newDestination.lat, lng: newDestination.lng });
+    const km = newLeg.km;
+    const min = newLeg.min;
 
-    // 🔒 Sanity: rejeita totais absurdos (ex: bug de coordenada (0,0) gera milhares de km).
+    const totalKm = Math.round((drivenKm + km) * 10) / 10;
+    const totalMin = drivenMin + min;
+
     if (totalKm > 1000 || totalMin > 1440 || km > 500) {
-      console.error("[handleChangeDestination] sanity fail", { fromLat, fromLng, newDestination, km, min, totalKm, totalMin });
+      setPreviewLoading(false);
+      console.error("[preview] sanity fail", { fromLat, fromLng, newDestination, km, min, totalKm, totalMin });
       toast.error("Distância recalculada inválida. Verifique o destino e tente novamente.");
       return;
     }
 
-    // 3) Recalcula preço via tariffs (mesma fórmula do useFareEstimate)
+    // (C) Preço total via tariffs (mesma fórmula do useFareEstimate)
     const { data: tariff } = await supabase
       .from("tariffs")
       .select("base_fare,per_km,per_minute,min_fare,region_multiplier,passenger_extra")
@@ -628,14 +639,34 @@ const PassengerHome = () => {
     const newPrice = Math.round(Math.max(base + extras, t.min_fare) * 100) / 100;
     const newFee = await calcPlatformFee(newPrice, activeRide.category);
 
-    // Atualiza legs também: mantém perna inicial e adiciona/sobrescreve a perna do novo trecho
-    const prevLegs: any[] = Array.isArray(activeRide.legs) ? activeRide.legs : [];
-    const firstLeg = prevLegs[0] || { fromIndex: 0, toIndex: 1, km: startedKm, min: activeRide.duration_minutes || 0, price: 0 };
-    const firstPrice = Math.round((newPrice * (startedKm / Math.max(totalKm, 0.1))) * 100) / 100;
+    // Rateio proporcional do preço entre o já percorrido e o novo trecho
+    const safeTotal = Math.max(totalKm, 0.1);
+    const drivenPrice = Math.round(newPrice * (drivenKm / safeTotal) * 100) / 100;
+    const newLegPrice = Math.round((newPrice - drivenPrice) * 100) / 100;
     const newLegs = [
-      { ...firstLeg, price: firstPrice },
-      { fromIndex: 1, toIndex: 2, km, min, price: Math.round((newPrice - firstPrice) * 100) / 100 },
+      { fromIndex: 0, toIndex: 1, km: drivenKm, min: drivenMin, price: drivenPrice },
+      { fromIndex: 1, toIndex: 2, km, min, price: newLegPrice },
     ];
+
+    setRoutePreview({
+      drivenKm,
+      drivenPrice,
+      newLegKm: km,
+      newLegMin: min,
+      newLegPrice,
+      totalKm,
+      totalMin,
+      totalPrice: newPrice,
+      totalFee: newFee,
+      newLegs,
+    });
+    setPreviewLoading(false);
+  };
+
+  // ETAPA 2: passageiro confirmou — grava no banco; o motorista recebe via realtime UPDATE.
+  const handleConfirmChangeDestination = async () => {
+    if (!activeRide || !newDestination || !routePreview) return;
+    const { totalKm, totalMin, totalPrice, totalFee, newLegs } = routePreview;
 
     const { error } = await supabase
       .from("rides")
@@ -645,9 +676,9 @@ const PassengerHome = () => {
         destination_lng: newDestination.lng,
         distance_km: totalKm,
         duration_minutes: totalMin,
-        price: newPrice,
-        platform_fee: newFee,
-        driver_net: newPrice - newFee,
+        price: totalPrice,
+        platform_fee: totalFee,
+        driver_net: totalPrice - totalFee,
         legs: newLegs,
       })
       .eq("id", activeRide.id);
@@ -662,23 +693,24 @@ const PassengerHome = () => {
       destination_lng: newDestination.lng,
       distance_km: totalKm,
       duration_minutes: totalMin,
-      price: newPrice,
-      platform_fee: newFee,
-      driver_net: newPrice - newFee,
+      price: totalPrice,
+      platform_fee: totalFee,
+      driver_net: totalPrice - totalFee,
       legs: newLegs,
     }));
     setSelectedDestination(newDestination);
     setShowChangeDest(false);
     setNewDestination(null);
+    setRoutePreview(null);
     toast.success("✅ Rota atualizada!", {
-      description: `Novo destino: ${newDestination.name}\nNovo valor: R$ ${newPrice.toFixed(2)} (${totalKm} km)`,
+      description: `Novo destino: ${newDestination.name}\nNovo valor: R$ ${totalPrice.toFixed(2)} (${totalKm} km)`,
       duration: 8000,
     });
     if (user) {
       supabase.from("chat_messages").insert({
         ride_id: activeRide.id,
         sender_id: user.id,
-        message: `📍 Destino alterado para: ${newDestination.name} • Novo valor: R$ ${newPrice.toFixed(2)} (${totalKm} km)`,
+        message: `📍 Destino alterado para: ${newDestination.name} • Novo valor: R$ ${totalPrice.toFixed(2)} (${totalKm} km)`,
       }).then(() => {});
     }
   };
