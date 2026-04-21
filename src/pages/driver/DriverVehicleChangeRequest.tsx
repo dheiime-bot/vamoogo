@@ -8,6 +8,7 @@ import DocumentUpload from "@/components/auth/DocumentUpload";
 import { validatePlate } from "@/lib/plateValidator";
 import { formatRenavam, validateRenavam } from "@/lib/validators";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
+import { getCategoryColor } from "@/lib/categoryStyle";
 
 type Category = "moto" | "economico" | "conforto";
 
@@ -156,21 +157,24 @@ const DriverVehicleChangeRequest = () => {
           <section>
             <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Nova categoria</p>
             <div className="grid grid-cols-3 gap-2">
-              {categoryOptions.map(({ value, label, Icon }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setNewCategory(value)}
-                  className={`rounded-xl border p-3 flex flex-col items-center gap-1 transition-colors ${
-                    newCategory === value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-xs font-semibold">{label}</span>
-                </button>
-              ))}
+              {categoryOptions.map(({ value, label, Icon }) => {
+                const color = getCategoryColor(value);
+                const isActive = newCategory === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setNewCategory(value)}
+                    className={`rounded-xl border p-3 flex flex-col items-center gap-1 transition-colors ${
+                      isActive ? "bg-card" : "border-border bg-card text-muted-foreground"
+                    }`}
+                    style={isActive ? { borderColor: color, backgroundColor: `${color}1a` } : undefined}
+                  >
+                    <Icon className="h-5 w-5" style={{ color }} />
+                    <span className="text-xs font-semibold" style={isActive ? { color } : undefined}>{label}</span>
+                  </button>
+                );
+              })}
             </div>
           </section>
 
