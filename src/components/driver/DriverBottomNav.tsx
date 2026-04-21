@@ -99,9 +99,7 @@ const DriverBottomNav = ({ centerSlot }: Props) => {
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem + 8px)" }}
     >
       <div className="mx-auto flex max-w-lg items-center justify-around gap-2 px-4 py-2">
-        <PillButton icon={Car} label="Corridas" path="/driver/offers" badge={pendingOffers} />
-        {resolvedCenter && <div className="pointer-events-auto flex-1 flex justify-center">{resolvedCenter}</div>}
-        <PillButton icon={Wallet} label="Carteira" path="/driver/wallet" />
+        {resolvedCenter && <div className="pointer-events-auto flex justify-center">{resolvedCenter}</div>}
       </div>
     </nav>
   );

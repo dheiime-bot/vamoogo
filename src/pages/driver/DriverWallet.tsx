@@ -356,7 +356,6 @@ const DriverWallet = () => {
         )}
       </div>
       <AppMenu role="driver" />
-      <DriverEarningsChip />
       <DriverHomeFab />
     </div>
   );
