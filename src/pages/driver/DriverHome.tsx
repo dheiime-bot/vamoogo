@@ -1323,6 +1323,88 @@ const DriverHome = () => {
           </button>
         }
       />
+
+      {/* 🚨 Modal persistente de mudança de rota — fica aberto com som/vibração
+          em loop até o motorista clicar em "Entendi". Mostra diff antes → depois. */}
+      <Dialog
+        open={!!routeChangeDiff}
+        onOpenChange={(o) => {
+          if (!o) {
+            stopOfferAlert();
+            setRouteChangeDiff(null);
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-sm border-warning/60 bg-card"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-warning flex items-center gap-2">
+              🚨 Passageiro alterou a rota!
+            </DialogTitle>
+            <DialogDescription>
+              Confirme para liberar a navegação para o novo destino.
+            </DialogDescription>
+          </DialogHeader>
+
+          {routeChangeDiff && (() => {
+            const dPrice = routeChangeDiff.newPrice - routeChangeDiff.prevPrice;
+            const dKm = routeChangeDiff.newKm - routeChangeDiff.prevKm;
+            const priceUp = dPrice >= 0;
+            const kmUp = dKm >= 0;
+            return (
+              <div className="space-y-3">
+                {/* Endereços */}
+                <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2 text-sm">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground">Antes</p>
+                    <p className="font-medium line-through opacity-70">{routeChangeDiff.prevAddr}</p>
+                  </div>
+                  <div className="flex justify-center">
+                    <ArrowRight className="h-4 w-4 text-warning" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase text-warning">Novo destino</p>
+                    <p className="font-bold text-foreground">{routeChangeDiff.newAddr}</p>
+                  </div>
+                </div>
+
+                {/* Diff de preço e km */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg border border-border bg-muted/40 p-2.5">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground">Valor</p>
+                    <p className="text-base font-extrabold">R$ {routeChangeDiff.newPrice.toFixed(2)}</p>
+                    <p className={`text-xs flex items-center gap-1 font-semibold ${priceUp ? "text-success" : "text-destructive"}`}>
+                      {priceUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {priceUp ? "+" : ""}R$ {dPrice.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-muted/40 p-2.5">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground">Distância</p>
+                    <p className="text-base font-extrabold">{routeChangeDiff.newKm.toFixed(1)} km</p>
+                    <p className={`text-xs flex items-center gap-1 font-semibold ${kmUp ? "text-success" : "text-destructive"}`}>
+                      {kmUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {kmUp ? "+" : ""}{dKm.toFixed(1)} km
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    stopOfferAlert();
+                    setRouteChangeDiff(null);
+                  }}
+                  className="w-full rounded-xl bg-warning py-3 text-sm font-extrabold text-warning-foreground hover:bg-warning/90 transition-colors animate-pulse"
+                >
+                  ✅ Entendi, atualizar rota
+                </button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
