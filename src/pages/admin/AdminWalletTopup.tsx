@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Save, Loader2, MessageCircle, Plus, X, History, CheckCircle2, Clock, XCircle, DollarSign, Gift, Trash2 } from "lucide-react";
+import { Save, Loader2, MessageCircle, Plus, X, Gift, Trash2, Wallet } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import EmptyState from "@/components/admin/EmptyState";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ManualRechargeDialog from "@/components/admin/wallet/ManualRechargeDialog";
+import WalletTopupsList from "@/components/admin/wallet/WalletTopupsList";
 
 interface WhatsappTopupConfig {
   enabled: boolean;
