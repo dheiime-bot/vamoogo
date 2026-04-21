@@ -38,13 +38,14 @@ const RideDetailsDialog = ({ rideId, open, onClose, role }: Props) => {
   const [ride, setRide] = useState<any>(null);
   const [other, setOther] = useState<any>(null); // passageiro (p/ motorista) OU motorista (p/ passageiro)
   const [loading, setLoading] = useState(false);
+  const [routeChanges, setRouteChanges] = useState<any[]>([]);
 
   useEffect(() => {
     if (!open || !rideId) return;
     let alive = true;
     (async () => {
       setLoading(true);
-      setRide(null); setOther(null);
+      setRide(null); setOther(null); setRouteChanges([]);
       const { data: r } = await supabase.from("rides").select("*").eq("id", rideId).maybeSingle();
       if (!alive) return;
       setRide(r);
@@ -66,6 +67,14 @@ const RideDetailsDialog = ({ rideId, open, onClose, role }: Props) => {
           }
           setOther({ ...(prof || {}), ...extra });
         }
+        // Histórico de mudanças de rota (auditoria visível ao passageiro/motorista)
+        const { data: changes } = await supabase
+          .from("ride_route_changes")
+          .select("*")
+          .eq("ride_id", rideId)
+          .order("created_at", { ascending: true });
+        if (!alive) return;
+        setRouteChanges(changes || []);
       }
       setLoading(false);
     })();
@@ -131,6 +140,63 @@ const RideDetailsDialog = ({ rideId, open, onClose, role }: Props) => {
                 </div>
               </div>
             </div>
+
+            {/* Mudanças de rota (auditoria) */}
+            {routeChanges.length > 0 && (
+              <div className="rounded-xl border border-warning/40 bg-warning/10 p-3 space-y-3">
+                <p className="text-xs font-bold uppercase text-warning flex items-center gap-1">
+                  <Navigation className="h-3.5 w-3.5" /> Mudanças de rota ({routeChanges.length})
+                </p>
+                {routeChanges.map((c: any, i: number) => {
+                  const prevAddr = (c.previous_destination_address || "").split(" - ")[0] || "—";
+                  const newAddr = (c.new_destination_address || "").split(" - ")[0] || "—";
+                  const prevPrice = Number(c.previous_price ?? 0);
+                  const newPrice = Number(c.new_price ?? 0);
+                  const diff = newPrice - prevPrice;
+                  return (
+                    <div key={c.id || i} className="rounded-lg bg-card border p-2.5 space-y-1.5 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase font-semibold text-muted-foreground">
+                          Alteração #{i + 1} • {c.changed_by_role === "driver" ? "Motorista" : "Passageiro"}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">{fmtDate(c.created_at)}</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="flex gap-1.5"><span className="text-muted-foreground shrink-0">De:</span><span className="line-through text-muted-foreground break-words">{prevAddr}</span></div>
+                        <div className="flex gap-1.5"><span className="text-success font-semibold shrink-0">Para:</span><span className="font-medium break-words">{newAddr}</span></div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5 pt-1 border-t">
+                        {c.driven_km != null && (
+                          <div className="text-center">
+                            <p className="text-[9px] text-muted-foreground uppercase">Já percorrido</p>
+                            <p className="font-semibold">{Number(c.driven_km).toFixed(1)} km</p>
+                            <p className="text-[10px] text-success">{formatBRL(Number(c.driven_price ?? 0))}</p>
+                          </div>
+                        )}
+                        {c.new_leg_km != null && (
+                          <div className="text-center">
+                            <p className="text-[9px] text-muted-foreground uppercase">Novo trecho</p>
+                            <p className="font-semibold">{Number(c.new_leg_km).toFixed(1)} km</p>
+                            <p className="text-[10px] text-success">{formatBRL(Number(c.new_leg_price ?? 0))}</p>
+                          </div>
+                        )}
+                        <div className="text-center">
+                          <p className="text-[9px] text-muted-foreground uppercase">Total novo</p>
+                          <p className="font-semibold">{Number(c.new_distance_km ?? 0).toFixed(1)} km</p>
+                          <p className="text-[10px] font-bold text-success">{formatBRL(newPrice)}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center pt-1 border-t">
+                        <span className="text-muted-foreground">Antes: {formatBRL(prevPrice)} ({Number(c.previous_distance_km ?? 0).toFixed(1)} km)</span>
+                        <span className={`font-bold ${diff >= 0 ? "text-success" : "text-destructive"}`}>
+                          {diff >= 0 ? "+" : ""}{formatBRL(diff)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Métricas */}
             <div className="grid grid-cols-3 gap-2">
