@@ -618,7 +618,11 @@ const DriverHome = () => {
       return;
     }
     if (lowBalance && !isOnline) {
-      toast.error("Saldo insuficiente. Recarregue para ficar online!");
+      toast.error(
+        negativeBalance
+          ? `Sua carteira está negativa (${formatBRL(balance)}). Recarregue para voltar a aceitar corridas.`
+          : "Saldo insuficiente. Recarregue para ficar online!"
+      );
       return;
     }
     // Se vai ficar online, FORÇA captura de GPS antes — corre alta precisão e
