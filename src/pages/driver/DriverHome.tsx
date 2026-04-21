@@ -60,6 +60,11 @@ const DriverHome = () => {
   // - tickNow: força re-render a cada 1s para atualizar o countdown na UI.
   const [phaseStartedAt, setPhaseStartedAt] = useState<number | null>(null);
   const [tickNow, setTickNow] = useState(Date.now());
+  // Quando o passageiro altera a rota durante a corrida, marcamos `routeChanged`
+  // para FORÇAR o motorista a clicar em "Iniciar nova rota" no app antes de
+  // continuar — assim o foco volta da navegação externa (Google Maps) para o app
+  // e o motorista vê o novo valor/endereço.
+  const [routeChanged, setRouteChanged] = useState(false);
   // Janelas (em segundos) exigidas pelo produto:
   const GOING_WAIT_SEC = 30;     // a caminho do passageiro
   const ARRIVED_WAIT_SEC = 10;   // chegou ao passageiro → iniciar corrida
