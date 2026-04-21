@@ -4,6 +4,7 @@ import AppMenu from "@/components/shared/AppMenu";
 import HomeFab from "@/components/passenger/HomeFab";
 import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 import ReportIssueButton from "@/components/shared/ReportIssueButton";
+import RideDetailsDialog from "@/components/shared/RideDetailsDialog";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +15,7 @@ const PassengerHistory = () => {
   const [rides, setRides] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "completed" | "cancelled">("all");
   const [reportRide, setReportRide] = useState<{ id: string; code: string | null; endedAt: string | null } | null>(null);
+  const [detailsRideId, setDetailsRideId] = useState<string | null>(null);
 
   const reload = async () => {
     if (!user) return;
@@ -78,7 +80,12 @@ const PassengerHistory = () => {
             <div className="flex items-start justify-between mb-3">
               <div>
                 {ride.ride_code && (
-                  <p className="text-xs font-mono font-semibold text-primary">{ride.ride_code}</p>
+                  <button
+                    onClick={() => setDetailsRideId(ride.id)}
+                    className="text-xs font-mono font-semibold text-primary hover:underline"
+                  >
+                    {ride.ride_code}
+                  </button>
                 )}
                 <p className="text-xs text-muted-foreground">{new Date(ride.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                 <p className="text-xs font-medium text-muted-foreground">{catLabel(ride.category)} • {ride.distance_km} km • ~{ride.duration_minutes} min</p>
@@ -116,6 +123,13 @@ const PassengerHistory = () => {
           rideEndedAt={reportRide.endedAt}
         />
       )}
+
+      <RideDetailsDialog
+        rideId={detailsRideId}
+        open={!!detailsRideId}
+        onClose={() => setDetailsRideId(null)}
+        role="passenger"
+      />
 
       <AppMenu role="passenger" />
       <HomeFab />
