@@ -138,6 +138,20 @@ const AdminRides = () => {
                       <AlertTriangle className="h-3 w-3" /> {ride.issue_flag}
                     </span>
                   )}
+                  {routeChanges[ride.id] && (
+                    <span
+                      className="text-[10px] font-bold uppercase rounded-full bg-info/15 text-info px-2 py-0.5 flex items-center gap-1"
+                      title={`Última alteração: ${routeChanges[ride.id].lastTo}`}
+                    >
+                      <Route className="h-3 w-3" />
+                      Rota alterada{routeChanges[ride.id].count > 1 ? ` ×${routeChanges[ride.id].count}` : ""}
+                      {routeChanges[ride.id].lastDiff != null && (
+                        <span className={routeChanges[ride.id].lastDiff! >= 0 ? "text-success" : "text-destructive"}>
+                          {routeChanges[ride.id].lastDiff! >= 0 ? "+" : ""}R$ {routeChanges[ride.id].lastDiff!.toFixed(2)}
+                        </span>
+                      )}
+                    </span>
+                  )}
                   {ride.payment_status && ride.payment_status !== "pending" && (
                     <span className={`text-[10px] font-bold uppercase rounded-full px-2 py-0.5 ${
                       ride.payment_status === "paid" ? "bg-success/15 text-success" : "bg-primary/15 text-primary"
