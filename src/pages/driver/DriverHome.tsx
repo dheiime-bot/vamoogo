@@ -118,6 +118,7 @@ const DriverHome = () => {
 
   const balance = driverData?.balance ?? 0;
   const lowBalance = balance < 5;
+  const negativeBalance = balance < 0;
   // Faz broadcast da posição GPS quando online
   const { lastSyncAt } = useDriverLocation({
     driverId: user?.id,
