@@ -161,6 +161,9 @@ const AdminDashboard = () => {
         ))}
       </div>
 
+      {/* Alerta de motoristas com saldo negativo */}
+      <NegativeBalanceAlert />
+
       {/* Map */}
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b">
