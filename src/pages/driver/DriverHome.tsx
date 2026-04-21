@@ -66,6 +66,17 @@ const DriverHome = () => {
   // continuar — assim o foco volta da navegação externa (Google Maps) para o app
   // e o motorista vê o novo valor/endereço.
   const [routeChanged, setRouteChanged] = useState(false);
+  // Diff persistente da última alteração de rota (mostrado em modal com som em loop
+  // até o motorista clicar em "Entendi"). Garante que ele veja a variação mesmo
+  // se o app estava em outra tela / minimizado.
+  const [routeChangeDiff, setRouteChangeDiff] = useState<null | {
+    prevAddr: string;
+    newAddr: string;
+    prevPrice: number;
+    newPrice: number;
+    prevKm: number;
+    newKm: number;
+  }>(null);
   // Janelas (em segundos) exigidas pelo produto:
   const GOING_WAIT_SEC = 5;      // a caminho do passageiro
   const ARRIVED_WAIT_SEC = 5;    // chegou ao passageiro → iniciar corrida
