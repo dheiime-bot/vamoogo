@@ -1127,11 +1127,11 @@ const PassengerHome = () => {
                           Cancelar
                         </button>
                         <button
-                          onClick={handleChangeDestination}
-                          disabled={!newDestination}
+                          onClick={handlePreviewChangeDestination}
+                          disabled={!newDestination || previewLoading}
                           className="rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-40"
                         >
-                          Confirmar
+                          {previewLoading ? "Calculando..." : "Calcular novo valor"}
                         </button>
                       </div>
                     </div>
