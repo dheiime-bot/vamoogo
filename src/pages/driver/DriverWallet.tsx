@@ -36,7 +36,7 @@ const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julh
 
 interface WalletEntry {
   id: string;
-  kind: "ride" | "topup" | "adjustment";
+  kind: "ride_credit" | "ride_fee" | "topup" | "recharge" | "adjustment" | "topup_admin" | "ride";
   description: string;
   amount: number;
   occurred_at: string;
@@ -59,10 +59,14 @@ interface EntryVisual {
 }
 
 const describeEntry = (tx: WalletEntry): EntryVisual => {
-  if (tx.kind === "ride") {
+  if (tx.kind === "ride" || tx.kind === "ride_credit") {
     const ref = tx.reference || {};
     const fee = Number(ref.fee || 0);
-    const subtitle = fee > 0 ? `Taxa Vamoo R$ ${formatBRL(fee)}` : "Corrida concluída";
+    const gross = Number(ref.gross || 0);
+    const subtitle =
+      gross > 0
+        ? `Total da corrida R$ ${formatBRL(gross)}${fee > 0 ? ` • taxa R$ ${formatBRL(fee)}` : ""}`
+        : "Corrida concluída";
     return {
       Icon: Car,
       bg: "bg-success/10",
@@ -70,6 +74,59 @@ const describeEntry = (tx: WalletEntry): EntryVisual => {
       amountText: `+ R$ ${formatBRL(tx.amount)}`,
       amountColor: "text-success",
       subtitle,
+      badge: { label: "Corrida", cls: "bg-success/15 text-success" },
+    };
+  }
+  if (tx.kind === "ride_fee") {
+    const ref = tx.reference || {};
+    const gross = Number(ref.gross || 0);
+    return {
+      Icon: Minus,
+      bg: "bg-destructive/10",
+      fg: "text-destructive",
+      amountText: `- R$ ${formatBRL(Math.abs(tx.amount))}`,
+      amountColor: "text-destructive",
+      subtitle: gross > 0 ? `Sobre o total R$ ${formatBRL(gross)}` : "Taxa da plataforma",
+      badge: { label: "Taxa Vamoo", cls: "bg-destructive/10 text-destructive" },
+    };
+  }
+  if (tx.kind === "recharge") {
+    const ref = tx.reference || {};
+    const requested = Number(ref.requested || tx.amount || 0);
+    const bonus = Number(ref.bonus || 0);
+    const method = (ref.method || "").toString();
+    const methodLabel = method === "pix" ? "Pix" : method === "card" ? "Cartão" : "Automática";
+    if (tx.status === "completed") {
+      return {
+        Icon: Plus,
+        bg: "bg-success/10",
+        fg: "text-success",
+        amountText: `+ R$ ${formatBRL(tx.amount)}`,
+        amountColor: "text-success",
+        subtitle: bonus > 0 ? `Recarga ${methodLabel} + bônus R$ ${formatBRL(bonus)}` : `Recarga ${methodLabel}`,
+        badge: { label: methodLabel, cls: "bg-success/15 text-success" },
+      };
+    }
+    return {
+      Icon: Clock,
+      bg: "bg-muted",
+      fg: "text-muted-foreground",
+      amountText: `R$ ${formatBRL(requested)}`,
+      amountColor: "text-muted-foreground",
+      subtitle: `Recarga ${methodLabel} • ${tx.status}`,
+      badge: { label: tx.status, cls: "bg-muted text-muted-foreground" },
+    };
+  }
+  if (tx.kind === "topup_admin") {
+    const isCredit = tx.amount >= 0;
+    return {
+      Icon: isCredit ? Plus : Minus,
+      bg: isCredit ? "bg-success/10" : "bg-destructive/10",
+      fg: isCredit ? "text-success" : "text-destructive",
+      amountText: `${isCredit ? "+" : "-"} R$ ${formatBRL(Math.abs(tx.amount))}`,
+      amountColor: isCredit ? "text-success" : "text-destructive",
+      subtitle: tx.reference?.reason || "Recarga aprovada pelo admin",
+      badge: { label: "Admin", cls: "bg-primary/10 text-primary" },
     };
   }
   if (tx.kind === "topup") {
