@@ -1684,6 +1684,42 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_topups: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          nome: string
+          status: string
+          telefone: string | null
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          nome: string
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          nome?: string
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       withdrawals: {
         Row: {
           admin_notes: string | null

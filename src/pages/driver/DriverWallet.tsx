@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar } from "lucide-react";
+import { CreditCard, QrCode, ArrowDownLeft, Gift, Loader2, History, TrendingUp, Wallet, Sparkles, Calendar, MessageCircle } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
+import WhatsappTopupModal from "@/components/driver/WhatsappTopupModal";
 
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,7 @@ const DriverWallet = () => {
   // Mês selecionado: offset em relação ao mês atual (0 = atual, 1 = mês passado, ...)
   const [monthOffset, setMonthOffset] = useState<number>(0);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [topupOpen, setTopupOpen] = useState(false);
   const balance = driverData?.balance ?? 0;
 
   const reload = async () => {
@@ -327,6 +329,21 @@ const DriverWallet = () => {
 
         {activeTab === "recharge" && (
           <div className="space-y-4 animate-slide-up">
+            {/* Recarga via WhatsApp (configurável pelo admin) */}
+            <button
+              onClick={() => setTopupOpen(true)}
+              className="w-full rounded-2xl bg-gradient-to-r from-success to-success/80 text-success-foreground p-4 flex items-center gap-3 shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all"
+            >
+              <div className="rounded-xl bg-white/20 p-2.5 shrink-0">
+                <MessageCircle className="h-5 w-5" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-extrabold">Recarregar saldo</p>
+                <p className="text-[11px] opacity-90">Solicitar recarga pela central via WhatsApp</p>
+              </div>
+              <span className="text-[10px] font-bold bg-white/20 rounded-full px-2 py-0.5">NOVO</span>
+            </button>
+
             {/* Quick amounts */}
             <div>
               <p className="text-[11px] font-semibold text-muted-foreground mb-2 px-1">Escolha um valor</p>
@@ -429,6 +446,7 @@ const DriverWallet = () => {
       </div>
       <AppMenu role="driver" />
       <DriverHomeFab />
+      <WhatsappTopupModal open={topupOpen} onOpenChange={setTopupOpen} />
     </div>
   );
 };
