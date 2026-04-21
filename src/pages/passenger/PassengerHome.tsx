@@ -83,6 +83,21 @@ const PassengerHome = () => {
   const [showChangeDest, setShowChangeDest] = useState(false);
   const [newDestination, setNewDestination] = useState<AppLocation | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  // Preview da troca de rota (passageiro): calcula km/R$ já percorridos pelo motorista
+  // + km/R$ do novo trecho a partir da posição atual, para o passageiro confirmar.
+  const [routePreview, setRoutePreview] = useState<{
+    drivenKm: number;
+    drivenPrice: number;
+    newLegKm: number;
+    newLegMin: number;
+    newLegPrice: number;
+    totalKm: number;
+    totalMin: number;
+    totalPrice: number;
+    totalFee: number;
+    newLegs: any[];
+  } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   // Status do GPS do dispositivo (alimenta o sino: verde=ok, vermelho=negado/erro)
   const [gpsStatus, setGpsStatus] = useState<"connected" | "disconnected" | "idle">("idle");
@@ -532,9 +547,9 @@ const PassengerHome = () => {
     setDriverLocation(null);
   };
 
-  // Alterar destino — permitido APENAS com a corrida em andamento (in_progress).
-  // Recalcula preço, distância e tempo via Distance Matrix antes de gravar no banco.
-  const handleChangeDestination = async () => {
+  // ETAPA 1: calcula a "prévia" da troca de rota e abre o popup de confirmação.
+  // Permitido APENAS com a corrida em andamento (in_progress).
+  const handlePreviewChangeDestination = async () => {
     if (!activeRide || !newDestination) return;
     if (activeRide.status !== "in_progress") {
       toast.error("Só é possível alterar o destino com a corrida em andamento");
@@ -555,52 +570,63 @@ const PassengerHome = () => {
       return;
     }
 
-    // 1) Distância/tempo via Google (com fallback haversine)
-    let km = 0; let min = 0;
-    const g = (window as any).google;
-    if (g?.maps?.DistanceMatrixService) {
-      try {
-        const svc = new g.maps.DistanceMatrixService();
-        const res: any = await new Promise((resolve, reject) => {
-          svc.getDistanceMatrix(
-            {
-              origins: [{ lat: fromLat, lng: fromLng }],
-              destinations: [{ lat: newDestination.lat, lng: newDestination.lng }],
-              travelMode: g.maps.TravelMode.DRIVING,
-              unitSystem: g.maps.UnitSystem.METRIC,
-            },
-            (r: any, status: string) => (status === "OK" ? resolve(r) : reject(new Error(status)))
-          );
-        });
-        const elem = res?.rows?.[0]?.elements?.[0];
-        if (elem?.status === "OK") {
-          km = Math.round((elem.distance.value / 1000) * 10) / 10;
-          min = Math.round(elem.duration.value / 60);
-        }
-      } catch { /* usa fallback abaixo */ }
-    }
-    if (!km) {
+    setPreviewLoading(true);
+
+    const haversine = (aLat: number, aLng: number, bLat: number, bLng: number) => {
       const R = 6371;
-      const dLat = ((newDestination.lat - fromLat) * Math.PI) / 180;
-      const dLng = ((newDestination.lng - fromLng) * Math.PI) / 180;
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos((fromLat * Math.PI) / 180) * Math.cos((newDestination.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
-      km = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
-      min = Math.max(2, Math.round(km * 2.5));
+      const dLat = ((bLat - aLat) * Math.PI) / 180;
+      const dLng = ((bLng - aLng) * Math.PI) / 180;
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    };
+    const g = (window as any).google;
+    const dmDistance = async (a: { lat: number; lng: number }, b: { lat: number; lng: number }): Promise<{ km: number; min: number }> => {
+      if (g?.maps?.DistanceMatrixService) {
+        try {
+          const svc = new g.maps.DistanceMatrixService();
+          const res: any = await new Promise((resolve, reject) => {
+            svc.getDistanceMatrix(
+              { origins: [a], destinations: [b], travelMode: g.maps.TravelMode.DRIVING, unitSystem: g.maps.UnitSystem.METRIC },
+              (r: any, st: string) => (st === "OK" ? resolve(r) : reject(new Error(st)))
+            );
+          });
+          const elem = res?.rows?.[0]?.elements?.[0];
+          if (elem?.status === "OK") {
+            return { km: Math.round((elem.distance.value / 1000) * 10) / 10, min: Math.round(elem.duration.value / 60) };
+          }
+        } catch { /* fallback */ }
+      }
+      const k = Math.round(haversine(a.lat, a.lng, b.lat, b.lng) * 10) / 10;
+      return { km: k, min: Math.max(2, Math.round(k * 2.5)) };
+    };
+
+    // (A) Deslocamento JÁ realizado: origem da corrida → posição atual do motorista
+    const originLat = Number(activeRide.origin_lat);
+    const originLng = Number(activeRide.origin_lng);
+    let drivenKm = 0;
+    let drivenMin = 0;
+    if (Number.isFinite(originLat) && Number.isFinite(originLng) && originLat !== 0 && originLng !== 0) {
+      const r = await dmDistance({ lat: originLat, lng: originLng }, { lat: fromLat, lng: fromLng });
+      drivenKm = r.km;
+      drivenMin = r.min;
     }
 
-    // 2) Soma com o já percorrido (origem → posição atual) para preço total justo
-    const startedKm = Number(activeRide.distance_km || 0);
-    const totalKm = Math.round((startedKm + km) * 10) / 10;
-    const totalMin = (activeRide.duration_minutes || 0) + min;
+    // (B) Novo trecho: posição atual → novo destino
+    const newLeg = await dmDistance({ lat: fromLat, lng: fromLng }, { lat: newDestination.lat, lng: newDestination.lng });
+    const km = newLeg.km;
+    const min = newLeg.min;
 
-    // 🔒 Sanity: rejeita totais absurdos (ex: bug de coordenada (0,0) gera milhares de km).
+    const totalKm = Math.round((drivenKm + km) * 10) / 10;
+    const totalMin = drivenMin + min;
+
     if (totalKm > 1000 || totalMin > 1440 || km > 500) {
-      console.error("[handleChangeDestination] sanity fail", { fromLat, fromLng, newDestination, km, min, totalKm, totalMin });
+      setPreviewLoading(false);
+      console.error("[preview] sanity fail", { fromLat, fromLng, newDestination, km, min, totalKm, totalMin });
       toast.error("Distância recalculada inválida. Verifique o destino e tente novamente.");
       return;
     }
 
-    // 3) Recalcula preço via tariffs (mesma fórmula do useFareEstimate)
+    // (C) Preço total via tariffs (mesma fórmula do useFareEstimate)
     const { data: tariff } = await supabase
       .from("tariffs")
       .select("base_fare,per_km,per_minute,min_fare,region_multiplier,passenger_extra")
@@ -613,14 +639,34 @@ const PassengerHome = () => {
     const newPrice = Math.round(Math.max(base + extras, t.min_fare) * 100) / 100;
     const newFee = await calcPlatformFee(newPrice, activeRide.category);
 
-    // Atualiza legs também: mantém perna inicial e adiciona/sobrescreve a perna do novo trecho
-    const prevLegs: any[] = Array.isArray(activeRide.legs) ? activeRide.legs : [];
-    const firstLeg = prevLegs[0] || { fromIndex: 0, toIndex: 1, km: startedKm, min: activeRide.duration_minutes || 0, price: 0 };
-    const firstPrice = Math.round((newPrice * (startedKm / Math.max(totalKm, 0.1))) * 100) / 100;
+    // Rateio proporcional do preço entre o já percorrido e o novo trecho
+    const safeTotal = Math.max(totalKm, 0.1);
+    const drivenPrice = Math.round(newPrice * (drivenKm / safeTotal) * 100) / 100;
+    const newLegPrice = Math.round((newPrice - drivenPrice) * 100) / 100;
     const newLegs = [
-      { ...firstLeg, price: firstPrice },
-      { fromIndex: 1, toIndex: 2, km, min, price: Math.round((newPrice - firstPrice) * 100) / 100 },
+      { fromIndex: 0, toIndex: 1, km: drivenKm, min: drivenMin, price: drivenPrice },
+      { fromIndex: 1, toIndex: 2, km, min, price: newLegPrice },
     ];
+
+    setRoutePreview({
+      drivenKm,
+      drivenPrice,
+      newLegKm: km,
+      newLegMin: min,
+      newLegPrice,
+      totalKm,
+      totalMin,
+      totalPrice: newPrice,
+      totalFee: newFee,
+      newLegs,
+    });
+    setPreviewLoading(false);
+  };
+
+  // ETAPA 2: passageiro confirmou — grava no banco; o motorista recebe via realtime UPDATE.
+  const handleConfirmChangeDestination = async () => {
+    if (!activeRide || !newDestination || !routePreview) return;
+    const { totalKm, totalMin, totalPrice, totalFee, newLegs } = routePreview;
 
     const { error } = await supabase
       .from("rides")
@@ -630,9 +676,9 @@ const PassengerHome = () => {
         destination_lng: newDestination.lng,
         distance_km: totalKm,
         duration_minutes: totalMin,
-        price: newPrice,
-        platform_fee: newFee,
-        driver_net: newPrice - newFee,
+        price: totalPrice,
+        platform_fee: totalFee,
+        driver_net: totalPrice - totalFee,
         legs: newLegs,
       })
       .eq("id", activeRide.id);
@@ -647,23 +693,24 @@ const PassengerHome = () => {
       destination_lng: newDestination.lng,
       distance_km: totalKm,
       duration_minutes: totalMin,
-      price: newPrice,
-      platform_fee: newFee,
-      driver_net: newPrice - newFee,
+      price: totalPrice,
+      platform_fee: totalFee,
+      driver_net: totalPrice - totalFee,
       legs: newLegs,
     }));
     setSelectedDestination(newDestination);
     setShowChangeDest(false);
     setNewDestination(null);
+    setRoutePreview(null);
     toast.success("✅ Rota atualizada!", {
-      description: `Novo destino: ${newDestination.name}\nNovo valor: R$ ${newPrice.toFixed(2)} (${totalKm} km)`,
+      description: `Novo destino: ${newDestination.name}\nNovo valor: R$ ${totalPrice.toFixed(2)} (${totalKm} km)`,
       duration: 8000,
     });
     if (user) {
       supabase.from("chat_messages").insert({
         ride_id: activeRide.id,
         sender_id: user.id,
-        message: `📍 Destino alterado para: ${newDestination.name} • Novo valor: R$ ${newPrice.toFixed(2)} (${totalKm} km)`,
+        message: `📍 Destino alterado para: ${newDestination.name} • Novo valor: R$ ${totalPrice.toFixed(2)} (${totalKm} km)`,
       }).then(() => {});
     }
   };
@@ -1070,22 +1117,73 @@ const PassengerHome = () => {
                         label=""
                         placeholder="Para onde mudar?"
                         value={newDestination ? placeDetailsFromAppLocation(newDestination) : null}
-                        onChange={(place) => setNewDestination(place ? appLocationFromPlaceDetails(place) : null)}
+                        onChange={(place) => {
+                          setNewDestination(place ? appLocationFromPlaceDetails(place) : null);
+                          setRoutePreview(null);
+                        }}
                       />
+
+                      {/* Prévia da nova rota — exibida após "Calcular novo valor".
+                          Detalhamento exigido pelo produto: km/R$ já percorridos pelo motorista
+                          + km/R$ do novo trecho a partir da posição atual + total. */}
+                      {routePreview && (
+                        <div className="rounded-lg border border-primary/30 bg-background p-2.5 space-y-2 text-xs">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                            Resumo da nova rota
+                          </p>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="flex items-start gap-2 flex-1 min-w-0">
+                              <span className="mt-1 h-2 w-2 rounded-full bg-success shrink-0" />
+                              <span className="min-w-0">
+                                <span className="block font-semibold">Já percorrido pelo motorista</span>
+                                <span className="block text-muted-foreground">{routePreview.drivenKm} km</span>
+                              </span>
+                            </span>
+                            <span className="font-bold text-foreground whitespace-nowrap">R$ {routePreview.drivenPrice.toFixed(2)}</span>
+                          </div>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="flex items-start gap-2 flex-1 min-w-0">
+                              <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
+                              <span className="min-w-0">
+                                <span className="block font-semibold truncate">Novo trecho até {newDestination?.name || "destino"}</span>
+                                <span className="block text-muted-foreground">{routePreview.newLegKm} km • ~{routePreview.newLegMin} min</span>
+                              </span>
+                            </span>
+                            <span className="font-bold text-foreground whitespace-nowrap">R$ {routePreview.newLegPrice.toFixed(2)}</span>
+                          </div>
+                          <div className="border-t border-primary/20 pt-2 flex items-center justify-between">
+                            <div>
+                              <p className="font-bold text-primary">Total a pagar</p>
+                              <p className="text-[10px] text-muted-foreground">{routePreview.totalKm} km • ~{routePreview.totalMin} min</p>
+                            </div>
+                            <span className="text-lg font-extrabold text-primary">R$ {routePreview.totalPrice.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-2 gap-2">
                         <button
-                          onClick={() => { setShowChangeDest(false); setNewDestination(null); }}
+                          onClick={() => { setShowChangeDest(false); setNewDestination(null); setRoutePreview(null); }}
                           className="rounded-xl border py-2.5 text-sm font-semibold hover:bg-muted transition-colors"
                         >
                           Cancelar
                         </button>
-                        <button
-                          onClick={handleChangeDestination}
-                          disabled={!newDestination}
-                          className="rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-40"
-                        >
-                          Confirmar
-                        </button>
+                        {!routePreview ? (
+                          <button
+                            onClick={handlePreviewChangeDestination}
+                            disabled={!newDestination || previewLoading}
+                            className="rounded-xl bg-gradient-primary py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-40"
+                          >
+                            {previewLoading ? "Calculando..." : "Calcular novo valor"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleConfirmChangeDestination}
+                            className="rounded-xl bg-success py-2.5 text-sm font-bold text-success-foreground shadow-glow"
+                          >
+                            Confirmar e avisar motorista
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}

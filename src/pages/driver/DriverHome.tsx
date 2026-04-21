@@ -60,6 +60,11 @@ const DriverHome = () => {
   // - tickNow: força re-render a cada 1s para atualizar o countdown na UI.
   const [phaseStartedAt, setPhaseStartedAt] = useState<number | null>(null);
   const [tickNow, setTickNow] = useState(Date.now());
+  // Quando o passageiro altera a rota durante a corrida, marcamos `routeChanged`
+  // para FORÇAR o motorista a clicar em "Iniciar nova rota" no app antes de
+  // continuar — assim o foco volta da navegação externa (Google Maps) para o app
+  // e o motorista vê o novo valor/endereço.
+  const [routeChanged, setRouteChanged] = useState(false);
   // Janelas (em segundos) exigidas pelo produto:
   const GOING_WAIT_SEC = 30;     // a caminho do passageiro
   const ARRIVED_WAIT_SEC = 10;   // chegou ao passageiro → iniciar corrida
@@ -339,6 +344,14 @@ const DriverHome = () => {
               description: `Novo destino: ${newAddr}\nNovo valor: R$ ${newPrice.toFixed(2)} (${newKm} km)`,
               duration: 12000,
             });
+            // Interrompe a navegação atual: força o motorista a clicar em "Iniciar
+            // nova rota" no app, fazendo o foco voltar do Google Maps externo.
+            setRouteChanged(true);
+            setPhaseStartedAt(null);
+            // Reseta para o destino final (assume troca de destino final)
+            setCurrentStopIndex(getRideStops(ride).length);
+            localStorage.setItem(`ride-stop-index-${ride.id}`, String(getRideStops(ride).length));
+            localStorage.setItem(`ride-phase-${ride.id}`, `route-changed|0`);
           }
           if (ride.status === "cancelled") {
             setActiveRide(null);
@@ -1012,7 +1025,21 @@ const DriverHome = () => {
                 );
               })()
             ) : !arrivedAtFinal ? (
-              (() => {
+              routeChanged ? (
+                <button
+                  onClick={() => {
+                    setRouteChanged(false);
+                    startPhaseTimer(activeRide.id, `stop-${currentStopIndex}`);
+                    if (nextTarget) openGoogleMapsRoute(nextTarget.lat, nextTarget.lng, routePointName(nextTarget));
+                  }}
+                  className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground flex items-center justify-center gap-2 animate-pulse"
+                >
+                  <NavigationIcon className="h-4 w-4 shrink-0" />
+                  <span className="truncate text-left">
+                    🚨 Iniciar nova rota: {nextTarget?.address?.split(" - ")[0] || "novo destino"} • R$ {Number(activeRide.price).toFixed(2)}
+                  </span>
+                </button>
+              ) : (() => {
                 const left = phaseSecondsLeft(STOP_WAIT_SEC);
                 const ready = left <= 0;
                 const addr = nextTarget?.address?.split(" - ")[0]
