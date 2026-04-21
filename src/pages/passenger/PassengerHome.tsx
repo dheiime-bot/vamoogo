@@ -306,6 +306,33 @@ const PassengerHome = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeRide?.driver_id, activeRide?.status]);
 
+  // 💬 Auto-abre o chat ao receber a 1ª mensagem do motorista durante a corrida.
+  // Escuta INSERTs em chat_messages da corrida ativa; se o remetente NÃO for o
+  // próprio passageiro e o overlay estiver fechado, abre automaticamente.
+  useEffect(() => {
+    if (!user || !activeRide?.id) return;
+    const ch = supabase
+      .channel(`passenger-chat-autoopen-${activeRide.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `ride_id=eq.${activeRide.id}`,
+        },
+        (payload) => {
+          const msg = payload.new as any;
+          if (!msg || msg.sender_id === user.id) return;
+          setShowChat((open) => (open ? open : true));
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [user, activeRide?.id]);
+
   // ⏱️ Auto-cancelamento client-side de 30s para corridas sem motorista.
   // Rede de segurança caso o dispatch/cron demore — garante feedback imediato ao passageiro.
   useEffect(() => {
