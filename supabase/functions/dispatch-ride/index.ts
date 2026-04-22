@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
           console.log(`[dispatch] ⏱️ preferred driver did not accept, falling back to broadcast`);
         }
       } else {
-        console.log(`[dispatch] preferred driver not eligible (online=${dl?.is_online}, cat=${dl?.category}, dist=${distKm})`);
+        console.log(`[dispatch] preferred driver not eligible (online=${dl?.is_online}, cat=${dl?.category}, dist=${distKm}, balanceOk=${prefBalanceOk})`);
       }
     }
 
@@ -147,6 +147,7 @@ Deno.serve(async (req) => {
           _category: ride.category,
           _limit: 10,
           _max_km: 25,
+          _estimated_fee: estimatedFee,
         });
 
       if (candErr) {
