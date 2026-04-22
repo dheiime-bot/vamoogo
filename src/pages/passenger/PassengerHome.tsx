@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Users, Plus, Car, Bike, Sparkles, X, Loader2, Phone, MessageCircle, Star, Navigation, Banknote, QrCode, Heart } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import BlockBanner from "@/components/shared/BlockBanner";
+import { guardErrorMessage } from "@/lib/guardErrors";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import PassengerSpendChip from "@/components/passenger/PassengerSpendChip";

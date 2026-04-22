@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { AlertTriangle, MapPin, Play, Flag, Phone, MessageCircle, Star, Clock, QrCode, Navigation as NavigationIcon } from "lucide-react";
 import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getRideDestination, getRideNextTarget, getRideStops, routePointName } from "@/lib/rideRoute";
+import { isGuardError, guardErrorMessage } from "@/lib/guardErrors";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { formatBRL } from "@/lib/brFormat";
 import AppMenu from "@/components/shared/AppMenu";
