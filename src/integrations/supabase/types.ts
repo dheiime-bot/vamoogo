@@ -2260,21 +2260,38 @@ export type Database = {
           status: string
         }[]
       }
-      find_nearest_drivers: {
-        Args: {
-          _category: Database["public"]["Enums"]["vehicle_category"]
-          _lat: number
-          _limit?: number
-          _lng: number
-          _max_km?: number
-        }
-        Returns: {
-          distance_km: number
-          driver_id: string
-          lat: number
-          lng: number
-        }[]
-      }
+      find_nearest_drivers:
+        | {
+            Args: {
+              _category: Database["public"]["Enums"]["vehicle_category"]
+              _lat: number
+              _limit?: number
+              _lng: number
+              _max_km?: number
+            }
+            Returns: {
+              distance_km: number
+              driver_id: string
+              lat: number
+              lng: number
+            }[]
+          }
+        | {
+            Args: {
+              _category: Database["public"]["Enums"]["vehicle_category"]
+              _estimated_fee?: number
+              _lat: number
+              _limit?: number
+              _lng: number
+              _max_km?: number
+            }
+            Returns: {
+              distance_km: number
+              driver_id: string
+              lat: number
+              lng: number
+            }[]
+          }
       get_favorite_driver_details: {
         Args: {
           _driver_ids: string[]
