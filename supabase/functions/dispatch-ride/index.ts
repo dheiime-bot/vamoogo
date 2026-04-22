@@ -49,6 +49,11 @@ Deno.serve(async (req) => {
     const { data: zCount } = await supabase.rpc("cleanup_zombie_drivers");
     if (zCount && zCount > 0) console.log(`[dispatch] cleaned ${zCount} zombie drivers`);
 
+    // Calcula a taxa estimada da plataforma para esta corrida.
+    // Hierarquia: tariffs.fee_percent (override por categoria) → platform_settings.global_fee_percent → 15%.
+    const estimatedFee = await computeEstimatedFee(supabase, ride.category, Number(ride.price || 0));
+    console.log(`[dispatch] estimated platform fee = R$${estimatedFee.toFixed(2)} (price=${ride.price})`);
+
     // 🌟 PRIORIDADE: motorista preferido (vindo de "favoritos → chamar")
     // Damos a ele 20s exclusivos antes do broadcast normal.
     if (preferredDriverId) {
@@ -63,7 +68,19 @@ Deno.serve(async (req) => {
         ? Math.round(haversineKm(ride.origin_lat, ride.origin_lng, dl.lat, dl.lng) * 100) / 100
         : null;
 
-      if (dl?.is_online && dl.category === ride.category && distKm != null && distKm <= 25) {
+      // Verifica também o saldo do motorista preferido (não pode ficar pior que -R$10 após a taxa)
+      const { data: prefDriver } = await supabase
+        .from("drivers")
+        .select("balance, online_blocked, status")
+        .eq("user_id", preferredDriverId)
+        .maybeSingle();
+      const prefBalanceOk = prefDriver
+        ? (Number(prefDriver.balance || 0) - estimatedFee) >= -10
+          && !prefDriver.online_blocked
+          && ["approved", "aprovado"].includes(String(prefDriver.status))
+        : false;
+
+      if (dl?.is_online && dl.category === ride.category && distKm != null && distKm <= 25 && prefBalanceOk) {
         const expiresAt = new Date(Date.now() + 20 * 1000).toISOString();
         const { error: prefErr } = await supabase.from("ride_offers").insert({
           ride_id: rideId,
