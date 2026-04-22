@@ -168,7 +168,6 @@ const DriverOffers = () => {
       .single();
 
     if (error || !updated) {
-      const { isGuardError, guardErrorMessage } = await import("@/lib/guardErrors");
       if (error && isGuardError(error)) {
         console.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
       } else {

@@ -461,7 +461,6 @@ const DriverHome = () => {
       .select().single();
 
     if (error || !updated) {
-      const { isGuardError, guardErrorMessage } = await import("@/lib/guardErrors");
       if (error && isGuardError(error)) {
         toast.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
       } else {

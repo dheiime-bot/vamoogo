@@ -567,7 +567,6 @@ const PassengerHome = () => {
 
     setIsRequesting(false);
     if (error) {
-      const { guardErrorMessage } = await import("@/lib/guardErrors");
       toast.error(guardErrorMessage(error, "Não foi possível solicitar a corrida"));
       return;
     }

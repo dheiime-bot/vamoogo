@@ -171,7 +171,6 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
       );
       if (cancelled) return;
       if (error) {
-        const { isGuardError } = await import("@/lib/guardErrors");
         if (isGuardError(error)) onBlocked?.(error.message!);
         else console.warn("driver_locations upsert error:", error.message);
         return;
