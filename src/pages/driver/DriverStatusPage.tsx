@@ -44,7 +44,6 @@ const DriverStatusPage = () => {
   const canReupload = ["pendente_documentos", "reprovado", "rejected"].includes(driverData?.status);
 
   const handleRefresh = async () => {
-    console.log("[DriverStatusPage] handleRefresh clicked", { user: user?.id, refreshing });
     if (!user) {
       toast.error("Usuário não autenticado");
       return;
@@ -59,7 +58,6 @@ const DriverStatusPage = () => {
         .select("status, analysis_message, analyzed_at")
         .eq("user_id", user.id)
         .maybeSingle();
-      console.log("[DriverStatusPage] refresh result", { data, error, previousStatus });
       if (error) throw error;
 
       await refreshProfile();
