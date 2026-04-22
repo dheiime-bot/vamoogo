@@ -43,11 +43,8 @@ export function useCityCache(coords: { lat: number; lng: number } | null, opts?:
           console.warn("[useCityCache] erro:", error);
           return;
         }
-        if (data?.skipped) {
-          console.log("[useCityCache] cache já recente:", data);
-        } else if (data?.ok) {
-          console.log(`[useCityCache] indexados ${data.inserted} locais (${data.total_unique} únicos)`);
-        }
+        // sucesso silencioso — sem logs em loop
+        void data;
       })
       .catch((e) => console.warn("[useCityCache] falha:", e));
   }, [coords?.lat, coords?.lng, opts?.radius]);

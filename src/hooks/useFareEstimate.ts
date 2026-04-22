@@ -124,7 +124,6 @@ export const useFareEstimate = (
           (w) => w && typeof w.lat === "number" && typeof w.lng === "number" && !isNaN(w.lat) && !isNaN(w.lng)
         );
         const sequence: Point[] = [origin, ...validWaypoints, destination];
-        console.log("[useFareEstimate] sequência:", sequence.length, "pontos •", validWaypoints.length, "paradas");
 
         // 3) Coleta km/min POR TRECHO. Tenta Distance Matrix; senão, fallback haversine.
         const legSpecs: { km: number; min: number }[] = [];

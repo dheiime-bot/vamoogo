@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { AlertTriangle, MapPin, Play, Flag, Phone, MessageCircle, Star, Clock, QrCode, Navigation as NavigationIcon } from "lucide-react";
 import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getRideDestination, getRideNextTarget, getRideStops, routePointName } from "@/lib/rideRoute";
+import { isGuardError, guardErrorMessage } from "@/lib/guardErrors";
 import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { formatBRL } from "@/lib/brFormat";
 import AppMenu from "@/components/shared/AppMenu";
@@ -280,7 +281,6 @@ const DriverHome = () => {
       if (error) { console.warn("[driver] poll offers error", error); return; }
       if (data && data.length > 0) {
         const offer = data[0];
-        console.log("[driver] poll found pending offer", offer.id);
         if (!offer.rides || offer.rides.status !== "requested") return;
         setPendingOffer(offer);
         setPendingRide(offer.rides);
@@ -296,21 +296,17 @@ const DriverHome = () => {
   // Realtime: novas ofertas (canal estável — só re-cria quando isOnline/user mudam)
   useEffect(() => {
     if (!isOnline || !user) return;
-    console.log("[driver] subscribing to ride_offers for", user.id);
 
     const channel = supabase.channel(`driver-offers-${user.id}`)
       .on("postgres_changes",
         { event: "INSERT", schema: "public", table: "ride_offers", filter: `driver_id=eq.${user.id}` },
         async (payload) => {
-          console.log("[driver] realtime ride_offers INSERT received", payload.new);
           if (activeRideRef.current || pendingOfferRef.current) {
-            console.log("[driver] skipping offer — already busy");
             return;
           }
           const offer = payload.new as any;
           const { data: ride } = await supabase.from("rides").select("*").eq("id", offer.ride_id).single();
           if (!ride || ride.status !== "requested") {
-            console.log("[driver] skipping offer — ride not in requested state", ride?.status);
             return;
           }
           setPendingOffer(offer);
@@ -318,9 +314,7 @@ const DriverHome = () => {
           setRideState("offer");
         playOfferSound(ride);
         })
-      .subscribe((status) => {
-        console.log("[driver] ride_offers channel status:", status);
-      });
+      .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [isOnline, user]);
@@ -461,7 +455,6 @@ const DriverHome = () => {
       .select().single();
 
     if (error || !updated) {
-      const { isGuardError, guardErrorMessage } = await import("@/lib/guardErrors");
       if (error && isGuardError(error)) {
         toast.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
       } else {

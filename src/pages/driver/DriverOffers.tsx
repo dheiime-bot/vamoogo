@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { Car, MapPin, Clock, Loader2, CheckCircle2, XCircle, RefreshCw, Power } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import { isGuardError, guardErrorMessage } from "@/lib/guardErrors";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -168,7 +169,6 @@ const DriverOffers = () => {
       .single();
 
     if (error || !updated) {
-      const { isGuardError, guardErrorMessage } = await import("@/lib/guardErrors");
       if (error && isGuardError(error)) {
         console.error(guardErrorMessage(error, "Não foi possível aceitar a corrida"));
       } else {

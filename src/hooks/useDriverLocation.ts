@@ -15,6 +15,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isGuardError } from "@/lib/guardErrors";
 import {
   initGpsTracker,
   subscribeGps,
@@ -171,7 +172,6 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
       );
       if (cancelled) return;
       if (error) {
-        const { isGuardError } = await import("@/lib/guardErrors");
         if (isGuardError(error)) onBlocked?.(error.message!);
         else console.warn("driver_locations upsert error:", error.message);
         return;
