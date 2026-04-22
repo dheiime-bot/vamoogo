@@ -244,3 +244,28 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
+
+// Calcula a taxa estimada da plataforma para uma corrida.
+// Hierarquia: tariffs.fee_percent (override por categoria) → platform_settings.global_fee_percent → 15%.
+async function computeEstimatedFee(supabase: any, category: string, price: number): Promise<number> {
+  if (!price || price <= 0) return 0;
+  const DEFAULT_PCT = 15;
+
+  const [tariffRes, settingRes] = await Promise.all([
+    supabase.from("tariffs").select("fee_percent").eq("category", category).eq("region", "default").maybeSingle(),
+    supabase.from("platform_settings").select("value").eq("key", "global_fee_percent").maybeSingle(),
+  ]);
+
+  let pct: number | null = null;
+  const override = tariffRes.data?.fee_percent;
+  if (override !== null && override !== undefined && !isNaN(Number(override))) {
+    pct = Number(override);
+  } else {
+    const raw = settingRes.data?.value;
+    const n = typeof raw === "number" ? raw : Number(raw);
+    if (!isNaN(n)) pct = n;
+  }
+  if (pct === null) pct = DEFAULT_PCT;
+  pct = Math.max(0, Math.min(100, pct));
+  return Math.round(((price * pct) / 100) * 100) / 100;
+}
