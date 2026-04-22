@@ -46,7 +46,6 @@ const DriverOfferAlert = () => {
     // chegando ao mesmo tempo via realtime + polling.
     if (offerRef.current || claimingRef.current) {
       if (offerRef.current?.id === offerRow.id) return; // mesma oferta, ignora
-      console.log("[offer-alert] popup ocupado — oferta vai pra lista:", offerRow.id);
       seenOfferIdsRef.current.add(offerRow.id);
       toast.info("Mais uma corrida disponível na lista", { duration: 2000 });
       return;
@@ -64,18 +63,15 @@ const DriverOfferAlert = () => {
         .in("status", ["accepted", "in_progress"])
         .limit(1);
       if (active && active.length > 0) {
-        console.log("[offer-alert] driver busy with active ride, skipping");
         return;
       }
 
       const { data: r } = await supabase
         .from("rides").select("*").eq("id", offerRow.ride_id).maybeSingle();
       if (!r || r.status !== "requested") {
-        console.log("[offer-alert] ride not in requested state:", r?.status);
         return;
       }
 
-      console.log("[offer-alert] 🚗 NEW OFFER", offerRow.id);
       setOffer(offerRow);
       setRide(r);
       playOfferAlert({
@@ -91,7 +87,6 @@ const DriverOfferAlert = () => {
   // Realtime: novas ofertas (entrega instantânea, mas pode falhar — não confiamos só nele)
   useEffect(() => {
     if (!isDriver || !user) return;
-    console.log("[offer-alert] subscribe for", user.id);
 
     const channel = supabase
       .channel(`offer-alert-${user.id}-${Date.now()}`)
@@ -99,11 +94,10 @@ const DriverOfferAlert = () => {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "ride_offers", filter: `driver_id=eq.${user.id}` },
         (payload) => {
-          console.log("[offer-alert] RT INSERT", payload.new);
           handleNewOffer(payload.new as any);
         }
       )
-      .subscribe((s) => console.log("[offer-alert] channel status:", s));
+      .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [isDriver, user, handleNewOffer]);
 
