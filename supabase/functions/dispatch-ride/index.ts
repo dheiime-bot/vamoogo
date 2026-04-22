@@ -49,6 +49,11 @@ Deno.serve(async (req) => {
     const { data: zCount } = await supabase.rpc("cleanup_zombie_drivers");
     if (zCount && zCount > 0) console.log(`[dispatch] cleaned ${zCount} zombie drivers`);
 
+    // Calcula a taxa estimada da plataforma para esta corrida.
+    // Hierarquia: tariffs.fee_percent (override por categoria) → platform_settings.global_fee_percent → 15%.
+    const estimatedFee = await computeEstimatedFee(supabase, ride.category, Number(ride.price || 0));
+    console.log(`[dispatch] estimated platform fee = R$${estimatedFee.toFixed(2)} (price=${ride.price})`);
+
     // 🌟 PRIORIDADE: motorista preferido (vindo de "favoritos → chamar")
     // Damos a ele 20s exclusivos antes do broadcast normal.
     if (preferredDriverId) {
@@ -63,7 +68,19 @@ Deno.serve(async (req) => {
         ? Math.round(haversineKm(ride.origin_lat, ride.origin_lng, dl.lat, dl.lng) * 100) / 100
         : null;
 
-      if (dl?.is_online && dl.category === ride.category && distKm != null && distKm <= 25) {
+      // Verifica também o saldo do motorista preferido (não pode ficar pior que -R$10 após a taxa)
+      const { data: prefDriver } = await supabase
+        .from("drivers")
+        .select("balance, online_blocked, status")
+        .eq("user_id", preferredDriverId)
+        .maybeSingle();
+      const prefBalanceOk = prefDriver
+        ? (Number(prefDriver.balance || 0) - estimatedFee) >= -10
+          && !prefDriver.online_blocked
+          && ["approved", "aprovado"].includes(String(prefDriver.status))
+        : false;
+
+      if (dl?.is_online && dl.category === ride.category && distKm != null && distKm <= 25 && prefBalanceOk) {
         const expiresAt = new Date(Date.now() + 20 * 1000).toISOString();
         const { error: prefErr } = await supabase.from("ride_offers").insert({
           ride_id: rideId,
@@ -104,7 +121,7 @@ Deno.serve(async (req) => {
           console.log(`[dispatch] ⏱️ preferred driver did not accept, falling back to broadcast`);
         }
       } else {
-        console.log(`[dispatch] preferred driver not eligible (online=${dl?.is_online}, cat=${dl?.category}, dist=${distKm})`);
+        console.log(`[dispatch] preferred driver not eligible (online=${dl?.is_online}, cat=${dl?.category}, dist=${distKm}, balanceOk=${prefBalanceOk})`);
       }
     }
 
@@ -130,6 +147,7 @@ Deno.serve(async (req) => {
           _category: ride.category,
           _limit: 10,
           _max_km: 25,
+          _estimated_fee: estimatedFee,
         });
 
       if (candErr) {
@@ -225,4 +243,29 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// Calcula a taxa estimada da plataforma para uma corrida.
+// Hierarquia: tariffs.fee_percent (override por categoria) → platform_settings.global_fee_percent → 15%.
+async function computeEstimatedFee(supabase: any, category: string, price: number): Promise<number> {
+  if (!price || price <= 0) return 0;
+  const DEFAULT_PCT = 15;
+
+  const [tariffRes, settingRes] = await Promise.all([
+    supabase.from("tariffs").select("fee_percent").eq("category", category).eq("region", "default").maybeSingle(),
+    supabase.from("platform_settings").select("value").eq("key", "global_fee_percent").maybeSingle(),
+  ]);
+
+  let pct: number | null = null;
+  const override = tariffRes.data?.fee_percent;
+  if (override !== null && override !== undefined && !isNaN(Number(override))) {
+    pct = Number(override);
+  } else {
+    const raw = settingRes.data?.value;
+    const n = typeof raw === "number" ? raw : Number(raw);
+    if (!isNaN(n)) pct = n;
+  }
+  if (pct === null) pct = DEFAULT_PCT;
+  pct = Math.max(0, Math.min(100, pct));
+  return Math.round(((price * pct) / 100) * 100) / 100;
 }
