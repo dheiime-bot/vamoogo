@@ -11,6 +11,7 @@ import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from "@vis.g
 import { Loader2, LocateFixed } from "lucide-react";
 import { useGoogleMapsKey } from "@/hooks/useGoogleMapsKey";
 import { CATEGORY_COLOR } from "@/lib/categoryStyle";
+import passengerMarkerImg from "@/assets/passenger-marker.png";
 
 interface MapPoint {
   lat: number;
@@ -432,99 +433,26 @@ const MotoMarker = ({
 };
 
 const PassengerMarker = () => {
-  const baseColor = "#2563eb"; // azul vamoo
-  const pinTop = "#60a5fa";
-  const pinBottom = "#1d4ed8";
   return (
-    <div className="relative drop-shadow-xl" title="Passageiro" style={{ width: 56, height: 70 }}>
-      {/* Halo pulsante atrás do pino */}
+    <div
+      className="relative drop-shadow-xl"
+      title="Passageiro"
+      style={{ width: 64, height: 84 }}
+    >
+      {/* Halo pulsante atrás do bonequinho */}
       <div
         className="absolute rounded-full bg-primary/25 animate-ping pointer-events-none"
-        style={{ width: 56, height: 56, top: 2, left: 0 }}
+        style={{ width: 56, height: 56, top: 4, left: 4 }}
       />
-      <div className="anim-passenger-bounce relative" style={{ width: 56, height: 70 }}>
-        <svg viewBox="0 0 64 80" width="56" height="70" style={{ overflow: "visible" }}>
-          <defs>
-            <radialGradient id="paxShadow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(0,0,0,0.45)" />
-              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-            </radialGradient>
-            <linearGradient id="paxPin" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor={pinTop} />
-              <stop offset="100%" stopColor={pinBottom} />
-            </linearGradient>
-            <linearGradient id="paxShirt" x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0%" stopColor="#1d4ed8" />
-              <stop offset="50%" stopColor={baseColor} />
-              <stop offset="100%" stopColor="#1d4ed8" />
-            </linearGradient>
-            <radialGradient id="paxHead" cx="40%" cy="35%" r="70%">
-              <stop offset="0%" stopColor="#fde6d3" />
-              <stop offset="100%" stopColor="#e2a877" />
-            </radialGradient>
-          </defs>
-
-          {/* sombra */}
-          <ellipse cx="32" cy="76" rx="13" ry="3" fill="url(#paxShadow)" />
-
-          {/* gota do pino azul */}
-          <path
-            d="M32 4 C18 4 8 14 8 28 C8 42 26 64 32 70 C38 64 56 42 56 28 C56 14 46 4 32 4 Z"
-            fill="url(#paxPin)"
-            stroke="#ffffff"
-            strokeWidth="2.5"
-          />
-
-          {/* círculo branco interno */}
-          <circle cx="32" cy="28" r="20" fill="#ffffff" />
-
-          {/* sombra interna sob o passageiro */}
-          <ellipse cx="32" cy="30" rx="11" ry="13" fill="rgba(0,0,0,0.1)" />
-
-          {/* OMBROS / camiseta — vista de cima */}
-          <path
-            d="M18 38
-               C 18 32 22 28 32 28
-               C 42 28 46 32 46 38
-               L 46 42
-               C 46 44 44 45 42 45
-               L 22 45
-               C 20 45 18 44 18 42 Z"
-            fill="url(#paxShirt)"
-            stroke="#0b1220"
-            strokeOpacity="0.2"
-            strokeWidth="0.6"
-          />
-          {/* gola da camiseta */}
-          <path
-            d="M28 28 Q 32 31 36 28"
-            stroke={shadeColor(baseColor, -0.4)}
-            strokeWidth="0.8"
-            fill="none"
-            strokeLinecap="round"
-          />
-
-          {/* CABEÇA — vista superior */}
-          <circle cx="32" cy="26" r="6.5" fill="url(#paxHead)" stroke="#0b1220" strokeOpacity="0.25" strokeWidth="0.6" />
-          {/* cabelo (faixa por cima da cabeça) */}
-          <path
-            d="M26 24
-               Q 32 19 38 24
-               Q 36 22.5 32 22.3
-               Q 28 22.5 26 24 Z"
-            fill="#3b2a1f"
-          />
-          {/* highlight do cabelo */}
-          <path
-            d="M28 23 Q 32 21 36 23"
-            stroke="#1f1410"
-            strokeWidth="0.4"
-            fill="none"
-            opacity="0.8"
-          />
-          {/* reflexo na cabeça */}
-          <ellipse cx="30" cy="24.5" rx="1.4" ry="0.9" fill="#ffffff" opacity="0.35" />
-        </svg>
+      <div className="anim-passenger-bounce relative" style={{ width: 64, height: 84 }}>
+        <img
+          src={passengerMarkerImg}
+          alt="Passageiro"
+          width={64}
+          height={84}
+          draggable={false}
+          style={{ width: 64, height: 84, objectFit: "contain", display: "block" }}
+        />
       </div>
     </div>
   );
