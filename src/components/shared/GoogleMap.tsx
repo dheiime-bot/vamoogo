@@ -935,11 +935,15 @@ const GoogleMapInner = ({
       {showRoute && origin && destination && (
         <RouteLayer origin={origin} destination={destination} stops={stops} />
       )}
-      {!showRoute && <FitToPoints points={points} />}
+      {!showRoute && <FitToPoints points={points} singlePointZoom={initialUserZoom} />}
       {onMapClick && <ClickHandler onMapClick={onMapClick} />}
       {onCenterChange && <CenterTracker onCenterChange={onCenterChange} />}
       {interactive && (
-        <RecenterButton target={origin || animatedDriver || userLoc || null} bottomInset={bottomInset} />
+        <RecenterButton
+          target={origin || animatedDriver || userLoc || null}
+          bottomInset={bottomInset}
+          bottomPx={recenterBottomPx}
+        />
       )}
     </Map>
   );
