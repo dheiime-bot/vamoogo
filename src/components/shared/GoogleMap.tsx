@@ -698,14 +698,14 @@ const RouteLayer = ({
   return null;
 };
 
-const FitToPoints = ({ points }: { points: MapPoint[] }) => {
+const FitToPoints = ({ points, singlePointZoom = 14 }: { points: MapPoint[]; singlePointZoom?: number }) => {
   const map = useMap();
   useEffect(() => {
     if (!map || points.length === 0) return;
     if (points.length === 1) {
       map.panTo({ lat: points[0].lat, lng: points[0].lng });
-      // Mesmo nível do botão "recentralizar" — visão de bairro, sem zoom agressivo
-      map.setZoom(14);
+      // Zoom configurável: 14 (bairro) por padrão, 16 (~6 quadras) no app do passageiro.
+      map.setZoom(singlePointZoom);
       return;
     }
     const g = (window as any).google;
