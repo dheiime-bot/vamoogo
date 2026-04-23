@@ -12,6 +12,7 @@ import { Loader2, LocateFixed } from "lucide-react";
 import { useGoogleMapsKey } from "@/hooks/useGoogleMapsKey";
 import { CATEGORY_COLOR } from "@/lib/categoryStyle";
 import passengerMarkerImg from "@/assets/passenger-marker.png";
+import driverMarkerImg from "@/assets/driver-marker.png";
 
 interface MapPoint {
   lat: number;
@@ -144,160 +145,6 @@ const CATEGORY_DEFAULT_COLOR: Record<"economico" | "conforto" | "moto", string> 
 };
 
 /* ----- Pino estilo "map-pin" com veículo dentro ----- */
-
-const CarMarker = ({
-  heading = 0,
-  variant = "economico",
-  color,
-}: {
-  heading?: number;
-  variant?: "economico" | "conforto";
-  color?: string | null;
-}) => {
-  const baseColor = color || CATEGORY_DEFAULT_COLOR[variant];
-  const light = isLightColor(baseColor);
-  const pinTop = baseColor;
-  const pinBottom = shadeColor(baseColor, -0.25);
-  const smoothHeading = useSmoothHeading(heading);
-  const uid = `${variant}-${baseColor.replace("#", "")}`;
-  // cor do corpo do carro = cor do veículo
-  const bodyTop = baseColor;
-  const bodyBottom = shadeColor(baseColor, -0.35);
-  const bodyEdge = shadeColor(baseColor, -0.55);
-  const glassColor = light ? "#1e293b" : "#0f172a";
-  const roofColor = shadeColor(baseColor, light ? -0.15 : 0.15);
-  return (
-    <div
-      className="relative drop-shadow-xl"
-      style={{ width: 56, height: 70 }}
-      title={variant === "conforto" ? "Motorista (Conforto)" : "Motorista"}
-    >
-      <div className="anim-vehicle-bob" style={{ width: 56, height: 70 }}>
-        <svg viewBox="0 0 64 80" width="56" height="70" style={{ overflow: "visible" }}>
-          <defs>
-            <radialGradient id={`carShadow-${uid}`} cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(0,0,0,0.45)" />
-              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-            </radialGradient>
-            <linearGradient id={`pinBg-${uid}`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor={pinTop} />
-              <stop offset="100%" stopColor={pinBottom} />
-            </linearGradient>
-            <linearGradient id={`carBody-${uid}`} x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0%" stopColor={bodyBottom} />
-              <stop offset="50%" stopColor={bodyTop} />
-              <stop offset="100%" stopColor={bodyBottom} />
-            </linearGradient>
-          </defs>
-          {/* sombra */}
-          <ellipse cx="32" cy="76" rx="14" ry="3" fill={`url(#carShadow-${uid})`} />
-          {/* gota do pino */}
-          <path
-            d="M32 4 C18 4 8 14 8 28 C8 42 26 64 32 70 C38 64 56 42 56 28 C56 14 46 4 32 4 Z"
-            fill={`url(#pinBg-${uid})`}
-            stroke="#ffffff"
-            strokeWidth="2.5"
-          />
-          {/* círculo branco interno */}
-          <circle cx="32" cy="28" r="20" fill="#ffffff" />
-          {/* carro dentro (gira pelo heading) */}
-          <g
-            style={{
-              transform: `rotate(${smoothHeading}deg)`,
-              transformOrigin: "32px 28px",
-              transformBox: "fill-box" as any,
-              transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
-            }}
-          >
-            {/* sombra interna sob o carro */}
-            <ellipse cx="32" cy="29" rx="11" ry="14" fill="rgba(0,0,0,0.12)" />
-
-            {/* Corpo do carro (vista superior) — cor do veículo */}
-            <path
-              d="M26 14
-                 C 23 14 21.5 16 21.5 19
-                 L 21.5 38
-                 C 21.5 41 23 43 26 43
-                 L 38 43
-                 C 41 43 42.5 41 42.5 38
-                 L 42.5 19
-                 C 42.5 16 41 14 38 14 Z"
-              fill={`url(#carBody-${uid})`}
-              stroke={bodyEdge}
-              strokeWidth="0.8"
-              strokeLinejoin="round"
-            />
-
-            {/* highlight lateral (brilho) */}
-            <path
-              d="M23.5 18 L 23.5 39"
-              stroke="#ffffff"
-              strokeWidth="0.8"
-              opacity="0.35"
-              strokeLinecap="round"
-            />
-            <path
-              d="M40.5 18 L 40.5 39"
-              stroke="#000000"
-              strokeWidth="0.6"
-              opacity="0.18"
-              strokeLinecap="round"
-            />
-
-            {/* para-brisa frontal (escuro/fumê) */}
-            <path
-              d="M24 19.5 L 26 23 L 38 23 L 40 19.5
-                 C 38.5 18 36 17.2 32 17.2
-                 C 28 17.2 25.5 18 24 19.5 Z"
-              fill={glassColor}
-              opacity="0.85"
-            />
-            {/* reflexo no para-brisa */}
-            <path
-              d="M26 19.5 L 27.5 22.5 L 30 22.5 Z"
-              fill="#ffffff"
-              opacity="0.18"
-            />
-
-            {/* teto / cabine */}
-            <rect
-              x="25"
-              y="24"
-              width="14"
-              height="9"
-              rx="1.5"
-              fill={roofColor}
-              opacity="0.9"
-            />
-            {/* divisão central do teto */}
-            <line x1="32" y1="24.5" x2="32" y2="32.5" stroke={bodyEdge} strokeWidth="0.4" opacity="0.5" />
-
-            {/* para-brisa traseiro */}
-            <path
-              d="M24 37.5 L 26 34 L 38 34 L 40 37.5
-                 C 38.5 39 36 39.8 32 39.8
-                 C 28 39.8 25.5 39 24 37.5 Z"
-              fill={glassColor}
-              opacity="0.7"
-            />
-
-            {/* faróis dianteiros */}
-            <rect x="23" y="14.8" width="3" height="1.6" rx="0.6" fill="#fef3c7" stroke="#f59e0b" strokeWidth="0.3" />
-            <rect x="38" y="14.8" width="3" height="1.6" rx="0.6" fill="#fef3c7" stroke="#f59e0b" strokeWidth="0.3" />
-
-            {/* lanternas traseiras */}
-            <rect x="23" y="40.6" width="3" height="1.6" rx="0.6" fill="#ef4444" />
-            <rect x="38" y="40.6" width="3" height="1.6" rx="0.6" fill="#ef4444" />
-
-            {/* retrovisores */}
-            <ellipse cx="20.8" cy="22" rx="1.2" ry="0.9" fill={bodyBottom} stroke={bodyEdge} strokeWidth="0.3" />
-            <ellipse cx="43.2" cy="22" rx="1.2" ry="0.9" fill={bodyBottom} stroke={bodyEdge} strokeWidth="0.3" />
-          </g>
-        </svg>
-      </div>
-    </div>
-  );
-};
 
 const MotoMarker = ({
   heading = 0,
@@ -459,6 +306,37 @@ const PassengerMarker = () => {
           style={{ width: 45, height: 59, objectFit: "contain", display: "block" }}
         />
       </div>
+    </div>
+  );
+};
+
+/**
+ * Marker do motorista (carro): ilustração custom da Vamoo.
+ * Mantém a mesma altura visual do PassengerMarker (59px) — largura segue a proporção da imagem.
+ * Não rotaciona pelo heading (ilustração lateral fixa, evita ficar de cabeça pra baixo).
+ */
+const DRIVER_CAR_HEIGHT = 59;
+const DRIVER_CAR_WIDTH = Math.round(DRIVER_CAR_HEIGHT * (1024 / 559)); // ~108
+const DriverCarMarker = () => {
+  return (
+    <div
+      className="relative drop-shadow-xl"
+      title="Motorista"
+      style={{ width: DRIVER_CAR_WIDTH, height: DRIVER_CAR_HEIGHT }}
+    >
+      <img
+        src={driverMarkerImg}
+        alt="Motorista"
+        width={DRIVER_CAR_WIDTH}
+        height={DRIVER_CAR_HEIGHT}
+        draggable={false}
+        style={{
+          width: DRIVER_CAR_WIDTH,
+          height: DRIVER_CAR_HEIGHT,
+          objectFit: "contain",
+          display: "block",
+        }}
+      />
     </div>
   );
 };
@@ -893,11 +771,7 @@ const GoogleMapInner = ({
           {animatedDriver.category === "moto" ? (
             <MotoMarker heading={animatedDriver.heading || 0} color={animatedDriver.color} />
           ) : (
-            <CarMarker
-              heading={animatedDriver.heading || 0}
-              variant={animatedDriver.category === "conforto" ? "conforto" : "economico"}
-              color={animatedDriver.color}
-            />
+            <DriverCarMarker />
           )}
         </AdvancedMarker>
       )}
@@ -905,17 +779,13 @@ const GoogleMapInner = ({
       {!animatedDriver &&
         nearbyDrivers.map((d, i) => (
           <AdvancedMarker key={`nb-${i}-${d.lat.toFixed(4)},${d.lng.toFixed(4)}`} position={{ lat: d.lat, lng: d.lng }}>
-            <div className="rounded-full bg-card/90 p-1 shadow-lg ring-1 ring-border">
-              {d.category === "moto" ? (
+            {d.category === "moto" ? (
+              <div className="rounded-full bg-card/90 p-1 shadow-lg ring-1 ring-border">
                 <MotoMarker heading={d.heading || 0} color={d.color} />
-              ) : (
-                <CarMarker
-                  heading={d.heading || 0}
-                  variant={d.category === "conforto" ? "conforto" : "economico"}
-                  color={d.color}
-                />
-              )}
-            </div>
+              </div>
+            ) : (
+              <DriverCarMarker />
+            )}
           </AdvancedMarker>
         ))}
       {userLoc && !origin && (
@@ -923,9 +793,9 @@ const GoogleMapInner = ({
           {userMarkerVariant === "moto" ? (
             <MotoMarker heading={0} />
           ) : userMarkerVariant === "car-economico" ? (
-            <CarMarker heading={0} variant="economico" />
+            <DriverCarMarker />
           ) : userMarkerVariant === "car-conforto" ? (
-            <CarMarker heading={0} variant="conforto" />
+            <DriverCarMarker />
           ) : (
             <PassengerMarker />
           )}
