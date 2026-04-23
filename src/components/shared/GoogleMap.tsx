@@ -437,21 +437,21 @@ const PassengerMarker = () => {
     <div
       className="relative drop-shadow-xl"
       title="Passageiro"
-      style={{ width: 64, height: 84 }}
+      style={{ width: 45, height: 59 }}
     >
       {/* Halo pulsante atrás do bonequinho */}
       <div
         className="absolute rounded-full bg-primary/25 animate-ping pointer-events-none"
-        style={{ width: 56, height: 56, top: 4, left: 4 }}
+        style={{ width: 39, height: 39, top: 3, left: 3 }}
       />
-      <div className="anim-passenger-bounce relative" style={{ width: 64, height: 84 }}>
+      <div className="anim-passenger-bounce relative" style={{ width: 45, height: 59 }}>
         <img
           src={passengerMarkerImg}
           alt="Passageiro"
-          width={64}
-          height={84}
+          width={45}
+          height={59}
           draggable={false}
-          style={{ width: 64, height: 84, objectFit: "contain", display: "block" }}
+          style={{ width: 45, height: 59, objectFit: "contain", display: "block" }}
         />
       </div>
     </div>
