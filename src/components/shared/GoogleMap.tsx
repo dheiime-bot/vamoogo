@@ -41,6 +41,11 @@ interface GoogleMapProps {
   userMarkerVariant?: "passenger" | "car-economico" | "car-conforto" | "moto";
   /** Espaçamento extra no rodapé (px) — sobe o botão recentralizar e o logo do Google p/ não ficarem cobertos por CTAs. */
   bottomInset?: number;
+  /** Zoom inicial quando há um único ponto (ex.: localização do usuário). Default 14 (~bairro). */
+  initialUserZoom?: number;
+  /** Override (px) para a posição vertical do botão de recentralizar — usado pelo passageiro
+   * para alinhar o botão acima do CTA "Para onde Vamoo?". Default = 24px (alinhado à nav do motorista). */
+  recenterBottomPx?: number;
 }
 
 const ALTAMIRA_CENTER = { lat: -3.2036, lng: -52.2108 };
@@ -693,14 +698,14 @@ const RouteLayer = ({
   return null;
 };
 
-const FitToPoints = ({ points }: { points: MapPoint[] }) => {
+const FitToPoints = ({ points, singlePointZoom = 14 }: { points: MapPoint[]; singlePointZoom?: number }) => {
   const map = useMap();
   useEffect(() => {
     if (!map || points.length === 0) return;
     if (points.length === 1) {
       map.panTo({ lat: points[0].lat, lng: points[0].lng });
-      // Mesmo nível do botão "recentralizar" — visão de bairro, sem zoom agressivo
-      map.setZoom(14);
+      // Zoom configurável: 14 (bairro) por padrão, 16 (~6 quadras) no app do passageiro.
+      map.setZoom(singlePointZoom);
       return;
     }
     const g = (window as any).google;
@@ -755,7 +760,15 @@ const MapStyler = () => {
 };
 
 /** Botão flutuante para recentralizar o mapa em um ponto preferido. */
-const RecenterButton = ({ target }: { target: MapPoint | null; bottomInset?: number }) => {
+const RecenterButton = ({
+  target,
+  bottomPx,
+}: {
+  target: MapPoint | null;
+  bottomInset?: number;
+  /** Override (px) acima do safe-area. Default 24. */
+  bottomPx?: number;
+}) => {
   const map = useMap();
 
   const handleClick = () => {
@@ -780,18 +793,15 @@ const RecenterButton = ({ target }: { target: MapPoint | null; bottomInset?: num
     }
   };
 
-  // Alinhado verticalmente com a DriverBottomNav.
-  // A nav fica ancorada em `safe-area + 0.5rem + 8px` (paddingBottom) e tem `py-2` (8px)
-  // no container interno, portanto a base dos botões (pneu/switch) fica em
-  // `safe-area + 24px`. Usamos o mesmo offset para o botão de recentralizar e ignoramos
-  // o `bottomInset` (que serve para o padding do mapa) para que ele fique exatamente
-  // na mesma linha do pneuzinho e do switch ON/OFF.
+  // Alinhamento padrão (motorista): mesma linha do pneu/switch da DriverBottomNav (safe-area + 24px).
+  // No app do passageiro, `bottomPx` posiciona o botão ~3mm acima do CTA "Para onde Vamoo?".
+  const offsetPx = bottomPx ?? 24;
   return (
     <button
       type="button"
       onClick={handleClick}
       aria-label="Recentralizar mapa"
-      style={{ bottom: `calc(env(safe-area-inset-bottom) + 24px)` }}
+      style={{ bottom: `calc(env(safe-area-inset-bottom) + ${offsetPx}px)` }}
       className="absolute right-4 z-[60] flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-lg ring-2 ring-background border border-border transition-transform active:scale-95 hover:bg-muted"
     >
       <LocateFixed className="h-7 w-7 text-primary" strokeWidth={2.2} />
@@ -824,6 +834,8 @@ const GoogleMapInner = ({
   trackUserLocation = false,
   userMarkerVariant = "passenger",
   bottomInset = 0,
+  initialUserZoom,
+  recenterBottomPx,
 }: Omit<GoogleMapProps, "className" | "showCenterPin">) => {
   const [userLoc, setUserLoc] = useState<MapPoint | null>(null);
   const animatedDriver = useInterpolatedPosition(driverLocation || null);
@@ -923,11 +935,15 @@ const GoogleMapInner = ({
       {showRoute && origin && destination && (
         <RouteLayer origin={origin} destination={destination} stops={stops} />
       )}
-      {!showRoute && <FitToPoints points={points} />}
+      {!showRoute && <FitToPoints points={points} singlePointZoom={initialUserZoom} />}
       {onMapClick && <ClickHandler onMapClick={onMapClick} />}
       {onCenterChange && <CenterTracker onCenterChange={onCenterChange} />}
       {interactive && (
-        <RecenterButton target={origin || animatedDriver || userLoc || null} bottomInset={bottomInset} />
+        <RecenterButton
+          target={origin || animatedDriver || userLoc || null}
+          bottomInset={bottomInset}
+          bottomPx={recenterBottomPx}
+        />
       )}
     </Map>
   );
