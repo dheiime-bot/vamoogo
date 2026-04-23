@@ -834,6 +834,8 @@ const GoogleMapInner = ({
   trackUserLocation = false,
   userMarkerVariant = "passenger",
   bottomInset = 0,
+  initialUserZoom,
+  recenterBottomPx,
 }: Omit<GoogleMapProps, "className" | "showCenterPin">) => {
   const [userLoc, setUserLoc] = useState<MapPoint | null>(null);
   const animatedDriver = useInterpolatedPosition(driverLocation || null);
