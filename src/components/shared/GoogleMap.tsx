@@ -12,6 +12,7 @@ import { Loader2, LocateFixed } from "lucide-react";
 import { useGoogleMapsKey } from "@/hooks/useGoogleMapsKey";
 import { CATEGORY_COLOR } from "@/lib/categoryStyle";
 import passengerMarkerImg from "@/assets/passenger-marker.png";
+import driverMarkerImg from "@/assets/driver-marker.png";
 
 interface MapPoint {
   lat: number;
