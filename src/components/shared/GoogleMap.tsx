@@ -464,6 +464,37 @@ const PassengerMarker = () => {
   );
 };
 
+/**
+ * Marker do motorista (carro): ilustração custom da Vamoo.
+ * Mantém a mesma altura visual do PassengerMarker (59px) — largura segue a proporção da imagem.
+ * Não rotaciona pelo heading (ilustração lateral fixa, evita ficar de cabeça pra baixo).
+ */
+const DRIVER_CAR_HEIGHT = 59;
+const DRIVER_CAR_WIDTH = Math.round(DRIVER_CAR_HEIGHT * (1024 / 559)); // ~108
+const DriverCarMarker = () => {
+  return (
+    <div
+      className="relative drop-shadow-xl"
+      title="Motorista"
+      style={{ width: DRIVER_CAR_WIDTH, height: DRIVER_CAR_HEIGHT }}
+    >
+      <img
+        src={driverMarkerImg}
+        alt="Motorista"
+        width={DRIVER_CAR_WIDTH}
+        height={DRIVER_CAR_HEIGHT}
+        draggable={false}
+        style={{
+          width: DRIVER_CAR_WIDTH,
+          height: DRIVER_CAR_HEIGHT,
+          objectFit: "contain",
+          display: "block",
+        }}
+      />
+    </div>
+  );
+};
+
 const DestinationMarker = () => (
   <div className="relative drop-shadow-lg" title="Destino">
     <svg viewBox="0 0 48 48" width="38" height="38">
