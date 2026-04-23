@@ -41,6 +41,11 @@ interface GoogleMapProps {
   userMarkerVariant?: "passenger" | "car-economico" | "car-conforto" | "moto";
   /** Espaçamento extra no rodapé (px) — sobe o botão recentralizar e o logo do Google p/ não ficarem cobertos por CTAs. */
   bottomInset?: number;
+  /** Zoom inicial quando há um único ponto (ex.: localização do usuário). Default 14 (~bairro). */
+  initialUserZoom?: number;
+  /** Override (px) para a posição vertical do botão de recentralizar — usado pelo passageiro
+   * para alinhar o botão acima do CTA "Para onde Vamoo?". Default = 24px (alinhado à nav do motorista). */
+  recenterBottomPx?: number;
 }
 
 const ALTAMIRA_CENTER = { lat: -3.2036, lng: -52.2108 };
