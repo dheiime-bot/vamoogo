@@ -802,6 +802,8 @@ const DriverHome = () => {
                 : "car-economico"
           }
           bottomInset={96}
+          // Mesmo zoom de abertura do app do passageiro (~6 quadras / 600m).
+          initialUserZoom={16}
         />
       </div>
 
