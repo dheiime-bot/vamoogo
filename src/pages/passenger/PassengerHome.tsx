@@ -980,6 +980,11 @@ const PassengerHome = () => {
               trackUserLocation={!selectedOrigin && !activeRide}
               showRoute={!!mapOrigin && !!mapDestination}
               bottomInset={dynamicInset}
+              // Abertura do app: zoom ~6 quadras (≈600m) sobre a localização do dispositivo.
+              initialUserZoom={16}
+              // Botão de recentralizar 3mm (~11px) acima do CTA "Para onde Vamoo?".
+              // CTA: padding-bottom safe-area + 28px + altura do botão (~56px) ≈ safe-area + 84px.
+              recenterBottomPx={showFullMap ? 95 : 24}
             />
           );
         })()}
