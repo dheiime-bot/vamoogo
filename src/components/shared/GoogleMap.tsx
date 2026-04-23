@@ -925,11 +925,7 @@ const GoogleMapInner = ({
           {animatedDriver.category === "moto" ? (
             <MotoMarker heading={animatedDriver.heading || 0} color={animatedDriver.color} />
           ) : (
-            <CarMarker
-              heading={animatedDriver.heading || 0}
-              variant={animatedDriver.category === "conforto" ? "conforto" : "economico"}
-              color={animatedDriver.color}
-            />
+            <DriverCarMarker />
           )}
         </AdvancedMarker>
       )}
@@ -937,17 +933,13 @@ const GoogleMapInner = ({
       {!animatedDriver &&
         nearbyDrivers.map((d, i) => (
           <AdvancedMarker key={`nb-${i}-${d.lat.toFixed(4)},${d.lng.toFixed(4)}`} position={{ lat: d.lat, lng: d.lng }}>
-            <div className="rounded-full bg-card/90 p-1 shadow-lg ring-1 ring-border">
-              {d.category === "moto" ? (
+            {d.category === "moto" ? (
+              <div className="rounded-full bg-card/90 p-1 shadow-lg ring-1 ring-border">
                 <MotoMarker heading={d.heading || 0} color={d.color} />
-              ) : (
-                <CarMarker
-                  heading={d.heading || 0}
-                  variant={d.category === "conforto" ? "conforto" : "economico"}
-                  color={d.color}
-                />
-              )}
-            </div>
+              </div>
+            ) : (
+              <DriverCarMarker />
+            )}
           </AdvancedMarker>
         ))}
       {userLoc && !origin && (
@@ -955,9 +947,9 @@ const GoogleMapInner = ({
           {userMarkerVariant === "moto" ? (
             <MotoMarker heading={0} />
           ) : userMarkerVariant === "car-economico" ? (
-            <CarMarker heading={0} variant="economico" />
+            <DriverCarMarker />
           ) : userMarkerVariant === "car-conforto" ? (
-            <CarMarker heading={0} variant="conforto" />
+            <DriverCarMarker />
           ) : (
             <PassengerMarker />
           )}
