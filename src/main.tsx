@@ -16,8 +16,26 @@ const isPreviewHost =
   window.location.hostname.includes("lovableproject.com");
 
 if (!isPreviewHost && !isInIframe && "serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`, { updateViaCache: "none" });
+      await registration.update();
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+        window.location.reload();
+      }
+      registration.addEventListener("updatefound", () => {
+        const nextWorker = registration.installing;
+        nextWorker?.addEventListener("statechange", () => {
+          if (nextWorker.state === "installed" && navigator.serviceWorker.controller) {
+            nextWorker.postMessage({ type: "SKIP_WAITING" });
+            window.location.reload();
+          }
+        });
+      });
+    } catch {
+      // ignora erros do service worker
+    }
   });
 }
 

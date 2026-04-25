@@ -20,7 +20,12 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       injectRegister: false,
       devOptions: { enabled: false },
-      workbox: { navigateFallbackDenylist: [/^\/~oauth/] },
+      workbox: {
+        navigateFallbackDenylist: [/^\/~oauth/],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+      },
       manifest: {
         name: "VamooGo",
         short_name: "VamooGo",
