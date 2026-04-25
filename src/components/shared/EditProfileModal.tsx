@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 import { toast } from "sonner";
 
 interface Props {
@@ -43,8 +44,10 @@ const EditProfileModal = ({ open, onOpenChange }: Props) => {
       setFullName(profile.full_name || "");
       setPhone(profile.phone || "");
       setBirthDate(profile.birth_date || "");
-      setSelfiePreview(profile.selfie_url || null);
       setSelfieFile(null);
+      resolveStorageUrl("selfies", profile.selfie_url).then((url) => {
+        setSelfiePreview(url || profile.selfie_url || null);
+      });
     }
   }, [open, profile]);
 
@@ -58,7 +61,10 @@ const EditProfileModal = ({ open, onOpenChange }: Props) => {
       return;
     }
     setSelfieFile(file);
-    setSelfiePreview(URL.createObjectURL(file));
+    setSelfiePreview((current) => {
+      if (current?.startsWith("blob:")) URL.revokeObjectURL(current);
+      return URL.createObjectURL(file);
+    });
   };
 
   const handleSave = async () => {
@@ -77,8 +83,7 @@ const EditProfileModal = ({ open, onOpenChange }: Props) => {
           .from("selfies")
           .upload(path, selfieFile, { upsert: true });
         if (upErr) throw upErr;
-        const { data } = supabase.storage.from("selfies").getPublicUrl(path);
-        selfie_url = data.publicUrl;
+        selfie_url = path;
       }
 
       const { error } = await supabase
