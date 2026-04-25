@@ -15,6 +15,24 @@ const signOrPublicUrl = async (bucket: StorageBucket, path: string): Promise<str
   return publicUrl ? withCacheBust(publicUrl) : undefined;
 };
 
+const storageCandidatesFor = async (bucket: StorageBucket, url: string): Promise<string[]> => {
+  const candidates: string[] = [];
+  const add = (candidate?: string) => {
+    if (candidate && !candidates.includes(candidate)) candidates.push(candidate);
+  };
+
+  const m = url.match(/\/object\/(?:sign|public)\/(selfies|driver-documents)\/([^?]+)/);
+  if (m) add(await signOrPublicUrl(m[1] as StorageBucket, decodeURIComponent(m[2])));
+  else if (!url.startsWith("http")) {
+    const prefixedBucket = storageBuckets.find((candidate) => url.startsWith(`${candidate}/`));
+    if (prefixedBucket) add(await signOrPublicUrl(prefixedBucket, url));
+    add(await signOrPublicUrl(bucket, url));
+    for (const candidate of storageBuckets.filter((candidate) => candidate !== bucket)) add(await signOrPublicUrl(candidate, url));
+  } else add(url);
+
+  return candidates;
+};
+
 /**
  * Resolve uma URL armazenada (que pode ser path interno do bucket, signed URL antiga,
  * ou URL pública) em uma signed URL fresca de 1h.
@@ -59,4 +77,15 @@ export async function resolveStorageUrl(
 
 export async function resolveAnyStorageImage(url?: string | null): Promise<string | undefined> {
   return (await resolveStorageUrl("selfies", url)) || (await resolveStorageUrl("driver-documents", url)) || undefined;
+}
+
+export async function resolveAnyStorageImageCandidates(urls?: (string | null | undefined)[] | string | null): Promise<string[]> {
+  const list = Array.isArray(urls) ? urls : [urls];
+  const candidates: string[] = [];
+  for (const url of list.filter(Boolean) as string[]) {
+    for (const candidate of await storageCandidatesFor("selfies", url)) {
+      if (!candidates.includes(candidate)) candidates.push(candidate);
+    }
+  }
+  return candidates;
 }
