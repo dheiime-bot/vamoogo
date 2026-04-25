@@ -730,12 +730,15 @@ const PassengerHome = () => {
     // (C) Preço total via tariffs (mesma fórmula do useFareEstimate)
     const { data: tariff } = await supabase
       .from("tariffs")
-      .select("base_fare,per_km,per_minute,min_fare,region_multiplier,passenger_extra")
+      .select("base_fare,per_km,per_minute,min_fare,region_multiplier,passenger_extra,additional_km_rate,wait_free_minutes,wait_per_minute")
       .eq("category", activeRide.category)
       .eq("region", "default")
       .maybeSingle();
     const t = tariff || { base_fare: 5, per_km: 1.8, per_minute: 0.45, min_fare: 12, region_multiplier: 1, passenger_extra: 2 };
-    const base = (t.base_fare + t.per_km * totalKm + t.per_minute * totalMin) * t.region_multiplier;
+    const drivenBase = t.per_km * drivenKm;
+    const extraKmRate = t.additional_km_rate > 0 ? t.additional_km_rate : t.per_km;
+    const newLegBase = extraKmRate * km;
+    const base = drivenBase + newLegBase;
     const extras = Math.max(0, Math.min(activeRide.passenger_count || 1, 4) - 1) * (t.passenger_extra > 0 ? t.passenger_extra : 3) * totalKm;
     const newPrice = Math.round(Math.max(base + extras, t.min_fare) * 100) / 100;
     const newFee = await calcPlatformFee(newPrice, activeRide.category);
