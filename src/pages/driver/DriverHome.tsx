@@ -916,6 +916,10 @@ const DriverHome = () => {
                     {offerPassengerRating != null ? offerPassengerRating.toFixed(2) : "5.00"}
                   </p>
                 </div>
+                <div>
+                  <p className="text-sm font-bold text-muted-foreground">Pagamento</p>
+                  <p className="text-2xl font-extrabold">{paymentLabels[pendingRide.payment_method] || "Dinheiro"}</p>
+                </div>
               </div>
             </div>
 
@@ -1339,17 +1343,21 @@ const DriverHome = () => {
         inProgress={activeRide?.status === "in_progress"}
         acceptedAt={activeRide?.updated_at ?? null}
       />
-      <NotificationBell
-        topOffsetPx={72}
-        connectionStatus={
-          !isOnline
-            ? "idle"
-            : !lastSyncAt || Date.now() - lastSyncAt > 60000
-              ? "disconnected"
-              : "connected"
-        }
-      />
-      <RefreshAppButton topOffsetPx={144} />
+      {rideState !== "offer" && (
+        <>
+          <NotificationBell
+            topOffsetPx={72}
+            connectionStatus={
+              !isOnline
+                ? "idle"
+                : !lastSyncAt || Date.now() - lastSyncAt > 60000
+                  ? "disconnected"
+                  : "connected"
+            }
+          />
+          <RefreshAppButton topOffsetPx={144} />
+        </>
+      )}
       <SelectVehicleModal
         open={requireVehiclePick}
         onOpenChange={setRequireVehiclePick}
