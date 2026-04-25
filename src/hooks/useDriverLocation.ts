@@ -85,7 +85,7 @@ export function useDriverLocation({ driverId, isOnline, category, onBlocked }: O
 
     const markOffline = () => {
       try {
-        const url = `https://xsbvfwxyxgnkfkafxtaa.supabase.co/rest/v1/motorista_locations?on_conflict=driver_id`;
+        const url = `https://xsbvfwxyxgnkfkafxtaa.supabase.co/rest/v1/driver_locations?on_conflict=driver_id`;
         const body = JSON.stringify({
           driver_id: driverId,
           is_online: false,
