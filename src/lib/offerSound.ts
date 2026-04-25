@@ -12,6 +12,25 @@ let unlocked = false;
 let persistentTimer: number | null = null;
 let persistentNotification: Notification | null = null;
 
+type PassengerSoundTone = "classico" | "suave" | "urgente" | "digital";
+
+const PASSENGER_ALERT_SETTINGS_KEY = "vamoogo_passenger_alert_settings";
+
+const getPassengerAlertSettings = () => {
+  try {
+    const raw = localStorage.getItem(PASSENGER_ALERT_SETTINGS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return {
+      soundEnabled: parsed.soundEnabled !== false,
+      vibrationEnabled: parsed.vibrationEnabled !== false,
+      notificationsEnabled: parsed.notificationsEnabled !== false,
+      soundTone: (parsed.soundTone || "classico") as PassengerSoundTone,
+    };
+  } catch {
+    return { soundEnabled: true, vibrationEnabled: true, notificationsEnabled: true, soundTone: "classico" as PassengerSoundTone };
+  }
+};
+
 function getCtx(): AudioContext | null {
   try {
     if (!ctx) {
@@ -73,38 +92,47 @@ export function stopOfferAlert() {
 }
 
 async function fireAlertCycle(payload?: { title?: string; body?: string; tag?: string }) {
+  const settings = getPassengerAlertSettings();
   // 1) Áudio
   const c = getCtx();
-  if (c) {
+  if (c && settings.soundEnabled) {
     try {
       if (c.state === "suspended") await c.resume();
-      const beep = (freq: number, start: number, dur = 0.2) => {
+      const beep = (freq: number, start: number, dur = 0.2, vol = 0.5) => {
         const osc = c.createOscillator();
         const gain = c.createGain();
-        osc.type = "sine";
+        osc.type = settings.soundTone === "digital" ? "square" : "sine";
         osc.frequency.setValueAtTime(freq, c.currentTime + start);
         gain.gain.setValueAtTime(0.0001, c.currentTime + start);
-        gain.gain.exponentialRampToValueAtTime(0.5, c.currentTime + start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(vol, c.currentTime + start + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + start + dur);
         osc.connect(gain).connect(c.destination);
         osc.start(c.currentTime + start);
         osc.stop(c.currentTime + start + dur);
       };
-      beep(880, 0); beep(1320, 0.25); beep(1760, 0.5);
-      beep(1320, 0.75); beep(880, 1.0);
+      if (settings.soundTone === "suave") {
+        beep(523, 0, 0.18, 0.28); beep(659, 0.26, 0.18, 0.28); beep(784, 0.52, 0.28, 0.3);
+      } else if (settings.soundTone === "urgente") {
+        beep(988, 0, 0.12, 0.55); beep(988, 0.18, 0.12, 0.55); beep(1480, 0.36, 0.16, 0.55); beep(1480, 0.58, 0.18, 0.55);
+      } else if (settings.soundTone === "digital") {
+        beep(740, 0, 0.12, 0.35); beep(1175, 0.16, 0.12, 0.35); beep(1568, 0.32, 0.18, 0.35);
+      } else {
+        beep(880, 0); beep(1320, 0.25); beep(1760, 0.5);
+        beep(1320, 0.75); beep(880, 1.0);
+      }
     } catch (e) {
       console.warn("[offerSound] audio failed:", e);
     }
   }
 
   // 2) Vibração
-  if (navigator.vibrate) {
+  if (settings.vibrationEnabled && navigator.vibrate) {
     try { navigator.vibrate([300, 120, 300, 120, 600]); } catch { /* ignore */ }
   }
 
   // 3) Notificação nativa (acorda tab inativa)
   try {
-    if ("Notification" in window && Notification.permission === "granted") {
+    if (settings.notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
       const n = new Notification(payload?.title || "Nova corrida! 🚗", {
         body: payload?.body || "Toque para ver os detalhes",
         icon: "/favicon.ico",
@@ -127,6 +155,7 @@ async function fireAlertCycle(payload?: { title?: string; body?: string; tag?: s
 
 /** Solicita permissão de notificação (chamar após interação do usuário) */
 export async function requestNotificationPermission(): Promise<boolean> {
+  if (!getPassengerAlertSettings().notificationsEnabled) return false;
   if (!("Notification" in window)) return false;
   if (Notification.permission === "granted") return true;
   if (Notification.permission === "denied") return false;
