@@ -26,7 +26,7 @@ import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocat
 import { getRideStops, getRideDestination } from "@/lib/rideRoute";
 import type { PixKeyType } from "@/lib/pix";
 import { calcPlatformFee } from "@/lib/platformFee";
-import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
+import { resolveAnyStorageImage } from "@/lib/resolveStorageUrl";
 import { getCategoryColor, getCategoryContentColor, getCategoryLabel } from "@/lib/categoryStyle";
 import { toast } from "sonner";
 import { playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
@@ -44,7 +44,7 @@ const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", de
 
 const resolveDriverPhotoUrl = async (url?: string | null) => {
   if (!url) return undefined;
-  return (await resolveStorageUrl("selfies", url)) || (await resolveStorageUrl("driver-documents", url)) || url;
+  return (await resolveAnyStorageImage(url)) || url;
 };
 
 const hasVisibleDriverDetails = (info: any) =>
@@ -1132,11 +1132,7 @@ const PassengerHome = () => {
         {showFormSheet && preferredDriver && (
           <div className="mx-4 mt-2 flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/10 p-3">
             {preferredDriver.photo ? (
-              <img
-                src={preferredDriver.photo}
-                alt={preferredDriver.name}
-                className="h-10 w-10 rounded-full object-cover border border-primary/30"
-              />
+              <UserAvatar src={preferredDriver.photo} name={preferredDriver.name} role="driver" size="sm" className="border-primary/30" />
             ) : (
               <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">
                 {preferredDriver.name[0]?.toUpperCase()}
