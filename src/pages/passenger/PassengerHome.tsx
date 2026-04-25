@@ -41,6 +41,11 @@ type RideState = "idle" | "payment" | "searching" | "accepted" | "driver_arrivin
 
 const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", debit: "Débito", credit: "Crédito" };
 
+const resolveDriverPhotoUrl = async (url?: string | null) => {
+  if (!url) return undefined;
+  return (await resolveStorageUrl("selfies", url)) || (await resolveStorageUrl("driver-documents", url)) || url;
+};
+
 const PassengerHome = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -156,7 +161,7 @@ const PassengerHome = () => {
 
   const loadDriverInfoForRide = async (ride: any) => {
     if (!ride?.id || !ride?.driver_id) return;
-    const { data } = await (supabase as any)
+    const { data, error } = await (supabase as any)
       .rpc("get_active_ride_driver_details", { _ride_id: ride.id })
       .maybeSingle();
     const { data: participants } = await (supabase as any)
@@ -165,10 +170,12 @@ const PassengerHome = () => {
       ? participants.find((participant: any) => participant.user_id === ride.driver_id || participant.user_type === "driver")
       : null;
 
-    if (!data && !driverParticipant) return;
+    if (error && !driverParticipant) {
+      console.warn("Não foi possível carregar os dados do motorista", error);
+    }
 
     const rawPhoto = data?.selfie_url || data?.selfie_signup_url || driverParticipant?.selfie_url || driverParticipant?.selfie_signup_url;
-    const photo = await resolveStorageUrl("selfies", rawPhoto);
+    const photo = await resolveDriverPhotoUrl(rawPhoto);
     setDriverInfo({
       user_id: data?.user_id || driverParticipant?.user_id || ride.driver_id,
       rating: data?.rating,
