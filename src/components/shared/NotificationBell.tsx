@@ -80,13 +80,14 @@ const formatTimeAgo = (iso: string) => {
 interface Props {
   /** Quando true, posiciona como botão fixo absoluto no topo direito. */
   floating?: boolean;
+  compact?: boolean;
   /** Status de conexão GPS — colore o sino: verde=conectado, vermelho=desconectado, neutro=idle */
   connectionStatus?: "connected" | "disconnected" | "idle";
   /** Offset vertical extra (px) — usado para empilhar o sino abaixo de outro elemento. */
   topOffsetPx?: number;
 }
 
-const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffsetPx = 0 }: Props) => {
+const NotificationBell = ({ floating = true, compact = false, connectionStatus = "idle", topOffsetPx = 0 }: Props) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -212,7 +213,10 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
         <PopoverTrigger asChild>
           <button
             aria-label="Notificações"
-            className="relative flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
+            className={cn(
+              "relative flex items-center justify-center rounded-full bg-card/95 backdrop-blur-md border border-border transition-transform active:scale-95 hover:bg-muted",
+              compact ? "h-9 w-9 shadow-sm" : "h-16 w-16 shadow-md"
+            )}
             title={
               connectionStatus === "connected"
                 ? "GPS conectado"
@@ -224,7 +228,7 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
             <span className="relative flex">
               <Bell
                 className={cn(
-                  "h-7 w-7 transition-colors",
+                  compact ? "h-4 w-4 transition-colors" : "h-7 w-7 transition-colors",
                   connectionStatus === "connected" && "text-success",
                   connectionStatus === "disconnected" && "text-destructive",
                   connectionStatus === "idle" && "text-foreground"
