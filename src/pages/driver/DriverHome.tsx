@@ -1084,9 +1084,15 @@ const DriverHome = () => {
         <div
           className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
         >
-          <div className="rounded-2xl border bg-card p-3 shadow-glow space-y-2.5">
+          <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-bold text-success">📍 Aguardando embarque</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <div className="min-w-0">
+                  <span className="text-lg font-extrabold text-success block">Aguardando embarque</span>
+                  <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
+                </div>
+              </div>
               {activeRide.ride_code && (
                 <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{activeRide.ride_code}</span>
               )}
