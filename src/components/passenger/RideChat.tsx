@@ -21,13 +21,59 @@ interface ChatMessage {
   is_read: boolean;
 }
 
+interface ChatParticipant {
+  id: string;
+  name: string;
+  photo: string | null;
+  role: "driver" | "passenger";
+}
+
 const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "driver", onBack }: RideChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [photoOpen, setPhotoOpen] = useState(false);
+  const [participants, setParticipants] = useState<Record<string, ChatParticipant>>({});
+  const [previewPhoto, setPreviewPhoto] = useState<{ src: string; name: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!rideId || !user?.id) return;
+
+    const loadParticipants = async () => {
+      const { data: ride } = await supabase
+        .from("rides")
+        .select("passenger_id, driver_id")
+        .eq("id", rideId)
+        .maybeSingle();
+
+      const ids = [ride?.passenger_id, ride?.driver_id].filter(Boolean) as string[];
+      if (!ids.length) return;
+
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, selfie_url, selfie_signup_url")
+        .in("user_id", ids);
+
+      const profileMap = new Map((profiles || []).map((profile: any) => [profile.user_id, profile]));
+      const next: Record<string, ChatParticipant> = {};
+
+      ids.forEach((id) => {
+        const profile = profileMap.get(id) as any;
+        const role: "driver" | "passenger" = id === ride?.driver_id ? "driver" : "passenger";
+        next[id] = {
+          id,
+          name: profile?.full_name || (role === "driver" ? driverName || "Motorista" : "Passageiro"),
+          photo: profile?.selfie_url || profile?.selfie_signup_url || null,
+          role,
+        };
+      });
+
+      setParticipants(next);
+    };
+
+    loadParticipants();
+  }, [rideId, user?.id, driverName]);
 
   useEffect(() => {
     // Load existing messages
@@ -71,6 +117,31 @@ const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "dri
     setSending(false);
   };
 
+  const currentParticipant = user?.id ? participants[user.id] : undefined;
+  const otherParticipant = Object.values(participants).find((participant) => participant.id !== user?.id);
+  const headerName = otherParticipant?.name || driverName || (participantRole === "driver" ? "Motorista" : "Passageiro");
+  const headerPhoto = otherParticipant?.photo || participantPhoto || null;
+  const headerRole = otherParticipant?.role || participantRole;
+
+  const getParticipantForMessage = (senderId: string, isMe: boolean): ChatParticipant => {
+    const participant = participants[senderId];
+    if (participant) return participant;
+    if (isMe) {
+      return {
+        id: senderId,
+        name: currentParticipant?.name || "Você",
+        photo: currentParticipant?.photo || null,
+        role: participantRole === "driver" ? "passenger" : "driver",
+      };
+    }
+    return {
+      id: senderId,
+      name: headerName,
+      photo: headerPhoto,
+      role: headerRole,
+    };
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background animate-fade-in">
       {/* Header */}
@@ -78,11 +149,11 @@ const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "dri
         <button onClick={onBack} className="rounded-full p-1 hover:bg-muted">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <button onClick={() => participantPhoto && setPhotoOpen(true)} disabled={!participantPhoto} className="rounded-full disabled:cursor-default">
-          <UserAvatar src={participantPhoto} name={driverName || "Contato"} role={participantRole} size="sm" />
+        <button onClick={() => headerPhoto && setPreviewPhoto({ src: headerPhoto, name: headerName })} disabled={!headerPhoto} className="rounded-full disabled:cursor-default">
+          <UserAvatar src={headerPhoto} name={headerName} role={headerRole} size="sm" />
         </button>
         <div>
-          <p className="text-sm font-semibold">{driverName || "Motorista"}</p>
+          <p className="text-sm font-semibold">{headerName}</p>
           <p className="text-xs text-success">Online</p>
         </div>
       </div>
@@ -96,8 +167,14 @@ const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "dri
         )}
         {messages.map((msg) => {
           const isMe = msg.sender_id === user?.id;
+          const sender = getParticipantForMessage(msg.sender_id, isMe);
           return (
-            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+            <div key={msg.id} className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+              {!isMe && (
+                <button onClick={() => sender.photo && setPreviewPhoto({ src: sender.photo, name: sender.name })} disabled={!sender.photo} className="rounded-full disabled:cursor-default">
+                  <UserAvatar src={sender.photo} name={sender.name} role={sender.role} size="xs" />
+                </button>
+              )}
               <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
                 isMe
                   ? "bg-primary text-primary-foreground rounded-br-md"
@@ -108,6 +185,11 @@ const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "dri
                   {new Date(msg.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>
+              {isMe && (
+                <button onClick={() => sender.photo && setPreviewPhoto({ src: sender.photo, name: sender.name })} disabled={!sender.photo} className="rounded-full disabled:cursor-default">
+                  <UserAvatar src={sender.photo} name={sender.name} role={sender.role} size="xs" />
+                </button>
+              )}
             </div>
           );
         })}
@@ -134,10 +216,10 @@ const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "dri
         </div>
       </div>
 
-      <Dialog open={photoOpen} onOpenChange={setPhotoOpen}>
+      <Dialog open={!!previewPhoto} onOpenChange={(open) => !open && setPreviewPhoto(null)}>
         <DialogContent className="max-w-sm p-3">
           <DialogTitle className="sr-only">Foto do contato</DialogTitle>
-          {participantPhoto && <img src={participantPhoto} alt={driverName || "Foto"} className="max-h-[75vh] w-full rounded-xl object-contain" />}
+          {previewPhoto && <img src={previewPhoto.src} alt={previewPhoto.name} className="max-h-[75vh] w-full rounded-xl object-contain" />}
         </DialogContent>
       </Dialog>
     </div>

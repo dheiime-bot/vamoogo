@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AppMenu from "@/components/shared/AppMenu";
 import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
 import DriverHomeFab from "@/components/driver/DriverHomeFab";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 import RideChat from "@/components/passenger/RideChat";
 import CentralChat from "@/components/shared/CentralChat";
@@ -21,6 +22,7 @@ interface ChatRow {
   last_message: string | null;
   last_at: string | null;
   unread: number;
+  photo: string | null;
 }
 
 const DriverChats = () => {
@@ -28,7 +30,7 @@ const DriverChats = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [rows, setRows] = useState<ChatRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openRide, setOpenRide] = useState<{ id: string; name: string } | null>(null);
+  const [openRide, setOpenRide] = useState<{ id: string; name: string; photo: string | null } | null>(null);
   const [openCentral, setOpenCentral] = useState(false);
   const [centralUnread, setCentralUnread] = useState(0);
 
@@ -85,12 +87,12 @@ const DriverChats = () => {
       const rideIds = rides.map((r) => r.id);
 
       const [{ data: profiles }, { data: messages }] = await Promise.all([
-        supabase.from("profiles").select("user_id, full_name").in("user_id", passengerIds),
+        supabase.from("profiles").select("user_id, full_name, selfie_url, selfie_signup_url").in("user_id", passengerIds),
         supabase.from("chat_messages").select("ride_id, message, created_at, sender_id, is_read")
           .in("ride_id", rideIds).order("created_at", { ascending: false }),
       ]);
 
-      const nameMap = new Map(profiles?.map((p) => [p.user_id, p.full_name]) ?? []);
+      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) ?? []);
       const msgMap = new Map<string, { msg: string; at: string; unread: number }>();
       messages?.forEach((m) => {
         const cur = msgMap.get(m.ride_id);
@@ -106,13 +108,14 @@ const DriverChats = () => {
         .map((r) => ({
           ride_id: r.id,
           passenger_id: r.passenger_id,
-          passenger_name: nameMap.get(r.passenger_id) ?? "Passageiro",
+          passenger_name: profileMap.get(r.passenger_id)?.full_name ?? "Passageiro",
           origin: r.origin_address,
           destination: r.destination_address,
           status: r.status,
           last_message: msgMap.get(r.id)?.msg ?? null,
           last_at: msgMap.get(r.id)?.at ?? null,
           unread: msgMap.get(r.id)?.unread ?? 0,
+          photo: profileMap.get(r.passenger_id)?.selfie_url || profileMap.get(r.passenger_id)?.selfie_signup_url || null,
         }))
         .filter((r) => r.last_message || r.status === "accepted" || r.status === "in_progress");
 
@@ -123,7 +126,7 @@ const DriverChats = () => {
   }, [user]);
 
   if (openRide) {
-    return <RideChat rideId={openRide.id} driverName={openRide.name} onBack={() => setOpenRide(null)} />;
+    return <RideChat rideId={openRide.id} driverName={openRide.name} participantPhoto={openRide.photo} participantRole="passenger" onBack={() => setOpenRide(null)} />;
   }
   if (openCentral) {
     return <CentralChat onBack={() => { setOpenCentral(false); loadCentralUnread(); }} />;
@@ -172,14 +175,10 @@ const DriverChats = () => {
             {rows.map((r) => (
               <button
                 key={r.ride_id}
-                onClick={() => setOpenRide({ id: r.ride_id, name: r.passenger_name })}
+                onClick={() => setOpenRide({ id: r.ride_id, name: r.passenger_name, photo: r.photo })}
                 className="w-full flex items-center gap-3 rounded-2xl bg-card border p-3 hover:bg-muted transition-colors text-left"
               >
-                <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <span className="text-sm font-bold text-primary">
-                    {r.passenger_name[0]?.toUpperCase()}
-                  </span>
-                </div>
+                <UserAvatar src={r.photo} name={r.passenger_name} role="passenger" size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold truncate">{r.passenger_name}</p>
