@@ -1437,6 +1437,51 @@ export type Database = {
           },
         ]
       }
+      site_leads: {
+        Row: {
+          city: string
+          created_at: string
+          driver_count: number | null
+          has_drivers: boolean | null
+          id: string
+          message: string | null
+          name: string
+          source: string
+          state: string
+          status: string
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          driver_count?: number | null
+          has_drivers?: boolean | null
+          id?: string
+          message?: string | null
+          name: string
+          source?: string
+          state: string
+          status?: string
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          driver_count?: number | null
+          has_drivers?: boolean | null
+          id?: string
+          message?: string | null
+          name?: string
+          source?: string
+          state?: string
+          status?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       staff_users: {
         Row: {
           created_at: string
