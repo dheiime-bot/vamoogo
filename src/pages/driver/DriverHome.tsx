@@ -1294,6 +1294,13 @@ const DriverHome = () => {
         merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
       />
 
+      <Dialog open={!!previewPhoto} onOpenChange={(open) => !open && setPreviewPhoto(null)}>
+        <DialogContent className="max-w-sm p-3">
+          <DialogTitle className="sr-only">Foto do passageiro</DialogTitle>
+          {previewPhoto && <img src={previewPhoto.src} alt={previewPhoto.name} className="max-h-[75vh] w-full rounded-xl object-contain" />}
+        </DialogContent>
+      </Dialog>
+
       {/* Modal de avaliação do passageiro pelo motorista — sobreposto sobre a tela inicial.
           O motorista permanece online; ao enviar/pular, volta a receber novas corridas. */}
       <Dialog
