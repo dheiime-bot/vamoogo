@@ -26,6 +26,7 @@ import { appLocationFromPlaceDetails, placeDetailsFromAppLocation, type AppLocat
 import { getRideStops, getRideDestination } from "@/lib/rideRoute";
 import type { PixKeyType } from "@/lib/pix";
 import { calcPlatformFee } from "@/lib/platformFee";
+import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 import { toast } from "sonner";
 import { playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
 
@@ -189,7 +190,10 @@ const PassengerHome = () => {
               supabase.from("drivers").select("*").eq("user_id", pendingRating.driver_id).maybeSingle(),
               supabase.from("profiles").select("*").eq("user_id", pendingRating.driver_id).maybeSingle(),
             ]);
-            if (driver && driverProfile) setDriverInfo({ ...driver, profile: driverProfile });
+            if (driver && driverProfile) {
+              const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
+              setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
+            }
           }
         }
         return;
@@ -210,7 +214,8 @@ const PassengerHome = () => {
         ]);
 
         if (driver && driverProfile) {
-          setDriverInfo({ ...driver, profile: driverProfile });
+          const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
+          setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
         }
       }
     };
