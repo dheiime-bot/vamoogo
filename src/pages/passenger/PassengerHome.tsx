@@ -46,6 +46,10 @@ const resolveDriverPhotoUrl = async (url?: string | null) => {
   return (await resolveStorageUrl("selfies", url)) || (await resolveStorageUrl("driver-documents", url)) || url;
 };
 
+const hasVisibleDriverDetails = (info: any) =>
+  !!(info?.profile?.selfie_url || info?.profile?.selfie_signup_url) &&
+  !!(info?.vehicle_model || info?.vehicle_brand || info?.vehicle_plate);
+
 const PassengerHome = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -176,23 +180,23 @@ const PassengerHome = () => {
 
     const rawPhoto = data?.selfie_url || data?.selfie_signup_url || driverParticipant?.selfie_url || driverParticipant?.selfie_signup_url;
     const photo = await resolveDriverPhotoUrl(rawPhoto);
-    setDriverInfo({
+    setDriverInfo((previous: any) => ({
       user_id: data?.user_id || driverParticipant?.user_id || ride.driver_id,
-      rating: data?.rating,
-      total_rides: data?.total_rides,
-      vehicle_brand: data?.vehicle_brand,
-      vehicle_model: data?.vehicle_model,
-      vehicle_color: data?.vehicle_color,
-      vehicle_plate: data?.vehicle_plate,
-      pix_key: data?.pix_key,
-      pix_key_type: data?.pix_key_type,
+      rating: data?.rating ?? previous?.rating ?? 5,
+      total_rides: data?.total_rides ?? previous?.total_rides ?? 0,
+      vehicle_brand: data?.vehicle_brand || previous?.vehicle_brand || null,
+      vehicle_model: data?.vehicle_model || previous?.vehicle_model || null,
+      vehicle_color: data?.vehicle_color || previous?.vehicle_color || null,
+      vehicle_plate: data?.vehicle_plate || previous?.vehicle_plate || null,
+      pix_key: data?.pix_key || previous?.pix_key || null,
+      pix_key_type: data?.pix_key_type || previous?.pix_key_type || null,
       profile: {
         user_id: data?.user_id || driverParticipant?.user_id || ride.driver_id,
         full_name: data?.full_name || driverParticipant?.full_name || "Motorista",
-        selfie_url: photo || data?.selfie_url || driverParticipant?.selfie_url,
-        selfie_signup_url: data?.selfie_signup_url || driverParticipant?.selfie_signup_url,
+        selfie_url: photo || data?.selfie_url || driverParticipant?.selfie_url || previous?.profile?.selfie_url || null,
+        selfie_signup_url: data?.selfie_signup_url || driverParticipant?.selfie_signup_url || previous?.profile?.selfie_signup_url || null,
       },
-    });
+    }));
   };
 
   // (recentRides removido — não estava em uso na UI)
@@ -888,9 +892,9 @@ const PassengerHome = () => {
   // Fallback: garante dados/foto do motorista em todas as fases após o aceite,
   // inclusive ao recarregar o app durante corrida ou avaliação.
   useEffect(() => {
-    if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.driver_id || driverInfo) return;
+    if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.driver_id || hasVisibleDriverDetails(driverInfo)) return;
     loadDriverInfoForRide(activeRide);
-  }, [rideState, activeRide?.driver_id, driverInfo]);
+  }, [rideState, activeRide?.id, activeRide?.driver_id, driverInfo]);
 
   const toggleFavoriteDriver = async () => {
     if (!activeRide?.driver_id || favoritingDriver) return;
@@ -1117,34 +1121,34 @@ const PassengerHome = () => {
               )}
 
               {/* Driver info */}
-              {driverInfo && rideState !== "searching" && (
+              {activeRide?.driver_id && rideState !== "searching" && (
                 <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => {
-                        const src = driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url;
-                        if (src) setPreviewPhoto({ src, name: driverInfo.profile?.full_name || "Motorista" });
+                        const src = driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url;
+                        if (src) setPreviewPhoto({ src, name: driverInfo?.profile?.full_name || "Motorista" });
                       }}
-                      disabled={!(driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url)}
+                      disabled={!(driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url)}
                       className="rounded-full disabled:cursor-default"
                     >
                       <UserAvatar
-                        src={driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url}
-                        name={driverInfo.profile?.full_name || "Motorista"}
+                        src={driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url}
+                        name={driverInfo?.profile?.full_name || "Motorista"}
                         role="driver"
                         size="lg"
                       />
                     </button>
                     <div className="flex-1">
-                      <p className="text-lg font-extrabold text-primary">{driverInfo.profile?.full_name || "Motorista"}</p>
+                      <p className="text-lg font-extrabold text-primary">{driverInfo?.profile?.full_name || "Motorista"}</p>
                       <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
                         <Star className="h-4 w-4 text-warning fill-warning" />
-                        <span>{driverInfo.rating?.toFixed(1) || "5.0"}</span>
+                        <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
                         <span>•</span>
-                        <span>{driverInfo.total_rides || 0} corridas</span>
+                        <span>{driverInfo?.total_rides || 0} corridas</span>
                       </div>
                       <p className="text-sm font-semibold text-muted-foreground mt-0.5">
-                        {driverInfo.vehicle_model} • {driverInfo.vehicle_color} • {driverInfo.vehicle_plate}
+                        {[driverInfo?.vehicle_brand, driverInfo?.vehicle_model, driverInfo?.vehicle_color, driverInfo?.vehicle_plate].filter(Boolean).join(" • ") || "Dados do veículo carregando..."}
                       </p>
                     </div>
                   </div>
