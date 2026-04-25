@@ -905,18 +905,18 @@ const PassengerHome = () => {
       .then(({ data }) => setFavoriteDriver(!!data));
   }, [rideState, activeRide?.driver_id, user?.id]);
 
-  // Fallback: garante dados/foto do motorista em todas as fases após o aceite,
-  // inclusive ao recarregar o app durante corrida ou avaliação.
+  // Fallback: mantém o card em loading e re-renderiza automaticamente quando
+  // motorista/veículo chegam da API, inclusive se a tela já estiver em progresso.
   useEffect(() => {
     if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.id || hasVisibleDriverDetails(driverInfo)) return;
     const attempts = driverInfoAttemptsRef.current[activeRide.id] ?? 0;
-    if (attempts >= 8) return;
+    if (attempts >= 12 || driverInfoLoadingRef.current) return;
     const timeout = window.setTimeout(() => {
       driverInfoAttemptsRef.current[activeRide.id] = attempts + 1;
       loadDriverInfoForRide(activeRide);
-    }, attempts === 0 ? 0 : 1200);
+    }, attempts === 0 ? 0 : Math.min(1000 + attempts * 500, 4000));
     return () => window.clearTimeout(timeout);
-  }, [rideState, activeRide?.id, activeRide?.driver_id, driverInfo]);
+  }, [rideState, activeRide?.id, activeRide?.driver_id, driverInfo, driverInfoLoading]);
 
   const toggleFavoriteDriver = async () => {
     if (!activeRide?.driver_id || favoritingDriver) return;
