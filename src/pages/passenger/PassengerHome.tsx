@@ -1207,6 +1207,8 @@ const PassengerHome = () => {
                 </div>
               </div>
 
+              {driverVehicleCard}
+
               {/* Ride stats in progress */}
               {rideState === "in_progress" && (
                 <div className="grid grid-cols-3 gap-2">
@@ -1227,18 +1229,15 @@ const PassengerHome = () => {
 
               {/* Action buttons */}
               {rideState !== "searching" && (
-                <>
-                  {driverVehicleCard}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => setShowChat(true)}
-                      className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold hover:bg-muted transition-colors">
-                      <MessageCircle className="h-4 w-4 text-primary" /> Chat
-                    </button>
-                    <button className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold hover:bg-muted transition-colors">
-                      <Phone className="h-4 w-4 text-primary" /> Ligar
-                    </button>
-                  </div>
-                </>
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => setShowChat(true)}
+                    className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold hover:bg-muted transition-colors">
+                    <MessageCircle className="h-4 w-4 text-primary" /> Chat
+                  </button>
+                  <button className="flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold hover:bg-muted transition-colors">
+                    <Phone className="h-4 w-4 text-primary" /> Ligar
+                  </button>
+                </div>
               )}
 
               {/* Aviso: rota congelada antes de iniciar */}
