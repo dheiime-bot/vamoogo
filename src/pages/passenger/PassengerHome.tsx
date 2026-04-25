@@ -46,6 +46,10 @@ const resolveDriverPhotoUrl = async (url?: string | null) => {
   return (await resolveStorageUrl("selfies", url)) || (await resolveStorageUrl("driver-documents", url)) || url;
 };
 
+const hasVisibleDriverDetails = (info: any) =>
+  !!(info?.profile?.selfie_url || info?.profile?.selfie_signup_url) &&
+  !!(info?.vehicle_model || info?.vehicle_brand || info?.vehicle_plate);
+
 const PassengerHome = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -176,23 +180,23 @@ const PassengerHome = () => {
 
     const rawPhoto = data?.selfie_url || data?.selfie_signup_url || driverParticipant?.selfie_url || driverParticipant?.selfie_signup_url;
     const photo = await resolveDriverPhotoUrl(rawPhoto);
-    setDriverInfo({
+    setDriverInfo((previous: any) => ({
       user_id: data?.user_id || driverParticipant?.user_id || ride.driver_id,
-      rating: data?.rating,
-      total_rides: data?.total_rides,
-      vehicle_brand: data?.vehicle_brand,
-      vehicle_model: data?.vehicle_model,
-      vehicle_color: data?.vehicle_color,
-      vehicle_plate: data?.vehicle_plate,
-      pix_key: data?.pix_key,
-      pix_key_type: data?.pix_key_type,
+      rating: data?.rating ?? previous?.rating ?? 5,
+      total_rides: data?.total_rides ?? previous?.total_rides ?? 0,
+      vehicle_brand: data?.vehicle_brand || previous?.vehicle_brand || null,
+      vehicle_model: data?.vehicle_model || previous?.vehicle_model || null,
+      vehicle_color: data?.vehicle_color || previous?.vehicle_color || null,
+      vehicle_plate: data?.vehicle_plate || previous?.vehicle_plate || null,
+      pix_key: data?.pix_key || previous?.pix_key || null,
+      pix_key_type: data?.pix_key_type || previous?.pix_key_type || null,
       profile: {
         user_id: data?.user_id || driverParticipant?.user_id || ride.driver_id,
         full_name: data?.full_name || driverParticipant?.full_name || "Motorista",
-        selfie_url: photo || data?.selfie_url || driverParticipant?.selfie_url,
-        selfie_signup_url: data?.selfie_signup_url || driverParticipant?.selfie_signup_url,
+        selfie_url: photo || data?.selfie_url || driverParticipant?.selfie_url || previous?.profile?.selfie_url || null,
+        selfie_signup_url: data?.selfie_signup_url || driverParticipant?.selfie_signup_url || previous?.profile?.selfie_signup_url || null,
       },
-    });
+    }));
   };
 
   // (recentRides removido — não estava em uso na UI)
