@@ -213,16 +213,7 @@ const PassengerHome = () => {
         if (pendingRating) {
           setActiveRide(pendingRating);
           setRideState("rating");
-          if (pendingRating.driver_id) {
-            const [{ data: driver }, { data: driverProfile }] = await Promise.all([
-              supabase.from("drivers").select("*").eq("user_id", pendingRating.driver_id).maybeSingle(),
-              supabase.from("profiles").select("*").eq("user_id", pendingRating.driver_id).maybeSingle(),
-            ]);
-            if (driver && driverProfile) {
-              const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
-              setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
-            }
-          }
+          if (pendingRating.driver_id) await loadDriverInfoForRide(pendingRating);
         }
         return;
       }
@@ -885,11 +876,7 @@ const PassengerHome = () => {
   // inclusive ao recarregar o app durante corrida ou avaliação.
   useEffect(() => {
     if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.driver_id || driverInfo) return;
-    let cancelled = false;
-    (async () => {
-      await loadDriverInfoForRide(activeRide);
-    })();
-    return () => { cancelled = true; };
+    loadDriverInfoForRide(activeRide);
   }, [rideState, activeRide?.driver_id, driverInfo]);
 
   const toggleFavoriteDriver = async () => {
