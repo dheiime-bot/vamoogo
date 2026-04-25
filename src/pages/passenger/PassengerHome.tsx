@@ -1103,12 +1103,21 @@ const PassengerHome = () => {
               {driverInfo && rideState !== "searching" && (
                 <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
                   <div className="flex items-center gap-3">
-                    <UserAvatar
-                      src={driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url}
-                      name={driverInfo.profile?.full_name || "Motorista"}
-                      role="driver"
-                      size="lg"
-                    />
+                    <button
+                      onClick={() => {
+                        const src = driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url;
+                        if (src) setPreviewPhoto({ src, name: driverInfo.profile?.full_name || "Motorista" });
+                      }}
+                      disabled={!(driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url)}
+                      className="rounded-full disabled:cursor-default"
+                    >
+                      <UserAvatar
+                        src={driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url}
+                        name={driverInfo.profile?.full_name || "Motorista"}
+                        role="driver"
+                        size="lg"
+                      />
+                    </button>
                     <div className="flex-1">
                       <p className="text-lg font-extrabold text-primary">{driverInfo.profile?.full_name || "Motorista"}</p>
                       <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
