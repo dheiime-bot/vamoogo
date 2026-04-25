@@ -34,6 +34,11 @@ type DriverRideState = "idle" | "offer" | "going_to_passenger" | "arrived" | "in
 
 const paymentLabels: Record<string, string> = { cash: "Dinheiro", pix: "Pix", debit: "Débito", credit: "Crédito" };
 
+const getLocalDayStartIso = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+};
+
 const playOfferSound = (ride?: any) => {
   playOfferAlert({
     title: "Nova corrida! 🚗",
@@ -178,11 +183,10 @@ const DriverHome = () => {
   // Stats do dia
   useEffect(() => {
     if (!user) return;
-    const today = new Date().toISOString().split("T")[0];
     supabase.from("rides")
       .select("driver_net, duration_minutes")
       .eq("driver_id", user.id).eq("status", "completed")
-      .gte("completed_at", today)
+      .gte("completed_at", getLocalDayStartIso())
       .then(({ data }) => {
         if (data) {
           const hours = data.reduce((s, r) => s + (r.duration_minutes || 0), 0) / 60;

@@ -14,15 +14,24 @@ const DriverEarningsChip = () => {
   const navigate = useNavigate();
   const [earnings, setEarnings] = useState(0);
 
+  const getLocalDayStartIso = () => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  };
+
+  const msUntilNextLocalMidnight = () => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
+  };
+
   const reload = async () => {
     if (!user) return;
-    const today = new Date().toISOString().split("T")[0];
     const { data } = await supabase
       .from("rides")
       .select("driver_net")
       .eq("driver_id", user.id)
       .eq("status", "completed")
-      .gte("completed_at", today);
+      .gte("completed_at", getLocalDayStartIso());
     if (data) {
       setEarnings(data.reduce((s, r: any) => s + Number(r.driver_net || 0), 0));
     }
@@ -39,7 +48,11 @@ const DriverEarningsChip = () => {
         reload,
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const midnightTimer = window.setTimeout(reload, msUntilNextLocalMidnight() + 1000);
+    return () => {
+      window.clearTimeout(midnightTimer);
+      supabase.removeChannel(channel);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
