@@ -45,8 +45,66 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
       setResolvedSrc(null);
       return;
     }
-    resolveStorageUrl("selfies", src).then((url) => {
-      if (!cancelled) setResolvedSrc(url || src);
+    const resolveAvatar = async () => {
+      const selfieUrl = await resolveStorageUrl("selfies", src);
+      const fallbackUrl = role === "driver" ? await resolveStorageUrl("driver-documents", src) : undefined;
+      if (!cancelled) setResolvedSrc(selfieUrl || fallbackUrl || src);
+    };
+    resolveAvatar();
+    return () => { cancelled = true; };
+  }, [src, role]);
+
+  useEffect(() => {
+    if (!resolvedSrc) return;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = resolvedSrc;
+  }, [resolvedSrc]);
+
+  const handleImageError = async () => {
+    if (!src) {
+      setResolvedSrc(null);
+      return;
+    }
+    const refreshedUrl = role === "driver"
+      ? (await resolveStorageUrl("driver-documents", src)) || (await resolveStorageUrl("selfies", src))
+      : await resolveStorageUrl("selfies", src);
+    setResolvedSrc(refreshedUrl ? `${refreshedUrl}${refreshedUrl.includes("?") ? "&" : "?"}retry=${Date.now()}` : null);
+  };
+
+  if (resolvedSrc) {
+    return (
+      <img
+        src={resolvedSrc}
+        alt={name || "Avatar"}
+        className={cn(
+          dim,
+          "rounded-full object-cover shrink-0 border border-border bg-muted",
+          className,
+        )}
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
+        onError={handleImageError}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        dim,
+        "rounded-full shrink-0 flex items-center justify-center bg-gradient-primary text-primary-foreground border border-border",
+        className,
+      )}
+      aria-label={name || "Avatar padrão"}
+    >
+      <Icon className={iconDim} strokeWidth={2.2} />
+    </div>
+  );
+};
+
+export default UserAvatar;
     });
     return () => { cancelled = true; };
   }, [src]);
