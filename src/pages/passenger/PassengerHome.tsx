@@ -7,6 +7,7 @@ import { guardErrorMessage } from "@/lib/guardErrors";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import PassengerSpendChip from "@/components/passenger/PassengerSpendChip";
+import UserAvatar from "@/components/shared/UserAvatar";
 import GoogleMap, { LEG_COLORS, vehicleColorToHex } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
