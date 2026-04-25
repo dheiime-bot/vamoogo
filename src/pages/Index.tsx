@@ -33,7 +33,7 @@ import vamooLogo from "@/assets/vamoo-logo.png";
 import productPassenger from "@/assets/vamoo-product-passenger.png";
 import { supabase } from "@/integrations/supabase/client";
 
-const WHATSAPP_NUMBER = "5599999999999";
+const WHATSAPP_NUMBER = "5593991622328";
 const CONTACT_EMAIL = "contato@vamoo.app";
 const whatsappMessage = "Quero levar o Vamoo para minha cidade";
 
@@ -49,7 +49,7 @@ const leadSchema = z.object({
   message: z.string().trim().max(1000, "Mensagem muito longa").optional(),
 });
 
-type LeadForm = z.input<typeof leadSchema>;
+type LeadForm = Omit<z.input<typeof leadSchema>, "driver_count"> & { driver_count: string };
 
 const openWhatsApp = (message = whatsappMessage) => {
   const encoded = encodeURIComponent(message.slice(0, 500));
