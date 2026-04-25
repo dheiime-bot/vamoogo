@@ -256,7 +256,7 @@ const PassengerHome = () => {
       else if (ride.arrived_at) setRideState("arrived");
       else setRideState("driver_arriving");
 
-      if (ride.driver_id) await loadDriverInfoForRide(ride);
+      if (ride.status !== "requested") await loadDriverInfoForRide(ride);
     };
 
     loadActiveRide();
@@ -281,7 +281,7 @@ const PassengerHome = () => {
         if (finalizedRideIdsRef.current.has(ride.id)) return;
         setActiveRide(ride);
 
-        if (ride.status === "accepted" && ride.driver_id) {
+        if (ride.status === "accepted") {
           await loadDriverInfoForRide(ride);
           // Se já tem arrived_at quando chegou o accepted (race condition), pula direto
           if (ride.arrived_at) {
@@ -296,11 +296,11 @@ const PassengerHome = () => {
           setRideState("arrived");
           playPhaseSound("arrived");
         } else if (ride.status === "in_progress") {
-          if (ride.driver_id && !driverInfo) await loadDriverInfoForRide(ride);
+          if (!driverInfo) await loadDriverInfoForRide(ride);
           setRideState("in_progress");
           playPhaseSound("started");
         } else if (ride.status === "completed") {
-          if (ride.driver_id && !driverInfo) await loadDriverInfoForRide(ride);
+          if (!driverInfo) await loadDriverInfoForRide(ride);
           // Volta o app para a tela inicial e abre o rating como modal sobreposto.
           setRideState("rating");
           setDriverLocation(null);
