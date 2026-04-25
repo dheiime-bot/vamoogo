@@ -187,8 +187,8 @@ const App = () => (
                 <Route path="/motorista/settings" element={<ProtectedDriverRoute><DriverSettings /></ProtectedDriverRoute>} />
                 <Route path="/admin" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
                 <Route path="/admin/chats" element={<ProtectedAdminRoute><AdminChats /></ProtectedAdminRoute>} />
-                <Route path="/admin/motoristas" element={<ProtectedAdminRoute><AdminDrivers /></ProtectedAdminRoute>} />
-                <Route path="/admin/passageiros" element={<ProtectedAdminRoute><AdminPassengers /></ProtectedAdminRoute>} />
+                <Route path="/admin/drivers" element={<ProtectedAdminRoute><AdminDrivers /></ProtectedAdminRoute>} />
+                <Route path="/admin/passengers" element={<ProtectedAdminRoute><AdminPassengers /></ProtectedAdminRoute>} />
                 <Route path="/admin/rides" element={<ProtectedAdminRoute><AdminRides /></ProtectedAdminRoute>} />
                 <Route path="/admin/appeals" element={<ProtectedAdminRoute><AdminAppeals /></ProtectedAdminRoute>} />
                 <Route path="/admin/cancellations" element={<ProtectedAdminRoute><AdminCancellations /></ProtectedAdminRoute>} />

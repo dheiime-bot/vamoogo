@@ -150,7 +150,7 @@ const NegativeBalanceAlert = () => {
             Executar diária
           </button>
           <button
-            onClick={() => navigate("/admin/motoristas")}
+            onClick={() => navigate("/admin/drivers")}
             className="text-xs font-semibold text-destructive hover:underline flex items-center gap-1"
           >
             Ver todos <ChevronRight className="h-3 w-3" />
@@ -163,7 +163,7 @@ const NegativeBalanceAlert = () => {
           <li key={d.user_id}>
             <div className="flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-destructive/5 transition-colors">
               <button
-                onClick={() => navigate(`/admin/motoristas?search=${encodeURIComponent(d.full_name || "")}`)}
+                onClick={() => navigate(`/admin/drivers?search=${encodeURIComponent(d.full_name || "")}`)}
                 className="flex items-center gap-2 min-w-0 flex-1 text-left"
               >
                 <Wallet className="h-3.5 w-3.5 text-destructive shrink-0" />
@@ -226,7 +226,7 @@ const NegativeBalanceAlert = () => {
       {drivers.length > 6 && (
         <div className="px-4 py-2 bg-destructive/5 border-t border-destructive/10 text-center">
           <button
-            onClick={() => navigate("/admin/motoristas")}
+            onClick={() => navigate("/admin/drivers")}
             className="text-[11px] font-semibold text-destructive hover:underline"
           >
             +{drivers.length - 6} outro{drivers.length - 6 > 1 ? "s" : ""} motorista{drivers.length - 6 > 1 ? "s" : ""} negativo{drivers.length - 6 > 1 ? "s" : ""}
