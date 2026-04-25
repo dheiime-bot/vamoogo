@@ -896,7 +896,7 @@ const DriverHome = () => {
             </div>
 
             <div className="rounded-xl bg-muted/50 p-3 mb-3">
-              <div className="grid grid-cols-1 gap-3 text-center sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3 text-center">
                 <div>
                   <p className="text-sm font-bold text-muted-foreground">Valor da corrida</p>
                   <p className="text-2xl font-extrabold text-success">R$ {Number(pendingRide.price || 0).toFixed(2)}</p>
@@ -928,7 +928,7 @@ const DriverHome = () => {
                 <div className="h-2.5 w-2.5 rounded-full bg-success mt-1.5" />
                 <div className="min-w-0">
                   <p className="text-[10px] text-muted-foreground">Embarque</p>
-                  <p className="text-sm font-medium truncate">{pendingRide.origin_address?.split(" - ")[0]}</p>
+                  <p className="text-lg font-bold leading-snug truncate">{pendingRide.origin_address?.split(" - ")[0]}</p>
                 </div>
               </div>
               {Array.isArray((pendingRide as any).stops) && (pendingRide as any).stops.length > 0 && (
@@ -950,7 +950,7 @@ const DriverHome = () => {
                 <div className="h-2.5 w-2.5 rounded-full bg-destructive mt-1.5" />
                 <div className="min-w-0">
                   <p className="text-[10px] text-muted-foreground">Destino</p>
-                  <p className="text-sm font-medium truncate">{pendingRide.destination_address?.split(" - ")[0]}</p>
+                  <p className="text-lg font-bold leading-snug truncate">{pendingRide.destination_address?.split(" - ")[0]}</p>
                 </div>
               </div>
             </div>
