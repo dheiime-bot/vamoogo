@@ -7,6 +7,7 @@ import { guardErrorMessage } from "@/lib/guardErrors";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
 import PassengerSpendChip from "@/components/passenger/PassengerSpendChip";
+import UserAvatar from "@/components/shared/UserAvatar";
 import GoogleMap, { LEG_COLORS, vehicleColorToHex } from "@/components/shared/GoogleMap";
 import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
@@ -1097,29 +1098,30 @@ const PassengerHome = () => {
 
               {/* Driver info */}
               {driverInfo && rideState !== "searching" && (
-                <div className="rounded-2xl border p-4 space-y-3">
+                <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xl font-bold text-primary">
-                        {(driverInfo.profile?.full_name || "M")[0]}
-                      </span>
-                    </div>
+                    <UserAvatar
+                      src={driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url}
+                      name={driverInfo.profile?.full_name || "Motorista"}
+                      role="driver"
+                      size="lg"
+                    />
                     <div className="flex-1">
-                      <p className="font-semibold">{driverInfo.profile?.full_name || "Motorista"}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Star className="h-3 w-3 text-warning fill-warning" />
+                      <p className="text-lg font-extrabold text-primary">{driverInfo.profile?.full_name || "Motorista"}</p>
+                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                        <Star className="h-4 w-4 text-warning fill-warning" />
                         <span>{driverInfo.rating?.toFixed(1) || "5.0"}</span>
                         <span>•</span>
                         <span>{driverInfo.total_rides || 0} corridas</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-sm font-semibold text-muted-foreground mt-0.5">
                         {driverInfo.vehicle_model} • {driverInfo.vehicle_color} • {driverInfo.vehicle_plate}
                       </p>
                     </div>
                   </div>
 
                   {/* Status badge */}
-                  <div className={`rounded-xl p-3 text-center text-sm font-semibold ${
+                  <div className={`rounded-xl p-3 text-center text-lg font-extrabold ${
                     rideState === "driver_arriving" ? "bg-info/10 text-info" :
                     rideState === "arrived" ? "bg-success/10 text-success" :
                     "bg-primary/10 text-primary"
@@ -1156,10 +1158,10 @@ const PassengerHome = () => {
               )}
 
               {/* Route info */}
-              <div className="rounded-xl border p-3 space-y-2">
+                <div className="rounded-xl bg-muted/50 p-3 space-y-2">
                 <div className="flex items-start gap-2">
                   <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-success" />
-                  <p className="text-sm truncate">{activeRide.origin_address?.split(" - ")[0]}</p>
+                    <p className="text-lg font-bold leading-snug truncate">{activeRide.origin_address?.split(" - ")[0]}</p>
                 </div>
                 {activeRideStops.map((stop, index) => (
                   <div key={`${stop.lat}-${stop.lng}-${index}`}>
@@ -1168,14 +1170,14 @@ const PassengerHome = () => {
                       <div className="mt-1 h-4 w-4 rounded-full bg-warning text-[9px] font-bold text-warning-foreground flex items-center justify-center shrink-0">
                         {index + 1}
                       </div>
-                      <p className="text-sm truncate">{stop.label}</p>
+                      <p className="text-lg font-bold leading-snug truncate">{stop.label}</p>
                     </div>
                   </div>
                 ))}
                 <div className="ml-1 h-2.5 border-l border-dashed border-muted-foreground/30" />
                 <div className="flex items-start gap-2">
                   <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-destructive" />
-                  <p className="text-sm truncate">{activeRide.destination_address?.split(" - ")[0]}</p>
+                    <p className="text-lg font-bold leading-snug truncate">{activeRide.destination_address?.split(" - ")[0]}</p>
                 </div>
               </div>
 

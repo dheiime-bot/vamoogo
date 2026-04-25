@@ -21,6 +21,7 @@ import RideChat from "@/components/passenger/RideChat";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import CancelRideDialog from "@/components/shared/CancelRideDialog";
 import SelectVehicleModal from "@/components/driver/SelectVehicleModal";
+import UserAvatar from "@/components/shared/UserAvatar";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission, stopOfferAlert } from "@/lib/offerSound";
@@ -50,6 +51,7 @@ const DriverHome = () => {
   const [offerCountdown, setOfferCountdown] = useState(15);
   const [showChat, setShowChat] = useState(false);
   const [passengerName, setPassengerName] = useState<string>("");
+  const [passengerPhoto, setPassengerPhoto] = useState<string | null>(null);
   const [offerPassengerRating, setOfferPassengerRating] = useState<number | null>(null);
   const [showPixModal, setShowPixModal] = useState(false);
   const [passengerRating, setPassengerRating] = useState(0);
@@ -763,11 +765,14 @@ const DriverHome = () => {
   const remainingStops = activeRide?.status === "in_progress" ? rideStops.slice(currentStopIndex) : rideStops;
   const routeStops = activeRide?.status === "in_progress" ? remainingStops : rideStops;
 
-  // Carrega nome do passageiro quando há corrida aceita
+  // Carrega dados do passageiro quando há corrida aceita
   useEffect(() => {
-    if (!activeRide?.passenger_id) { setPassengerName(""); return; }
-    supabase.from("profiles").select("full_name").eq("user_id", activeRide.passenger_id).single()
-      .then(({ data }) => setPassengerName(data?.full_name ?? "Passageiro"));
+    if (!activeRide?.passenger_id) { setPassengerName(""); setPassengerPhoto(null); return; }
+    supabase.from("profiles").select("full_name, selfie_url, selfie_signup_url").eq("user_id", activeRide.passenger_id).single()
+      .then(({ data }) => {
+        setPassengerName(data?.full_name ?? "Passageiro");
+        setPassengerPhoto((data as any)?.selfie_url || (data as any)?.selfie_signup_url || null);
+      });
   }, [activeRide?.passenger_id]);
 
   useEffect(() => {
@@ -974,20 +979,24 @@ const DriverHome = () => {
         <div
           className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
         >
-          <div className="rounded-2xl border bg-card p-3 shadow-glow space-y-2.5">
+          <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-xs font-bold text-info truncate">A caminho do passageiro</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <div className="min-w-0">
+                  <span className="text-lg font-extrabold text-primary truncate block">A caminho do passageiro</span>
+                  <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
+                </div>
                 {activeRide.ride_code && (
                   <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
                 )}
               </div>
-              <span className="text-sm font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
+              <span className="text-2xl font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
             </div>
 
             <div className="flex items-start gap-2">
-              <MapPin className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
-              <p className="text-xs truncate">{activeRide.origin_address?.split(" - ")[0]}</p>
+              <MapPin className="h-5 w-5 text-success mt-0.5 shrink-0" />
+              <p className="text-lg font-bold leading-snug truncate">{activeRide.origin_address?.split(" - ")[0]}</p>
             </div>
 
             {activeRide.for_other_person && (
@@ -1075,9 +1084,15 @@ const DriverHome = () => {
         <div
           className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
         >
-          <div className="rounded-2xl border bg-card p-3 shadow-glow space-y-2.5">
+          <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-bold text-success">📍 Aguardando embarque</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <div className="min-w-0">
+                  <span className="text-lg font-extrabold text-success block">Aguardando embarque</span>
+                  <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
+                </div>
+              </div>
               {activeRide.ride_code && (
                 <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{activeRide.ride_code}</span>
               )}
@@ -1121,21 +1136,25 @@ const DriverHome = () => {
         <div
           className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
         >
-          <div className="rounded-2xl border bg-card p-3 shadow-glow space-y-2.5">
+          <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-xs font-bold text-success truncate">🛣️ Em corrida</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <div className="min-w-0">
+                  <span className="text-lg font-extrabold text-success truncate block">Em corrida</span>
+                  <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
+                </div>
                 {activeRide.ride_code && (
                   <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
                 )}
               </div>
-              <span className="text-sm font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
+              <span className="text-2xl font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
             </div>
             <div className="flex items-start gap-2">
               {currentStopIndex < rideStops.length ? (
-                <MapPin className="h-3.5 w-3.5 text-warning mt-0.5 shrink-0" />
+                <MapPin className="h-5 w-5 text-warning mt-0.5 shrink-0" />
               ) : (
-                <Flag className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
+                <Flag className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
               )}
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold text-muted-foreground">
@@ -1143,7 +1162,7 @@ const DriverHome = () => {
                     ? `Você está indo para a parada ${currentStopIndex + 1} de ${rideStops.length}`
                     : arrivedAtFinal ? "Chegou ao destino final" : "Você está indo para o destino final"}
                 </p>
-                <p className="text-xs truncate">
+                <p className="text-lg font-bold leading-snug truncate">
                   {nextTarget?.address || routePointName(nextTarget, "Destino final")}
                 </p>
               </div>
