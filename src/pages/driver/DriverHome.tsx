@@ -765,11 +765,14 @@ const DriverHome = () => {
   const remainingStops = activeRide?.status === "in_progress" ? rideStops.slice(currentStopIndex) : rideStops;
   const routeStops = activeRide?.status === "in_progress" ? remainingStops : rideStops;
 
-  // Carrega nome do passageiro quando há corrida aceita
+  // Carrega dados do passageiro quando há corrida aceita
   useEffect(() => {
-    if (!activeRide?.passenger_id) { setPassengerName(""); return; }
-    supabase.from("profiles").select("full_name").eq("user_id", activeRide.passenger_id).single()
-      .then(({ data }) => setPassengerName(data?.full_name ?? "Passageiro"));
+    if (!activeRide?.passenger_id) { setPassengerName(""); setPassengerPhoto(null); return; }
+    supabase.from("profiles").select("full_name, selfie_url, selfie_signup_url").eq("user_id", activeRide.passenger_id).single()
+      .then(({ data }) => {
+        setPassengerName(data?.full_name ?? "Passageiro");
+        setPassengerPhoto((data as any)?.selfie_url || (data as any)?.selfie_signup_url || null);
+      });
   }, [activeRide?.passenger_id]);
 
   useEffect(() => {
