@@ -41,6 +41,7 @@ const DRIVER_ITEMS: MenuItem[] = [
   { icon: Car, label: "Meus veículos", path: "/driver/vehicles" },
   { icon: MessageCircle, label: "Chats", path: "/driver/chats" },
   { icon: User, label: "Meus dados", path: "/driver/profile" },
+  { icon: Settings, label: "Configurações", path: "/driver/settings" },
 ];
 
 interface Props {
