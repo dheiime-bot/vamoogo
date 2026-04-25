@@ -23,7 +23,7 @@ import { playOfferAlert, stopOfferAlert } from "@/lib/offerSound";
 
 interface NotificationRow {
   id: string;
-  type: "chat" | "ride_status" | "admin_route_change" | "low_balance" | "admin" | "system";
+  type: "chat" | "ride_status" | "low_balance" | "admin" | "system";
   title: string;
   message: string | null;
   link: string | null;
@@ -33,6 +33,7 @@ interface NotificationRow {
 }
 
 const iconFor = (type: NotificationRow["type"]) => {
+  if (type === "admin") return Megaphone;
   switch (type) {
     case "chat":
       return MessageCircle;
@@ -40,8 +41,6 @@ const iconFor = (type: NotificationRow["type"]) => {
       return Wallet;
     case "ride_status":
       return Car;
-    case "admin_route_change":
-      return Route;
     case "admin":
     case "system":
     default:
@@ -50,6 +49,7 @@ const iconFor = (type: NotificationRow["type"]) => {
 };
 
 const colorFor = (type: NotificationRow["type"]) => {
+  if (type === "admin") return "text-warning bg-warning/10";
   switch (type) {
     case "chat":
       return "text-primary bg-primary/10";
@@ -57,8 +57,6 @@ const colorFor = (type: NotificationRow["type"]) => {
       return "text-destructive bg-destructive/10";
     case "ride_status":
       return "text-success bg-success/10";
-    case "admin_route_change":
-      return "text-info bg-info/10";
     case "admin":
     case "system":
     default:
@@ -125,11 +123,11 @@ const NotificationBell = ({ floating = true, compact = false, connectionStatus =
           setItems((prev) => [n, ...prev].slice(0, 30));
           // Notificações importantes (corrida/chat) tocam som + toast destacado
           // para garantir que o motorista/passageiro veja o aviso em qualquer tela.
-          const isUrgent = n.type === "ride_status" || n.type === "chat" || n.type === "admin_route_change";
+          const isRouteChange = (n.data && (n.data as any).event === "route_changed");
+          const isUrgent = n.type === "ride_status" || n.type === "chat" || isRouteChange;
           if (isUrgent) {
             // Mudança de rota = persistente (loop até o motorista interagir).
             // Outras urgências = um ciclo só.
-            const isRouteChange = (n.data && (n.data as any).event === "route_changed");
             try {
               playOfferAlert({
                 title: n.title,
