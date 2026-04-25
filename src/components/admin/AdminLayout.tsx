@@ -129,7 +129,7 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar collapsible="icon" className="border-r [&_[data-sidebar=sidebar]]:bg-background">
       {/* Header / Brand — Logo Vamoo */}
       <SidebarHeader className="border-b border-sidebar-border">
         <NavLink
