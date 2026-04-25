@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { User, Car as CarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { resolveAnyStorageImage } from "@/lib/resolveStorageUrl";
+import { resolveAnyStorageImageCandidates } from "@/lib/resolveStorageUrl";
 
 interface UserAvatarProps {
   src?: string | null;
@@ -37,21 +37,27 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
   const Icon = role === "driver" ? CarIcon : User;
   const dim = sizeMap[size];
   const iconDim = iconSizeMap[size];
-  const [resolvedSrc, setResolvedSrc] = useState<string | null>(src || null);
+  const [imageCandidates, setImageCandidates] = useState<string[]>([]);
+  const [candidateIndex, setCandidateIndex] = useState(0);
+  const resolvedSrc = imageCandidates[candidateIndex] || null;
 
   useEffect(() => {
     let cancelled = false;
     if (!src) {
-      setResolvedSrc(null);
+      setImageCandidates([]);
+      setCandidateIndex(0);
       return;
     }
     const resolveAvatar = async () => {
-      const imageUrl = await resolveAnyStorageImage(src);
-      if (!cancelled) setResolvedSrc(imageUrl || src);
+      const candidates = await resolveAnyStorageImageCandidates(src);
+      if (!cancelled) {
+        setImageCandidates(candidates.length ? candidates : [src]);
+        setCandidateIndex(0);
+      }
     };
     resolveAvatar();
     return () => { cancelled = true; };
-  }, [src, role]);
+  }, [src]);
 
   useEffect(() => {
     if (!resolvedSrc) return;
@@ -60,14 +66,7 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
     image.src = resolvedSrc;
   }, [resolvedSrc]);
 
-  const handleImageError = async () => {
-    if (!src) {
-      setResolvedSrc(null);
-      return;
-    }
-    const refreshedUrl = await resolveAnyStorageImage(src);
-    setResolvedSrc(refreshedUrl ? `${refreshedUrl}${refreshedUrl.includes("?") ? "&" : "?"}retry=${Date.now()}` : null);
-  };
+  const handleImageError = () => setCandidateIndex((current) => current + 1);
 
   if (resolvedSrc) {
     return (
