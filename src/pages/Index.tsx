@@ -49,7 +49,7 @@ const leadSchema = z.object({
   message: z.string().trim().max(1000, "Mensagem muito longa").optional(),
 });
 
-type LeadForm = z.input<typeof leadSchema>;
+type LeadForm = Omit<z.input<typeof leadSchema>, "driver_count"> & { driver_count: string };
 
 const openWhatsApp = (message = whatsappMessage) => {
   const encoded = encodeURIComponent(message.slice(0, 500));
