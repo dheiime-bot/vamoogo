@@ -8,11 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { playOfferAlert, requestNotificationPermission, unlockAudioOnce } from "@/lib/offerSound";
 import { cn } from "@/lib/utils";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-}
+import { BeforeInstallPromptEvent, clearStoredInstallPrompt, getStoredInstallPrompt, VAMOO_INSTALL_PROMPT_READY } from "@/lib/pwaInstall";
 
 type SoundTone = "classico" | "suave" | "urgente" | "digital";
 
@@ -73,12 +69,10 @@ const DriverSettings = () => {
       .catch(() => setCameraStatus("unsupported"));
 
     setStandalone(window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true);
-    const onBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    setInstallPrompt(getStoredInstallPrompt());
+    const onPromptReady = () => setInstallPrompt(getStoredInstallPrompt());
+    window.addEventListener(VAMOO_INSTALL_PROMPT_READY, onPromptReady);
+    return () => window.removeEventListener(VAMOO_INSTALL_PROMPT_READY, onPromptReady);
   }, []);
 
   const saveSettings = (next: DriverAlertSettings) => {
@@ -146,6 +140,7 @@ const DriverSettings = () => {
     if (choice.outcome === "accepted") {
       setStandalone(true);
       setInstallPrompt(null);
+      clearStoredInstallPrompt();
       toast.success("Instalação iniciada");
     }
   };
