@@ -978,16 +978,25 @@ const PassengerHome = () => {
             </div>
             {driverCardIsLoading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />}
           </div>
-          <div className="mt-2 rounded-lg bg-muted/50 p-2">
-            <div className="flex items-center gap-2">
-              <Car className="h-4 w-4 shrink-0 text-primary" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-extrabold text-foreground">
-                  {driverVehicleName || (driverCardIsLoading ? "Carregando veículo..." : "Veículo não informado")}
-                </p>
-                <p className="truncate text-xs font-semibold text-muted-foreground">
-                  {driverVehicleMeta || (driverCardIsLoading ? "Aguarde alguns segundos" : "Dados pendentes")}
-                </p>
+          <div className="mt-2 rounded-lg bg-muted/50 p-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: driverCategoryColor, color: driverCategoryContentColor }}>
+                <DriverVehicleIcon className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate text-sm font-extrabold text-foreground">
+                    {driverVehicleName || (driverCardIsLoading ? "Carregando veículo..." : "Veículo não informado")}
+                  </p>
+                  <span className="shrink-0 rounded-md border bg-background px-2 py-1 font-mono text-xs font-black tracking-wide text-foreground">
+                    {driverVehiclePlate || "PLACA"}
+                  </span>
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
+                  <span>{getCategoryLabel(driverCategory)}</span>
+                  {driverVehicleColor && <span>• {driverVehicleColor}</span>}
+                  {!driverVehicleColor && driverCardIsLoading && <span>• carregando cor</span>}
+                </div>
               </div>
             </div>
           </div>
