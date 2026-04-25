@@ -12,22 +12,24 @@ let unlocked = false;
 let persistentTimer: number | null = null;
 let persistentNotification: Notification | null = null;
 
-type PassengerSoundTone = "classico" | "suave" | "urgente" | "digital";
+type AlertSoundTone = "classico" | "suave" | "urgente" | "digital";
 
 const PASSENGER_ALERT_SETTINGS_KEY = "vamoogo_passenger_alert_settings";
+const DRIVER_ALERT_SETTINGS_KEY = "vamoogo_driver_alert_settings";
 
-const getPassengerAlertSettings = () => {
+const getAlertSettings = () => {
   try {
-    const raw = localStorage.getItem(PASSENGER_ALERT_SETTINGS_KEY);
+    const key = window.location.pathname.startsWith("/driver") ? DRIVER_ALERT_SETTINGS_KEY : PASSENGER_ALERT_SETTINGS_KEY;
+    const raw = localStorage.getItem(key);
     const parsed = raw ? JSON.parse(raw) : {};
     return {
       soundEnabled: parsed.soundEnabled !== false,
       vibrationEnabled: parsed.vibrationEnabled !== false,
       notificationsEnabled: parsed.notificationsEnabled !== false,
-      soundTone: (parsed.soundTone || "classico") as PassengerSoundTone,
+      soundTone: (parsed.soundTone || "classico") as AlertSoundTone,
     };
   } catch {
-    return { soundEnabled: true, vibrationEnabled: true, notificationsEnabled: true, soundTone: "classico" as PassengerSoundTone };
+    return { soundEnabled: true, vibrationEnabled: true, notificationsEnabled: true, soundTone: "classico" as AlertSoundTone };
   }
 };
 
@@ -92,7 +94,7 @@ export function stopOfferAlert() {
 }
 
 async function fireAlertCycle(payload?: { title?: string; body?: string; tag?: string }) {
-  const settings = getPassengerAlertSettings();
+  const settings = getAlertSettings();
   // 1) Áudio
   const c = getCtx();
   if (c && settings.soundEnabled) {
@@ -155,7 +157,7 @@ async function fireAlertCycle(payload?: { title?: string; body?: string; tag?: s
 
 /** Solicita permissão de notificação (chamar após interação do usuário) */
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (!getPassengerAlertSettings().notificationsEnabled) return false;
+  if (!getAlertSettings().notificationsEnabled) return false;
   if (!("Notification" in window)) return false;
   if (Notification.permission === "granted") return true;
   if (Notification.permission === "denied") return false;
@@ -180,14 +182,16 @@ export async function requestNotificationPermission(): Promise<boolean> {
 export async function playPhaseSound(
   phase: "accepted" | "arriving" | "arrived" | "started" | "completed" | "cancelled"
 ) {
+  const settings = getAlertSettings();
+  if (!settings.soundEnabled && !settings.vibrationEnabled) return;
   const c = getCtx();
-  if (!c) return;
   try {
-    if (c.state === "suspended") await c.resume();
+    if (c && settings.soundEnabled && c.state === "suspended") await c.resume();
     const beep = (freq: number, start: number, dur = 0.18, vol = 0.45) => {
+      if (!c || !settings.soundEnabled) return;
       const osc = c.createOscillator();
       const gain = c.createGain();
-      osc.type = "sine";
+      osc.type = settings.soundTone === "digital" ? "square" : "sine";
       osc.frequency.setValueAtTime(freq, c.currentTime + start);
       gain.gain.setValueAtTime(0.0001, c.currentTime + start);
       gain.gain.exponentialRampToValueAtTime(vol, c.currentTime + start + 0.02);
@@ -204,7 +208,7 @@ export async function playPhaseSound(
       case "completed": beep(1320, 0); beep(990, 0.18); beep(660, 0.36, 0.3); break;
       case "cancelled": beep(330, 0, 0.5, 0.4); break;
     }
-    if (navigator.vibrate) {
+    if (settings.vibrationEnabled && navigator.vibrate) {
       try { navigator.vibrate(phase === "cancelled" ? 400 : [120, 80, 120]); } catch { /* ignore */ }
     }
   } catch (e) {
