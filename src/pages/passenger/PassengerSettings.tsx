@@ -144,8 +144,8 @@ const PassengerSettings = () => {
         <section className="rounded-2xl border bg-card p-4 shadow-md">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-extrabold">App Android</h2>
-              <p className="text-sm text-muted-foreground">{standalone ? "Instalado na tela inicial" : "Instale para usar como aplicativo"}</p>
+              <h2 className="text-lg font-extrabold">App Passageiro Android</h2>
+              <p className="text-sm text-muted-foreground">{standalone ? "Instalado na tela inicial" : "Instale o app do passageiro"}</p>
             </div>
             <Button onClick={installApp} disabled={standalone} variant={standalone ? "secondary" : "default"}>
               {standalone ? "Instalado" : "Instalar"}
