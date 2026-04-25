@@ -194,12 +194,12 @@ const AppMenu = ({ role, floating = true }: Props) => {
 
         {canBecomeDriver && (
           <div className="border-t p-2">
-            <p className="px-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase">Motorista</p>
+            <p className="px-2 pb-1 text-xs font-extrabold text-muted-foreground uppercase">Motorista</p>
             <button
               onClick={() => go("/passenger/become-driver")}
-              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold text-primary hover:bg-primary/10 transition-colors"
             >
-              <Car className="h-4 w-4" />
+              <Car className="h-5 w-5" />
               Quero ser motorista
             </button>
           </div>
@@ -208,9 +208,9 @@ const AppMenu = ({ role, floating = true }: Props) => {
         <div className="border-t p-2">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold text-destructive hover:bg-destructive/10 transition-colors"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-5 w-5" />
             Sair da conta
           </button>
         </div>
