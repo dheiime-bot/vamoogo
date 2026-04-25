@@ -892,9 +892,9 @@ const PassengerHome = () => {
   // Fallback: garante dados/foto do motorista em todas as fases após o aceite,
   // inclusive ao recarregar o app durante corrida ou avaliação.
   useEffect(() => {
-    if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.driver_id || driverInfo) return;
+    if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.driver_id || hasVisibleDriverDetails(driverInfo)) return;
     loadDriverInfoForRide(activeRide);
-  }, [rideState, activeRide?.driver_id, driverInfo]);
+  }, [rideState, activeRide?.id, activeRide?.driver_id, driverInfo]);
 
   const toggleFavoriteDriver = async () => {
     if (!activeRide?.driver_id || favoritingDriver) return;
@@ -1121,7 +1121,7 @@ const PassengerHome = () => {
               )}
 
               {/* Driver info */}
-              {driverInfo && rideState !== "searching" && (
+              {activeRide?.driver_id && rideState !== "searching" && (
                 <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
                   <div className="flex items-center gap-3">
                     <button
@@ -1148,7 +1148,7 @@ const PassengerHome = () => {
                         <span>{driverInfo.total_rides || 0} corridas</span>
                       </div>
                       <p className="text-sm font-semibold text-muted-foreground mt-0.5">
-                        {driverInfo.vehicle_model} • {driverInfo.vehicle_color} • {driverInfo.vehicle_plate}
+                        {[driverInfo?.vehicle_brand, driverInfo?.vehicle_model, driverInfo?.vehicle_color, driverInfo?.vehicle_plate].filter(Boolean).join(" • ") || "Dados do veículo carregando..."}
                       </p>
                     </div>
                   </div>
