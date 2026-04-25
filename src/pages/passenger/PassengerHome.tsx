@@ -812,7 +812,7 @@ const PassengerHome = () => {
     // 📋 Auditoria: registra a alteração de rota (visível ao passageiro, motorista e admin)
     if (user) {
       const newAddrFull = `${newDestination.name} - ${newDestination.address}`;
-      supabase.from("ride_route_changes").insert({
+      const { error: auditErr } = await supabase.from("ride_route_changes").insert({
         ride_id: activeRide.id,
         changed_by: user.id,
         changed_by_role: "passenger",
@@ -831,9 +831,11 @@ const PassengerHome = () => {
         new_leg_km: routePreview.newLegKm,
         new_leg_price: routePreview.newLegPrice,
         details: { totalMin, totalFee, legs: newLegs },
-      }).then(({ error: auditErr }) => {
-        if (auditErr) console.error("[audit route change]", auditErr);
       });
+      if (auditErr) {
+        console.error("[audit route change]", auditErr);
+        toast.error("Rota atualizada, mas o Admin não recebeu o registro da alteração.");
+      }
     }
     setActiveRide((r: any) => ({
       ...r,

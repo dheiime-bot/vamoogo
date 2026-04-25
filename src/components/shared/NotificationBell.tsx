@@ -8,7 +8,7 @@
  * Funciona para passageiro e motorista — usa apenas auth.uid().
  */
 import { useEffect, useMemo, useState } from "react";
-import { Bell, Check, MessageCircle, Wallet, Car, Megaphone, X, Trash2 } from "lucide-react";
+import { Bell, Check, MessageCircle, Wallet, Car, Megaphone, X, Trash2, Route } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,7 +32,8 @@ interface NotificationRow {
   created_at: string;
 }
 
-const iconFor = (type: NotificationRow["type"]) => {
+const iconFor = (type: NotificationRow["type"], data?: any) => {
+  if (data?.event === "route_changed") return Route;
   switch (type) {
     case "chat":
       return MessageCircle;
@@ -40,25 +41,24 @@ const iconFor = (type: NotificationRow["type"]) => {
       return Wallet;
     case "ride_status":
       return Car;
-    case "admin":
     case "system":
     default:
       return Megaphone;
   }
 };
 
-const colorFor = (type: NotificationRow["type"]) => {
+const colorFor = (type: NotificationRow["type"], data?: any) => {
+  if (data?.event === "route_changed") return "text-info bg-info/10";
   switch (type) {
     case "chat":
       return "text-primary bg-primary/10";
     case "low_balance":
       return "text-destructive bg-destructive/10";
     case "ride_status":
-      return "text-emerald-600 bg-emerald-500/10";
-    case "admin":
+      return "text-success bg-success/10";
     case "system":
     default:
-      return "text-amber-600 bg-amber-500/10";
+      return "text-warning bg-warning/10";
   }
 };
 
@@ -76,13 +76,14 @@ const formatTimeAgo = (iso: string) => {
 interface Props {
   /** Quando true, posiciona como botão fixo absoluto no topo direito. */
   floating?: boolean;
+  compact?: boolean;
   /** Status de conexão GPS — colore o sino: verde=conectado, vermelho=desconectado, neutro=idle */
   connectionStatus?: "connected" | "disconnected" | "idle";
   /** Offset vertical extra (px) — usado para empilhar o sino abaixo de outro elemento. */
   topOffsetPx?: number;
 }
 
-const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffsetPx = 0 }: Props) => {
+const NotificationBell = ({ floating = true, compact = false, connectionStatus = "idle", topOffsetPx = 0 }: Props) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -120,11 +121,11 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
           setItems((prev) => [n, ...prev].slice(0, 30));
           // Notificações importantes (corrida/chat) tocam som + toast destacado
           // para garantir que o motorista/passageiro veja o aviso em qualquer tela.
-          const isUrgent = n.type === "ride_status" || n.type === "chat";
+          const isRouteChange = (n.data && (n.data as any).event === "route_changed");
+          const isUrgent = n.type === "ride_status" || n.type === "chat" || isRouteChange;
           if (isUrgent) {
             // Mudança de rota = persistente (loop até o motorista interagir).
             // Outras urgências = um ciclo só.
-            const isRouteChange = (n.data && (n.data as any).event === "route_changed");
             try {
               playOfferAlert({
                 title: n.title,
@@ -208,7 +209,10 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
         <PopoverTrigger asChild>
           <button
             aria-label="Notificações"
-            className="relative flex h-16 w-16 items-center justify-center rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border transition-transform active:scale-95 hover:bg-muted"
+            className={cn(
+              "relative flex items-center justify-center rounded-full bg-card/95 backdrop-blur-md border border-border transition-transform active:scale-95 hover:bg-muted",
+              compact ? "h-9 w-9 shadow-sm" : "h-16 w-16 shadow-md"
+            )}
             title={
               connectionStatus === "connected"
                 ? "GPS conectado"
@@ -220,7 +224,7 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
             <span className="relative flex">
               <Bell
                 className={cn(
-                  "h-7 w-7 transition-colors",
+                  compact ? "h-4 w-4 transition-colors" : "h-7 w-7 transition-colors",
                   connectionStatus === "connected" && "text-success",
                   connectionStatus === "disconnected" && "text-destructive",
                   connectionStatus === "idle" && "text-foreground"
@@ -286,7 +290,7 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
               </div>
             ) : (
               items.map((n) => {
-                const Icon = iconFor(n.type);
+                const Icon = iconFor(n.type, n.data);
                 return (
                   <div
                     key={n.id}
@@ -304,7 +308,7 @@ const NotificationBell = ({ floating = true, connectionStatus = "idle", topOffse
                       !n.is_read && "bg-primary/5"
                     )}
                   >
-                    <div className={cn("h-9 w-9 shrink-0 rounded-full flex items-center justify-center", colorFor(n.type))}>
+                    <div className={cn("h-9 w-9 shrink-0 rounded-full flex items-center justify-center", colorFor(n.type, n.data))}>
                       <Icon className="h-4.5 w-4.5" />
                     </div>
                     <div className="min-w-0 flex-1">
