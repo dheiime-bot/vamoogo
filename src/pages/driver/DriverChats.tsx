@@ -4,11 +4,11 @@ import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppMenu from "@/components/shared/AppMenu";
-import DriverEarningsChip from "@/components/motorista/DriverEarningsChip";
-import DriverHomeFab from "@/components/motorista/DriverHomeFab";
+import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import UserAvatar from "@/components/shared/UserAvatar";
 
-import RideChat from "@/components/passageiro/RideChat";
+import RideChat from "@/components/passenger/RideChat";
 import CentralChat from "@/components/shared/CentralChat";
 import { Headset } from "lucide-react";
 

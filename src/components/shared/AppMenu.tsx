@@ -13,7 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import SelectVehicleModal from "@/components/motorista/SelectVehicleModal";
+import SelectVehicleModal from "@/components/driver/SelectVehicleModal";
 import UserAvatar from "@/components/shared/UserAvatar";
 
 type MenuRole = "passenger" | "driver";

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
-import HomeFab from "@/components/passageiro/HomeFab";
+import HomeFab from "@/components/passenger/HomeFab";
 
 interface Coupon {
   id: string;

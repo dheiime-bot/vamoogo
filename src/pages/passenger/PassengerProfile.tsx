@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Camera, FileText, Phone, Mail, Shield, ArrowLeft, Car, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import HomeFab from "@/components/passageiro/HomeFab";
+import HomeFab from "@/components/passenger/HomeFab";
 import UserAvatar from "@/components/shared/UserAvatar";
 
 import StatusBadge from "@/components/shared/StatusBadge";

@@ -9,7 +9,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
 import { useRealtimeReconnect } from "@/hooks/useRealtimeReconnect";
 import { useDevicePermissions } from "@/hooks/useDevicePermissions";
-import GpsPermissionGate from "@/components/motorista/GpsPermissionGate";
+import GpsPermissionGate from "@/components/driver/GpsPermissionGate";
 import RouteErrorBoundary from "@/components/shared/RouteErrorBoundary";
 
 // Eager: rota inicial — precisa pintar o mais rápido possível
@@ -26,26 +26,26 @@ const PassengerSignup = lazy(() => import("./pages/auth/PassengerSignup.tsx"));
 const DriverSignup = lazy(() => import("./pages/auth/DriverSignup.tsx"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword.tsx"));
 
-const PassengerHome = lazy(() => import("./pages/passageiro/PassengerHome.tsx"));
-const PassengerHistory = lazy(() => import("./pages/passageiro/PassengerHistory.tsx"));
-const PassengerProfile = lazy(() => import("./pages/passageiro/PassengerProfile.tsx"));
-const PassengerChats = lazy(() => import("./pages/passageiro/PassengerChats.tsx"));
-const PassengerCoupons = lazy(() => import("./pages/passageiro/PassengerCoupons.tsx"));
-const PassengerFavoriteDrivers = lazy(() => import("./pages/passageiro/PassengerFavoriteDrivers.tsx"));
-const PassengerChangePassword = lazy(() => import("./pages/passageiro/PassengerChangePassword.tsx"));
-const PassengerSettings = lazy(() => import("./pages/passageiro/PassengerSettings.tsx"));
-const BecomeDriver = lazy(() => import("./pages/passageiro/BecomeDriver.tsx"));
+const PassengerHome = lazy(() => import("./pages/passenger/PassengerHome.tsx"));
+const PassengerHistory = lazy(() => import("./pages/passenger/PassengerHistory.tsx"));
+const PassengerProfile = lazy(() => import("./pages/passenger/PassengerProfile.tsx"));
+const PassengerChats = lazy(() => import("./pages/passenger/PassengerChats.tsx"));
+const PassengerCoupons = lazy(() => import("./pages/passenger/PassengerCoupons.tsx"));
+const PassengerFavoriteDrivers = lazy(() => import("./pages/passenger/PassengerFavoriteDrivers.tsx"));
+const PassengerChangePassword = lazy(() => import("./pages/passenger/PassengerChangePassword.tsx"));
+const PassengerSettings = lazy(() => import("./pages/passenger/PassengerSettings.tsx"));
+const BecomeDriver = lazy(() => import("./pages/passenger/BecomeDriver.tsx"));
 
-const DriverHome = lazy(() => import("./pages/motorista/DriverHome.tsx"));
-const DriverStatusPage = lazy(() => import("./pages/motorista/DriverStatusPage.tsx"));
-const DriverWallet = lazy(() => import("./pages/motorista/DriverWallet.tsx"));
-const DriverRides = lazy(() => import("./pages/motorista/DriverRides.tsx"));
-const DriverOffers = lazy(() => import("./pages/motorista/DriverOffers.tsx"));
-const DriverProfile = lazy(() => import("./pages/motorista/DriverProfile.tsx"));
-const DriverChats = lazy(() => import("./pages/motorista/DriverChats.tsx"));
-const DriverVehicles = lazy(() => import("./pages/motorista/DriverVehicles.tsx"));
-const DriverVehicleChangeRequest = lazy(() => import("./pages/motorista/DriverVehicleChangeRequest.tsx"));
-const DriverSettings = lazy(() => import("./pages/motorista/DriverSettings.tsx"));
+const DriverHome = lazy(() => import("./pages/driver/DriverHome.tsx"));
+const DriverStatusPage = lazy(() => import("./pages/driver/DriverStatusPage.tsx"));
+const DriverWallet = lazy(() => import("./pages/driver/DriverWallet.tsx"));
+const DriverRides = lazy(() => import("./pages/driver/DriverRides.tsx"));
+const DriverOffers = lazy(() => import("./pages/driver/DriverOffers.tsx"));
+const DriverProfile = lazy(() => import("./pages/driver/DriverProfile.tsx"));
+const DriverChats = lazy(() => import("./pages/driver/DriverChats.tsx"));
+const DriverVehicles = lazy(() => import("./pages/driver/DriverVehicles.tsx"));
+const DriverVehicleChangeRequest = lazy(() => import("./pages/driver/DriverVehicleChangeRequest.tsx"));
+const DriverSettings = lazy(() => import("./pages/driver/DriverSettings.tsx"));
 
 const AdminChats = lazy(() => import("./pages/admin/AdminChats.tsx"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));

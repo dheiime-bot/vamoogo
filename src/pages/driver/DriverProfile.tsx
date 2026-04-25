@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import UserAvatar from "@/components/shared/UserAvatar";
-import DriverEarningsChip from "@/components/motorista/DriverEarningsChip";
-import DriverHomeFab from "@/components/motorista/DriverHomeFab";
+import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import EditProfileModal from "@/components/shared/EditProfileModal";
-import DriverRatingsSection from "@/components/motorista/DriverRatingsSection";
+import DriverRatingsSection from "@/components/driver/DriverRatingsSection";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";

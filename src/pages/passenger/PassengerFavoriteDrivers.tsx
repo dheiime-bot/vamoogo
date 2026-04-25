@@ -7,7 +7,7 @@ import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import UserAvatar from "@/components/shared/UserAvatar";
-import HomeFab from "@/components/passageiro/HomeFab";
+import HomeFab from "@/components/passenger/HomeFab";
 
 interface FavRow {
   id: string;

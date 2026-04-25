@@ -5,7 +5,7 @@ import EmptyState from "@/components/admin/EmptyState";
 import DriverDetailsModal from "@/components/admin/DriverDetailsModal";
 import DriverActionsMenu from "@/components/admin/DriverActionsMenu";
 import { supabase } from "@/integrations/supabase/client";
-import { getDriverStatusInfo } from "@/lib/motoristaStatus";
+import { getDriverStatusInfo } from "@/lib/driverStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";

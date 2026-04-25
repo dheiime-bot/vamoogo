@@ -3,7 +3,7 @@ import { ArrowLeft, Bell, BellRing, Crosshair, MapPin, Smartphone, Volume2, Wave
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import AppMenu from "@/components/shared/AppMenu";
-import HomeFab from "@/components/passageiro/HomeFab";
+import HomeFab from "@/components/passenger/HomeFab";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { playOfferAlert, requestNotificationPermission, unlockAudioOnce } from "@/lib/offerSound";

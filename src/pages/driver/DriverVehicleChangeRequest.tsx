@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import DocumentUpload from "@/components/auth/DocumentUpload";
 import { validatePlate } from "@/lib/plateValidator";
 import { formatRenavam, validateRenavam } from "@/lib/validators";
-import DriverHomeFab from "@/components/motorista/DriverHomeFab";
+import DriverHomeFab from "@/components/driver/DriverHomeFab";
 import { getCategoryColor } from "@/lib/categoryStyle";
 
 type Category = "moto" | "economico" | "conforto";
