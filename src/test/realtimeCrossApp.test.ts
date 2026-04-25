@@ -43,8 +43,9 @@ class RealtimeBus {
     if (config.event !== "*" && config.event !== payload.eventType) return false;
     if (!config.filter) return true;
 
-    const [field, operator, expected] = config.filter.split("=");
-    if (operator !== "eq") return false;
+    const [field, expression] = config.filter.split("=");
+    const [operator, expected] = expression?.split(".") ?? [];
+    if (operator !== "eq" || !expected) return false;
     const row = payload.new ?? payload.old ?? {};
     return String(row[field]) === expected;
   }
