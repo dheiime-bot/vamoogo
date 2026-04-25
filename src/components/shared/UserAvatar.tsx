@@ -45,11 +45,32 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
       setResolvedSrc(null);
       return;
     }
-    resolveStorageUrl("selfies", src).then((url) => {
-      if (!cancelled) setResolvedSrc(url || src);
-    });
+    const resolveAvatar = async () => {
+      const selfieUrl = await resolveStorageUrl("selfies", src);
+      const fallbackUrl = role === "driver" ? await resolveStorageUrl("driver-documents", src) : undefined;
+      if (!cancelled) setResolvedSrc(selfieUrl || fallbackUrl || src);
+    };
+    resolveAvatar();
     return () => { cancelled = true; };
-  }, [src]);
+  }, [src, role]);
+
+  useEffect(() => {
+    if (!resolvedSrc) return;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = resolvedSrc;
+  }, [resolvedSrc]);
+
+  const handleImageError = async () => {
+    if (!src) {
+      setResolvedSrc(null);
+      return;
+    }
+    const refreshedUrl = role === "driver"
+      ? (await resolveStorageUrl("driver-documents", src)) || (await resolveStorageUrl("selfies", src))
+      : await resolveStorageUrl("selfies", src);
+    setResolvedSrc(refreshedUrl ? `${refreshedUrl}${refreshedUrl.includes("?") ? "&" : "?"}retry=${Date.now()}` : null);
+  };
 
   if (resolvedSrc) {
     return (
@@ -61,7 +82,10 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
           "rounded-full object-cover shrink-0 border border-border bg-muted",
           className,
         )}
-        loading="lazy"
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
+        onError={handleImageError}
       />
     );
   }
