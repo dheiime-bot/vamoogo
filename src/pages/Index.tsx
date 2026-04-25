@@ -33,7 +33,7 @@ import vamooLogo from "@/assets/vamoo-logo.png";
 import productPassenger from "@/assets/vamoo-product-passenger.png";
 import { supabase } from "@/integrations/supabase/client";
 
-const WHATSAPP_NUMBER = "5599999999999";
+const WHATSAPP_NUMBER = "5593991622328";
 const CONTACT_EMAIL = "contato@vamoo.app";
 const whatsappMessage = "Quero levar o Vamoo para minha cidade";
 
