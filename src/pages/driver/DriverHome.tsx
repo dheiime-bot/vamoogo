@@ -1136,21 +1136,25 @@ const DriverHome = () => {
         <div
           className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
         >
-          <div className="rounded-2xl border bg-card p-3 shadow-glow space-y-2.5">
+          <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-xs font-bold text-success truncate">🛣️ Em corrida</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <div className="min-w-0">
+                  <span className="text-lg font-extrabold text-success truncate block">Em corrida</span>
+                  <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
+                </div>
                 {activeRide.ride_code && (
                   <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
                 )}
               </div>
-              <span className="text-sm font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
+              <span className="text-2xl font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
             </div>
             <div className="flex items-start gap-2">
               {currentStopIndex < rideStops.length ? (
-                <MapPin className="h-3.5 w-3.5 text-warning mt-0.5 shrink-0" />
+                <MapPin className="h-5 w-5 text-warning mt-0.5 shrink-0" />
               ) : (
-                <Flag className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
+                <Flag className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
               )}
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold text-muted-foreground">
@@ -1158,7 +1162,7 @@ const DriverHome = () => {
                     ? `Você está indo para a parada ${currentStopIndex + 1} de ${rideStops.length}`
                     : arrivedAtFinal ? "Chegou ao destino final" : "Você está indo para o destino final"}
                 </p>
-                <p className="text-xs truncate">
+                <p className="text-lg font-bold leading-snug truncate">
                   {nextTarget?.address || routePointName(nextTarget, "Destino final")}
                 </p>
               </div>
