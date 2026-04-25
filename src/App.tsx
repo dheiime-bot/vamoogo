@@ -9,7 +9,6 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
 import { useRealtimeReconnect } from "@/hooks/useRealtimeReconnect";
 import { useDevicePermissions } from "@/hooks/useDevicePermissions";
-import DriverOfferAlert from "@/components/driver/DriverOfferAlert";
 import GpsPermissionGate from "@/components/driver/GpsPermissionGate";
 import RouteErrorBoundary from "@/components/shared/RouteErrorBoundary";
 
@@ -153,7 +152,6 @@ const App = () => (
           <KeyboardAwareScroll />
           <RealtimeReconnect />
           <DevicePermissionsBootstrap />
-          <DriverOfferAlert />
           <RouteErrorBoundary>
             <Suspense fallback={<AuthLoading />}>
               <Routes>
