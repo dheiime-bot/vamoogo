@@ -65,10 +65,12 @@ Deno.serve(async (req) => {
     }
     const newUserId = created.user.id;
 
-    // 2) Atribui role (handle_new_user já cria 'admin' por user_type=admin; garantimos master se necessário)
-    if (role === "master") {
-      await admin.from("user_roles").insert({ user_id: newUserId, role: "master" });
-    }
+    // 2) Atribui role administrativa explicitamente. O cadastro público é protegido
+    // contra user_type=admin/master, então funções administrativas precisam definir isso aqui.
+    await admin.from("user_roles").upsert(
+      { user_id: newUserId, role },
+      { onConflict: "user_id,role" },
+    );
 
     // 3) Cria registro em staff_users
     await admin.from("staff_users").insert({
