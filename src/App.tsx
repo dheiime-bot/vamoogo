@@ -164,6 +164,7 @@ const App = () => (
             <Suspense fallback={<AuthLoading />}>
               <Routes>
                 <Route path="/" element={<Index />} />
+                  <Route path="/index" element={<Navigate to="/" replace />} />
                 <Route path="/landing" element={<Navigate to="/" replace />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
