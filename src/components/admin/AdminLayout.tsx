@@ -291,19 +291,7 @@ const AdminLayout = ({ title, children, actions }: AdminLayoutProps) => {
           <header className="sticky top-0 z-10 flex items-center gap-3 border-b bg-card px-4 py-3">
             <SidebarTrigger />
 
-            {/* Search */}
-            <div className="hidden sm:flex flex-1 max-w-md items-center gap-2 rounded-xl bg-muted px-3 py-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Busca global..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              />
-            </div>
-
-            <div className="flex-1 sm:hidden">
+            <div className="flex-1">
               <h2 className="text-lg font-bold">{title}</h2>
             </div>
 
