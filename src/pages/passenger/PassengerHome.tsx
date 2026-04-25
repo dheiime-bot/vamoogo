@@ -988,7 +988,7 @@ const PassengerHome = () => {
                   <p className="truncate text-sm font-extrabold text-foreground">
                     {driverVehicleName || (driverCardIsLoading ? "Carregando veículo..." : "Veículo não informado")}
                   </p>
-                  <span className="relative flex h-11 min-w-[116px] shrink-0 overflow-hidden rounded-md border-2 border-foreground bg-background pt-3.5 text-center shadow-sm">
+                  <span className="relative flex h-11 min-w-[116px] shrink-0 animate-enter overflow-hidden rounded-md border-2 border-foreground bg-background pt-3.5 text-center shadow-sm ring-2 ring-primary/20">
                     <span className="absolute inset-x-0 top-0 flex h-3.5 items-center justify-center bg-primary text-[6px] font-black uppercase leading-none tracking-[0.18em] text-primary-foreground">
                       Brasil
                     </span>
