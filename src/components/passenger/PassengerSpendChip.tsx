@@ -4,6 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/brFormat";
@@ -12,6 +13,7 @@ const PassengerSpendChip = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [spent, setSpent] = useState(0);
+  const [hidden, setHidden] = useState(false);
 
   const reload = async () => {
     if (!user) return;
@@ -27,6 +29,7 @@ const PassengerSpendChip = () => {
 
   useEffect(() => {
     if (!user) return;
+    setHidden(localStorage.getItem(`passenger-spend-hidden-${user.id}`) === "1");
     reload();
     const channel = supabase
       .channel(`passenger-spend-${user.id}`)
@@ -40,17 +43,25 @@ const PassengerSpendChip = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  const toggleHidden = () => {
+    if (!user) return;
+    const next = !hidden;
+    setHidden(next);
+    localStorage.setItem(`passenger-spend-hidden-${user.id}`, next ? "1" : "0");
+  };
+
   return (
-    <button
-      onClick={() => navigate("/passenger/history")}
-      className="fixed right-3 z-50 flex h-16 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-5 transition-transform active:scale-95 hover:bg-muted"
+    <div
+      className="fixed right-3 z-50 flex h-16 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-2 pl-5"
       style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
-      aria-label="Ver histórico de corridas"
     >
-      <span className="font-display text-lg font-extrabold text-foreground leading-none select-none">
-        {formatBRL(spent)}
-      </span>
-    </button>
+      <button onClick={() => navigate("/passenger/history")} className="font-display text-lg font-extrabold text-foreground leading-none select-none" aria-label="Ver histórico de corridas">
+        {hidden ? "R$ •••" : formatBRL(spent)}
+      </button>
+      <button onClick={toggleHidden} className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted" aria-label={hidden ? "Mostrar valor" : "Ocultar valor"}>
+        {hidden ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+      </button>
+    </div>
   );
 };
 
