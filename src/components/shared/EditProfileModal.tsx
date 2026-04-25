@@ -135,7 +135,11 @@ const EditProfileModal = ({ open, onOpenChange }: Props) => {
               type="file"
               accept="image/*"
               hidden
-              onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+                e.currentTarget.value = "";
+              }}
             />
             <input
               ref={cameraInputRef}
@@ -143,7 +147,11 @@ const EditProfileModal = ({ open, onOpenChange }: Props) => {
               accept="image/*"
               capture="user"
               hidden
-              onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+                e.currentTarget.value = "";
+              }}
             />
             <div className="grid w-full grid-cols-2 gap-2 px-4">
               <button
