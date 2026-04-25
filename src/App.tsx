@@ -45,6 +45,7 @@ const DriverProfile = lazy(() => import("./pages/driver/DriverProfile.tsx"));
 const DriverChats = lazy(() => import("./pages/driver/DriverChats.tsx"));
 const DriverVehicles = lazy(() => import("./pages/driver/DriverVehicles.tsx"));
 const DriverVehicleChangeRequest = lazy(() => import("./pages/driver/DriverVehicleChangeRequest.tsx"));
+const DriverSettings = lazy(() => import("./pages/driver/DriverSettings.tsx"));
 
 const AdminChats = lazy(() => import("./pages/admin/AdminChats.tsx"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));
@@ -183,6 +184,7 @@ const App = () => (
                 <Route path="/driver/chats" element={<ProtectedDriverRoute><DriverChats /></ProtectedDriverRoute>} />
                 <Route path="/driver/vehicles" element={<ProtectedDriverRoute><DriverVehicles /></ProtectedDriverRoute>} />
                 <Route path="/driver/vehicles/request" element={<ProtectedDriverRoute><DriverVehicleChangeRequest /></ProtectedDriverRoute>} />
+                <Route path="/driver/settings" element={<ProtectedDriverRoute><DriverSettings /></ProtectedDriverRoute>} />
                 <Route path="/admin" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
                 <Route path="/admin/chats" element={<ProtectedAdminRoute><AdminChats /></ProtectedAdminRoute>} />
                 <Route path="/admin/drivers" element={<ProtectedAdminRoute><AdminDrivers /></ProtectedAdminRoute>} />
