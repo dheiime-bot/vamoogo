@@ -32,8 +32,8 @@ interface NotificationRow {
   created_at: string;
 }
 
-const iconFor = (type: NotificationRow["type"]) => {
-  if (type === "admin") return Megaphone;
+const iconFor = (type: NotificationRow["type"], data?: any) => {
+  if (data?.event === "route_changed") return Route;
   switch (type) {
     case "chat":
       return MessageCircle;
@@ -41,15 +41,14 @@ const iconFor = (type: NotificationRow["type"]) => {
       return Wallet;
     case "ride_status":
       return Car;
-    case "admin":
     case "system":
     default:
       return Megaphone;
   }
 };
 
-const colorFor = (type: NotificationRow["type"]) => {
-  if (type === "admin") return "text-warning bg-warning/10";
+const colorFor = (type: NotificationRow["type"], data?: any) => {
+  if (data?.event === "route_changed") return "text-info bg-info/10";
   switch (type) {
     case "chat":
       return "text-primary bg-primary/10";
@@ -57,7 +56,6 @@ const colorFor = (type: NotificationRow["type"]) => {
       return "text-destructive bg-destructive/10";
     case "ride_status":
       return "text-success bg-success/10";
-    case "admin":
     case "system":
     default:
       return "text-warning bg-warning/10";
@@ -292,7 +290,7 @@ const NotificationBell = ({ floating = true, compact = false, connectionStatus =
               </div>
             ) : (
               items.map((n) => {
-                const Icon = iconFor(n.type);
+                const Icon = iconFor(n.type, n.data);
                 return (
                   <div
                     key={n.id}
@@ -310,7 +308,7 @@ const NotificationBell = ({ floating = true, compact = false, connectionStatus =
                       !n.is_read && "bg-primary/5"
                     )}
                   >
-                    <div className={cn("h-9 w-9 shrink-0 rounded-full flex items-center justify-center", colorFor(n.type))}>
+                    <div className={cn("h-9 w-9 shrink-0 rounded-full flex items-center justify-center", colorFor(n.type, n.data))}>
                       <Icon className="h-4.5 w-4.5" />
                     </div>
                     <div className="min-w-0 flex-1">
