@@ -970,34 +970,34 @@ const PassengerHome = () => {
         >
           <UserAvatar src={driverPhoto || undefined} name={driverName} role="driver" size="lg" />
         </button>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1 space-y-2.5">
+          <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Motorista</p>
-              <p className="truncate text-base font-extrabold text-foreground">{driverName}</p>
+              <p className="line-clamp-2 text-base font-extrabold leading-tight text-foreground">{driverName}</p>
             </div>
             {driverCardIsLoading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />}
           </div>
-          <div className="mt-2 rounded-lg bg-muted/50 p-2.5">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: driverCategoryColor, color: driverCategoryContentColor }}>
+          <div className="rounded-lg bg-muted/50 p-2.5">
+            <div className="flex items-start gap-2.5">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: driverCategoryColor, color: driverCategoryContentColor }}>
                 <DriverVehicleIcon className="h-5 w-5" />
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="truncate text-sm font-extrabold text-foreground">
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="min-w-0">
+                  <p className="line-clamp-2 text-sm font-extrabold leading-tight text-foreground">
                     {driverVehicleName || (driverCardIsLoading ? "Carregando veículo..." : "Veículo não informado")}
                   </p>
-                  <span className="relative flex h-11 min-w-[116px] shrink-0 animate-enter overflow-hidden rounded-md border-2 border-foreground bg-background pt-3.5 text-center shadow-sm ring-2 ring-primary/20">
-                    <span className="absolute inset-x-0 top-0 flex h-3.5 items-center justify-center bg-primary text-[6px] font-black uppercase leading-none tracking-[0.18em] text-primary-foreground">
-                      Brasil
-                    </span>
-                    <span className="flex-1 px-2 font-mono text-lg font-black leading-none tracking-[0.12em] text-foreground">
-                      {driverVehiclePlate || "PLACA"}
-                    </span>
-                  </span>
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
+                <span className="relative flex h-12 w-full max-w-[168px] animate-enter overflow-hidden rounded-md border-2 border-foreground bg-background pt-4 text-center shadow-sm ring-2 ring-primary/20">
+                  <span className="absolute inset-x-0 top-0 flex h-4 items-center justify-center bg-primary text-[7px] font-black uppercase leading-none tracking-[0.2em] text-primary-foreground">
+                    Brasil
+                  </span>
+                  <span className="flex-1 px-2 font-mono text-xl font-black leading-none tracking-[0.14em] text-foreground">
+                    {driverVehiclePlate || "PLACA"}
+                  </span>
+                </span>
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                   <span>{getCategoryLabel(driverCategory)}</span>
                   {driverVehicleColor && <span>• {driverVehicleColor}</span>}
                   {!driverVehicleColor && driverCardIsLoading && <span>• carregando cor</span>}
@@ -1005,7 +1005,7 @@ const PassengerHome = () => {
               </div>
             </div>
           </div>
-          <div className="mt-1 flex items-center gap-2 text-xs font-bold text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
             <Star className="h-3.5 w-3.5 text-warning fill-warning" />
             <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
             <span>•</span>
