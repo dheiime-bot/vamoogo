@@ -946,7 +946,8 @@ const PassengerHome = () => {
 
   const isRideActive = ["searching", "accepted", "driver_arriving", "arrived", "in_progress"].includes(rideState);
   const activeRideStops = activeRide ? getRideStops(activeRide) : [];
-  const driverPhoto = driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url || null;
+  const driverPhoto = driverInfo?.profile?.selfie_url || null;
+  const driverPhotoFallback = driverInfo?.profile?.selfie_signup_url || null;
   const driverName = driverInfo?.profile?.full_name || "Motorista";
   const driverVehicleName = [driverInfo?.vehicle_brand, driverInfo?.vehicle_model].filter(Boolean).join(" ");
   const driverVehicleColor = driverInfo?.vehicle_color || null;
@@ -962,13 +963,13 @@ const PassengerHome = () => {
       <div className="flex items-start gap-3 sm:gap-4">
         <button
           onClick={() => {
-            if (driverPhoto) setPreviewPhoto({ src: driverPhoto, name: driverName });
+            if (driverPhoto || driverPhotoFallback) setPreviewPhoto({ src: driverPhoto || driverPhotoFallback, name: driverName });
           }}
-          disabled={!driverPhoto}
+          disabled={!driverPhoto && !driverPhotoFallback}
           className="rounded-full disabled:cursor-default"
           aria-label="Ver foto do motorista"
         >
-          <UserAvatar src={driverPhoto || undefined} name={driverName} role="driver" size="lg" />
+          <UserAvatar src={driverPhoto || driverPhotoFallback || undefined} name={driverName} role="driver" size="lg" />
         </button>
         <div className="min-w-0 flex-1 space-y-2.5 sm:space-y-3">
           <div className="flex items-start justify-between gap-2">
