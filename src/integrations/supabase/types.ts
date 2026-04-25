@@ -1620,6 +1620,7 @@ export type Database = {
       }
       tariffs: {
         Row: {
+          additional_km_rate: number
           base_fare: number
           category: Database["public"]["Enums"]["vehicle_category"]
           created_at: string
@@ -1632,8 +1633,11 @@ export type Database = {
           region: string
           region_multiplier: number
           updated_at: string
+          wait_free_minutes: number
+          wait_per_minute: number
         }
         Insert: {
+          additional_km_rate?: number
           base_fare?: number
           category: Database["public"]["Enums"]["vehicle_category"]
           created_at?: string
@@ -1646,8 +1650,11 @@ export type Database = {
           region?: string
           region_multiplier?: number
           updated_at?: string
+          wait_free_minutes?: number
+          wait_per_minute?: number
         }
         Update: {
+          additional_km_rate?: number
           base_fare?: number
           category?: Database["public"]["Enums"]["vehicle_category"]
           created_at?: string
@@ -1660,6 +1667,8 @@ export type Database = {
           region?: string
           region_multiplier?: number
           updated_at?: string
+          wait_free_minutes?: number
+          wait_per_minute?: number
         }
         Relationships: []
       }

@@ -4,8 +4,8 @@
  * Faz debounce automático e devolve { distanceKm, durationMin, price, loading }.
  *
  * Fórmula:
- *   price = (base_fare + per_km*km + per_minute*min) * region_multiplier
- *         + (passengers - 1) * passenger_extra
+ *   price = max(per_km * km, min_fare)
+ *         + (passengers - 1) * passenger_extra * km
  *   price = max(price, min_fare)
  */
 import { useEffect, useState } from "react";
@@ -24,6 +24,9 @@ interface Tariff {
   min_fare: number;
   region_multiplier: number;
   passenger_extra: number;
+  wait_free_minutes?: number;
+  wait_per_minute?: number;
+  additional_km_rate?: number;
 }
 
 export interface FareLeg {
@@ -61,7 +64,7 @@ const haversineKm = (a: Point, b: Point) => {
 const DEFAULT_EXTRA_PER_KM = 3.0;
 
 const computePrice = (km: number, min: number, passengers: number, t: Tariff) => {
-  const base = (t.base_fare + t.per_km * km + t.per_minute * min) * t.region_multiplier;
+  const base = t.per_km * km;
   const extraPerKm = t.passenger_extra > 0 ? t.passenger_extra : DEFAULT_EXTRA_PER_KM;
   const additional = Math.max(0, Math.min(passengers, 4) - 1); // máximo 3 extras (2,3,4)
   const extras = additional * extraPerKm * km;
@@ -103,7 +106,7 @@ export const useFareEstimate = (
         // 1) Buscar tarifa da categoria (default region)
         const { data: tariffData, error: tErr } = await supabase
           .from("tariffs")
-          .select("category,base_fare,per_km,per_minute,min_fare,region_multiplier,passenger_extra")
+          .select("category,base_fare,per_km,per_minute,min_fare,region_multiplier,passenger_extra,wait_free_minutes,wait_per_minute,additional_km_rate")
           .eq("category", category)
           .eq("region", "default")
           .maybeSingle();
@@ -179,7 +182,7 @@ export const useFareEstimate = (
 
         // Preço bruto por trecho (sem min_fare/extras), para rateio proporcional
         const rawByLeg = legSpecs.map(
-          (l) => (tariff.base_fare + tariff.per_km * l.km + tariff.per_minute * l.min) * tariff.region_multiplier
+          (l) => tariff.per_km * l.km
         );
         const sumRaw = rawByLeg.reduce((a, b) => a + b, 0) || 1;
         const legs: FareLeg[] = legSpecs.map((l, i) => ({

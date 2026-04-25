@@ -3,7 +3,7 @@
  *
  * Hierarquia:
  *   1. tariffs.fee_percent (override por categoria, se preenchido)
- *   2. platform_settings.global_fee_percent (taxa global)
+ *   2. platform_settings.platform_fee_percent ou global_fee_percent (taxa global)
  *   3. fallback hardcoded 15%
  *
  * Uso:
@@ -32,9 +32,8 @@ export async function getFeePercent(category: VehicleCategory): Promise<number> 
       .maybeSingle(),
     supabase
       .from("platform_settings")
-      .select("value")
-      .eq("key", "global_fee_percent")
-      .maybeSingle(),
+      .select("key,value")
+      .in("key", ["platform_fee_percent", "global_fee_percent"]),
   ]);
 
   const override = (tariffRes.data as any)?.fee_percent;
@@ -42,7 +41,9 @@ export async function getFeePercent(category: VehicleCategory): Promise<number> 
     return clampPct(Number(override));
   }
 
-  const global = (settingRes.data as any)?.value;
+  const settings = (settingRes.data as any[]) || [];
+  const global = settings.find((item) => item.key === "platform_fee_percent")?.value
+    ?? settings.find((item) => item.key === "global_fee_percent")?.value;
   const globalNum = typeof global === "number" ? global : Number(global);
   if (!isNaN(globalNum)) return clampPct(globalNum);
 
