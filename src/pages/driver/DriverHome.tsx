@@ -916,7 +916,7 @@ const DriverHome = () => {
                     {offerPassengerRating != null ? offerPassengerRating.toFixed(2) : "5.00"}
                   </p>
                 </div>
-                <div>
+                <div className="col-span-2">
                   <p className="text-sm font-bold text-muted-foreground">Pagamento</p>
                   <p className="text-2xl font-extrabold">{paymentLabels[pendingRide.payment_method] || "Dinheiro"}</p>
                 </div>
