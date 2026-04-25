@@ -50,6 +50,7 @@ const DriverHome = () => {
   const [offerCountdown, setOfferCountdown] = useState(15);
   const [showChat, setShowChat] = useState(false);
   const [passengerName, setPassengerName] = useState<string>("");
+  const [offerPassengerRating, setOfferPassengerRating] = useState<number | null>(null);
   const [showPixModal, setShowPixModal] = useState(false);
   const [passengerRating, setPassengerRating] = useState(0);
   const [passengerRatingComment, setPassengerRatingComment] = useState("");
@@ -453,6 +454,23 @@ const DriverHome = () => {
     }, 500);
     return () => clearInterval(interval);
   }, [rideState, pendingOffer]);
+
+  useEffect(() => {
+    if (rideState !== "offer" || !pendingRide?.passenger_id) {
+      setOfferPassengerRating(null);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("rating")
+      .eq("user_id", pendingRide.passenger_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setOfferPassengerRating(data?.rating != null ? Number(data.rating) : null);
+      });
+    return () => { cancelled = true; };
+  }, [rideState, pendingRide?.passenger_id]);
 
   const handleAccept = async () => {
     if (!pendingOffer || !pendingRide || !user) return;
