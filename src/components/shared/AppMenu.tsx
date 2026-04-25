@@ -211,13 +211,6 @@ const AppMenu = ({ role, floating = true }: Props) => {
 
         <div className="border-t p-2">
           <button
-            onClick={handleSignOut}
-            className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold text-destructive hover:bg-destructive/10 transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
-            Sair da conta
-          </button>
-          <button
             onClick={() => go(role === "driver" ? "/driver/settings" : "/passenger/settings")}
             className={cn(
               "w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold transition-colors",
@@ -228,6 +221,13 @@ const AppMenu = ({ role, floating = true }: Props) => {
           >
             <Settings className="h-5 w-5" />
             Configurações
+          </button>
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <LogOut className="h-5 w-5" />
+            Sair da conta
           </button>
         </div>
       </SheetContent>
