@@ -261,12 +261,7 @@ const PassengerHome = () => {
         setActiveRide(ride);
 
         if (ride.status === "accepted" && ride.driver_id) {
-          const { data: driver } = await supabase.from("drivers").select("*").eq("user_id", ride.driver_id).single();
-          const { data: driverProfile } = await supabase.from("profiles").select("*").eq("user_id", ride.driver_id).single();
-          if (driver && driverProfile) {
-            const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
-            setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
-          }
+          await loadDriverInfoForRide(ride);
           // Se já tem arrived_at quando chegou o accepted (race condition), pula direto
           if (ride.arrived_at) {
             setRideState("arrived");
@@ -280,9 +275,11 @@ const PassengerHome = () => {
           setRideState("arrived");
           playPhaseSound("arrived");
         } else if (ride.status === "in_progress") {
+          if (ride.driver_id && !driverInfo) await loadDriverInfoForRide(ride);
           setRideState("in_progress");
           playPhaseSound("started");
         } else if (ride.status === "completed") {
+          if (ride.driver_id && !driverInfo) await loadDriverInfoForRide(ride);
           // Volta o app para a tela inicial e abre o rating como modal sobreposto.
           setRideState("rating");
           setDriverLocation(null);
@@ -310,7 +307,7 @@ const PassengerHome = () => {
         }
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user]);
+  }, [user, driverInfo]);
 
   // Realtime: posição GPS do motorista durante a corrida
   useEffect(() => {
