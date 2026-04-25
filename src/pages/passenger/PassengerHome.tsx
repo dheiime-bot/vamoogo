@@ -175,6 +175,7 @@ const PassengerHome = () => {
           .eq("passenger_id", user.id)
           .eq("status", "completed")
           .is("rating", null)
+          .not("driver_id", "is", null)
           .order("completed_at", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -828,10 +829,15 @@ const PassengerHome = () => {
     if (!activeRide || rating === 0) return;
     // Marca antes do update para que o eco do realtime não reabra o modal.
     finalizedRideIdsRef.current.add(activeRide.id);
-    await supabase
+    const { error } = await supabase
       .from("rides")
       .update({ rating, rating_comment: ratingComment?.trim() || null } as any)
       .eq("id", activeRide.id);
+    if (error) {
+      finalizedRideIdsRef.current.delete(activeRide.id);
+      toast.error("Não foi possível salvar a avaliação. Tente novamente.");
+      return;
+    }
     resetRide();
   };
 

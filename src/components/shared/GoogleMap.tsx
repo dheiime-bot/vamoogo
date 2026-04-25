@@ -578,6 +578,9 @@ const RouteLayer = ({
 
 const FitToPoints = ({ points, singlePointZoom = 14 }: { points: MapPoint[]; singlePointZoom?: number }) => {
   const map = useMap();
+  const pointsKey = points
+    .map((p) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`)
+    .join("|");
   useEffect(() => {
     if (!map || points.length === 0) return;
     if (points.length === 1) {
@@ -591,7 +594,7 @@ const FitToPoints = ({ points, singlePointZoom = 14 }: { points: MapPoint[]; sin
     const bounds = new g.maps.LatLngBounds();
     points.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }));
     map.fitBounds(bounds, 80);
-  }, [map, points]);
+  }, [map, pointsKey, singlePointZoom]);
   return null;
 };
 
