@@ -28,7 +28,7 @@ window.addEventListener("beforeinstallprompt", (event) => {
 
 // 🔄 Limpeza única de caches (executa 1x por dispositivo, controlada por versão).
 // Bump CACHE_PURGE_VERSION para forçar nova limpeza global no próximo load.
-const CACHE_PURGE_VERSION = "2026-04-20-1";
+const CACHE_PURGE_VERSION = "2026-04-25-driver-card-1";
 (async () => {
   try {
     if (localStorage.getItem("vamoo_cache_purge") !== CACHE_PURGE_VERSION) {
