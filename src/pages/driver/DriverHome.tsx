@@ -52,6 +52,7 @@ const DriverHome = () => {
   const [showChat, setShowChat] = useState(false);
   const [passengerName, setPassengerName] = useState<string>("");
   const [passengerPhoto, setPassengerPhoto] = useState<string | null>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<{ src: string; name: string } | null>(null);
   const [offerPassengerRating, setOfferPassengerRating] = useState<number | null>(null);
   const [showPixModal, setShowPixModal] = useState(false);
   const [passengerRating, setPassengerRating] = useState(0);
@@ -823,7 +824,7 @@ const DriverHome = () => {
 
   // Chat overlay (apenas quando corrida está ativa)
   if (showChat && activeRide) {
-    return <RideChat rideId={activeRide.id} driverName={passengerName} onBack={() => setShowChat(false)} />;
+    return <RideChat rideId={activeRide.id} driverName={passengerName} participantPhoto={passengerPhoto} participantRole="passenger" onBack={() => setShowChat(false)} />;
   }
 
   // === TELA ÚNICA: mapa fullscreen + botão Online sempre visíveis. Etapas viram mini pop-ups ===
