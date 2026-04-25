@@ -1170,6 +1170,31 @@ const PassengerHome = () => {
                   <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-destructive" />
                     <p className="text-lg font-bold leading-snug truncate">{activeRide.destination_address?.split(" - ")[0]}</p>
                 </div>
+                {shouldShowDriverCard && (
+                  <div className="mt-3 flex items-center gap-3 border-t pt-3">
+                    <button
+                      onClick={() => {
+                        if (driverPhoto) setPreviewPhoto({ src: driverPhoto, name: driverName });
+                      }}
+                      disabled={!driverPhoto}
+                      className="rounded-full disabled:cursor-default"
+                    >
+                      <UserAvatar src={driverPhoto || undefined} name={driverName} role="driver" size="lg" />
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-base font-extrabold text-foreground">{driverName}</p>
+                      <p className="truncate text-sm font-semibold text-muted-foreground">
+                        {driverVehicleDetails || "Dados do veículo carregando..."}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                        <Star className="h-3.5 w-3.5 text-warning fill-warning" />
+                        <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
+                        <span>•</span>
+                        <span>{driverInfo?.total_rides || 0} corridas</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Ride stats in progress */}
@@ -1187,43 +1212,6 @@ const PassengerHome = () => {
                     <p className="text-[10px] text-muted-foreground">Valor</p>
                     <p className="text-sm font-bold text-primary">R$ {activeRide.price?.toFixed(2)}</p>
                   </div>
-                </div>
-              )}
-
-              {/* Driver info — entre rota e botões Chat/Ligar */}
-              {shouldShowDriverCard && (
-                <div className="rounded-xl border bg-background p-3 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => {
-                        if (driverPhoto) setPreviewPhoto({ src: driverPhoto, name: driverName });
-                      }}
-                      disabled={!driverPhoto}
-                      className="rounded-full disabled:cursor-default"
-                    >
-                      <UserAvatar src={driverPhoto || undefined} name={driverName} role="driver" size="lg" />
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate text-base font-extrabold text-foreground">{driverName}</p>
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-bold text-warning">
-                          <Star className="h-3 w-3 fill-warning" /> {driverInfo?.rating?.toFixed(1) || "5.0"}
-                        </span>
-                      </div>
-                      <p className="mt-1 truncate text-sm font-semibold text-muted-foreground">
-                        {driverVehicleDetails || "Dados do veículo carregando..."}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {driverInfo?.total_rides ? `${driverInfo.total_rides} corridas` : "Motorista confirmado"}
-                      </p>
-                    </div>
-                  </div>
-                  {activeRide?.ride_code && (
-                    <div className="mt-3 flex items-center justify-center gap-1.5 border-t pt-2">
-                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Chave da corrida</span>
-                      <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold text-primary">{activeRide.ride_code}</span>
-                    </div>
-                  )}
                 </div>
               )}
 
