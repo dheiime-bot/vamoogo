@@ -47,43 +47,60 @@ interface NavItem {
   children?: { label: string; path: string }[];
 }
 
-const navItems: NavItem[] = [
+const baseNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
-  { icon: Car, label: "Corridas", path: "/admin/rides" },
-  { icon: Car, label: "Veículos", path: "/admin/vehicles" },
+  {
+    icon: MapPin,
+    label: "Operação",
+    children: [
+      { label: "Mapa ao vivo", path: "/admin/live" },
+      { label: "Corridas", path: "/admin/rides" },
+      { label: "Cancelamentos", path: "/admin/cancellations" },
+      { label: "Recursos de avaliação", path: "/admin/appeals" },
+    ],
+  },
   {
     icon: Users,
-    label: "Pessoas",
+    label: "Pessoas e frota",
     children: [
       { label: "Motoristas", path: "/admin/drivers" },
       { label: "Passageiros", path: "/admin/passengers" },
+      { label: "Veículos", path: "/admin/vehicles" },
       { label: "Mudanças de veículo", path: "/admin/vehicle-requests" },
     ],
   },
-  { icon: DollarSign, label: "Financeiro", path: "/admin/finance" },
-  { icon: Wallet, label: "Recarga de Carteira", path: "/admin/wallet-topup" },
-  { icon: BarChart3, label: "Relatórios", path: "/admin/reports" },
-  { icon: MapPin, label: "Mapa ao vivo", path: "/admin/live" },
   {
-    icon: Briefcase,
-    label: "Workspace",
+    icon: DollarSign,
+    label: "Financeiro",
     children: [
+      { label: "Resumo financeiro", path: "/admin/finance" },
+      { label: "Recarga de carteira", path: "/admin/wallet-topup" },
       { label: "Tarifas", path: "/admin/tariffs" },
-      { label: "Cupons", path: "/admin/coupons" },
-      { label: "Campanhas", path: "/admin/campaigns" },
-      { label: "Antifraude", path: "/admin/fraud" },
-      { label: "Recursos de avaliação", path: "/admin/appeals" },
-      { label: "Cancelamentos", path: "/admin/cancellations" },
-      { label: "Logs", path: "/admin/audit" },
     ],
   },
-  { icon: MessageCircle, label: "Chats", path: "/admin/chats" },
-  { icon: Headphones, label: "Suporte", path: "/admin/support" },
   {
-    icon: Settings,
-    label: "Configurações",
+    icon: Headphones,
+    label: "Atendimento",
     children: [
-      { label: "Tarifas", path: "/admin/tariffs" },
+      { label: "Suporte", path: "/admin/support" },
+      { label: "Chats", path: "/admin/chats" },
+    ],
+  },
+  {
+    icon: Megaphone,
+    label: "Marketing",
+    children: [
+      { label: "Campanhas", path: "/admin/campaigns" },
+      { label: "Cupons", path: "/admin/coupons" },
+    ],
+  },
+  {
+    icon: ShieldCheck,
+    label: "Controle",
+    children: [
+      { label: "Antifraude", path: "/admin/fraud" },
+      { label: "Relatórios", path: "/admin/reports" },
+      { label: "Logs", path: "/admin/audit" },
       { label: "Regras de cancelamento", path: "/admin/settings/cancellations" },
     ],
   },
