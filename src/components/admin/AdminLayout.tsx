@@ -170,7 +170,7 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
+              {baseNavItems.map((item) => {
                 if (item.children) {
                   const open = isGroupActive(item.children);
                   return (
