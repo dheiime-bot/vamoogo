@@ -33,6 +33,7 @@ const PassengerChats = lazy(() => import("./pages/passenger/PassengerChats.tsx")
 const PassengerCoupons = lazy(() => import("./pages/passenger/PassengerCoupons.tsx"));
 const PassengerFavoriteDrivers = lazy(() => import("./pages/passenger/PassengerFavoriteDrivers.tsx"));
 const PassengerChangePassword = lazy(() => import("./pages/passenger/PassengerChangePassword.tsx"));
+const PassengerSettings = lazy(() => import("./pages/passenger/PassengerSettings.tsx"));
 const BecomeDriver = lazy(() => import("./pages/passenger/BecomeDriver.tsx"));
 
 const DriverHome = lazy(() => import("./pages/driver/DriverHome.tsx"));
@@ -170,6 +171,7 @@ const App = () => (
                 <Route path="/passenger/coupons" element={<ProtectedPassengerRoute><PassengerCoupons /></ProtectedPassengerRoute>} />
                 <Route path="/passenger/favorites" element={<ProtectedPassengerRoute><PassengerFavoriteDrivers /></ProtectedPassengerRoute>} />
                 <Route path="/passenger/change-password" element={<ProtectedPassengerRoute><PassengerChangePassword /></ProtectedPassengerRoute>} />
+                <Route path="/passenger/settings" element={<ProtectedPassengerRoute><PassengerSettings /></ProtectedPassengerRoute>} />
                 <Route path="/passenger/become-driver" element={<ProtectedPassengerRoute><BecomeDriver /></ProtectedPassengerRoute>} />
                 <Route path="/driver" element={<ProtectedDriverRoute><DriverHome /></ProtectedDriverRoute>} />
                 <Route path="/driver/status" element={<ProtectedDriverRoute><DriverStatusPage /></ProtectedDriverRoute>} />
