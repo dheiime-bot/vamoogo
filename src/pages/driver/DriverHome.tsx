@@ -52,6 +52,7 @@ const DriverHome = () => {
   const [showChat, setShowChat] = useState(false);
   const [passengerName, setPassengerName] = useState<string>("");
   const [passengerPhoto, setPassengerPhoto] = useState<string | null>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<{ src: string; name: string } | null>(null);
   const [offerPassengerRating, setOfferPassengerRating] = useState<number | null>(null);
   const [showPixModal, setShowPixModal] = useState(false);
   const [passengerRating, setPassengerRating] = useState(0);
@@ -823,7 +824,7 @@ const DriverHome = () => {
 
   // Chat overlay (apenas quando corrida está ativa)
   if (showChat && activeRide) {
-    return <RideChat rideId={activeRide.id} driverName={passengerName} onBack={() => setShowChat(false)} />;
+    return <RideChat rideId={activeRide.id} driverName={passengerName} participantPhoto={passengerPhoto} participantRole="passenger" onBack={() => setShowChat(false)} />;
   }
 
   // === TELA ÚNICA: mapa fullscreen + botão Online sempre visíveis. Etapas viram mini pop-ups ===
@@ -982,7 +983,9 @@ const DriverHome = () => {
           <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
-                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <button onClick={() => passengerPhoto && setPreviewPhoto({ src: passengerPhoto, name: passengerName || "Passageiro" })} disabled={!passengerPhoto} className="rounded-full disabled:cursor-default">
+                  <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                </button>
                 <div className="min-w-0">
                   <span className="text-lg font-extrabold text-primary truncate block">A caminho do passageiro</span>
                   <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
@@ -1087,7 +1090,9 @@ const DriverHome = () => {
           <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
-                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <button onClick={() => passengerPhoto && setPreviewPhoto({ src: passengerPhoto, name: passengerName || "Passageiro" })} disabled={!passengerPhoto} className="rounded-full disabled:cursor-default">
+                  <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                </button>
                 <div className="min-w-0">
                   <span className="text-lg font-extrabold text-success block">Aguardando embarque</span>
                   <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
@@ -1139,7 +1144,9 @@ const DriverHome = () => {
           <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
-                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <button onClick={() => passengerPhoto && setPreviewPhoto({ src: passengerPhoto, name: passengerName || "Passageiro" })} disabled={!passengerPhoto} className="rounded-full disabled:cursor-default">
+                  <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                </button>
                 <div className="min-w-0">
                   <span className="text-lg font-extrabold text-success truncate block">Em corrida</span>
                   <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
@@ -1286,6 +1293,13 @@ const DriverHome = () => {
         rideId={activeRide?.id || ""}
         merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
       />
+
+      <Dialog open={!!previewPhoto} onOpenChange={(open) => !open && setPreviewPhoto(null)}>
+        <DialogContent className="max-w-sm p-3">
+          <DialogTitle className="sr-only">Foto do passageiro</DialogTitle>
+          {previewPhoto && <img src={previewPhoto.src} alt={previewPhoto.name} className="max-h-[75vh] w-full rounded-xl object-contain" />}
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de avaliação do passageiro pelo motorista — sobreposto sobre a tela inicial.
           O motorista permanece online; ao enviar/pular, volta a receber novas corridas. */}

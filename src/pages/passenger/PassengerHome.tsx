@@ -77,6 +77,7 @@ const PassengerHome = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [driverInfo, setDriverInfo] = useState<any>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<{ src: string; name: string } | null>(null);
   const [originType, setOriginType] = useState<OriginType>("gps");
   const [forOtherPerson, setForOtherPerson] = useState(false);
   const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
@@ -909,6 +910,8 @@ const PassengerHome = () => {
       <RideChat
         rideId={activeRide.id}
         driverName={driverInfo?.profile?.full_name}
+        participantPhoto={driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url || null}
+        participantRole="driver"
         onBack={() => setShowChat(false)}
       />
     );
@@ -1100,12 +1103,21 @@ const PassengerHome = () => {
               {driverInfo && rideState !== "searching" && (
                 <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
                   <div className="flex items-center gap-3">
-                    <UserAvatar
-                      src={driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url}
-                      name={driverInfo.profile?.full_name || "Motorista"}
-                      role="driver"
-                      size="lg"
-                    />
+                    <button
+                      onClick={() => {
+                        const src = driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url;
+                        if (src) setPreviewPhoto({ src, name: driverInfo.profile?.full_name || "Motorista" });
+                      }}
+                      disabled={!(driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url)}
+                      className="rounded-full disabled:cursor-default"
+                    >
+                      <UserAvatar
+                        src={driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url}
+                        name={driverInfo.profile?.full_name || "Motorista"}
+                        role="driver"
+                        size="lg"
+                      />
+                    </button>
                     <div className="flex-1">
                       <p className="text-lg font-extrabold text-primary">{driverInfo.profile?.full_name || "Motorista"}</p>
                       <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
@@ -1609,6 +1621,13 @@ const PassengerHome = () => {
         rideId={activeRide?.id || ""}
         merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
       />
+
+      <Dialog open={!!previewPhoto} onOpenChange={(open) => !open && setPreviewPhoto(null)}>
+        <DialogContent className="max-w-sm p-3">
+          <DialogTitle className="sr-only">Foto do motorista</DialogTitle>
+          {previewPhoto && <img src={previewPhoto.src} alt={previewPhoto.name} className="max-h-[75vh] w-full rounded-xl object-contain" />}
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de avaliação — sobreposto sobre a tela inicial após corrida finalizar.
           Fechar (X / overlay / Esc) chama resetRide para limpar o estado. */}
