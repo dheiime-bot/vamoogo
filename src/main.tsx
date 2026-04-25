@@ -15,7 +15,7 @@ const isPreviewHost =
   window.location.hostname.includes("id-preview--") ||
   window.location.hostname.includes("lovableproject.com");
 
-const APP_REFRESH_VERSION = "2026-04-25-cache-clean-3";
+const APP_REFRESH_VERSION = "2026-04-25-driver-card-photo-centered-v4";
 
 const buildCacheBustedUrl = () => {
   const url = new URL(window.location.href);
