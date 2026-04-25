@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
+import { resolveAnyStorageImage } from "@/lib/resolveStorageUrl";
 
 interface RideChatProps {
   rideId: string;
@@ -51,7 +51,7 @@ const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "dri
 
       await Promise.all(participantRows.map(async (profile) => {
         const role: "driver" | "passenger" = profile.user_id === driverRow?.user_id ? "driver" : "passenger";
-        const photo = await resolveStorageUrl("selfies", profile.selfie_url || profile.selfie_signup_url);
+        const photo = await resolveAnyStorageImage(profile.selfie_url || profile.selfie_signup_url);
         next[profile.user_id] = {
           id: profile.user_id,
           name: profile?.full_name || (role === "driver" ? driverName || "Motorista" : "Passageiro"),
