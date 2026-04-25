@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -87,11 +87,17 @@ const AuthLoading = () => (
   </div>
 );
 
+const LegacyPathRedirect = ({ from, to }: { from: string; to: string }) => {
+  const location = useLocation();
+  const nextPath = location.pathname.replace(from, to);
+  return <Navigate to={`${nextPath}${location.search}`} replace />;
+};
+
 const ProtectedAdminRoute = ({ children }: { children: JSX.Element }) => {
   const { user, roles, loading } = useAuth();
   if (loading || (user && roles.length === 0)) return <AuthLoading />;
-  if (!user) return <Navigate to="/" replace />;
-  if (!roles.includes("admin") && !roles.includes("master")) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/admin/login" replace />;
+  if (!roles.includes("admin") && !roles.includes("master")) return <Navigate to="/admin/login" replace />;
   return children;
 };
 
