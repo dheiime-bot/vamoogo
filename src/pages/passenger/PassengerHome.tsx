@@ -245,7 +245,10 @@ const PassengerHome = () => {
         if (ride.status === "accepted" && ride.driver_id) {
           const { data: driver } = await supabase.from("drivers").select("*").eq("user_id", ride.driver_id).single();
           const { data: driverProfile } = await supabase.from("profiles").select("*").eq("user_id", ride.driver_id).single();
-          if (driver && driverProfile) setDriverInfo({ ...driver, profile: driverProfile });
+          if (driver && driverProfile) {
+            const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
+            setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
+          }
           // Se já tem arrived_at quando chegou o accepted (race condition), pula direto
           if (ride.arrived_at) {
             setRideState("arrived");
@@ -874,7 +877,8 @@ const PassengerHome = () => {
         supabase.from("profiles").select("*").eq("user_id", activeRide.driver_id).maybeSingle(),
       ]);
       if (!cancelled && driver && driverProfile) {
-        setDriverInfo({ ...driver, profile: driverProfile });
+        const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
+        setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
       }
     })();
     return () => { cancelled = true; };
