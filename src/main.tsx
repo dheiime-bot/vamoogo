@@ -20,7 +20,10 @@ if (!isPreviewHost && !isInIframe && "serviceWorker" in navigator) {
     try {
       const registration = await navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`, { updateViaCache: "none" });
       await registration.update();
-      if (registration.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+        window.location.reload();
+      }
       registration.addEventListener("updatefound", () => {
         const nextWorker = registration.installing;
         nextWorker?.addEventListener("statechange", () => {
