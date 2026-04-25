@@ -66,7 +66,7 @@ const AdminCoupons = () => {
       .limit(500);
     if (!rows) { setSent([]); return; }
     const ids = Array.from(new Set(rows.map((r: any) => r.passenger_id)));
-    let nameMap = new Map<string, { full_name: string; email: string | null; selfie_url: string | null }>();
+    const nameMap = new Map<string, { full_name: string; email: string | null; selfie_url: string | null }>();
     if (ids.length) {
       const { data: profs } = await supabase
         .from("profiles")
@@ -182,7 +182,7 @@ const AdminCoupons = () => {
   };
 
   // Pré-preenche o formulário de envio direto com um cupom existente e troca para a aba de envio.
-  const useCouponForSend = (c: any, mode: "mass" | "individual") => {
+  const prepareCouponForSend = (c: any, mode: "mass" | "individual") => {
     setSendForm({
       code: c.code,
       discount_type: c.discount_type || "percentage",
@@ -349,10 +349,10 @@ const AdminCoupons = () => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-52">
-                    <DropdownMenuItem onClick={() => useCouponForSend(c, "mass")}>
+                    <DropdownMenuItem onClick={() => prepareCouponForSend(c, "mass")}>
                       <Megaphone className="h-4 w-4 mr-2" /> Enviar em massa
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => useCouponForSend(c, "individual")}>
+                    <DropdownMenuItem onClick={() => prepareCouponForSend(c, "individual")}>
                       <UserPlus className="h-4 w-4 mr-2" /> Enviar individual
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
