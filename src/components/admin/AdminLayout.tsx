@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import VamooLogo from "@/components/shared/VamooLogo";
+import NotificationBell from "@/components/shared/NotificationBell";
 
 interface NavItem {
   icon: typeof LayoutDashboard;
@@ -297,10 +298,7 @@ const AdminLayout = ({ title, children, actions }: AdminLayoutProps) => {
 
             <div className="ml-auto flex items-center gap-2">
               {actions}
-              <button className="relative rounded-xl p-2 hover:bg-muted transition-colors">
-                <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
-              </button>
+              <NotificationBell floating={false} />
               <button
                 onClick={() => setDarkMode(!darkMode)}
                 className="rounded-xl p-2 hover:bg-muted transition-colors"
