@@ -140,22 +140,22 @@ const AppMenu = ({ role, floating = true }: Props) => {
                 src={profile?.selfie_url || profile?.selfie_signup_url}
                 name={profile?.full_name || user?.user_metadata?.full_name || "Usuário"}
                 role={role}
-                size="sm"
+                size="md"
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate">
+                <p className="text-base font-extrabold truncate">
                   {profile?.full_name || user?.user_metadata?.full_name || "Usuário"}
                 </p>
-                <p className="text-xs text-muted-foreground truncate font-normal">
+                <p className="text-sm text-muted-foreground truncate font-normal">
                   {user?.email}
                 </p>
                 {ratingToShow != null && (
                   <div className="mt-1 flex items-center gap-1">
-                    <Star className="h-3.5 w-3.5 text-warning fill-warning" />
-                    <span className="text-xs font-bold text-foreground">
+                    <Star className="h-4 w-4 text-warning fill-warning" />
+                    <span className="text-sm font-bold text-foreground">
                       {ratingToShow.toFixed(2)}
                     </span>
-                    <span className="text-[10px] text-muted-foreground font-normal">
+                    <span className="text-xs text-muted-foreground font-normal">
                       / 5,00
                     </span>
                   </div>
@@ -174,7 +174,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
                 key={item.path}
                 onClick={() => go(item.path)}
                 className={cn(
-                  "w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold transition-colors",
+                  "w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold transition-colors",
                   active
                     ? "bg-primary/10 text-primary"
                     : "text-foreground hover:bg-muted"
@@ -188,7 +188,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
           {role === "driver" && vehicleCount >= 2 && (
             <button
               onClick={() => { setOpen(false); setTimeout(() => setShowVehicleModal(true), 0); }}
-              className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold text-foreground hover:bg-muted transition-colors"
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold text-foreground hover:bg-muted transition-colors"
             >
               <Car className="h-5 w-5 shrink-0" />
               <span className="flex-1 text-left">Selecionar veículo</span>
@@ -201,7 +201,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
             <p className="px-2 pb-1 text-xs font-extrabold text-muted-foreground uppercase">Motorista</p>
             <button
               onClick={() => go("/passenger/become-driver")}
-              className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold text-primary hover:bg-primary/10 transition-colors"
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold text-primary hover:bg-primary/10 transition-colors"
             >
               <Car className="h-5 w-5" />
               Quero ser motorista
@@ -212,7 +212,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
         <div className="border-t p-2">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold text-destructive hover:bg-destructive/10 transition-colors"
+            className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold text-destructive hover:bg-destructive/10 transition-colors"
           >
             <LogOut className="h-5 w-5" />
             Sair da conta
