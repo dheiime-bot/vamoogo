@@ -905,8 +905,14 @@ const PassengerHome = () => {
   // Fallback: garante dados/foto do motorista em todas as fases após o aceite,
   // inclusive ao recarregar o app durante corrida ou avaliação.
   useEffect(() => {
-    if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.driver_id || hasVisibleDriverDetails(driverInfo)) return;
-    loadDriverInfoForRide(activeRide);
+    if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.id || hasVisibleDriverDetails(driverInfo)) return;
+    const attempts = driverInfoAttemptsRef.current[activeRide.id] ?? 0;
+    if (attempts >= 8) return;
+    const timeout = window.setTimeout(() => {
+      driverInfoAttemptsRef.current[activeRide.id] = attempts + 1;
+      loadDriverInfoForRide(activeRide);
+    }, attempts === 0 ? 0 : 1200);
+    return () => window.clearTimeout(timeout);
   }, [rideState, activeRide?.id, activeRide?.driver_id, driverInfo]);
 
   const toggleFavoriteDriver = async () => {
