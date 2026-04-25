@@ -146,7 +146,7 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
 
       </SidebarHeader>
 
-      <SidebarContent className="overflow-hidden hover:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <SidebarContent className="overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border hover:scrollbar-thumb-primary/50 [scrollbar-gutter:stable] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb:hover]:bg-primary/50">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
