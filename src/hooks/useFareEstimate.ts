@@ -106,7 +106,7 @@ export const useFareEstimate = (
         // 1) Buscar tarifa da categoria (default region)
         const { data: tariffData, error: tErr } = await supabase
           .from("tariffs")
-          .select("category,base_fare,per_km,per_minute,min_fare,region_multiplier,passenger_extra")
+          .select("category,base_fare,per_km,per_minute,min_fare,region_multiplier,passenger_extra,wait_free_minutes,wait_per_minute,additional_km_rate")
           .eq("category", category)
           .eq("region", "default")
           .maybeSingle();
@@ -182,7 +182,7 @@ export const useFareEstimate = (
 
         // Preço bruto por trecho (sem min_fare/extras), para rateio proporcional
         const rawByLeg = legSpecs.map(
-          (l) => (tariff.base_fare + tariff.per_km * l.km + tariff.per_minute * l.min) * tariff.region_multiplier
+          (l) => tariff.per_km * l.km
         );
         const sumRaw = rawByLeg.reduce((a, b) => a + b, 0) || 1;
         const legs: FareLeg[] = legSpecs.map((l, i) => ({
