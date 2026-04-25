@@ -15,24 +15,44 @@ const isPreviewHost =
   window.location.hostname.includes("id-preview--") ||
   window.location.hostname.includes("lovableproject.com");
 
+const activateUpdatedServiceWorker = (worker?: ServiceWorker | null) => {
+  if (!worker) return;
+  worker.postMessage({ type: "SKIP_WAITING" });
+};
+
 if (!isPreviewHost && !isInIframe && "serviceWorker" in navigator) {
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`, { updateViaCache: "none" });
-      await registration.update();
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: "SKIP_WAITING" });
-        window.location.reload();
-      }
+
+      const checkForUpdate = async () => {
+        try {
+          await registration.update();
+          activateUpdatedServiceWorker(registration.waiting);
+        } catch {
+          // ignora falhas temporárias de atualização
+        }
+      };
+
       registration.addEventListener("updatefound", () => {
         const nextWorker = registration.installing;
         nextWorker?.addEventListener("statechange", () => {
-          if (nextWorker.state === "installed" && navigator.serviceWorker.controller) {
-            nextWorker.postMessage({ type: "SKIP_WAITING" });
-            window.location.reload();
+          if (nextWorker.state === "installed") {
+            activateUpdatedServiceWorker(nextWorker);
           }
         });
       });
+
+      await checkForUpdate();
+      window.setInterval(checkForUpdate, 60_000);
     } catch {
       // ignora erros do service worker
     }
@@ -46,7 +66,7 @@ window.addEventListener("beforeinstallprompt", (event) => {
 
 // 🔄 Limpeza única de caches (executa 1x por dispositivo, controlada por versão).
 // Bump CACHE_PURGE_VERSION para forçar nova limpeza global no próximo load.
-const CACHE_PURGE_VERSION = "2026-04-25-driver-card-1";
+const CACHE_PURGE_VERSION = "2026-04-25-sw-auto-refresh-1";
 (async () => {
   try {
     if (localStorage.getItem("vamoo_cache_purge") !== CACHE_PURGE_VERSION) {
