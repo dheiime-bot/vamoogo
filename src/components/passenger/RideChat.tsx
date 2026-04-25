@@ -52,7 +52,7 @@ const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "dri
       await Promise.all(participantRows.map(async (profile) => {
         const role: "driver" | "passenger" = profile.user_id === driverRow?.user_id ? "driver" : "passenger";
         const photo = await resolveStorageUrl("selfies", profile.selfie_url || profile.selfie_signup_url);
-        next[id] = {
+        next[profile.user_id] = {
           id: profile.user_id,
           name: profile?.full_name || (role === "driver" ? driverName || "Motorista" : "Passageiro"),
           photo: photo || null,
