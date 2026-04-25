@@ -3,8 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, Car, DollarSign, Settings, AlertTriangle, MapPin,
   Headphones, ScrollText, Megaphone, Ticket, BarChart3, LogOut,
-  Search, Bell, Moon, Sun, RefreshCw, ChevronDown, ChevronRight, User,
-  Briefcase, Headset, MessageCircle, ShieldCheck, UserCog, KeyRound, LifeBuoy, Mail, Wallet,
+  Bell, Moon, Sun, RefreshCw, ChevronDown, ChevronRight, User,
+  Briefcase, MessageCircle, ShieldCheck, UserCog, KeyRound, LifeBuoy, Mail, Wallet,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMaster } from "@/hooks/usePermission";
@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -145,25 +144,6 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
           )}
         </NavLink>
 
-        {/* Search */}
-        {!collapsed ? (
-          <div className="mx-2 mb-2 flex items-center gap-2 rounded-lg border bg-background px-2.5 py-1.5">
-            <Search className="h-3.5 w-3.5 text-muted-foreground" />
-            <input
-              placeholder="Buscar"
-              className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
-            />
-            <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              ⌘K
-            </kbd>
-          </div>
-        ) : (
-          <div className="flex justify-center pb-2">
-            <button className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-sidebar-accent">
-              <Search className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </div>
-        )}
       </SidebarHeader>
 
       <SidebarContent className="overflow-hidden hover:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -264,20 +244,6 @@ const AppSidebar = ({ supportOpen, supportUrgent }: { supportOpen: number; suppo
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-2">
-        {!collapsed && (
-          <div className="rounded-xl border bg-background p-3 mb-2">
-            <div className="mb-1.5 flex items-center gap-2">
-              <Headset className="h-4 w-4 text-foreground" />
-              <span className="text-xs font-semibold">Precisa de ajuda?</span>
-            </div>
-            <p className="text-[11px] text-muted-foreground mb-2">
-              Fale com nosso suporte
-            </p>
-            <Button variant="outline" size="sm" className="h-7 w-full text-xs">
-              Contato
-            </Button>
-          </div>
-        )}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleLogout} tooltip="Sair">
@@ -295,7 +261,6 @@ const AdminLayout = ({ title, children, actions }: AdminLayoutProps) => {
   const [darkMode, setDarkMode] = useState(() =>
     document.documentElement.classList.contains("dark")
   );
-  const [searchQuery, setSearchQuery] = useState("");
   const { profile, user, signOut } = useAuth();
   const isMaster = useIsMaster();
   const navigate = useNavigate();
@@ -326,19 +291,7 @@ const AdminLayout = ({ title, children, actions }: AdminLayoutProps) => {
           <header className="sticky top-0 z-10 flex items-center gap-3 border-b bg-card px-4 py-3">
             <SidebarTrigger />
 
-            {/* Search */}
-            <div className="hidden sm:flex flex-1 max-w-md items-center gap-2 rounded-xl bg-muted px-3 py-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Busca global..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              />
-            </div>
-
-            <div className="flex-1 sm:hidden">
+            <div className="flex-1">
               <h2 className="text-lg font-bold">{title}</h2>
             </div>
 
