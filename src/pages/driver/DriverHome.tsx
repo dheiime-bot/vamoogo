@@ -979,20 +979,24 @@ const DriverHome = () => {
         <div
           className="fixed inset-x-0 bottom-[160px] z-40 px-4 animate-slide-up"
         >
-          <div className="rounded-2xl border bg-card p-3 shadow-glow space-y-2.5">
+          <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-xs font-bold text-info truncate">A caminho do passageiro</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <div className="min-w-0">
+                  <span className="text-lg font-extrabold text-primary truncate block">A caminho do passageiro</span>
+                  <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
+                </div>
                 {activeRide.ride_code && (
                   <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{activeRide.ride_code}</span>
                 )}
               </div>
-              <span className="text-sm font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
+              <span className="text-2xl font-extrabold shrink-0">R$ {Number(activeRide.price).toFixed(2)}</span>
             </div>
 
             <div className="flex items-start gap-2">
-              <MapPin className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
-              <p className="text-xs truncate">{activeRide.origin_address?.split(" - ")[0]}</p>
+              <MapPin className="h-5 w-5 text-success mt-0.5 shrink-0" />
+              <p className="text-lg font-bold leading-snug truncate">{activeRide.origin_address?.split(" - ")[0]}</p>
             </div>
 
             {activeRide.for_other_person && (
