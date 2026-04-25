@@ -87,6 +87,8 @@ const PassengerHome = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [driverInfo, setDriverInfo] = useState<any>(null);
+  const driverInfoLoadingRef = useRef(false);
+  const driverInfoAttemptsRef = useRef<Record<string, number>>({});
   const [previewPhoto, setPreviewPhoto] = useState<{ src: string; name: string } | null>(null);
   const [originType, setOriginType] = useState<OriginType>("gps");
   const [forOtherPerson, setForOtherPerson] = useState(false);
@@ -164,39 +166,50 @@ const PassengerHome = () => {
   }, []);
 
   const loadDriverInfoForRide = async (ride: any) => {
-    if (!ride?.id || !ride?.driver_id) return;
-    const { data, error } = await (supabase as any)
-      .rpc("get_active_ride_driver_details", { _ride_id: ride.id })
-      .maybeSingle();
-    const { data: participants } = await (supabase as any)
-      .rpc("get_ride_chat_participants", { _ride_id: ride.id });
-    const driverParticipant = Array.isArray(participants)
-      ? participants.find((participant: any) => participant.user_id === ride.driver_id || participant.user_type === "driver")
-      : null;
+    if (!ride?.id || driverInfoLoadingRef.current) return;
+    driverInfoLoadingRef.current = true;
+    try {
+      const { data, error } = await (supabase as any)
+        .rpc("get_active_ride_driver_details", { _ride_id: ride.id })
+        .maybeSingle();
+      const resolvedDriverId = data?.user_id || ride.driver_id;
 
-    if (error && !driverParticipant) {
-      console.warn("Não foi possível carregar os dados do motorista", error);
+      const { data: participants } = await (supabase as any)
+        .rpc("get_ride_chat_participants", { _ride_id: ride.id });
+      const driverParticipant = Array.isArray(participants)
+        ? participants.find((participant: any) => participant.user_id === resolvedDriverId || participant.user_id === ride.driver_id || participant.user_type === "driver")
+        : null;
+      const finalDriverId = data?.user_id || driverParticipant?.user_id || ride.driver_id;
+
+      if (error && !driverParticipant) console.warn("Não foi possível carregar os dados do motorista", error);
+      if (!finalDriverId) return;
+
+      if (ride.driver_id !== finalDriverId) {
+        setActiveRide((previous: any) => previous?.id === ride.id ? { ...previous, driver_id: finalDriverId } : previous);
+      }
+
+      const rawPhoto = data?.selfie_url || data?.selfie_signup_url || driverParticipant?.selfie_url || driverParticipant?.selfie_signup_url;
+      const photo = await resolveDriverPhotoUrl(rawPhoto);
+      setDriverInfo((previous: any) => ({
+        user_id: finalDriverId,
+        rating: data?.rating ?? previous?.rating ?? 5,
+        total_rides: data?.total_rides ?? previous?.total_rides ?? 0,
+        vehicle_brand: data?.vehicle_brand || previous?.vehicle_brand || null,
+        vehicle_model: data?.vehicle_model || previous?.vehicle_model || null,
+        vehicle_color: data?.vehicle_color || previous?.vehicle_color || null,
+        vehicle_plate: data?.vehicle_plate || previous?.vehicle_plate || null,
+        pix_key: data?.pix_key || previous?.pix_key || null,
+        pix_key_type: data?.pix_key_type || previous?.pix_key_type || null,
+        profile: {
+          user_id: finalDriverId,
+          full_name: data?.full_name || driverParticipant?.full_name || previous?.profile?.full_name || "Motorista",
+          selfie_url: photo || data?.selfie_url || driverParticipant?.selfie_url || previous?.profile?.selfie_url || null,
+          selfie_signup_url: data?.selfie_signup_url || driverParticipant?.selfie_signup_url || previous?.profile?.selfie_signup_url || null,
+        },
+      }));
+    } finally {
+      driverInfoLoadingRef.current = false;
     }
-
-    const rawPhoto = data?.selfie_url || data?.selfie_signup_url || driverParticipant?.selfie_url || driverParticipant?.selfie_signup_url;
-    const photo = await resolveDriverPhotoUrl(rawPhoto);
-    setDriverInfo((previous: any) => ({
-      user_id: data?.user_id || driverParticipant?.user_id || ride.driver_id,
-      rating: data?.rating ?? previous?.rating ?? 5,
-      total_rides: data?.total_rides ?? previous?.total_rides ?? 0,
-      vehicle_brand: data?.vehicle_brand || previous?.vehicle_brand || null,
-      vehicle_model: data?.vehicle_model || previous?.vehicle_model || null,
-      vehicle_color: data?.vehicle_color || previous?.vehicle_color || null,
-      vehicle_plate: data?.vehicle_plate || previous?.vehicle_plate || null,
-      pix_key: data?.pix_key || previous?.pix_key || null,
-      pix_key_type: data?.pix_key_type || previous?.pix_key_type || null,
-      profile: {
-        user_id: data?.user_id || driverParticipant?.user_id || ride.driver_id,
-        full_name: data?.full_name || driverParticipant?.full_name || "Motorista",
-        selfie_url: photo || data?.selfie_url || driverParticipant?.selfie_url || previous?.profile?.selfie_url || null,
-        selfie_signup_url: data?.selfie_signup_url || driverParticipant?.selfie_signup_url || previous?.profile?.selfie_signup_url || null,
-      },
-    }));
   };
 
   // (recentRides removido — não estava em uso na UI)
