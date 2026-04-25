@@ -154,6 +154,34 @@ const PassengerHome = () => {
     return () => { cancelled = true; navigator.geolocation.clearWatch(watchId); };
   }, []);
 
+  const loadDriverInfoForRide = async (ride: any) => {
+    if (!ride?.id || !ride?.driver_id) return;
+    const { data } = await (supabase as any)
+      .rpc("get_active_ride_driver_details", { _ride_id: ride.id })
+      .maybeSingle();
+    if (!data) return;
+
+    const rawPhoto = data.selfie_url || data.selfie_signup_url;
+    const photo = await resolveStorageUrl("selfies", rawPhoto);
+    setDriverInfo({
+      user_id: data.user_id,
+      rating: data.rating,
+      total_rides: data.total_rides,
+      vehicle_brand: data.vehicle_brand,
+      vehicle_model: data.vehicle_model,
+      vehicle_color: data.vehicle_color,
+      vehicle_plate: data.vehicle_plate,
+      pix_key: data.pix_key,
+      pix_key_type: data.pix_key_type,
+      profile: {
+        user_id: data.user_id,
+        full_name: data.full_name,
+        selfie_url: photo || data.selfie_url,
+        selfie_signup_url: data.selfie_signup_url,
+      },
+    });
+  };
+
   // (recentRides removido — não estava em uso na UI)
 
   useEffect(() => {
@@ -207,17 +235,7 @@ const PassengerHome = () => {
       else if (ride.arrived_at) setRideState("arrived");
       else setRideState("driver_arriving");
 
-      if (ride.driver_id) {
-        const [{ data: driver }, { data: driverProfile }] = await Promise.all([
-          supabase.from("drivers").select("*").eq("user_id", ride.driver_id).maybeSingle(),
-          supabase.from("profiles").select("*").eq("user_id", ride.driver_id).maybeSingle(),
-        ]);
-
-        if (driver && driverProfile) {
-          const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
-          setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
-        }
-      }
+      if (ride.driver_id) await loadDriverInfoForRide(ride);
     };
 
     loadActiveRide();
