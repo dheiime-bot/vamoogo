@@ -21,6 +21,7 @@ import RideChat from "@/components/passenger/RideChat";
 import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import CancelRideDialog from "@/components/shared/CancelRideDialog";
 import SelectVehicleModal from "@/components/driver/SelectVehicleModal";
+import UserAvatar from "@/components/shared/UserAvatar";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission, stopOfferAlert } from "@/lib/offerSound";
@@ -50,6 +51,7 @@ const DriverHome = () => {
   const [offerCountdown, setOfferCountdown] = useState(15);
   const [showChat, setShowChat] = useState(false);
   const [passengerName, setPassengerName] = useState<string>("");
+  const [passengerPhoto, setPassengerPhoto] = useState<string | null>(null);
   const [offerPassengerRating, setOfferPassengerRating] = useState<number | null>(null);
   const [showPixModal, setShowPixModal] = useState(false);
   const [passengerRating, setPassengerRating] = useState(0);
