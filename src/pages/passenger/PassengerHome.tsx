@@ -27,6 +27,7 @@ import { getRideStops, getRideDestination } from "@/lib/rideRoute";
 import type { PixKeyType } from "@/lib/pix";
 import { calcPlatformFee } from "@/lib/platformFee";
 import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
+import { getCategoryColor, getCategoryContentColor, getCategoryLabel } from "@/lib/categoryStyle";
 import { toast } from "sonner";
 import { playPhaseSound, unlockAudioOnce, requestNotificationPermission } from "@/lib/offerSound";
 
@@ -948,7 +949,12 @@ const PassengerHome = () => {
   const driverPhoto = driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url || null;
   const driverName = driverInfo?.profile?.full_name || "Motorista";
   const driverVehicleName = [driverInfo?.vehicle_brand, driverInfo?.vehicle_model].filter(Boolean).join(" ");
-  const driverVehicleMeta = [driverInfo?.vehicle_color, driverInfo?.vehicle_plate].filter(Boolean).join(" • ");
+  const driverVehicleColor = driverInfo?.vehicle_color || null;
+  const driverVehiclePlate = driverInfo?.vehicle_plate || null;
+  const driverCategory = driverInfo?.category || activeRide?.category || selectedCategory;
+  const driverCategoryColor = getCategoryColor(driverCategory);
+  const driverCategoryContentColor = getCategoryContentColor(driverCategory);
+  const DriverVehicleIcon = driverCategory === "moto" ? Bike : Car;
   const driverCardIsLoading = driverInfoLoading || !hasVisibleDriverDetails(driverInfo);
   const shouldShowDriverCard = rideState !== "searching" && !!activeRide;
   const driverVehicleCard = shouldShowDriverCard ? (
