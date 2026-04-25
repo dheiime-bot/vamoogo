@@ -87,6 +87,7 @@ const PassengerHome = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [driverInfo, setDriverInfo] = useState<any>(null);
+  const [driverInfoLoading, setDriverInfoLoading] = useState(false);
   const driverInfoLoadingRef = useRef(false);
   const driverInfoAttemptsRef = useRef<Record<string, number>>({});
   const [previewPhoto, setPreviewPhoto] = useState<{ src: string; name: string } | null>(null);
@@ -168,6 +169,7 @@ const PassengerHome = () => {
   const loadDriverInfoForRide = async (ride: any) => {
     if (!ride?.id || driverInfoLoadingRef.current) return;
     driverInfoLoadingRef.current = true;
+    setDriverInfoLoading(true);
     try {
       const { data, error } = await (supabase as any)
         .rpc("get_active_ride_driver_details", { _ride_id: ride.id })
@@ -209,6 +211,7 @@ const PassengerHome = () => {
       }));
     } finally {
       driverInfoLoadingRef.current = false;
+      setDriverInfoLoading(false);
     }
   };
 
@@ -902,18 +905,18 @@ const PassengerHome = () => {
       .then(({ data }) => setFavoriteDriver(!!data));
   }, [rideState, activeRide?.driver_id, user?.id]);
 
-  // Fallback: garante dados/foto do motorista em todas as fases após o aceite,
-  // inclusive ao recarregar o app durante corrida ou avaliação.
+  // Fallback: mantém o card em loading e re-renderiza automaticamente quando
+  // motorista/veículo chegam da API, inclusive se a tela já estiver em progresso.
   useEffect(() => {
     if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.id || hasVisibleDriverDetails(driverInfo)) return;
     const attempts = driverInfoAttemptsRef.current[activeRide.id] ?? 0;
-    if (attempts >= 8) return;
+    if (attempts >= 12 || driverInfoLoadingRef.current) return;
     const timeout = window.setTimeout(() => {
       driverInfoAttemptsRef.current[activeRide.id] = attempts + 1;
       loadDriverInfoForRide(activeRide);
-    }, attempts === 0 ? 0 : 1200);
+    }, attempts === 0 ? 0 : Math.min(1000 + attempts * 500, 4000));
     return () => window.clearTimeout(timeout);
-  }, [rideState, activeRide?.id, activeRide?.driver_id, driverInfo]);
+  }, [rideState, activeRide?.id, activeRide?.driver_id, driverInfo, driverInfoLoading]);
 
   const toggleFavoriteDriver = async () => {
     if (!activeRide?.driver_id || favoritingDriver) return;
@@ -951,6 +954,7 @@ const PassengerHome = () => {
     driverInfo?.vehicle_color,
     driverInfo?.vehicle_plate,
   ].filter(Boolean).join(" • ");
+  const driverCardIsLoading = driverInfoLoading || !hasVisibleDriverDetails(driverInfo);
   const shouldShowDriverCard = rideState !== "searching" && !!activeRide;
 
   // Chat overlay
@@ -1184,13 +1188,14 @@ const PassengerHome = () => {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-base font-extrabold text-foreground">{driverName}</p>
                       <p className="truncate text-sm font-semibold text-muted-foreground">
-                        {driverVehicleDetails || "Dados do veículo carregando..."}
+                        {driverVehicleDetails || (driverCardIsLoading ? "Carregando dados do veículo..." : "Veículo não informado")}
                       </p>
                       <div className="mt-1 flex items-center gap-2 text-xs font-bold text-muted-foreground">
                         <Star className="h-3.5 w-3.5 text-warning fill-warning" />
                         <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
                         <span>•</span>
                         <span>{driverInfo?.total_rides || 0} corridas</span>
+                        {driverCardIsLoading && <Loader2 className="ml-1 h-3.5 w-3.5 animate-spin text-primary" />}
                       </div>
                     </div>
                   </div>
