@@ -32,7 +32,6 @@ const PASSENGER_ITEMS: MenuItem[] = [
   { icon: Heart, label: "Motoristas favoritos", path: "/passenger/favorites" },
   { icon: User, label: "Meus dados", path: "/passenger/profile" },
   { icon: Lock, label: "Alterar senha", path: "/passenger/change-password" },
-  { icon: Settings, label: "Configurações", path: "/passenger/settings" },
 ];
 
 const DRIVER_ITEMS: MenuItem[] = [
@@ -41,7 +40,6 @@ const DRIVER_ITEMS: MenuItem[] = [
   { icon: Car, label: "Meus veículos", path: "/driver/vehicles" },
   { icon: MessageCircle, label: "Chats", path: "/driver/chats" },
   { icon: User, label: "Meus dados", path: "/driver/profile" },
-  { icon: Settings, label: "Configurações", path: "/driver/settings" },
 ];
 
 interface Props {
@@ -218,6 +216,18 @@ const AppMenu = ({ role, floating = true }: Props) => {
           >
             <LogOut className="h-5 w-5" />
             Sair da conta
+          </button>
+          <button
+            onClick={() => go(role === "driver" ? "/driver/settings" : "/passenger/settings")}
+            className={cn(
+              "w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold transition-colors",
+              location.pathname.endsWith("/settings")
+                ? "bg-primary/10 text-primary"
+                : "text-foreground hover:bg-muted"
+            )}
+          >
+            <Settings className="h-5 w-5" />
+            Configurações
           </button>
         </div>
       </SheetContent>
