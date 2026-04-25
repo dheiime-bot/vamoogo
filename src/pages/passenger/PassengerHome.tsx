@@ -951,7 +951,7 @@ const PassengerHome = () => {
     driverInfo?.vehicle_color,
     driverInfo?.vehicle_plate,
   ].filter(Boolean).join(" • ");
-  const shouldShowDriverCard = rideState !== "searching" && !!(activeRide?.driver_id || driverInfo?.user_id);
+  const shouldShowDriverCard = rideState !== "searching" && !!activeRide;
 
   // Chat overlay
   if (showChat && activeRide) {
@@ -1143,75 +1143,6 @@ const PassengerHome = () => {
                   {paymentMethod && (
                     <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
                       <Banknote className="h-3.5 w-3.5" /> {paymentLabels[paymentMethod]}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Driver info */}
-              {shouldShowDriverCard && (
-                <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => {
-                        if (driverPhoto) setPreviewPhoto({ src: driverPhoto, name: driverName });
-                      }}
-                      disabled={!driverPhoto}
-                      className="rounded-full disabled:cursor-default"
-                    >
-                      <UserAvatar
-                        src={driverPhoto || undefined}
-                        name={driverName}
-                        role="driver"
-                        size="lg"
-                      />
-                    </button>
-                    <div className="flex-1">
-                      <p className="text-lg font-extrabold text-primary">{driverName}</p>
-                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
-                        <Star className="h-4 w-4 text-warning fill-warning" />
-                        <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
-                        <span>•</span>
-                        <span>{driverInfo?.total_rides || 0} corridas</span>
-                      </div>
-                      <p className="text-sm font-semibold text-muted-foreground mt-0.5">
-                        {driverVehicleDetails || "Dados do veículo carregando..."}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Status badge */}
-                  <div className={`rounded-xl p-3 text-center text-lg font-extrabold ${
-                    rideState === "driver_arriving" ? "bg-info/10 text-info" :
-                    rideState === "arrived" ? "bg-success/10 text-success" :
-                    "bg-primary/10 text-primary"
-                  }`}>
-                    {rideState === "driver_arriving" && (
-                      <div className="space-y-0.5">
-                        <p>🚗 A caminho de: {activeRide.origin_address?.split(" - ")[0] || "embarque"}</p>
-                        {liveEta && (
-                          <p className="text-xs font-medium opacity-80">
-                            Chega em ~{liveEta.minutes} min • {liveEta.km} km
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    {rideState === "arrived" && `📍 Chegou em: ${activeRide.origin_address?.split(" - ")[0] || "embarque"}`}
-                    {rideState === "in_progress" && (() => {
-                      const stops = getRideStops(activeRide);
-                      const next = stops[0] || getRideDestination(activeRide);
-                      const addr = next?.address?.split(" - ")[0]
-                        || next?.label
-                        || activeRide.destination_address?.split(" - ")[0]
-                        || "destino";
-                      return `🛣️ A caminho para: ${addr}`;
-                    })()}
-                  </div>
-
-                  {activeRide?.ride_code && (
-                    <div className="flex items-center justify-center gap-1.5">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Chave da corrida</span>
-                      <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{activeRide.ride_code}</span>
                     </div>
                   )}
                 </div>
