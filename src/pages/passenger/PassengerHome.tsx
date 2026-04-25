@@ -1622,6 +1622,13 @@ const PassengerHome = () => {
         merchantCity={activeRide?.origin_address?.split(",").slice(-2, -1)[0]?.trim()}
       />
 
+      <Dialog open={!!previewPhoto} onOpenChange={(open) => !open && setPreviewPhoto(null)}>
+        <DialogContent className="max-w-sm p-3">
+          <DialogTitle className="sr-only">Foto do motorista</DialogTitle>
+          {previewPhoto && <img src={previewPhoto.src} alt={previewPhoto.name} className="max-h-[75vh] w-full rounded-xl object-contain" />}
+        </DialogContent>
+      </Dialog>
+
       {/* Modal de avaliação — sobreposto sobre a tela inicial após corrida finalizar.
           Fechar (X / overlay / Esc) chama resetRide para limpar o estado. */}
       <Dialog
