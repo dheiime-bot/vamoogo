@@ -1126,26 +1126,26 @@ const PassengerHome = () => {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => {
-                        const src = driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url;
-                        if (src) setPreviewPhoto({ src, name: driverInfo.profile?.full_name || "Motorista" });
+                        const src = driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url;
+                        if (src) setPreviewPhoto({ src, name: driverInfo?.profile?.full_name || "Motorista" });
                       }}
-                      disabled={!(driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url)}
+                      disabled={!(driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url)}
                       className="rounded-full disabled:cursor-default"
                     >
                       <UserAvatar
-                        src={driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url}
-                        name={driverInfo.profile?.full_name || "Motorista"}
+                        src={driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url}
+                        name={driverInfo?.profile?.full_name || "Motorista"}
                         role="driver"
                         size="lg"
                       />
                     </button>
                     <div className="flex-1">
-                      <p className="text-lg font-extrabold text-primary">{driverInfo.profile?.full_name || "Motorista"}</p>
+                      <p className="text-lg font-extrabold text-primary">{driverInfo?.profile?.full_name || "Motorista"}</p>
                       <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
                         <Star className="h-4 w-4 text-warning fill-warning" />
-                        <span>{driverInfo.rating?.toFixed(1) || "5.0"}</span>
+                        <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
                         <span>•</span>
-                        <span>{driverInfo.total_rides || 0} corridas</span>
+                        <span>{driverInfo?.total_rides || 0} corridas</span>
                       </div>
                       <p className="text-sm font-semibold text-muted-foreground mt-0.5">
                         {[driverInfo?.vehicle_brand, driverInfo?.vehicle_model, driverInfo?.vehicle_color, driverInfo?.vehicle_plate].filter(Boolean).join(" • ") || "Dados do veículo carregando..."}
