@@ -15,7 +15,7 @@ const isPreviewHost =
   window.location.hostname.includes("id-preview--") ||
   window.location.hostname.includes("lovableproject.com");
 
-const APP_REFRESH_VERSION = "2026-04-25-driver-card-photo-centered-v4";
+const APP_REFRESH_VERSION = "2026-04-25-published-cache-bust-v5";
 
 const buildCacheBustedUrl = () => {
   const url = new URL(window.location.href);
@@ -41,49 +41,11 @@ const activateUpdatedServiceWorker = (worker?: ServiceWorker | null) => {
   worker.postMessage({ type: "SKIP_WAITING" });
 };
 
-if (!isPreviewHost && !isInIframe && "serviceWorker" in navigator) {
-  let refreshing = false;
-
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (refreshing) return;
-    refreshing = true;
-    reloadWithoutCache();
-  });
-
-  window.addEventListener("load", async () => {
-    try {
-      const registration = await navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`, { updateViaCache: "none" });
-
-      const checkForUpdate = async () => {
-        try {
-          await registration.update();
-          activateUpdatedServiceWorker(registration.waiting);
-        } catch {
-          // ignora falhas temporárias de atualização
-        }
-      };
-
-      registration.addEventListener("updatefound", () => {
-        const nextWorker = registration.installing;
-        nextWorker?.addEventListener("statechange", () => {
-          if (nextWorker.state === "installed") {
-            activateUpdatedServiceWorker(nextWorker);
-          }
-        });
-      });
-
-      await checkForUpdate();
-      window.setInterval(checkForUpdate, 60_000);
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") checkForUpdate();
-      });
-      window.addEventListener("focus", checkForUpdate);
-      window.addEventListener("online", checkForUpdate);
-    } catch {
-      // ignora erros do service worker
-    }
-  });
-}
+const removeServiceWorkers = async () => {
+  if (!("serviceWorker" in navigator)) return;
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(registrations.map((registration) => registration.unregister()));
+};
 
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
@@ -101,9 +63,9 @@ const CACHE_PURGE_VERSION = APP_REFRESH_VERSION;
         await Promise.all(keys.map((k) => caches.delete(k)));
       }
       if ((isPreviewHost || isInIframe) && "serviceWorker" in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.unregister()));
+        await removeServiceWorkers();
       }
+      if (!isPreviewHost && !isInIframe) await removeServiceWorkers();
       localStorage.setItem("vamoo_cache_purge", CACHE_PURGE_VERSION);
     }
   } catch {
