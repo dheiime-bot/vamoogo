@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { User, Car as CarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
+import { resolveAnyStorageImage } from "@/lib/resolveStorageUrl";
 
 interface UserAvatarProps {
   src?: string | null;
@@ -46,9 +46,8 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
       return;
     }
     const resolveAvatar = async () => {
-      const selfieUrl = await resolveStorageUrl("selfies", src);
-      const fallbackUrl = role === "driver" ? await resolveStorageUrl("driver-documents", src) : undefined;
-      if (!cancelled) setResolvedSrc(selfieUrl || fallbackUrl || src);
+      const imageUrl = await resolveAnyStorageImage(src);
+      if (!cancelled) setResolvedSrc(imageUrl || src);
     };
     resolveAvatar();
     return () => { cancelled = true; };
@@ -66,9 +65,7 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
       setResolvedSrc(null);
       return;
     }
-    const refreshedUrl = role === "driver"
-      ? (await resolveStorageUrl("driver-documents", src)) || (await resolveStorageUrl("selfies", src))
-      : await resolveStorageUrl("selfies", src);
+    const refreshedUrl = await resolveAnyStorageImage(src);
     setResolvedSrc(refreshedUrl ? `${refreshedUrl}${refreshedUrl.includes("?") ? "&" : "?"}retry=${Date.now()}` : null);
   };
 
