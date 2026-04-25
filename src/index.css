@@ -125,6 +125,10 @@
     min-height: 100dvh;
   }
 
+  html {
+    font-size: 17px;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
