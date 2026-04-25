@@ -176,6 +176,8 @@ const App = () => (
                 <Route path="/auth/driver/login" element={<Navigate to="/motorista/login" replace />} />
                 <Route path="/auth/passenger" element={<Navigate to="/passageiro/cadastro" replace />} />
                 <Route path="/auth/driver" element={<Navigate to="/motorista/cadastro" replace />} />
+                <Route path="/passenger/*" element={<LegacyPathRedirect from="/passenger" to="/passageiro" />} />
+                <Route path="/driver/*" element={<LegacyPathRedirect from="/driver" to="/motorista" />} />
                 <Route path="/passageiro" element={<ProtectedPassengerRoute><PassengerHome /></ProtectedPassengerRoute>} />
                 <Route path="/passageiro/history" element={<ProtectedPassengerRoute><PassengerHistory /></ProtectedPassengerRoute>} />
                 <Route path="/passageiro/profile" element={<ProtectedPassengerRoute><PassengerProfile /></ProtectedPassengerRoute>} />
