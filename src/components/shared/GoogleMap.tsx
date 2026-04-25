@@ -11,8 +11,8 @@ import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from "@vis.g
 import { Loader2, LocateFixed } from "lucide-react";
 import { useGoogleMapsKey } from "@/hooks/useGoogleMapsKey";
 import { CATEGORY_COLOR } from "@/lib/categoryStyle";
-import passengerMarkerImg from "@/assets/passageiro-marker.png";
-import driverMarkerImg from "@/assets/motorista-marker.png";
+import passengerMarkerImg from "@/assets/passenger-marker.png";
+import driverMarkerImg from "@/assets/driver-marker.png";
 import motoMarkerImg from "@/assets/moto-marker.png";
 
 interface MapPoint {
