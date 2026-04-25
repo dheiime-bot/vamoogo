@@ -47,7 +47,7 @@ const PassengerSpendChip = () => {
       style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
       aria-label="Ver histórico de corridas"
     >
-      <span className="font-display text-lg font-extrabold text-gradient-primary leading-none select-none">
+      <span className="font-display text-lg font-extrabold text-foreground leading-none select-none">
         {formatBRL(spent)}
       </span>
     </button>
