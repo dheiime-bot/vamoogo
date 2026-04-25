@@ -881,20 +881,13 @@ const PassengerHome = () => {
       .then(({ data }) => setFavoriteDriver(!!data));
   }, [rideState, activeRide?.driver_id, user?.id]);
 
-  // Fallback: se entrar em "rating" sem driverInfo carregado (ex: refresh durante rating),
-  // busca os dados do motorista para garantir que o botão de favoritar e o nome apareçam.
+  // Fallback: garante dados/foto do motorista em todas as fases após o aceite,
+  // inclusive ao recarregar o app durante corrida ou avaliação.
   useEffect(() => {
-    if (rideState !== "rating" || !activeRide?.driver_id || driverInfo) return;
+    if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.driver_id || driverInfo) return;
     let cancelled = false;
     (async () => {
-      const [{ data: driver }, { data: driverProfile }] = await Promise.all([
-        supabase.from("drivers").select("*").eq("user_id", activeRide.driver_id).maybeSingle(),
-        supabase.from("profiles").select("*").eq("user_id", activeRide.driver_id).maybeSingle(),
-      ]);
-      if (!cancelled && driver && driverProfile) {
-        const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
-        setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
-      }
+      await loadDriverInfoForRide(activeRide);
     })();
     return () => { cancelled = true; };
   }, [rideState, activeRide?.driver_id, driverInfo]);
