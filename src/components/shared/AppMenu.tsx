@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import SelectVehicleModal from "@/components/driver/SelectVehicleModal";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 type MenuRole = "passenger" | "driver";
 
@@ -135,12 +136,15 @@ const AppMenu = ({ role, floating = true }: Props) => {
         <SheetHeader className="border-b p-4">
           <SheetTitle className="text-left">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold">
-                {(user?.email?.[0] || "U").toUpperCase()}
-              </div>
+              <UserAvatar
+                src={profile?.selfie_url || profile?.selfie_signup_url}
+                name={profile?.full_name || user?.user_metadata?.full_name || "Usuário"}
+                role={role}
+                size="sm"
+              />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold truncate">
-                  {user?.user_metadata?.full_name || "Usuário"}
+                  {profile?.full_name || user?.user_metadata?.full_name || "Usuário"}
                 </p>
                 <p className="text-xs text-muted-foreground truncate font-normal">
                   {user?.email}
