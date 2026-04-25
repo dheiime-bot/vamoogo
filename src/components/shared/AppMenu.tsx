@@ -143,19 +143,19 @@ const AppMenu = ({ role, floating = true }: Props) => {
                 size="md"
               />
               <div className="min-w-0 flex-1">
-                <p className="text-base font-extrabold truncate">
+                <p className="text-lg font-extrabold truncate">
                   {profile?.full_name || user?.user_metadata?.full_name || "Usuário"}
                 </p>
-                <p className="text-sm text-muted-foreground truncate font-normal">
+                <p className="text-lg text-muted-foreground truncate font-normal leading-tight">
                   {user?.email}
                 </p>
                 {ratingToShow != null && (
                   <div className="mt-1 flex items-center gap-1">
-                    <Star className="h-4 w-4 text-warning fill-warning" />
-                    <span className="text-sm font-bold text-foreground">
+                    <Star className="h-5 w-5 text-warning fill-warning" />
+                    <span className="text-lg font-bold text-foreground">
                       {ratingToShow.toFixed(2)}
                     </span>
-                    <span className="text-xs text-muted-foreground font-normal">
+                    <span className="text-lg text-muted-foreground font-normal">
                       / 5,00
                     </span>
                   </div>
