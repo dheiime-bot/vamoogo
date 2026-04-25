@@ -8,8 +8,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Janela total de busca = 30s. 1 rodada com TTL de 28s + buffer de 2s.
-const OFFER_TTL_SECONDS = 28;
+// Janela total de busca = 20s. Mesmo sem motorista elegível, mantém a corrida em busca
+// até completar a janela antes de cancelar por falta de motorista.
+const SEARCH_WINDOW_SECONDS = 20;
+const OFFER_TTL_SECONDS = 18;
 const MAX_ROUNDS = 1;
 const BATCH_SIZE = 5;
 
@@ -43,6 +45,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    const searchStartedAt = Date.now();
+    const searchDeadline = searchStartedAt + SEARCH_WINDOW_SECONDS * 1000;
     console.log(`[dispatch] starting for ride ${rideId} cat=${ride.category} at ${ride.origin_lat},${ride.origin_lng}`);
 
     // Limpa motoristas zumbi (sem heartbeat há > 2min) antes de buscar candidatos
@@ -160,7 +164,16 @@ Deno.serve(async (req) => {
       console.log(`[dispatch] round ${round}: ${candidates?.length || 0} nearby, ${fresh.length} new`);
 
       if (fresh.length === 0) {
-        await new Promise((r) => setTimeout(r, 3000));
+        while (Date.now() < searchDeadline) {
+          await new Promise((r) => setTimeout(r, 1500));
+          const { data: chk } = await supabase
+            .from("rides").select("status, driver_id").eq("id", rideId).single();
+          if (!chk || chk.status !== "requested") {
+            return new Response(JSON.stringify({ ok: true, status: chk?.status }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
         continue;
       }
 
@@ -181,7 +194,7 @@ Deno.serve(async (req) => {
       }
 
       // Aguarda TTL + 1s buffer, mas verifica a cada 1.5s se alguém aceitou (early exit)
-      const deadline = Date.now() + (OFFER_TTL_SECONDS + 1) * 1000;
+      const deadline = Math.min(Date.now() + (OFFER_TTL_SECONDS + 1) * 1000, searchDeadline);
       while (Date.now() < deadline) {
         await new Promise((r) => setTimeout(r, 1500));
         const { data: chk } = await supabase

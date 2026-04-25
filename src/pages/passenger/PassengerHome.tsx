@@ -362,12 +362,12 @@ const PassengerHome = () => {
     };
   }, [user, activeRide?.id]);
 
-  // ⏱️ Auto-cancelamento client-side de 30s para corridas sem motorista.
+  // ⏱️ Auto-cancelamento client-side de 20s para corridas sem motorista.
   // Rede de segurança caso o dispatch/cron demore — garante feedback imediato ao passageiro.
   useEffect(() => {
     if (rideState !== "searching" || !activeRide?.id || !activeRide?.created_at) return;
     const created = new Date(activeRide.created_at).getTime();
-    const remaining = 30_000 - (Date.now() - created);
+    const remaining = 20_000 - (Date.now() - created);
     if (remaining <= 0) return; // o realtime/cron vai cuidar
     const t = setTimeout(async () => {
       // Re-checa estado atual antes de cancelar (pode ter sido aceita)
