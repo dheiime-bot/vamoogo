@@ -984,12 +984,17 @@ const PassengerHome = () => {
                 <DriverVehicleIcon className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-3">
                   <p className="truncate text-sm font-extrabold text-foreground">
                     {driverVehicleName || (driverCardIsLoading ? "Carregando veículo..." : "Veículo não informado")}
                   </p>
-                  <span className="shrink-0 rounded-md border bg-background px-2 py-1 font-mono text-xs font-black tracking-wide text-foreground">
-                    {driverVehiclePlate || "PLACA"}
+                  <span className="relative flex h-11 min-w-[116px] shrink-0 overflow-hidden rounded-md border-2 border-foreground bg-background pt-3.5 text-center shadow-sm">
+                    <span className="absolute inset-x-0 top-0 flex h-3.5 items-center justify-center bg-primary text-[6px] font-black uppercase leading-none tracking-[0.18em] text-primary-foreground">
+                      Brasil
+                    </span>
+                    <span className="flex-1 px-2 font-mono text-lg font-black leading-none tracking-[0.12em] text-foreground">
+                      {driverVehiclePlate || "PLACA"}
+                    </span>
                   </span>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
