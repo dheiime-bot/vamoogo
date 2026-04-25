@@ -159,25 +159,31 @@ const PassengerHome = () => {
     const { data } = await (supabase as any)
       .rpc("get_active_ride_driver_details", { _ride_id: ride.id })
       .maybeSingle();
-    if (!data) return;
+    const { data: participants } = await (supabase as any)
+      .rpc("get_ride_chat_participants", { _ride_id: ride.id });
+    const driverParticipant = Array.isArray(participants)
+      ? participants.find((participant: any) => participant.user_id === ride.driver_id || participant.user_type === "driver")
+      : null;
 
-    const rawPhoto = data.selfie_url || data.selfie_signup_url;
+    if (!data && !driverParticipant) return;
+
+    const rawPhoto = data?.selfie_url || data?.selfie_signup_url || driverParticipant?.selfie_url || driverParticipant?.selfie_signup_url;
     const photo = await resolveStorageUrl("selfies", rawPhoto);
     setDriverInfo({
-      user_id: data.user_id,
-      rating: data.rating,
-      total_rides: data.total_rides,
-      vehicle_brand: data.vehicle_brand,
-      vehicle_model: data.vehicle_model,
-      vehicle_color: data.vehicle_color,
-      vehicle_plate: data.vehicle_plate,
-      pix_key: data.pix_key,
-      pix_key_type: data.pix_key_type,
+      user_id: data?.user_id || driverParticipant?.user_id || ride.driver_id,
+      rating: data?.rating,
+      total_rides: data?.total_rides,
+      vehicle_brand: data?.vehicle_brand,
+      vehicle_model: data?.vehicle_model,
+      vehicle_color: data?.vehicle_color,
+      vehicle_plate: data?.vehicle_plate,
+      pix_key: data?.pix_key,
+      pix_key_type: data?.pix_key_type,
       profile: {
-        user_id: data.user_id,
-        full_name: data.full_name,
-        selfie_url: photo || data.selfie_url,
-        selfie_signup_url: data.selfie_signup_url,
+        user_id: data?.user_id || driverParticipant?.user_id || ride.driver_id,
+        full_name: data?.full_name || driverParticipant?.full_name || "Motorista",
+        selfie_url: photo || data?.selfie_url || driverParticipant?.selfie_url,
+        selfie_signup_url: data?.selfie_signup_url || driverParticipant?.selfie_signup_url,
       },
     });
   };
