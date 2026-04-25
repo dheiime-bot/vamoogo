@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 
 interface RideChatProps {
   rideId: string;
@@ -41,33 +42,23 @@ const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "dri
     if (!rideId || !user?.id) return;
 
     const loadParticipants = async () => {
-      const { data: ride } = await supabase
-        .from("rides")
-        .select("passenger_id, driver_id")
-        .eq("id", rideId)
-        .maybeSingle();
+      const { data: profiles } = await supabase.rpc("get_ride_chat_participants" as any, { _ride_id: rideId });
+      const participantRows = (profiles || []) as any[];
+      if (!participantRows.length) return;
 
-      const ids = [ride?.passenger_id, ride?.driver_id].filter(Boolean) as string[];
-      if (!ids.length) return;
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, selfie_url, selfie_signup_url")
-        .in("user_id", ids);
-
-      const profileMap = new Map((profiles || []).map((profile: any) => [profile.user_id, profile]));
+      const driverRow = participantRows.find((profile) => profile.user_type === "driver");
       const next: Record<string, ChatParticipant> = {};
 
-      ids.forEach((id) => {
-        const profile = profileMap.get(id) as any;
-        const role: "driver" | "passenger" = id === ride?.driver_id ? "driver" : "passenger";
+      await Promise.all(participantRows.map(async (profile) => {
+        const role: "driver" | "passenger" = profile.user_id === driverRow?.user_id ? "driver" : "passenger";
+        const photo = await resolveStorageUrl("selfies", profile.selfie_url || profile.selfie_signup_url);
         next[id] = {
-          id,
+          id: profile.user_id,
           name: profile?.full_name || (role === "driver" ? driverName || "Motorista" : "Passageiro"),
-          photo: profile?.selfie_url || profile?.selfie_signup_url || null,
+          photo: photo || null,
           role,
         };
-      });
+      }));
 
       setParticipants(next);
     };
