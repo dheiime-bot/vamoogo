@@ -105,37 +105,3 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
 };
 
 export default UserAvatar;
-    });
-    return () => { cancelled = true; };
-  }, [src]);
-
-  if (resolvedSrc) {
-    return (
-      <img
-        src={resolvedSrc}
-        alt={name || "Avatar"}
-        className={cn(
-          dim,
-          "rounded-full object-cover shrink-0 border border-border bg-muted",
-          className,
-        )}
-        loading="lazy"
-      />
-    );
-  }
-
-  return (
-    <div
-      className={cn(
-        dim,
-        "rounded-full shrink-0 flex items-center justify-center bg-gradient-primary text-primary-foreground border border-border",
-        className,
-      )}
-      aria-label={name || "Avatar padrão"}
-    >
-      <Icon className={iconDim} strokeWidth={2.2} />
-    </div>
-  );
-};
-
-export default UserAvatar;
