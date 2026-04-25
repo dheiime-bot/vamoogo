@@ -959,8 +959,8 @@ const PassengerHome = () => {
   const driverCardIsLoading = driverInfoLoading || !hasVisibleDriverDetails(driverInfo);
   const shouldShowDriverCard = rideState !== "searching" && !!activeRide;
   const driverVehicleCard = shouldShowDriverCard ? (
-    <div className="rounded-xl border bg-card p-3 shadow-sm sm:p-4">
-      <div className="flex items-start gap-3 sm:gap-4">
+    <div className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col items-center gap-3 text-center">
         <button
           onClick={() => {
             if (driverPhoto || driverPhotoFallback) setPreviewPhoto({ src: driverPhoto || driverPhotoFallback, name: driverName });
@@ -969,27 +969,27 @@ const PassengerHome = () => {
           className="rounded-full disabled:cursor-default"
           aria-label="Ver foto do motorista"
         >
-          <UserAvatar src={driverPhoto || driverPhotoFallback || undefined} name={driverName} role="driver" size="lg" />
+          <UserAvatar src={driverPhoto || driverPhotoFallback || undefined} name={driverName} role="driver" size="xl" />
         </button>
-        <div className="min-w-0 flex-1 space-y-2.5 sm:space-y-3">
-          <div className="flex items-start justify-between gap-2">
+        <div className="w-full min-w-0 space-y-3">
+          <div className="relative px-6">
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Motorista</p>
-              <p className="line-clamp-2 text-base font-extrabold leading-tight text-foreground">{driverName}</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Motorista</p>
+              <p className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">{driverName}</p>
             </div>
-            {driverCardIsLoading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />}
+            {driverCardIsLoading && <Loader2 className="absolute right-0 top-1 h-4 w-4 animate-spin text-primary" />}
           </div>
-          <div className="rounded-lg bg-muted/50 p-2.5 sm:p-3">
-            <div className="flex items-start gap-2.5 sm:items-center sm:gap-3">
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: driverCategoryColor, color: driverCategoryContentColor }}>
+          <div className="rounded-lg bg-muted/50 p-3 sm:p-4">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:text-left">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: driverCategoryColor, color: driverCategoryContentColor }}>
                 <DriverVehicleIcon className="h-5 w-5" />
               </div>
-              <div className="min-w-0 flex-1 space-y-2 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:space-y-0">
+              <div className="min-w-0 flex-1 space-y-3 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:space-y-0">
                 <div className="min-w-0 sm:flex-1">
-                  <p className="line-clamp-2 text-sm font-extrabold leading-tight text-foreground">
+                  <p className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
                     {driverVehicleName || (driverCardIsLoading ? "Carregando veículo..." : "Veículo não informado")}
                   </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-muted-foreground sm:text-xs">
+                  <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5 text-xl font-bold text-muted-foreground sm:justify-start sm:text-2xl">
                     <span>{getCategoryLabel(driverCategory)}</span>
                     {driverVehicleColor && <span>• {driverVehicleColor}</span>}
                     {!driverVehicleColor && driverCardIsLoading && <span>• carregando cor</span>}
@@ -1006,8 +1006,8 @@ const PassengerHome = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-            <Star className="h-3.5 w-3.5 text-warning fill-warning" />
+          <div className="flex items-center justify-center gap-2 text-xl font-bold text-muted-foreground sm:text-2xl">
+            <Star className="h-5 w-5 text-warning fill-warning" />
             <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
             <span>•</span>
             <span>{driverInfo?.total_rides || 0} corridas</span>
