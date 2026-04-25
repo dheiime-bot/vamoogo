@@ -900,18 +900,25 @@ const DriverHome = () => {
                 <span className="text-xs text-muted-foreground">Você ganha</span>
                 <span className="text-2xl font-extrabold text-success">R$ {Number(pendingRide.driver_net).toFixed(2)}</span>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="grid grid-cols-2 gap-2 text-center">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Valor da corrida</p>
+                  <p className="text-sm font-bold">R$ {Number(pendingRide.price || 0).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Valor por km</p>
+                  <p className="text-sm font-bold">R$ {(Number(pendingRide.driver_net || pendingRide.price || 0) / Math.max(Number(pendingRide.distance_km || 0), 0.1)).toFixed(2)}</p>
+                </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground">Até passageiro</p>
-                  <p className="text-sm font-bold">{Number(pendingOffer.distance_to_pickup_km).toFixed(1)} km</p>
+                  <p className="text-sm font-bold">{Number(pendingOffer.distance_to_pickup_km || 0).toFixed(1)} km</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Corrida</p>
-                  <p className="text-sm font-bold">{pendingRide.distance_km} km</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Pagamento</p>
-                  <p className="text-sm font-bold">{paymentLabels[pendingRide.payment_method] || "—"}</p>
+                  <p className="text-[10px] text-muted-foreground">Nota passageiro</p>
+                  <p className="text-sm font-bold flex items-center justify-center gap-1">
+                    <Star className="h-3.5 w-3.5 text-warning fill-warning" />
+                    {offerPassengerRating != null ? offerPassengerRating.toFixed(2) : "5.00"}
+                  </p>
                 </div>
               </div>
             </div>
