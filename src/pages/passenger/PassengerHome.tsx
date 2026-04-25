@@ -87,6 +87,7 @@ const PassengerHome = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [driverInfo, setDriverInfo] = useState<any>(null);
+  const [driverInfoLoading, setDriverInfoLoading] = useState(false);
   const driverInfoLoadingRef = useRef(false);
   const driverInfoAttemptsRef = useRef<Record<string, number>>({});
   const [previewPhoto, setPreviewPhoto] = useState<{ src: string; name: string } | null>(null);
@@ -168,6 +169,7 @@ const PassengerHome = () => {
   const loadDriverInfoForRide = async (ride: any) => {
     if (!ride?.id || driverInfoLoadingRef.current) return;
     driverInfoLoadingRef.current = true;
+    setDriverInfoLoading(true);
     try {
       const { data, error } = await (supabase as any)
         .rpc("get_active_ride_driver_details", { _ride_id: ride.id })
@@ -209,6 +211,7 @@ const PassengerHome = () => {
       }));
     } finally {
       driverInfoLoadingRef.current = false;
+      setDriverInfoLoading(false);
     }
   };
 
