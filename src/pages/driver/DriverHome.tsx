@@ -983,7 +983,9 @@ const DriverHome = () => {
           <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
-                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <button onClick={() => passengerPhoto && setPreviewPhoto({ src: passengerPhoto, name: passengerName || "Passageiro" })} disabled={!passengerPhoto} className="rounded-full disabled:cursor-default">
+                  <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                </button>
                 <div className="min-w-0">
                   <span className="text-lg font-extrabold text-primary truncate block">A caminho do passageiro</span>
                   <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
@@ -1088,7 +1090,9 @@ const DriverHome = () => {
           <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
-                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <button onClick={() => passengerPhoto && setPreviewPhoto({ src: passengerPhoto, name: passengerName || "Passageiro" })} disabled={!passengerPhoto} className="rounded-full disabled:cursor-default">
+                  <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                </button>
                 <div className="min-w-0">
                   <span className="text-lg font-extrabold text-success block">Aguardando embarque</span>
                   <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
@@ -1140,7 +1144,9 @@ const DriverHome = () => {
           <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
-                <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                <button onClick={() => passengerPhoto && setPreviewPhoto({ src: passengerPhoto, name: passengerName || "Passageiro" })} disabled={!passengerPhoto} className="rounded-full disabled:cursor-default">
+                  <UserAvatar src={passengerPhoto} name={passengerName} role="passenger" size="lg" />
+                </button>
                 <div className="min-w-0">
                   <span className="text-lg font-extrabold text-success truncate block">Em corrida</span>
                   <p className="text-sm font-bold truncate">{passengerName || "Passageiro"}</p>
