@@ -50,7 +50,7 @@ const PassengerLogin = () => {
 
     setLoading(false);
     toast.success("Bem-vindo!");
-    navigate("/passenger");
+    navigate("/passageiro");
   };
 
   const handleResetPassword = async () => {
@@ -160,13 +160,13 @@ const PassengerLogin = () => {
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-border flex flex-col items-center gap-2">
             <button
-              onClick={() => navigate("/auth/passenger")}
+              onClick={() => navigate("/passageiro/cadastro")}
               className="text-xs font-semibold text-primary hover:underline"
             >
               Ainda não tem conta? Cadastre-se →
             </button>
             <button
-              onClick={() => navigate("/auth/driver/login")}
+              onClick={() => navigate("/motorista/login")}
               className="text-xs font-medium text-muted-foreground hover:text-foreground"
             >
               É motorista? Entrar no app de motorista →

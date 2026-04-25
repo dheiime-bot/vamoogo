@@ -9,7 +9,7 @@
  */
 import { useEffect, useState } from "react";
 import { Star, ShieldAlert, Clock, CheckCircle2, XCircle } from "lucide-react";
-import AppealRatingDialog from "@/components/driver/AppealRatingDialog";
+import AppealRatingDialog from "@/components/motorista/AppealRatingDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 

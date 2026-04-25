@@ -9,7 +9,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
 import { useRealtimeReconnect } from "@/hooks/useRealtimeReconnect";
 import { useDevicePermissions } from "@/hooks/useDevicePermissions";
-import GpsPermissionGate from "@/components/driver/GpsPermissionGate";
+import GpsPermissionGate from "@/components/motorista/GpsPermissionGate";
 import RouteErrorBoundary from "@/components/shared/RouteErrorBoundary";
 
 // Eager: rota inicial — precisa pintar o mais rápido possível
@@ -26,26 +26,26 @@ const PassengerSignup = lazy(() => import("./pages/auth/PassengerSignup.tsx"));
 const DriverSignup = lazy(() => import("./pages/auth/DriverSignup.tsx"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword.tsx"));
 
-const PassengerHome = lazy(() => import("./pages/passenger/PassengerHome.tsx"));
-const PassengerHistory = lazy(() => import("./pages/passenger/PassengerHistory.tsx"));
-const PassengerProfile = lazy(() => import("./pages/passenger/PassengerProfile.tsx"));
-const PassengerChats = lazy(() => import("./pages/passenger/PassengerChats.tsx"));
-const PassengerCoupons = lazy(() => import("./pages/passenger/PassengerCoupons.tsx"));
-const PassengerFavoriteDrivers = lazy(() => import("./pages/passenger/PassengerFavoriteDrivers.tsx"));
-const PassengerChangePassword = lazy(() => import("./pages/passenger/PassengerChangePassword.tsx"));
-const PassengerSettings = lazy(() => import("./pages/passenger/PassengerSettings.tsx"));
-const BecomeDriver = lazy(() => import("./pages/passenger/BecomeDriver.tsx"));
+const PassengerHome = lazy(() => import("./pages/passageiro/PassengerHome.tsx"));
+const PassengerHistory = lazy(() => import("./pages/passageiro/PassengerHistory.tsx"));
+const PassengerProfile = lazy(() => import("./pages/passageiro/PassengerProfile.tsx"));
+const PassengerChats = lazy(() => import("./pages/passageiro/PassengerChats.tsx"));
+const PassengerCoupons = lazy(() => import("./pages/passageiro/PassengerCoupons.tsx"));
+const PassengerFavoriteDrivers = lazy(() => import("./pages/passageiro/PassengerFavoriteDrivers.tsx"));
+const PassengerChangePassword = lazy(() => import("./pages/passageiro/PassengerChangePassword.tsx"));
+const PassengerSettings = lazy(() => import("./pages/passageiro/PassengerSettings.tsx"));
+const BecomeDriver = lazy(() => import("./pages/passageiro/BecomeDriver.tsx"));
 
-const DriverHome = lazy(() => import("./pages/driver/DriverHome.tsx"));
-const DriverStatusPage = lazy(() => import("./pages/driver/DriverStatusPage.tsx"));
-const DriverWallet = lazy(() => import("./pages/driver/DriverWallet.tsx"));
-const DriverRides = lazy(() => import("./pages/driver/DriverRides.tsx"));
-const DriverOffers = lazy(() => import("./pages/driver/DriverOffers.tsx"));
-const DriverProfile = lazy(() => import("./pages/driver/DriverProfile.tsx"));
-const DriverChats = lazy(() => import("./pages/driver/DriverChats.tsx"));
-const DriverVehicles = lazy(() => import("./pages/driver/DriverVehicles.tsx"));
-const DriverVehicleChangeRequest = lazy(() => import("./pages/driver/DriverVehicleChangeRequest.tsx"));
-const DriverSettings = lazy(() => import("./pages/driver/DriverSettings.tsx"));
+const DriverHome = lazy(() => import("./pages/motorista/DriverHome.tsx"));
+const DriverStatusPage = lazy(() => import("./pages/motorista/DriverStatusPage.tsx"));
+const DriverWallet = lazy(() => import("./pages/motorista/DriverWallet.tsx"));
+const DriverRides = lazy(() => import("./pages/motorista/DriverRides.tsx"));
+const DriverOffers = lazy(() => import("./pages/motorista/DriverOffers.tsx"));
+const DriverProfile = lazy(() => import("./pages/motorista/DriverProfile.tsx"));
+const DriverChats = lazy(() => import("./pages/motorista/DriverChats.tsx"));
+const DriverVehicles = lazy(() => import("./pages/motorista/DriverVehicles.tsx"));
+const DriverVehicleChangeRequest = lazy(() => import("./pages/motorista/DriverVehicleChangeRequest.tsx"));
+const DriverSettings = lazy(() => import("./pages/motorista/DriverSettings.tsx"));
 
 const AdminChats = lazy(() => import("./pages/admin/AdminChats.tsx"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));
@@ -98,9 +98,9 @@ const ProtectedAdminRoute = ({ children }: { children: JSX.Element }) => {
 const ProtectedPassengerRoute = ({ children }: { children: JSX.Element }) => {
   const { user, roles, loading } = useAuth();
   if (loading || (user && roles.length === 0)) return <AuthLoading />;
-  if (!user) return <Navigate to="/auth/passenger/login" replace />;
+  if (!user) return <Navigate to="/passageiro/login" replace />;
   if (!roles.includes("passenger") && !roles.includes("driver") && !roles.includes("admin") && !roles.includes("master")) {
-    return <Navigate to="/auth/passenger/login" replace />;
+    return <Navigate to="/passageiro/login" replace />;
   }
   return children;
 };
@@ -108,9 +108,9 @@ const ProtectedPassengerRoute = ({ children }: { children: JSX.Element }) => {
 const ProtectedDriverRoute = ({ children }: { children: JSX.Element }) => {
   const { user, roles, loading } = useAuth();
   if (loading || (user && roles.length === 0)) return <AuthLoading />;
-  if (!user) return <Navigate to="/auth/driver/login" replace />;
+  if (!user) return <Navigate to="/motorista/login" replace />;
   if (!roles.includes("driver") && !roles.includes("admin") && !roles.includes("master")) {
-    return <Navigate to="/auth/driver/login" replace />;
+    return <Navigate to="/motorista/login" replace />;
   }
   // Bloqueia toda a área do motorista até a permissão de GPS ser concedida.
   return <GpsPermissionGate>{children}</GpsPermissionGate>;
@@ -160,35 +160,35 @@ const App = () => (
                 <Route path="/" element={<AdminLogin />} />
                 <Route path="/landing" element={<Index />} />
                 <Route path="/auth" element={<AuthPage />} />
-                <Route path="/auth/passenger/login" element={<PassengerLogin />} />
-                <Route path="/auth/driver/login" element={<DriverLogin />} />
-                <Route path="/auth/passenger" element={<PassengerSignup />} />
-                <Route path="/auth/driver" element={<DriverSignup />} />
+                <Route path="/passageiro/login" element={<PassengerLogin />} />
+                <Route path="/motorista/login" element={<DriverLogin />} />
+                <Route path="/passageiro/cadastro" element={<PassengerSignup />} />
+                <Route path="/motorista/cadastro" element={<DriverSignup />} />
                 <Route path="/auth/reset-password" element={<ResetPassword />} />
-                <Route path="/passenger" element={<ProtectedPassengerRoute><PassengerHome /></ProtectedPassengerRoute>} />
-                <Route path="/passenger/history" element={<ProtectedPassengerRoute><PassengerHistory /></ProtectedPassengerRoute>} />
-                <Route path="/passenger/profile" element={<ProtectedPassengerRoute><PassengerProfile /></ProtectedPassengerRoute>} />
-                <Route path="/passenger/chats" element={<ProtectedPassengerRoute><PassengerChats /></ProtectedPassengerRoute>} />
-                <Route path="/passenger/coupons" element={<ProtectedPassengerRoute><PassengerCoupons /></ProtectedPassengerRoute>} />
-                <Route path="/passenger/favorites" element={<ProtectedPassengerRoute><PassengerFavoriteDrivers /></ProtectedPassengerRoute>} />
-                <Route path="/passenger/change-password" element={<ProtectedPassengerRoute><PassengerChangePassword /></ProtectedPassengerRoute>} />
-                <Route path="/passenger/settings" element={<ProtectedPassengerRoute><PassengerSettings /></ProtectedPassengerRoute>} />
-                <Route path="/passenger/become-driver" element={<ProtectedPassengerRoute><BecomeDriver /></ProtectedPassengerRoute>} />
-                <Route path="/driver" element={<ProtectedDriverRoute><DriverHome /></ProtectedDriverRoute>} />
-                <Route path="/driver/status" element={<ProtectedDriverRoute><DriverStatusPage /></ProtectedDriverRoute>} />
-                <Route path="/driver/wallet" element={<ProtectedDriverRoute><DriverWallet /></ProtectedDriverRoute>} />
-                <Route path="/driver/rides" element={<ProtectedDriverRoute><DriverRides /></ProtectedDriverRoute>} />
-                <Route path="/driver/ratings" element={<Navigate to="/driver/profile" replace />} />
-                <Route path="/driver/offers" element={<ProtectedDriverRoute><DriverOffers /></ProtectedDriverRoute>} />
-                <Route path="/driver/profile" element={<ProtectedDriverRoute><DriverProfile /></ProtectedDriverRoute>} />
-                <Route path="/driver/chats" element={<ProtectedDriverRoute><DriverChats /></ProtectedDriverRoute>} />
-                <Route path="/driver/vehicles" element={<ProtectedDriverRoute><DriverVehicles /></ProtectedDriverRoute>} />
-                <Route path="/driver/vehicles/request" element={<ProtectedDriverRoute><DriverVehicleChangeRequest /></ProtectedDriverRoute>} />
-                <Route path="/driver/settings" element={<ProtectedDriverRoute><DriverSettings /></ProtectedDriverRoute>} />
+                <Route path="/passageiro" element={<ProtectedPassengerRoute><PassengerHome /></ProtectedPassengerRoute>} />
+                <Route path="/passageiro/history" element={<ProtectedPassengerRoute><PassengerHistory /></ProtectedPassengerRoute>} />
+                <Route path="/passageiro/profile" element={<ProtectedPassengerRoute><PassengerProfile /></ProtectedPassengerRoute>} />
+                <Route path="/passageiro/chats" element={<ProtectedPassengerRoute><PassengerChats /></ProtectedPassengerRoute>} />
+                <Route path="/passageiro/coupons" element={<ProtectedPassengerRoute><PassengerCoupons /></ProtectedPassengerRoute>} />
+                <Route path="/passageiro/favorites" element={<ProtectedPassengerRoute><PassengerFavoriteDrivers /></ProtectedPassengerRoute>} />
+                <Route path="/passageiro/change-password" element={<ProtectedPassengerRoute><PassengerChangePassword /></ProtectedPassengerRoute>} />
+                <Route path="/passageiro/settings" element={<ProtectedPassengerRoute><PassengerSettings /></ProtectedPassengerRoute>} />
+                <Route path="/passageiro/become-driver" element={<ProtectedPassengerRoute><BecomeDriver /></ProtectedPassengerRoute>} />
+                <Route path="/motorista" element={<ProtectedDriverRoute><DriverHome /></ProtectedDriverRoute>} />
+                <Route path="/motorista/status" element={<ProtectedDriverRoute><DriverStatusPage /></ProtectedDriverRoute>} />
+                <Route path="/motorista/wallet" element={<ProtectedDriverRoute><DriverWallet /></ProtectedDriverRoute>} />
+                <Route path="/motorista/rides" element={<ProtectedDriverRoute><DriverRides /></ProtectedDriverRoute>} />
+                <Route path="/motorista/ratings" element={<Navigate to="/motorista/profile" replace />} />
+                <Route path="/motorista/offers" element={<ProtectedDriverRoute><DriverOffers /></ProtectedDriverRoute>} />
+                <Route path="/motorista/profile" element={<ProtectedDriverRoute><DriverProfile /></ProtectedDriverRoute>} />
+                <Route path="/motorista/chats" element={<ProtectedDriverRoute><DriverChats /></ProtectedDriverRoute>} />
+                <Route path="/motorista/vehicles" element={<ProtectedDriverRoute><DriverVehicles /></ProtectedDriverRoute>} />
+                <Route path="/motorista/vehicles/request" element={<ProtectedDriverRoute><DriverVehicleChangeRequest /></ProtectedDriverRoute>} />
+                <Route path="/motorista/settings" element={<ProtectedDriverRoute><DriverSettings /></ProtectedDriverRoute>} />
                 <Route path="/admin" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
                 <Route path="/admin/chats" element={<ProtectedAdminRoute><AdminChats /></ProtectedAdminRoute>} />
-                <Route path="/admin/drivers" element={<ProtectedAdminRoute><AdminDrivers /></ProtectedAdminRoute>} />
-                <Route path="/admin/passengers" element={<ProtectedAdminRoute><AdminPassengers /></ProtectedAdminRoute>} />
+                <Route path="/admin/motoristas" element={<ProtectedAdminRoute><AdminDrivers /></ProtectedAdminRoute>} />
+                <Route path="/admin/passageiros" element={<ProtectedAdminRoute><AdminPassengers /></ProtectedAdminRoute>} />
                 <Route path="/admin/rides" element={<ProtectedAdminRoute><AdminRides /></ProtectedAdminRoute>} />
                 <Route path="/admin/appeals" element={<ProtectedAdminRoute><AdminAppeals /></ProtectedAdminRoute>} />
                 <Route path="/admin/cancellations" element={<ProtectedAdminRoute><AdminCancellations /></ProtectedAdminRoute>} />

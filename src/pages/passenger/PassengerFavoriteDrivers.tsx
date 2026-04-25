@@ -7,7 +7,7 @@ import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import UserAvatar from "@/components/shared/UserAvatar";
-import HomeFab from "@/components/passenger/HomeFab";
+import HomeFab from "@/components/passageiro/HomeFab";
 
 interface FavRow {
   id: string;
@@ -224,7 +224,7 @@ const PassengerFavoriteDrivers = () => {
       );
     } catch {}
     toast.success(`Chamando ${name}…`);
-    navigate("/passenger?preferred=" + encodeURIComponent(driverId));
+    navigate("/passageiro?preferred=" + encodeURIComponent(driverId));
   };
 
   const canCall = (d: DriverDetails | null) =>
@@ -234,7 +234,7 @@ const PassengerFavoriteDrivers = () => {
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <button
-          onClick={() => navigate("/passenger")}
+          onClick={() => navigate("/passageiro")}
           className="rounded-full p-2 hover:bg-muted"
           aria-label="Voltar"
         >

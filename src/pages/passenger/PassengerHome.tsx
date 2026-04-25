@@ -6,14 +6,14 @@ import BlockBanner from "@/components/shared/BlockBanner";
 import { guardErrorMessage } from "@/lib/guardErrors";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
-import PassengerSpendChip from "@/components/passenger/PassengerSpendChip";
+import PassengerSpendChip from "@/components/passageiro/PassengerSpendChip";
 import UserAvatar from "@/components/shared/UserAvatar";
 import GoogleMap, { LEG_COLORS, vehicleColorToHex } from "@/components/shared/GoogleMap";
-import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passenger/PaymentMethodModal";
-import PixPaymentModal from "@/components/passenger/PixPaymentModal";
-import RideChat from "@/components/passenger/RideChat";
-import RideSummary from "@/components/passenger/RideSummary";
-import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passenger/OriginPicker";
+import PaymentMethodModal, { type PaymentMethod, type AppliedCoupon } from "@/components/passageiro/PaymentMethodModal";
+import PixPaymentModal from "@/components/passageiro/PixPaymentModal";
+import RideChat from "@/components/passageiro/RideChat";
+import RideSummary from "@/components/passageiro/RideSummary";
+import OriginPicker, { type OriginType, type OtherPersonInfo } from "@/components/passageiro/OriginPicker";
 import AddressAutocompleteField from "@/components/address/AddressAutocompleteField";
 import CancelRideDialog from "@/components/shared/CancelRideDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -828,7 +828,7 @@ const PassengerHome = () => {
         type: "ride_status",
         title: "🚨 Passageiro alterou a rota!",
         message: `${prevAddr} → ${newAddrShort} • R$ ${totalPrice.toFixed(2)} (${deltaPrice >= 0 ? "+" : ""}R$ ${deltaPrice.toFixed(2)})`,
-        link: "/driver",
+        link: "/motorista",
         data: {
           ride_id: activeRide.id,
           event: "route_changed",

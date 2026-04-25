@@ -4,10 +4,10 @@ import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppMenu from "@/components/shared/AppMenu";
-import HomeFab from "@/components/passenger/HomeFab";
+import HomeFab from "@/components/passageiro/HomeFab";
 import UserAvatar from "@/components/shared/UserAvatar";
 
-import RideChat from "@/components/passenger/RideChat";
+import RideChat from "@/components/passageiro/RideChat";
 import CentralChat from "@/components/shared/CentralChat";
 import { Headset } from "lucide-react";
 

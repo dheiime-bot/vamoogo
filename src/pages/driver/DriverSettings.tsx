@@ -3,7 +3,7 @@ import { ArrowLeft, Bell, BellRing, Camera, Crosshair, MapPin, Smartphone, Volum
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import AppMenu from "@/components/shared/AppMenu";
-import DriverHomeFab from "@/components/driver/DriverHomeFab";
+import DriverHomeFab from "@/components/motorista/DriverHomeFab";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { playOfferAlert, requestNotificationPermission, unlockAudioOnce } from "@/lib/offerSound";
@@ -148,7 +148,7 @@ const DriverSettings = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="bg-gradient-primary px-6 pb-12 pt-20 text-primary-foreground">
-        <button onClick={() => navigate("/driver")} className="mb-5 text-primary-foreground/80">
+        <button onClick={() => navigate("/motorista")} className="mb-5 text-primary-foreground/80">
           <ArrowLeft className="h-6 w-6" />
         </button>
         <h1 className="text-2xl font-extrabold">Configurações</h1>

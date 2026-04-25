@@ -2,7 +2,7 @@ import { X, CheckCircle, XCircle, Ban, Phone, Mail, FileText, Car, User as UserI
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { getDriverStatusInfo } from "@/lib/driverStatus";
+import { getDriverStatusInfo } from "@/lib/motoristaStatus";
 import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 import EditDriverModal from "./EditDriverModal";
 

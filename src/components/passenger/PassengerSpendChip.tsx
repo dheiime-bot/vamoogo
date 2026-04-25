@@ -55,7 +55,7 @@ const PassengerSpendChip = () => {
       className="fixed right-3 z-50 flex h-16 items-center gap-2 rounded-full bg-card/95 backdrop-blur-md shadow-md border border-border px-2 pl-5"
       style={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }}
     >
-      <button onClick={() => navigate("/passenger/history")} className="font-display text-lg font-extrabold text-foreground leading-none select-none" aria-label="Ver histórico de corridas">
+      <button onClick={() => navigate("/passageiro/history")} className="font-display text-lg font-extrabold text-foreground leading-none select-none" aria-label="Ver histórico de corridas">
         {hidden ? "R$ •••" : formatBRL(spent)}
       </button>
       <button onClick={toggleHidden} className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted" aria-label={hidden ? "Mostrar valor" : "Ocultar valor"}>

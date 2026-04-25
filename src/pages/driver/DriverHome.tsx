@@ -4,23 +4,23 @@ import { AlertTriangle, MapPin, Play, Flag, Phone, MessageCircle, Star, Clock, Q
 import { openGoogleMapsRoute } from "@/lib/externalNav";
 import { getRideDestination, getRideNextTarget, getRideStops, routePointName } from "@/lib/rideRoute";
 import { isGuardError, guardErrorMessage } from "@/lib/guardErrors";
-import { getDriverStatusInfo } from "@/lib/driverStatus";
+import { getDriverStatusInfo } from "@/lib/motoristaStatus";
 import { formatBRL } from "@/lib/brFormat";
 import AppMenu from "@/components/shared/AppMenu";
 import BlockBanner from "@/components/shared/BlockBanner";
 import NotificationBell from "@/components/shared/NotificationBell";
 import RefreshAppButton from "@/components/shared/RefreshAppButton";
-import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
-import DriverBottomNav from "@/components/driver/DriverBottomNav";
+import DriverEarningsChip from "@/components/motorista/DriverEarningsChip";
+import DriverBottomNav from "@/components/motorista/DriverBottomNav";
 
 import GoogleMap from "@/components/shared/GoogleMap";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
-import RideChat from "@/components/passenger/RideChat";
-import PixPaymentModal from "@/components/passenger/PixPaymentModal";
+import RideChat from "@/components/passageiro/RideChat";
+import PixPaymentModal from "@/components/passageiro/PixPaymentModal";
 import CancelRideDialog from "@/components/shared/CancelRideDialog";
-import SelectVehicleModal from "@/components/driver/SelectVehicleModal";
+import SelectVehicleModal from "@/components/motorista/SelectVehicleModal";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 import type { PixKeyType } from "@/lib/pix";
@@ -825,7 +825,7 @@ const DriverHome = () => {
   }, [driverData?.status, user]);
 
   if (driverData && !statusInfo.canDrive) {
-    return <Navigate to="/driver/status" replace />;
+    return <Navigate to="/motorista/status" replace />;
   }
 
   // Chat overlay (apenas quando corrida está ativa)

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Camera, FileText, Phone, Mail, Shield, ArrowLeft, Car, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import HomeFab from "@/components/passenger/HomeFab";
+import HomeFab from "@/components/passageiro/HomeFab";
 import UserAvatar from "@/components/shared/UserAvatar";
 
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -37,7 +37,7 @@ const PassengerProfile = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="bg-gradient-primary p-6 pt-20 pb-16">
-        <button onClick={() => navigate("/passenger")} className="mb-4 text-primary-foreground/80">
+        <button onClick={() => navigate("/passageiro")} className="mb-4 text-primary-foreground/80">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-lg font-bold text-primary-foreground">Meu Perfil</h1>
@@ -85,7 +85,7 @@ const PassengerProfile = () => {
 
         {canBecomeDriver && (
           <button
-            onClick={() => navigate("/passenger/become-driver")}
+            onClick={() => navigate("/passageiro/become-driver")}
             className="mt-6 w-full rounded-xl bg-gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-glow flex items-center justify-center gap-2"
           >
             <Car className="h-4 w-4" /> Quero ser motorista
@@ -93,7 +93,7 @@ const PassengerProfile = () => {
         )}
         {isDriver && (
           <button
-            onClick={() => navigate("/driver/status")}
+            onClick={() => navigate("/motorista/status")}
             className="mt-6 w-full rounded-xl border border-primary/40 bg-primary/5 py-3 text-sm font-semibold text-primary flex items-center justify-center gap-2"
           >
             <Car className="h-4 w-4" /> Ver meu cadastro de motorista

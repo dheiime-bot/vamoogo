@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => { cancelled = true; subscription.unsubscribe(); };
   }, [loadUserData]);
 
-  // 🔄 Realtime: atualiza profile/driver/roles automaticamente sem recarregar
+  // 🔄 Realtime: atualiza profile/motorista/roles automaticamente sem recarregar
   useEffect(() => {
     if (!user) return;
     const channel = supabase

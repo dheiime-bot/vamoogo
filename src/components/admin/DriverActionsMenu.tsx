@@ -75,7 +75,7 @@ const DriverActionsMenu = ({ driver, onView, onChanged }: Props) => {
 
   const sendNotification = async (title: string, message: string) => {
     await supabase.from("notifications").insert({
-      user_id: driver.user_id, type: "driver_status", title, message, link: "/driver/status",
+      user_id: driver.user_id, type: "driver_status", title, message, link: "/motorista/status",
     });
   };
 

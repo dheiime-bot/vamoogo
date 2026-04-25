@@ -523,7 +523,7 @@ const DriverSignup = () => {
     }
 
     toast.success("Cadastro enviado! Aguarde a análise da equipe.");
-    navigate("/driver/status");
+    navigate("/motorista/status");
   };
 
   // ---------- UI ----------

@@ -16,8 +16,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import DriverHomeFab from "@/components/driver/DriverHomeFab";
-import WhatsappTopupModal from "@/components/driver/WhatsappTopupModal";
+import DriverHomeFab from "@/components/motorista/DriverHomeFab";
+import WhatsappTopupModal from "@/components/motorista/WhatsappTopupModal";
 
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";

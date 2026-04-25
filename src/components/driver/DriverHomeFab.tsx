@@ -11,11 +11,11 @@ const DriverHomeFab = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  if (pathname === "/driver" || pathname === "/driver/") return null;
+  if (pathname === "/motorista" || pathname === "/motorista/") return null;
 
   return (
     <button
-      onClick={() => navigate("/driver")}
+      onClick={() => navigate("/motorista")}
       aria-label="Ir para a tela inicial"
       className={cn(
         "fixed left-1/2 z-50 -translate-x-1/2",

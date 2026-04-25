@@ -242,7 +242,7 @@ const BecomeDriver = () => {
   };
 
   const back = () => {
-    if (step === 0) navigate("/passenger/profile");
+    if (step === 0) navigate("/passageiro/profile");
     else setStep((s) => s - 1);
   };
 
@@ -280,7 +280,7 @@ const BecomeDriver = () => {
       if (error) throw error;
       await refreshProfile();
       toast.success("Cadastro enviado! Aguarde a análise da equipe.");
-      navigate("/driver/status");
+      navigate("/motorista/status");
     } catch (e: any) {
       toast.error(e?.message || "Erro ao enviar cadastro");
     } finally {
@@ -303,7 +303,7 @@ const BecomeDriver = () => {
         <CheckCircle2 className="h-12 w-12 text-success mb-3" />
         <h1 className="text-xl font-bold mb-1">Você já é motorista</h1>
         <p className="text-sm text-muted-foreground mb-6">Acompanhe o status da sua análise.</p>
-        <button onClick={() => navigate("/driver/status")} className="rounded-xl bg-gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
+        <button onClick={() => navigate("/motorista/status")} className="rounded-xl bg-gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
           Ver status
         </button>
       </div>
@@ -319,7 +319,7 @@ const BecomeDriver = () => {
           Para se tornar motorista é necessário ter no mínimo 21 anos.
           {age !== null && ` Sua idade cadastrada: ${age} anos.`}
         </p>
-        <button onClick={() => navigate("/passenger/profile")} className="rounded-xl border bg-card px-6 py-3 text-sm font-semibold">
+        <button onClick={() => navigate("/passageiro/profile")} className="rounded-xl border bg-card px-6 py-3 text-sm font-semibold">
           Voltar ao perfil
         </button>
       </div>

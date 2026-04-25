@@ -36,7 +36,7 @@ const AuthPage = () => {
           {/* Opções de login */}
           <div className="space-y-3">
             <button
-              onClick={() => navigate("/auth/passenger/login")}
+              onClick={() => navigate("/passageiro/login")}
               className="group flex w-full items-center gap-4 rounded-2xl border border-border bg-background p-5 text-left transition-all hover:border-primary hover:shadow-glow"
             >
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-primary">
@@ -50,7 +50,7 @@ const AuthPage = () => {
             </button>
 
             <button
-              onClick={() => navigate("/auth/driver/login")}
+              onClick={() => navigate("/motorista/login")}
               className="group flex w-full items-center gap-4 rounded-2xl border border-border bg-background p-5 text-left transition-all hover:border-primary hover:shadow-glow"
             >
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-primary">
@@ -69,13 +69,13 @@ const AuthPage = () => {
             <p className="mb-3 text-center text-xs text-muted-foreground">Ainda não tem conta?</p>
             <div className="flex gap-2">
               <button
-                onClick={() => navigate("/auth/passenger")}
+                onClick={() => navigate("/passageiro/cadastro")}
                 className="flex-1 rounded-xl border border-primary/30 bg-primary/5 py-2.5 text-xs font-semibold text-primary hover:bg-primary/10"
               >
                 Cadastrar Passageiro
               </button>
               <button
-                onClick={() => navigate("/auth/driver")}
+                onClick={() => navigate("/motorista/cadastro")}
                 className="flex-1 rounded-xl border border-primary/30 bg-primary/5 py-2.5 text-xs font-semibold text-primary hover:bg-primary/10"
               >
                 Cadastrar Motorista

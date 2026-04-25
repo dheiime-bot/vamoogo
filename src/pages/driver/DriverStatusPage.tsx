@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { getDriverStatusInfo } from "@/lib/driverStatus";
+import { getDriverStatusInfo } from "@/lib/motoristaStatus";
 import DocumentUpload from "@/components/auth/DocumentUpload";
 import { LogOut, Loader2, RefreshCw, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ const DriverStatusPage = () => {
       });
       if (newInfo.canDrive) {
         // aprovado → vai pra Home automaticamente
-        setTimeout(() => navigate("/driver"), 1200);
+        setTimeout(() => navigate("/motorista"), 1200);
       }
     }
     lastStatusRef.current = now;
@@ -67,7 +67,7 @@ const DriverStatusPage = () => {
         const newInfo = getDriverStatusInfo(newStatus);
         toast.success(`Status atualizado: ${newInfo.label}`);
         if (newInfo.canDrive) {
-          setTimeout(() => navigate("/driver"), 800);
+          setTimeout(() => navigate("/motorista"), 800);
         }
       } else {
         toast.info("Nenhuma novidade ainda. Tente novamente em instantes.");

@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { Camera, FileText, Phone, Car as CarIcon, Shield, Star, ArrowLeft, QrCode, Loader2, Check, Pencil } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
 import UserAvatar from "@/components/shared/UserAvatar";
-import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
-import DriverHomeFab from "@/components/driver/DriverHomeFab";
+import DriverEarningsChip from "@/components/motorista/DriverEarningsChip";
+import DriverHomeFab from "@/components/motorista/DriverHomeFab";
 
 import StatusBadge from "@/components/shared/StatusBadge";
 import EditProfileModal from "@/components/shared/EditProfileModal";
-import DriverRatingsSection from "@/components/driver/DriverRatingsSection";
+import DriverRatingsSection from "@/components/motorista/DriverRatingsSection";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,7 +90,7 @@ const DriverProfile = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="bg-gradient-dark p-6 pt-20 pb-16">
-        <button onClick={() => navigate("/driver")} className="mb-4 text-primary-foreground/80"><ArrowLeft className="h-5 w-5" /></button>
+        <button onClick={() => navigate("/motorista")} className="mb-4 text-primary-foreground/80"><ArrowLeft className="h-5 w-5" /></button>
         <h1 className="text-lg font-bold text-primary-foreground">Meu perfil</h1>
       </div>
 
@@ -222,7 +222,7 @@ const DriverProfile = () => {
               ))}
             </div>
             <button
-              onClick={() => navigate("/driver/vehicles")}
+              onClick={() => navigate("/motorista/vehicles")}
               className="mt-4 w-full rounded-xl border border-primary/40 bg-primary/5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10"
             >
               Gerenciar veículos / mudar categoria

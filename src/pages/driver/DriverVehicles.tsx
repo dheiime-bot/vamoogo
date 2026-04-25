@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { toast } from "sonner";
-import DriverHomeFab from "@/components/driver/DriverHomeFab";
+import DriverHomeFab from "@/components/motorista/DriverHomeFab";
 
 interface Vehicle {
   id: string;
@@ -95,7 +95,7 @@ const DriverVehicles = () => {
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <button
-          onClick={() => navigate("/driver/profile")}
+          onClick={() => navigate("/motorista/profile")}
           className="rounded-full p-2 hover:bg-muted"
           aria-label="Voltar"
         >
@@ -167,7 +167,7 @@ const DriverVehicles = () => {
                 ))
               )}
               <button
-                onClick={() => navigate("/driver/vehicles/request")}
+                onClick={() => navigate("/motorista/vehicles/request")}
                 disabled={!!pending}
                 className="w-full rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 p-4 flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 title={pending ? "Você já tem uma solicitação pendente" : "Cadastrar novo veículo"}

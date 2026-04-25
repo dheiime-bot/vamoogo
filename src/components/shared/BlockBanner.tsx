@@ -66,8 +66,8 @@ const BlockBanner = ({ role }: { role: "passenger" | "driver" }) => {
 
   // Libera a tela quando o usuário está no chat de suporte
   const isOnChats =
-    location.pathname.startsWith("/passenger/chats") ||
-    location.pathname.startsWith("/driver/chats");
+    location.pathname.startsWith("/passageiro/chats") ||
+    location.pathname.startsWith("/motorista/chats");
   if (isOnChats) return null;
 
   const formatRemaining = (target: number) => {
@@ -81,7 +81,7 @@ const BlockBanner = ({ role }: { role: "passenger" | "driver" }) => {
   };
 
   const goSupport = () => {
-    navigate(role === "passenger" ? "/passenger/chats?central=1" : "/driver/chats?central=1");
+    navigate(role === "passenger" ? "/passageiro/chats?central=1" : "/motorista/chats?central=1");
   };
 
   // Mostra APENAS um motivo: manual tem prioridade sobre automático

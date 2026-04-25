@@ -19,7 +19,7 @@ const DRIVER_ALERT_SETTINGS_KEY = "vamoogo_driver_alert_settings";
 
 const getAlertSettings = () => {
   try {
-    const key = window.location.pathname.startsWith("/driver") ? DRIVER_ALERT_SETTINGS_KEY : PASSENGER_ALERT_SETTINGS_KEY;
+    const key = window.location.pathname.startsWith("/motorista") ? DRIVER_ALERT_SETTINGS_KEY : PASSENGER_ALERT_SETTINGS_KEY;
     const raw = localStorage.getItem(key);
     const parsed = raw ? JSON.parse(raw) : {};
     return {

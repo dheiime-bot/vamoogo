@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import HomeFab from "@/components/passenger/HomeFab";
+import HomeFab from "@/components/passageiro/HomeFab";
 
 const PassengerChangePassword = () => {
   const navigate = useNavigate();
@@ -54,14 +54,14 @@ const PassengerChangePassword = () => {
     }
     toast.success("Senha alterada com sucesso");
     setCurrent(""); setNext(""); setConfirm("");
-    navigate("/passenger");
+    navigate("/passageiro");
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <button
-          onClick={() => navigate("/passenger")}
+          onClick={() => navigate("/passageiro")}
           className="rounded-full p-2 hover:bg-muted"
           aria-label="Voltar"
         >

@@ -7,8 +7,8 @@
 import { useEffect, useState } from "react";
 import { Clock, Navigation } from "lucide-react";
 import AppMenu from "@/components/shared/AppMenu";
-import DriverEarningsChip from "@/components/driver/DriverEarningsChip";
-import DriverHomeFab from "@/components/driver/DriverHomeFab";
+import DriverEarningsChip from "@/components/motorista/DriverEarningsChip";
+import DriverHomeFab from "@/components/motorista/DriverHomeFab";
 import ReportRideIssueModal from "@/components/shared/ReportRideIssueModal";
 import ReportIssueButton from "@/components/shared/ReportIssueButton";
 import RideDetailsDialog from "@/components/shared/RideDetailsDialog";
