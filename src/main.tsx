@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { BeforeInstallPromptEvent, storeInstallPrompt } from "./lib/pwaInstall";
 
 const isInIframe = (() => {
   try {
@@ -19,6 +20,11 @@ if (!isPreviewHost && !isInIframe && "serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   });
 }
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  storeInstallPrompt(event as BeforeInstallPromptEvent);
+});
 
 // 🔄 Limpeza única de caches (executa 1x por dispositivo, controlada por versão).
 // Bump CACHE_PURGE_VERSION para forçar nova limpeza global no próximo load.
