@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Camera, X } from "lucide-react";
+import { Loader2, Camera, X, Image as ImageIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,8 @@ const formatPhone = (raw: string) => {
 
 const EditProfileModal = ({ open, onOpenChange }: Props) => {
   const { user, profile, refreshProfile } = useAuth();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -125,20 +126,36 @@ const EditProfileModal = ({ open, onOpenChange }: Props) => {
               )}
             </div>
             <input
-              ref={fileRef}
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+            />
+            <input
+              ref={cameraInputRef}
               type="file"
               accept="image/*"
               capture="user"
               hidden
               onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
             />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="text-xs font-semibold text-primary"
-            >
-              Trocar foto
-            </button>
+            <div className="grid w-full grid-cols-2 gap-2 px-4">
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-muted"
+              >
+                <ImageIcon className="h-3.5 w-3.5 text-primary" /> Galeria
+              </button>
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-muted"
+              >
+                <Camera className="h-3.5 w-3.5 text-primary" /> Nova selfie
+              </button>
+            </div>
           </div>
 
           <div>
