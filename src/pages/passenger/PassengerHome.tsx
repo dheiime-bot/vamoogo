@@ -943,6 +943,15 @@ const PassengerHome = () => {
 
   const isRideActive = ["searching", "accepted", "driver_arriving", "arrived", "in_progress"].includes(rideState);
   const activeRideStops = activeRide ? getRideStops(activeRide) : [];
+  const driverPhoto = driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url || null;
+  const driverName = driverInfo?.profile?.full_name || "Motorista";
+  const driverVehicleDetails = [
+    driverInfo?.vehicle_brand,
+    driverInfo?.vehicle_model,
+    driverInfo?.vehicle_color,
+    driverInfo?.vehicle_plate,
+  ].filter(Boolean).join(" • ");
+  const shouldShowDriverCard = rideState !== "searching" && !!(activeRide?.driver_id || driverInfo?.user_id);
 
   // Chat overlay
   if (showChat && activeRide) {
@@ -1140,26 +1149,25 @@ const PassengerHome = () => {
               )}
 
               {/* Driver info */}
-              {activeRide?.driver_id && rideState !== "searching" && (
+              {shouldShowDriverCard && (
                 <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => {
-                        const src = driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url;
-                        if (src) setPreviewPhoto({ src, name: driverInfo?.profile?.full_name || "Motorista" });
+                        if (driverPhoto) setPreviewPhoto({ src: driverPhoto, name: driverName });
                       }}
-                      disabled={!(driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url)}
+                      disabled={!driverPhoto}
                       className="rounded-full disabled:cursor-default"
                     >
                       <UserAvatar
-                        src={driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url}
-                        name={driverInfo?.profile?.full_name || "Motorista"}
+                        src={driverPhoto || undefined}
+                        name={driverName}
                         role="driver"
                         size="lg"
                       />
                     </button>
                     <div className="flex-1">
-                      <p className="text-lg font-extrabold text-primary">{driverInfo?.profile?.full_name || "Motorista"}</p>
+                      <p className="text-lg font-extrabold text-primary">{driverName}</p>
                       <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
                         <Star className="h-4 w-4 text-warning fill-warning" />
                         <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
@@ -1167,7 +1175,7 @@ const PassengerHome = () => {
                         <span>{driverInfo?.total_rides || 0} corridas</span>
                       </div>
                       <p className="text-sm font-semibold text-muted-foreground mt-0.5">
-                        {[driverInfo?.vehicle_brand, driverInfo?.vehicle_model, driverInfo?.vehicle_color, driverInfo?.vehicle_plate].filter(Boolean).join(" • ") || "Dados do veículo carregando..."}
+                        {driverVehicleDetails || "Dados do veículo carregando..."}
                       </p>
                     </div>
                   </div>
