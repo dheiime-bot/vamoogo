@@ -294,7 +294,7 @@ const PassengerHome = () => {
             setRideState("driver_arriving");
             playPhaseSound("accepted");
           }
-        } else if (ride.status === "accepted" && ride.arrived_at && !prev?.arrived_at) {
+        } else if (ride.arrived_at && !prev?.arrived_at) {
           // Motorista marcou chegada
           setRideState("arrived");
           playPhaseSound("arrived");
