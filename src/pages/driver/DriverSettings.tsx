@@ -9,6 +9,11 @@ import { Switch } from "@/components/ui/switch";
 import { playOfferAlert, requestNotificationPermission, unlockAudioOnce } from "@/lib/offerSound";
 import { cn } from "@/lib/utils";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 type SoundTone = "classico" | "suave" | "urgente" | "digital";
 
 interface DriverAlertSettings {
@@ -40,6 +45,8 @@ const DriverSettings = () => {
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission | "unsupported">("unsupported");
   const [locationStatus, setLocationStatus] = useState<PermissionState | "unsupported" | "unknown">("unknown");
   const [cameraStatus, setCameraStatus] = useState<PermissionState | "unsupported" | "unknown">("unknown");
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [standalone, setStandalone] = useState(false);
 
   useEffect(() => {
     try {
@@ -64,6 +71,14 @@ const DriverSettings = () => {
         status.onchange = () => setCameraStatus(status.state);
       })
       .catch(() => setCameraStatus("unsupported"));
+
+    setStandalone(window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true);
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
   }, []);
 
   const saveSettings = (next: DriverAlertSettings) => {
@@ -121,6 +136,20 @@ const DriverSettings = () => {
     await playOfferAlert({ title: "Teste Vamoo", body: "Som de chamada configurado", tag: "driver-sound-test" });
   };
 
+  const installApp = async () => {
+    if (!installPrompt) {
+      toast.info("No Android, abra o menu do Chrome e toque em Instalar app");
+      return;
+    }
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === "accepted") {
+      setStandalone(true);
+      setInstallPrompt(null);
+      toast.success("Instalação iniciada");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="bg-gradient-primary px-6 pb-12 pt-20 text-primary-foreground">
@@ -132,6 +161,18 @@ const DriverSettings = () => {
       </header>
 
       <main className="-mt-6 space-y-4 px-4">
+        <section className="rounded-2xl border bg-card p-4 shadow-md">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-extrabold">App Android</h2>
+              <p className="text-sm text-muted-foreground">{standalone ? "Instalado na tela inicial" : "Instale para usar como aplicativo"}</p>
+            </div>
+            <Button onClick={installApp} disabled={standalone} variant={standalone ? "secondary" : "default"}>
+              {standalone ? "Instalado" : "Instalar"}
+            </Button>
+          </div>
+        </section>
+
         <section className="rounded-2xl border bg-card p-4 shadow-md">
           <div className="mb-4 flex items-center gap-3">
             <div className="rounded-xl bg-primary/10 p-3"><Volume2 className="h-5 w-5 text-primary" /></div>
