@@ -954,6 +954,7 @@ const PassengerHome = () => {
     driverInfo?.vehicle_color,
     driverInfo?.vehicle_plate,
   ].filter(Boolean).join(" • ");
+  const driverCardIsLoading = driverInfoLoading || !hasVisibleDriverDetails(driverInfo);
   const shouldShowDriverCard = rideState !== "searching" && !!activeRide;
 
   // Chat overlay
@@ -1187,13 +1188,14 @@ const PassengerHome = () => {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-base font-extrabold text-foreground">{driverName}</p>
                       <p className="truncate text-sm font-semibold text-muted-foreground">
-                        {driverVehicleDetails || "Dados do veículo carregando..."}
+                        {driverVehicleDetails || (driverCardIsLoading ? "Carregando dados do veículo..." : "Veículo não informado")}
                       </p>
                       <div className="mt-1 flex items-center gap-2 text-xs font-bold text-muted-foreground">
                         <Star className="h-3.5 w-3.5 text-warning fill-warning" />
                         <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
                         <span>•</span>
                         <span>{driverInfo?.total_rides || 0} corridas</span>
+                        {driverCardIsLoading && <Loader2 className="ml-1 h-3.5 w-3.5 animate-spin text-primary" />}
                       </div>
                     </div>
                   </div>
