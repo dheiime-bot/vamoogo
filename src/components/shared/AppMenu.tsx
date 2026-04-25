@@ -131,7 +131,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
         </SheetTrigger>
       </div>
 
-      <SheetContent side="left" className="w-72 p-0 flex flex-col">
+        <SheetContent side="left" className="w-80 p-0 flex flex-col">
         <SheetHeader className="border-b p-4">
           <SheetTitle className="text-left">
             <div className="flex items-center gap-3">
@@ -170,13 +170,13 @@ const AppMenu = ({ role, floating = true }: Props) => {
                 key={item.path}
                 onClick={() => go(item.path)}
                 className={cn(
-                  "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                  "w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold transition-colors",
                   active
                     ? "bg-primary/10 text-primary"
                     : "text-foreground hover:bg-muted"
                 )}
               >
-                <Icon className="h-4.5 w-4.5 shrink-0" />
+                <Icon className="h-5 w-5 shrink-0" />
                 <span className="flex-1 text-left">{item.label}</span>
               </button>
             );
@@ -184,9 +184,9 @@ const AppMenu = ({ role, floating = true }: Props) => {
           {role === "driver" && vehicleCount >= 2 && (
             <button
               onClick={() => { setOpen(false); setTimeout(() => setShowVehicleModal(true), 0); }}
-              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold text-foreground hover:bg-muted transition-colors"
             >
-              <Car className="h-4.5 w-4.5 shrink-0" />
+              <Car className="h-5 w-5 shrink-0" />
               <span className="flex-1 text-left">Selecionar veículo</span>
             </button>
           )}
@@ -194,12 +194,12 @@ const AppMenu = ({ role, floating = true }: Props) => {
 
         {canBecomeDriver && (
           <div className="border-t p-2">
-            <p className="px-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase">Motorista</p>
+            <p className="px-2 pb-1 text-xs font-extrabold text-muted-foreground uppercase">Motorista</p>
             <button
               onClick={() => go("/passenger/become-driver")}
-              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold text-primary hover:bg-primary/10 transition-colors"
             >
-              <Car className="h-4 w-4" />
+              <Car className="h-5 w-5" />
               Quero ser motorista
             </button>
           </div>
@@ -208,9 +208,9 @@ const AppMenu = ({ role, floating = true }: Props) => {
         <div className="border-t p-2">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            className="w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-extrabold text-destructive hover:bg-destructive/10 transition-colors"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-5 w-5" />
             Sair da conta
           </button>
         </div>
