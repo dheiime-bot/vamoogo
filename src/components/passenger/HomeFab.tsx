@@ -12,11 +12,11 @@ const HomeFab = ({ className }: { className?: string }) => {
   const { pathname } = useLocation();
 
   // Não exibe na própria Home
-  if (pathname === "/passenger" || pathname === "/passenger/") return null;
+  if (pathname === "/passageiro" || pathname === "/passageiro/") return null;
 
   return (
     <button
-      onClick={() => navigate("/passenger")}
+      onClick={() => navigate("/passageiro")}
       aria-label="Ir para a tela inicial"
       className={cn(
         "fixed left-1/2 z-50 -translate-x-1/2",

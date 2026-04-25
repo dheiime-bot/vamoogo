@@ -90,7 +90,7 @@ const DriverProfile = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="bg-gradient-dark p-6 pt-20 pb-16">
-        <button onClick={() => navigate("/driver")} className="mb-4 text-primary-foreground/80"><ArrowLeft className="h-5 w-5" /></button>
+        <button onClick={() => navigate("/motorista")} className="mb-4 text-primary-foreground/80"><ArrowLeft className="h-5 w-5" /></button>
         <h1 className="text-lg font-bold text-primary-foreground">Meu perfil</h1>
       </div>
 
@@ -222,7 +222,7 @@ const DriverProfile = () => {
               ))}
             </div>
             <button
-              onClick={() => navigate("/driver/vehicles")}
+              onClick={() => navigate("/motorista/vehicles")}
               className="mt-4 w-full rounded-xl border border-primary/40 bg-primary/5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10"
             >
               Gerenciar veículos / mudar categoria

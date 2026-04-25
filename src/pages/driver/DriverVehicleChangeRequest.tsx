@@ -113,7 +113,7 @@ const DriverVehicleChangeRequest = () => {
       return;
     }
     toast.success("Solicitação enviada! Aguarde análise do admin.");
-    navigate("/driver/vehicles");
+    navigate("/motorista/vehicles");
   };
 
   if (loading) {
@@ -128,7 +128,7 @@ const DriverVehicleChangeRequest = () => {
     <div className="min-h-screen bg-background pb-32">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <button
-          onClick={() => navigate("/driver/vehicles")}
+          onClick={() => navigate("/motorista/vehicles")}
           className="rounded-full p-2 hover:bg-muted"
           aria-label="Voltar"
         >
@@ -145,7 +145,7 @@ const DriverVehicleChangeRequest = () => {
               Aguarde a análise do administrador antes de enviar uma nova.
             </p>
             <button
-              onClick={() => navigate("/driver/vehicles")}
+              onClick={() => navigate("/motorista/vehicles")}
               className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
               Voltar para meus veículos

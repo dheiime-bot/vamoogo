@@ -25,21 +25,21 @@ interface MenuItem {
 }
 
 const PASSENGER_ITEMS: MenuItem[] = [
-  { icon: Home, label: "Início", path: "/passenger" },
-  { icon: Clock, label: "Minhas corridas", path: "/passenger/history" },
-  { icon: MessageCircle, label: "Chats", path: "/passenger/chats" },
-  { icon: TicketPercent, label: "Cupons", path: "/passenger/coupons" },
-  { icon: Heart, label: "Motoristas favoritos", path: "/passenger/favorites" },
-  { icon: User, label: "Meus dados", path: "/passenger/profile" },
-  { icon: Lock, label: "Alterar senha", path: "/passenger/change-password" },
+  { icon: Home, label: "Início", path: "/passageiro" },
+  { icon: Clock, label: "Minhas corridas", path: "/passageiro/history" },
+  { icon: MessageCircle, label: "Chats", path: "/passageiro/chats" },
+  { icon: TicketPercent, label: "Cupons", path: "/passageiro/coupons" },
+  { icon: Heart, label: "Motoristas favoritos", path: "/passageiro/favorites" },
+  { icon: User, label: "Meus dados", path: "/passageiro/profile" },
+  { icon: Lock, label: "Alterar senha", path: "/passageiro/change-password" },
 ];
 
 const DRIVER_ITEMS: MenuItem[] = [
-  { icon: Home, label: "Início", path: "/driver" },
-  { icon: Car, label: "Corridas", path: "/driver/rides" },
-  { icon: Car, label: "Meus veículos", path: "/driver/vehicles" },
-  { icon: MessageCircle, label: "Chats", path: "/driver/chats" },
-  { icon: User, label: "Meus dados", path: "/driver/profile" },
+  { icon: Home, label: "Início", path: "/motorista" },
+  { icon: Car, label: "Corridas", path: "/motorista/rides" },
+  { icon: Car, label: "Meus veículos", path: "/motorista/vehicles" },
+  { icon: MessageCircle, label: "Chats", path: "/motorista/chats" },
+  { icon: User, label: "Meus dados", path: "/motorista/profile" },
 ];
 
 interface Props {
@@ -200,7 +200,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
           <div className="border-t p-2">
             <p className="px-2 pb-1 text-xs font-extrabold text-muted-foreground uppercase">Motorista</p>
             <button
-              onClick={() => go("/passenger/become-driver")}
+              onClick={() => go("/passageiro/become-driver")}
               className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold text-primary hover:bg-primary/10 transition-colors"
             >
               <Car className="h-5 w-5" />
@@ -211,7 +211,7 @@ const AppMenu = ({ role, floating = true }: Props) => {
 
         <div className="border-t p-2">
           <button
-            onClick={() => go(role === "driver" ? "/driver/settings" : "/passenger/settings")}
+            onClick={() => go(role === "driver" ? "/motorista/settings" : "/passageiro/settings")}
             className={cn(
               "w-full flex items-center gap-3 rounded-xl px-4 py-4 text-lg font-extrabold transition-colors",
               location.pathname.endsWith("/settings")

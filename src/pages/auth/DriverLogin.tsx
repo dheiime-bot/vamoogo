@@ -52,7 +52,7 @@ const DriverLogin = () => {
     toast.success("Bem-vindo, motorista!");
     // Sinaliza para o DriverHome verificar se precisa abrir o modal de seleção de veículo.
     sessionStorage.setItem("vamoo:driver:check_vehicle", "1");
-    navigate("/driver");
+    navigate("/motorista");
   };
 
   const handleResetPassword = async () => {
@@ -162,13 +162,13 @@ const DriverLogin = () => {
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-border flex flex-col items-center gap-2">
             <button
-              onClick={() => navigate("/auth/driver")}
+              onClick={() => navigate("/motorista/cadastro")}
               className="text-xs font-semibold text-primary hover:underline"
             >
               Quer dirigir? Cadastre-se como motorista →
             </button>
             <button
-              onClick={() => navigate("/auth/passenger/login")}
+              onClick={() => navigate("/passageiro/login")}
               className="text-xs font-medium text-muted-foreground hover:text-foreground"
             >
               É passageiro? Entrar no app de passageiro →

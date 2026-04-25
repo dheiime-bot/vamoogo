@@ -16,8 +16,8 @@ interface Props {
   centerSlot?: ReactNode;
 }
 
-const HOME_PATH = "/driver";
-const OFFERS_PATH = "/driver/offers";
+const HOME_PATH = "/motorista";
+const OFFERS_PATH = "/motorista/offers";
 
 const DriverBottomNav = ({ centerSlot }: Props) => {
   const location = useLocation();

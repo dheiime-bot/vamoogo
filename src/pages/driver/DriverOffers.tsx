@@ -185,7 +185,7 @@ const DriverOffers = () => {
         .eq("id", item.offerId);
     }
     setAccepting(null);
-    navigate("/driver");
+    navigate("/motorista");
   };
 
   const handleReject = async (item: Item) => {
@@ -239,7 +239,7 @@ const DriverOffers = () => {
             </p>
             {!isOnline && (
               <button
-                onClick={() => navigate("/driver")}
+                onClick={() => navigate("/motorista")}
                 className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-primary text-primary-foreground px-4 py-2 text-xs font-bold"
               >
                 <Power className="h-3.5 w-3.5" /> Ficar online

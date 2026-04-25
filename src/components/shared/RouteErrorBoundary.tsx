@@ -84,8 +84,8 @@ const RouteErrorBoundary = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   // Detecta o app a partir do prefixo da rota.
   let homePath = "/";
-  if (location.pathname.startsWith("/driver")) homePath = "/driver";
-  else if (location.pathname.startsWith("/passenger")) homePath = "/passenger";
+  if (location.pathname.startsWith("/motorista")) homePath = "/motorista";
+  else if (location.pathname.startsWith("/passageiro")) homePath = "/passageiro";
   else if (location.pathname.startsWith("/admin")) homePath = "/admin";
   return (
     <ErrorBoundaryInner resetKey={location.key} homePath={homePath}>

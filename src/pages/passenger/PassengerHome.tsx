@@ -828,7 +828,7 @@ const PassengerHome = () => {
         type: "ride_status",
         title: "🚨 Passageiro alterou a rota!",
         message: `${prevAddr} → ${newAddrShort} • R$ ${totalPrice.toFixed(2)} (${deltaPrice >= 0 ? "+" : ""}R$ ${deltaPrice.toFixed(2)})`,
-        link: "/driver",
+        link: "/motorista",
         data: {
           ride_id: activeRide.id,
           event: "route_changed",

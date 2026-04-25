@@ -184,7 +184,7 @@ const DriverOfferAlert = () => {
       .eq("id", offer.id);
     setOffer(null); setRide(null); setAccepting(false);
     toast.success("Corrida aceita! 🚗");
-    navigate("/driver");
+    navigate("/motorista");
   };
 
   const handleReject = async () => {

@@ -825,7 +825,7 @@ const DriverHome = () => {
   }, [driverData?.status, user]);
 
   if (driverData && !statusInfo.canDrive) {
-    return <Navigate to="/driver/status" replace />;
+    return <Navigate to="/motorista/status" replace />;
   }
 
   // Chat overlay (apenas quando corrida está ativa)

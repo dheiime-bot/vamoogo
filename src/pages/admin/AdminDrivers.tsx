@@ -138,7 +138,7 @@ const AdminDrivers = () => {
       type: "driver_status",
       title: titles[newStatus] || "Status atualizado",
       message: message || getDriverStatusInfo(newStatus).description,
-      link: "/driver/status",
+      link: "/motorista/status",
     });
 
     const labels: Record<string, string> = {

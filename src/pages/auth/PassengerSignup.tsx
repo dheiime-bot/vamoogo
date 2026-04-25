@@ -252,7 +252,7 @@ const PassengerSignup = () => {
     }
 
     toast.success("Cadastro criado! Verifique seu e-mail para confirmar.");
-    navigate("/passenger");
+    navigate("/passageiro");
   };
 
   // ---------- UI ----------
