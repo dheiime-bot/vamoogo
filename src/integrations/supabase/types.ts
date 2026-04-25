@@ -2292,6 +2292,23 @@ export type Database = {
               lng: number
             }[]
           }
+      get_active_ride_driver_details: {
+        Args: { _ride_id: string }
+        Returns: {
+          full_name: string
+          pix_key: string
+          pix_key_type: string
+          rating: number
+          selfie_signup_url: string
+          selfie_url: string
+          total_rides: number
+          user_id: string
+          vehicle_brand: string
+          vehicle_color: string
+          vehicle_model: string
+          vehicle_plate: string
+        }[]
+      }
       get_favorite_driver_details: {
         Args: {
           _driver_ids: string[]
