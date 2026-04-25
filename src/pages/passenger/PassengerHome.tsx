@@ -734,7 +734,17 @@ const PassengerHome = () => {
       .eq("category", activeRide.category)
       .eq("region", "default")
       .maybeSingle();
-    const t = tariff || { base_fare: 5, per_km: 1.8, per_minute: 0.45, min_fare: 12, region_multiplier: 1, passenger_extra: 2 };
+    const t = tariff || {
+      base_fare: 5,
+      per_km: 1.8,
+      per_minute: 0.45,
+      min_fare: 12,
+      region_multiplier: 1,
+      passenger_extra: 2,
+      additional_km_rate: 0,
+      wait_free_minutes: 5,
+      wait_per_minute: 0,
+    };
     const drivenBase = t.per_km * drivenKm;
     const extraKmRate = t.additional_km_rate > 0 ? t.additional_km_rate : t.per_km;
     const newLegBase = extraKmRate * km;
