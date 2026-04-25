@@ -15,6 +15,27 @@ const isPreviewHost =
   window.location.hostname.includes("id-preview--") ||
   window.location.hostname.includes("lovableproject.com");
 
+const APP_REFRESH_VERSION = "2026-04-25-sw-hard-refresh-2";
+
+const buildCacheBustedUrl = () => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("vamoo_v", APP_REFRESH_VERSION);
+  url.searchParams.set("t", Date.now().toString());
+  return url.toString();
+};
+
+const reloadWithoutCache = async () => {
+  try {
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+    }
+  } catch {
+    // ignora falhas temporárias de cache
+  }
+  window.location.replace(buildCacheBustedUrl());
+};
+
 const activateUpdatedServiceWorker = (worker?: ServiceWorker | null) => {
   if (!worker) return;
   worker.postMessage({ type: "SKIP_WAITING" });
@@ -26,7 +47,7 @@ if (!isPreviewHost && !isInIframe && "serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (refreshing) return;
     refreshing = true;
-    window.location.reload();
+    reloadWithoutCache();
   });
 
   window.addEventListener("load", async () => {
@@ -53,6 +74,11 @@ if (!isPreviewHost && !isInIframe && "serviceWorker" in navigator) {
 
       await checkForUpdate();
       window.setInterval(checkForUpdate, 60_000);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") checkForUpdate();
+      });
+      window.addEventListener("focus", checkForUpdate);
+      window.addEventListener("online", checkForUpdate);
     } catch {
       // ignora erros do service worker
     }
@@ -66,7 +92,7 @@ window.addEventListener("beforeinstallprompt", (event) => {
 
 // 🔄 Limpeza única de caches (executa 1x por dispositivo, controlada por versão).
 // Bump CACHE_PURGE_VERSION para forçar nova limpeza global no próximo load.
-const CACHE_PURGE_VERSION = "2026-04-25-sw-auto-refresh-1";
+const CACHE_PURGE_VERSION = APP_REFRESH_VERSION;
 (async () => {
   try {
     if (localStorage.getItem("vamoo_cache_purge") !== CACHE_PURGE_VERSION) {

@@ -956,6 +956,37 @@ const PassengerHome = () => {
   ].filter(Boolean).join(" • ");
   const driverCardIsLoading = driverInfoLoading || !hasVisibleDriverDetails(driverInfo);
   const shouldShowDriverCard = rideState !== "searching" && !!activeRide;
+  const driverVehicleCard = shouldShowDriverCard ? (
+    <div className="rounded-xl border bg-card p-3 shadow-sm">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => {
+            if (driverPhoto) setPreviewPhoto({ src: driverPhoto, name: driverName });
+          }}
+          disabled={!driverPhoto}
+          className="rounded-full disabled:cursor-default"
+          aria-label="Ver foto do motorista"
+        >
+          <UserAvatar src={driverPhoto || undefined} name={driverName} role="driver" size="lg" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-base font-extrabold text-foreground">{driverName}</p>
+            {driverCardIsLoading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />}
+          </div>
+          <p className="truncate text-sm font-semibold text-muted-foreground">
+            {driverVehicleDetails || (driverCardIsLoading ? "Carregando dados do veículo..." : "Veículo não informado")}
+          </p>
+          <div className="mt-1 flex items-center gap-2 text-xs font-bold text-muted-foreground">
+            <Star className="h-3.5 w-3.5 text-warning fill-warning" />
+            <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
+            <span>•</span>
+            <span>{driverInfo?.total_rides || 0} corridas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   // Chat overlay
   if (showChat && activeRide) {
@@ -1174,33 +1205,9 @@ const PassengerHome = () => {
                   <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-destructive" />
                     <p className="text-lg font-bold leading-snug truncate">{activeRide.destination_address?.split(" - ")[0]}</p>
                 </div>
-                {shouldShowDriverCard && (
-                  <div className="mt-3 flex items-center gap-3 border-t pt-3">
-                    <button
-                      onClick={() => {
-                        if (driverPhoto) setPreviewPhoto({ src: driverPhoto, name: driverName });
-                      }}
-                      disabled={!driverPhoto}
-                      className="rounded-full disabled:cursor-default"
-                    >
-                      <UserAvatar src={driverPhoto || undefined} name={driverName} role="driver" size="lg" />
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-base font-extrabold text-foreground">{driverName}</p>
-                      <p className="truncate text-sm font-semibold text-muted-foreground">
-                        {driverVehicleDetails || (driverCardIsLoading ? "Carregando dados do veículo..." : "Veículo não informado")}
-                      </p>
-                      <div className="mt-1 flex items-center gap-2 text-xs font-bold text-muted-foreground">
-                        <Star className="h-3.5 w-3.5 text-warning fill-warning" />
-                        <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
-                        <span>•</span>
-                        <span>{driverInfo?.total_rides || 0} corridas</span>
-                        {driverCardIsLoading && <Loader2 className="ml-1 h-3.5 w-3.5 animate-spin text-primary" />}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
+
+              {driverVehicleCard}
 
               {/* Ride stats in progress */}
               {rideState === "in_progress" && (
