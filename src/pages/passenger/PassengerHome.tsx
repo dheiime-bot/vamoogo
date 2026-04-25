@@ -958,8 +958,8 @@ const PassengerHome = () => {
   const driverCardIsLoading = driverInfoLoading || !hasVisibleDriverDetails(driverInfo);
   const shouldShowDriverCard = rideState !== "searching" && !!activeRide;
   const driverVehicleCard = shouldShowDriverCard ? (
-    <div className="rounded-xl border bg-card p-3 shadow-sm">
-      <div className="flex items-start gap-3">
+    <div className="rounded-xl border bg-card p-3 shadow-sm sm:p-4">
+      <div className="flex items-start gap-3 sm:gap-4">
         <button
           onClick={() => {
             if (driverPhoto) setPreviewPhoto({ src: driverPhoto, name: driverName });
@@ -970,7 +970,7 @@ const PassengerHome = () => {
         >
           <UserAvatar src={driverPhoto || undefined} name={driverName} role="driver" size="lg" />
         </button>
-        <div className="min-w-0 flex-1 space-y-2.5">
+        <div className="min-w-0 flex-1 space-y-2.5 sm:space-y-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Motorista</p>
@@ -978,30 +978,30 @@ const PassengerHome = () => {
             </div>
             {driverCardIsLoading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />}
           </div>
-          <div className="rounded-lg bg-muted/50 p-2.5">
-            <div className="flex items-start gap-2.5">
+          <div className="rounded-lg bg-muted/50 p-2.5 sm:p-3">
+            <div className="flex items-start gap-2.5 sm:items-center sm:gap-3">
               <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: driverCategoryColor, color: driverCategoryContentColor }}>
                 <DriverVehicleIcon className="h-5 w-5" />
               </div>
-              <div className="min-w-0 flex-1 space-y-2">
-                <div className="min-w-0">
+              <div className="min-w-0 flex-1 space-y-2 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:space-y-0">
+                <div className="min-w-0 sm:flex-1">
                   <p className="line-clamp-2 text-sm font-extrabold leading-tight text-foreground">
                     {driverVehicleName || (driverCardIsLoading ? "Carregando veículo..." : "Veículo não informado")}
                   </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-muted-foreground sm:text-xs">
+                    <span>{getCategoryLabel(driverCategory)}</span>
+                    {driverVehicleColor && <span>• {driverVehicleColor}</span>}
+                    {!driverVehicleColor && driverCardIsLoading && <span>• carregando cor</span>}
+                  </div>
                 </div>
-                <span className="relative flex h-12 w-full max-w-[168px] animate-enter overflow-hidden rounded-md border-2 border-foreground bg-background pt-4 text-center shadow-sm ring-2 ring-primary/20">
+                <span className="relative flex h-12 w-full max-w-[168px] shrink-0 animate-enter overflow-hidden rounded-md border-2 border-foreground bg-background pt-4 text-center shadow-sm ring-2 ring-primary/20 sm:h-14 sm:max-w-[190px] sm:pt-5">
                   <span className="absolute inset-x-0 top-0 flex h-4 items-center justify-center bg-primary text-[7px] font-black uppercase leading-none tracking-[0.2em] text-primary-foreground">
                     Brasil
                   </span>
-                  <span className="flex-1 px-2 font-mono text-xl font-black leading-none tracking-[0.14em] text-foreground">
+                  <span className="flex-1 px-2 font-mono text-xl font-black leading-none tracking-[0.14em] text-foreground sm:text-2xl">
                     {driverVehiclePlate || "PLACA"}
                   </span>
                 </span>
-                <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
-                  <span>{getCategoryLabel(driverCategory)}</span>
-                  {driverVehicleColor && <span>• {driverVehicleColor}</span>}
-                  {!driverVehicleColor && driverCardIsLoading && <span>• carregando cor</span>}
-                </div>
               </div>
             </div>
           </div>
