@@ -2,10 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import UserAvatar from "@/components/shared/UserAvatar";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 interface RideChatProps {
   rideId: string;
   driverName?: string;
+  participantPhoto?: string | null;
+  participantRole?: "driver" | "passenger";
   onBack: () => void;
 }
 
@@ -17,11 +21,12 @@ interface ChatMessage {
   is_read: boolean;
 }
 
-const RideChat = ({ rideId, driverName, onBack }: RideChatProps) => {
+const RideChat = ({ rideId, driverName, participantPhoto, participantRole = "driver", onBack }: RideChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,11 +78,9 @@ const RideChat = ({ rideId, driverName, onBack }: RideChatProps) => {
         <button onClick={onBack} className="rounded-full p-1 hover:bg-muted">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-          <span className="text-sm font-bold text-primary">
-            {(driverName || "M")[0].toUpperCase()}
-          </span>
-        </div>
+        <button onClick={() => participantPhoto && setPhotoOpen(true)} disabled={!participantPhoto} className="rounded-full disabled:cursor-default">
+          <UserAvatar src={participantPhoto} name={driverName || "Contato"} role={participantRole} size="sm" />
+        </button>
         <div>
           <p className="text-sm font-semibold">{driverName || "Motorista"}</p>
           <p className="text-xs text-success">Online</p>
@@ -130,6 +133,13 @@ const RideChat = ({ rideId, driverName, onBack }: RideChatProps) => {
           </button>
         </div>
       </div>
+
+      <Dialog open={photoOpen} onOpenChange={setPhotoOpen}>
+        <DialogContent className="max-w-sm p-3">
+          <DialogTitle className="sr-only">Foto do contato</DialogTitle>
+          {participantPhoto && <img src={participantPhoto} alt={driverName || "Foto"} className="max-h-[75vh] w-full rounded-xl object-contain" />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
