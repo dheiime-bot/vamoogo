@@ -47,8 +47,7 @@ const resolveDriverPhotoUrl = async (url?: string | null) => {
 };
 
 const hasVisibleDriverDetails = (info: any) =>
-  !!(info?.profile?.selfie_url || info?.profile?.selfie_signup_url) &&
-  !!(info?.vehicle_model || info?.vehicle_brand || info?.vehicle_plate);
+  !!(info?.profile?.full_name || info?.vehicle_model || info?.vehicle_brand || info?.vehicle_plate);
 
 const PassengerHome = () => {
   const { user } = useAuth();
@@ -948,17 +947,13 @@ const PassengerHome = () => {
   const activeRideStops = activeRide ? getRideStops(activeRide) : [];
   const driverPhoto = driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url || null;
   const driverName = driverInfo?.profile?.full_name || "Motorista";
-  const driverVehicleDetails = [
-    driverInfo?.vehicle_brand,
-    driverInfo?.vehicle_model,
-    driverInfo?.vehicle_color,
-    driverInfo?.vehicle_plate,
-  ].filter(Boolean).join(" • ");
+  const driverVehicleName = [driverInfo?.vehicle_brand, driverInfo?.vehicle_model].filter(Boolean).join(" ");
+  const driverVehicleMeta = [driverInfo?.vehicle_color, driverInfo?.vehicle_plate].filter(Boolean).join(" • ");
   const driverCardIsLoading = driverInfoLoading || !hasVisibleDriverDetails(driverInfo);
   const shouldShowDriverCard = rideState !== "searching" && !!activeRide;
   const driverVehicleCard = shouldShowDriverCard ? (
     <div className="rounded-xl border bg-card p-3 shadow-sm">
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <button
           onClick={() => {
             if (driverPhoto) setPreviewPhoto({ src: driverPhoto, name: driverName });
@@ -970,13 +965,26 @@ const PassengerHome = () => {
           <UserAvatar src={driverPhoto || undefined} name={driverName} role="driver" size="lg" />
         </button>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="truncate text-base font-extrabold text-foreground">{driverName}</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Motorista</p>
+              <p className="truncate text-base font-extrabold text-foreground">{driverName}</p>
+            </div>
             {driverCardIsLoading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />}
           </div>
-          <p className="truncate text-sm font-semibold text-muted-foreground">
-            {driverVehicleDetails || (driverCardIsLoading ? "Carregando dados do veículo..." : "Veículo não informado")}
-          </p>
+          <div className="mt-2 rounded-lg bg-muted/50 p-2">
+            <div className="flex items-center gap-2">
+              <Car className="h-4 w-4 shrink-0 text-primary" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-extrabold text-foreground">
+                  {driverVehicleName || (driverCardIsLoading ? "Carregando veículo..." : "Veículo não informado")}
+                </p>
+                <p className="truncate text-xs font-semibold text-muted-foreground">
+                  {driverVehicleMeta || (driverCardIsLoading ? "Aguarde alguns segundos" : "Dados pendentes")}
+                </p>
+              </div>
+            </div>
+          </div>
           <div className="mt-1 flex items-center gap-2 text-xs font-bold text-muted-foreground">
             <Star className="h-3.5 w-3.5 text-warning fill-warning" />
             <span>{driverInfo?.rating?.toFixed(1) || "5.0"}</span>
