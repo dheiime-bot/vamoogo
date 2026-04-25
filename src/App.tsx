@@ -157,14 +157,19 @@ const App = () => (
           <RouteErrorBoundary>
             <Suspense fallback={<AuthLoading />}>
               <Routes>
-                <Route path="/" element={<AdminLogin />} />
-                <Route path="/landing" element={<Index />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/landing" element={<Navigate to="/" replace />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/passageiro/login" element={<PassengerLogin />} />
                 <Route path="/motorista/login" element={<DriverLogin />} />
                 <Route path="/passageiro/cadastro" element={<PassengerSignup />} />
                 <Route path="/motorista/cadastro" element={<DriverSignup />} />
                 <Route path="/auth/reset-password" element={<ResetPassword />} />
+                <Route path="/auth/passenger/login" element={<Navigate to="/passageiro/login" replace />} />
+                <Route path="/auth/driver/login" element={<Navigate to="/motorista/login" replace />} />
+                <Route path="/auth/passenger" element={<Navigate to="/passageiro/cadastro" replace />} />
+                <Route path="/auth/driver" element={<Navigate to="/motorista/cadastro" replace />} />
                 <Route path="/passageiro" element={<ProtectedPassengerRoute><PassengerHome /></ProtectedPassengerRoute>} />
                 <Route path="/passageiro/history" element={<ProtectedPassengerRoute><PassengerHistory /></ProtectedPassengerRoute>} />
                 <Route path="/passageiro/profile" element={<ProtectedPassengerRoute><PassengerProfile /></ProtectedPassengerRoute>} />
