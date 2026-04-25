@@ -77,6 +77,7 @@ const PassengerHome = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [driverInfo, setDriverInfo] = useState<any>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<{ src: string; name: string } | null>(null);
   const [originType, setOriginType] = useState<OriginType>("gps");
   const [forOtherPerson, setForOtherPerson] = useState(false);
   const [otherPerson, setOtherPerson] = useState<OtherPersonInfo>({ name: "", phone: "" });
@@ -909,6 +910,8 @@ const PassengerHome = () => {
       <RideChat
         rideId={activeRide.id}
         driverName={driverInfo?.profile?.full_name}
+        participantPhoto={driverInfo?.profile?.selfie_url || driverInfo?.profile?.selfie_signup_url || null}
+        participantRole="driver"
         onBack={() => setShowChat(false)}
       />
     );
