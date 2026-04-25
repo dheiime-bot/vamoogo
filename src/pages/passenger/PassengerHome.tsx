@@ -1098,22 +1098,23 @@ const PassengerHome = () => {
 
               {/* Driver info */}
               {driverInfo && rideState !== "searching" && (
-                <div className="rounded-2xl border p-4 space-y-3">
+                <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-glow space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xl font-bold text-primary">
-                        {(driverInfo.profile?.full_name || "M")[0]}
-                      </span>
-                    </div>
+                    <UserAvatar
+                      src={driverInfo.profile?.selfie_url || driverInfo.profile?.selfie_signup_url}
+                      name={driverInfo.profile?.full_name || "Motorista"}
+                      role="driver"
+                      size="lg"
+                    />
                     <div className="flex-1">
-                      <p className="font-semibold">{driverInfo.profile?.full_name || "Motorista"}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Star className="h-3 w-3 text-warning fill-warning" />
+                      <p className="text-lg font-extrabold text-primary">{driverInfo.profile?.full_name || "Motorista"}</p>
+                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                        <Star className="h-4 w-4 text-warning fill-warning" />
                         <span>{driverInfo.rating?.toFixed(1) || "5.0"}</span>
                         <span>•</span>
                         <span>{driverInfo.total_rides || 0} corridas</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-sm font-semibold text-muted-foreground mt-0.5">
                         {driverInfo.vehicle_model} • {driverInfo.vehicle_color} • {driverInfo.vehicle_plate}
                       </p>
                     </div>
