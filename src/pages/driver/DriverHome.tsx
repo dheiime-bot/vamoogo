@@ -193,10 +193,10 @@ const DriverHome = () => {
   // Recupera corrida ativa ao montar (caso o motorista recarregue)
   useEffect(() => {
     if (!user) return;
-    supabase.from("rides").select("*")
-      .eq("driver_id", user.id).in("status", ["accepted", "in_progress"])
-      .order("created_at", { ascending: false }).limit(1)
-      .then(({ data }) => {
+    const loadDriverRideState = async () => {
+      const { data } = await supabase.from("rides").select("*")
+        .eq("driver_id", user.id).in("status", ["accepted", "in_progress"])
+        .order("created_at", { ascending: false }).limit(1);
         if (data && data.length > 0) {
           const r = data[0] as any;
           setActiveRide(r);
@@ -219,8 +219,26 @@ const DriverHome = () => {
               restorePhaseTimer(r.id, "going");
             }
           }
+          return;
         }
-      });
+
+      const { data: pendingRating } = await supabase
+        .from("rides")
+        .select("*")
+        .eq("driver_id", user.id)
+        .eq("status", "completed")
+        .is("driver_rating", null)
+        .order("completed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (pendingRating) {
+        setRatedRide(pendingRating);
+        setActiveRide(null);
+        setRideState("rating");
+      }
+    };
+    loadDriverRideState();
   }, [user]);
 
   // 🔄 Auto-online ao carregar/recarregar a Home:
@@ -586,13 +604,18 @@ const DriverHome = () => {
     if (!ratedRide || passengerRating === 0) return;
     // Marca antes do update para que o eco do realtime não reabra o modal.
     finalizedRideIdsRef.current.add(ratedRide.id);
-    await supabase
+    const { error } = await supabase
       .from("rides")
       .update({
         driver_rating: passengerRating,
         driver_rating_comment: passengerRatingComment?.trim() || null,
       } as any)
       .eq("id", ratedRide.id);
+    if (error) {
+      finalizedRideIdsRef.current.delete(ratedRide.id);
+      toast.error("Não foi possível salvar a avaliação. Tente novamente.");
+      return;
+    }
     closeDriverRating();
   };
 
