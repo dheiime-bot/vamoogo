@@ -154,6 +154,34 @@ const PassengerHome = () => {
     return () => { cancelled = true; navigator.geolocation.clearWatch(watchId); };
   }, []);
 
+  const loadDriverInfoForRide = async (ride: any) => {
+    if (!ride?.id || !ride?.driver_id) return;
+    const { data } = await (supabase as any)
+      .rpc("get_active_ride_driver_details", { _ride_id: ride.id })
+      .maybeSingle();
+    if (!data) return;
+
+    const rawPhoto = data.selfie_url || data.selfie_signup_url;
+    const photo = await resolveStorageUrl("selfies", rawPhoto);
+    setDriverInfo({
+      user_id: data.user_id,
+      rating: data.rating,
+      total_rides: data.total_rides,
+      vehicle_brand: data.vehicle_brand,
+      vehicle_model: data.vehicle_model,
+      vehicle_color: data.vehicle_color,
+      vehicle_plate: data.vehicle_plate,
+      pix_key: data.pix_key,
+      pix_key_type: data.pix_key_type,
+      profile: {
+        user_id: data.user_id,
+        full_name: data.full_name,
+        selfie_url: photo || data.selfie_url,
+        selfie_signup_url: data.selfie_signup_url,
+      },
+    });
+  };
+
   // (recentRides removido — não estava em uso na UI)
 
   useEffect(() => {
@@ -185,16 +213,7 @@ const PassengerHome = () => {
         if (pendingRating) {
           setActiveRide(pendingRating);
           setRideState("rating");
-          if (pendingRating.driver_id) {
-            const [{ data: driver }, { data: driverProfile }] = await Promise.all([
-              supabase.from("drivers").select("*").eq("user_id", pendingRating.driver_id).maybeSingle(),
-              supabase.from("profiles").select("*").eq("user_id", pendingRating.driver_id).maybeSingle(),
-            ]);
-            if (driver && driverProfile) {
-              const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
-              setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
-            }
-          }
+          if (pendingRating.driver_id) await loadDriverInfoForRide(pendingRating);
         }
         return;
       }
@@ -207,17 +226,7 @@ const PassengerHome = () => {
       else if (ride.arrived_at) setRideState("arrived");
       else setRideState("driver_arriving");
 
-      if (ride.driver_id) {
-        const [{ data: driver }, { data: driverProfile }] = await Promise.all([
-          supabase.from("drivers").select("*").eq("user_id", ride.driver_id).maybeSingle(),
-          supabase.from("profiles").select("*").eq("user_id", ride.driver_id).maybeSingle(),
-        ]);
-
-        if (driver && driverProfile) {
-          const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
-          setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
-        }
-      }
+      if (ride.driver_id) await loadDriverInfoForRide(ride);
     };
 
     loadActiveRide();
@@ -243,12 +252,7 @@ const PassengerHome = () => {
         setActiveRide(ride);
 
         if (ride.status === "accepted" && ride.driver_id) {
-          const { data: driver } = await supabase.from("drivers").select("*").eq("user_id", ride.driver_id).single();
-          const { data: driverProfile } = await supabase.from("profiles").select("*").eq("user_id", ride.driver_id).single();
-          if (driver && driverProfile) {
-            const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
-            setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
-          }
+          await loadDriverInfoForRide(ride);
           // Se já tem arrived_at quando chegou o accepted (race condition), pula direto
           if (ride.arrived_at) {
             setRideState("arrived");
@@ -262,9 +266,11 @@ const PassengerHome = () => {
           setRideState("arrived");
           playPhaseSound("arrived");
         } else if (ride.status === "in_progress") {
+          if (ride.driver_id && !driverInfo) await loadDriverInfoForRide(ride);
           setRideState("in_progress");
           playPhaseSound("started");
         } else if (ride.status === "completed") {
+          if (ride.driver_id && !driverInfo) await loadDriverInfoForRide(ride);
           // Volta o app para a tela inicial e abre o rating como modal sobreposto.
           setRideState("rating");
           setDriverLocation(null);
@@ -292,7 +298,7 @@ const PassengerHome = () => {
         }
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user]);
+  }, [user, driverInfo]);
 
   // Realtime: posição GPS do motorista durante a corrida
   useEffect(() => {
@@ -866,22 +872,11 @@ const PassengerHome = () => {
       .then(({ data }) => setFavoriteDriver(!!data));
   }, [rideState, activeRide?.driver_id, user?.id]);
 
-  // Fallback: se entrar em "rating" sem driverInfo carregado (ex: refresh durante rating),
-  // busca os dados do motorista para garantir que o botão de favoritar e o nome apareçam.
+  // Fallback: garante dados/foto do motorista em todas as fases após o aceite,
+  // inclusive ao recarregar o app durante corrida ou avaliação.
   useEffect(() => {
-    if (rideState !== "rating" || !activeRide?.driver_id || driverInfo) return;
-    let cancelled = false;
-    (async () => {
-      const [{ data: driver }, { data: driverProfile }] = await Promise.all([
-        supabase.from("drivers").select("*").eq("user_id", activeRide.driver_id).maybeSingle(),
-        supabase.from("profiles").select("*").eq("user_id", activeRide.driver_id).maybeSingle(),
-      ]);
-      if (!cancelled && driver && driverProfile) {
-        const photo = await resolveStorageUrl("selfies", driverProfile.selfie_url || driverProfile.selfie_signup_url);
-        setDriverInfo({ ...driver, profile: { ...driverProfile, selfie_url: photo || driverProfile.selfie_url } });
-      }
-    })();
-    return () => { cancelled = true; };
+    if (!["driver_arriving", "arrived", "in_progress", "rating"].includes(rideState) || !activeRide?.driver_id || driverInfo) return;
+    loadDriverInfoForRide(activeRide);
   }, [rideState, activeRide?.driver_id, driverInfo]);
 
   const toggleFavoriteDriver = async () => {
