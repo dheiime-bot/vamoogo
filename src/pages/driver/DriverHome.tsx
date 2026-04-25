@@ -22,6 +22,7 @@ import PixPaymentModal from "@/components/passenger/PixPaymentModal";
 import CancelRideDialog from "@/components/shared/CancelRideDialog";
 import SelectVehicleModal from "@/components/driver/SelectVehicleModal";
 import UserAvatar from "@/components/shared/UserAvatar";
+import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 import type { PixKeyType } from "@/lib/pix";
 import { toast } from "sonner";
 import { playOfferAlert, playPhaseSound, unlockAudioOnce, requestNotificationPermission, stopOfferAlert } from "@/lib/offerSound";
@@ -770,9 +771,10 @@ const DriverHome = () => {
   useEffect(() => {
     if (!activeRide?.passenger_id) { setPassengerName(""); setPassengerPhoto(null); return; }
     supabase.from("profiles").select("full_name, selfie_url, selfie_signup_url").eq("user_id", activeRide.passenger_id).single()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         setPassengerName(data?.full_name ?? "Passageiro");
-        setPassengerPhoto((data as any)?.selfie_url || (data as any)?.selfie_signup_url || null);
+        const photo = await resolveStorageUrl("selfies", (data as any)?.selfie_url || (data as any)?.selfie_signup_url);
+        setPassengerPhoto(photo || null);
       });
   }, [activeRide?.passenger_id]);
 

@@ -2312,6 +2312,16 @@ export type Database = {
           vehicle_plate: string
         }[]
       }
+      get_ride_chat_participants: {
+        Args: { _ride_id: string }
+        Returns: {
+          full_name: string
+          selfie_signup_url: string
+          selfie_url: string
+          user_id: string
+          user_type: string
+        }[]
+      }
       get_ride_for_driver: {
         Args: { _ride_id: string }
         Returns: {

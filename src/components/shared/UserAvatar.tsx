@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { User, Car as CarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveStorageUrl } from "@/lib/resolveStorageUrl";
 
 interface UserAvatarProps {
   src?: string | null;
@@ -35,11 +37,24 @@ const UserAvatar = ({ src, name, role = "passenger", size = "md", className }: U
   const Icon = role === "driver" ? CarIcon : User;
   const dim = sizeMap[size];
   const iconDim = iconSizeMap[size];
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(src || null);
 
-  if (src) {
+  useEffect(() => {
+    let cancelled = false;
+    if (!src) {
+      setResolvedSrc(null);
+      return;
+    }
+    resolveStorageUrl("selfies", src).then((url) => {
+      if (!cancelled) setResolvedSrc(url || src);
+    });
+    return () => { cancelled = true; };
+  }, [src]);
+
+  if (resolvedSrc) {
     return (
       <img
-        src={src}
+        src={resolvedSrc}
         alt={name || "Avatar"}
         className={cn(
           dim,
